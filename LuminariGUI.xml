@@ -1441,9 +1441,10 @@ end
         height = &quot;10%&quot;,
 				color = &quot;black&quot;
       },
-      GUI.Box2
-    )
+     GUI.Box2
+	)
 	setMiniConsoleFontSize(&quot;GUI.castConsole&quot;, getFontSize(&quot;main&quot;))
+	setFont("GUI.castConsole", getFont("main"))
 end
 
 
@@ -3130,6 +3131,7 @@ function demonnic.chat:create()
       name = string.format(&quot;win%s&quot;, tab),
     }, demonnic.chat.container)
     demonnic.chat.windows[tab]:setFontSize(demonnic.chat.config.fontSize)
+	demonnic.chat.windows[tab]:setFont(getFont("main"))
     demonnic.chat.windows[tab]:setColor(winr,wing,winb)
     demonnic.chat.windows[tab]:setWrap(demonnic.chat.config.width)
     demonnic.chat.windows[tab]:hide()
