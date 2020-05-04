@@ -2453,6 +2453,7 @@ end</script>
       sendMSDP("REPORT", "MOVEMENT_MAX")
       sendMSDP("REPORT", "EXPERIENCE")
       sendMSDP("REPORT", "EXPERIENCE_TNL")
+      sendMSDP("REPORT", "EXPERIENCE_MAX")
       sendMSDP("REPORT", "ACTIONS")
       sendMSDP("REPORT", "GROUP")
       --sendMSDP("REPORT", "INVENTORY")
@@ -2512,7 +2513,7 @@ end</script>
     --   msdp.EXPERIENCE_MAX
     -- Calculate a percentage
     local pct_xp
-    local xp = tonumber(msdp.EXPERIENCE)
+    local xp = tonumber(msdp.EXPERIENCE_MAX)
     local xp_tnl = tonumber(msdp.EXPERIENCE_TNL) or 0
     if xp &gt; 0 then
       pct_xp = (xp / (xp + xp_tnl)) * 100
@@ -2657,6 +2658,7 @@ function GUI.init()
   registerAnonymousEventHandler("msdp.MOVEMENT_MAX", "GUI.updateMovesGauge")
   registerAnonymousEventHandler("msdp.EXPERIENCE", "GUI.updateExperienceGauge")
   registerAnonymousEventHandler("msdp.EXPERIENCE_TNL", "GUI.updateExperienceGauge")
+  registerAnonymousEventHandler("msdp.EXPERIENCE_MAX", "GUI.updateExperienceGauge")
   registerAnonymousEventHandler("msdp.ACTIONS", "GUI.updateActionIcons")
   registerAnonymousEventHandler("msdp.CHARACTER_NAME", "GUI.updatePlayer")
   registerAnonymousEventHandler("msdp.POSITION", "GUI.updatePlayer")
