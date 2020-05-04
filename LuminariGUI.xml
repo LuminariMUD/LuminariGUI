@@ -567,7 +567,8 @@ demonnic.chat:create()</script>
 				<Script isActive="yes" isFolder="no">
 					<name>MSDPMapper</name>
 					<packageName></packageName>
-					<script>
+					<script>mudlet = mudlet or {}
+mudlet.mapper_script = true
 map = map or {}
 map.room_info = map.room_info or {}
 map.prev_info = map.prev_info or {}
@@ -646,10 +647,6 @@ local exitmap = {
   [9] = "up",     [10] = "down",      [11] = "in",        [12] = "out",
 }
 
-for k, v in pairs(exitmap) do
-
-end
-
 local function make_room()
   local info = map.room_info
   local coords = {0,0,0}
@@ -724,6 +721,63 @@ local function shift_room(dir)
   updateMap()
 end
 
+local function speedwalk_timeout()
+  speedwalk_active = false
+  cecho("&lt;red&gt;SpeedWalk failed to reach destination!\n")
+end
+
+local function speedwalk_check()
+  speedwalk_active = speedwalk_active or false
+  speedwalk_timer = speedwalk_timer or false
+  if speedwalk_timer then killTimer(speedwalk_timer) end
+  -- todo: make this more versatile, consider movement cost of terrain type
+  local move = tonumber(msdp.MOVEMENT or "0")
+  if move &lt; 10 then
+    cecho("&lt;red&gt;SpeedWalk: &lt;white&gt;Not enough movement to continue SpeedWalk!\n")
+    return
+  end
+  if #speedWalkDir &lt; 1 then
+    speedwalk_active = false
+    return
+  end
+  if speedWalkPath[# speedWalkPath] == msdp.ROOM.VNUM then
+    speedwalk_active = false
+    cecho("&lt;red&gt;SpeedWalk: &lt;white&gt;You have arrived at your destination.\n")
+    return
+  end
+  if not speedwalk_active then return end
+  speedwalk_timer = tempTimer(10, function() speedwalk_timeout() end)
+  local step_n = speedwalk_vnums[msdp.ROOM.VNUM] or 0
+  local step_d = speedWalkDir[step_n+1]
+  local monk_steps = {}
+  -- // This will need to wait until I can get all class info from msdp (instead of just active class/total levels)
+  -- if msdp.CLASS == "monk" and msdp.LEVEL &gt;= 12 then
+  --  for n, dir in ipairs(speedWalkDir) do
+  --    if n &gt;= (step_n+1) then monk_steps[#monk_steps+1] = dir end
+  --  end
+  -- end
+  local pos = msdp.POSITION or "Sleeping"
+  if pos == "Sleeping" then send("wake") end
+  if pos ~= "Standing" then send("stand") end
+  if #monk_steps &gt; 0 then
+    send("abundantstep "..table.concat(monk_steps, " "))
+    return
+  end
+  local door_check = msdp.ROOM.DOORS[exits[step_d]] or ""
+  if door_check ~= "" then send("open "..door_check.." "..exits[step_d]) end
+  send(step_d)  
+end
+
+function doSpeedWalk()
+  if #speedWalkDir &lt; 1 then return end
+  speedwalk_active = true
+  speedwalk_vnums = {}
+  for n, vnum in ipairs(speedWalkPath) do
+    speedwalk_vnums[vnum] = n
+  end
+  speedwalk_check()
+end
+
 local function handle_move()
   if map.enabled == true and map.room_info.ENVIRONMENT ~= "Wilderness" then
     if not getRoomName(map.room_info.VNUM) then
@@ -746,7 +800,10 @@ local function handle_move()
     end
   end
   centerview(map.room_info.VNUM)
+  speedwalk_check()
 end
+
+
 
 local function make_aliases()
 
@@ -961,17 +1018,13 @@ function map.onProtocolEnabled(_, protocol)
   if protocol == "MSDP" then
     print("MSDP enabled!")
     sendMSDP("REPORT", "ROOM")
+    sendMSDP("REPORT", "POSITION")
     config()
   end
 end
 
-function doSpeedWalk()
-  for _, dir in ipairs(speedWalkDir) do
-    send(dir)
-  end
-end
-
 registerAnonymousEventHandler("msdp.ROOM","map.eventHandler")
+registerAnonymousEventHandler("msdp.POSITION","map.eventHandler")
 registerAnonymousEventHandler("shiftRoom","map.eventHandler")
 registerAnonymousEventHandler("sysConnectionEvent", "map.eventHandler")
 registerAnonymousEventHandler("sysProtocolEnabled", "map.onProtocolEnabled")
@@ -2111,7 +2164,7 @@ end
 function GUI.updatePlayer()
     GUI.tabbedInfoWindow["Playercenter"]:echo(
 		[[&lt;p style="font-size:16px;font-style:normal;font-family: 'Bitstream Vera Sans Mono'"&gt;]] .. 
-    (msdp.CHARACTER_NAME or "Unknown") ..		
+    (msdp.CHARACTER_NAME or "Unknown") ..	" ("..(msdp.POSITION or "Unknown")..")"..
     [[&lt;br/&gt;Level ]] ..
     (msdp.LEVEL or "Unknown") ..
     [[ ]] ..
@@ -2309,7 +2362,7 @@ end </script>
 function GUI.updateRoom()
   if msdp.ROOM.ENVIRONMENT == "Wilderness" then
     GUI.buttonWindow.roomInfo:echo(
-		  [[&lt;p style="font-size:18px;font-style:normal;font-family: 'Bitstream Vera Sans Mono'"&gt;]] .. 	
+		  [[&lt;p style="font-size:]]..tostring(getFontSize())..[[px;font-style:normal;font-family: ']]..getFont()..[['"&gt;]] .. 	
       [[ ]] ..
       (msdp.ROOM.ENVIRONMENT or "Unknown") ..
       [[&lt;br/&gt;&amp;nbsp;Coords: ]] ..
@@ -2321,7 +2374,7 @@ function GUI.updateRoom()
     )	
 	else
     GUI.buttonWindow.roomInfo:echo(
-		  [[&lt;p style="font-size:18px;font-style:normal;font-family: 'Bitstream Vera Sans Mono'"&gt;]] .. 	
+		  [[&lt;p style="font-size:]]..tostring(getFontSize())..[[px;font-style:normal;font-family: ']]..getFont()..[['"&gt;]] .. 	
       [[&lt;br/&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;Room: ]] ..
       (msdp.ROOM.NAME or "Unknown") ..
       [[&lt;br/&gt;&amp;nbsp;Room #: ]] ..
@@ -2378,6 +2431,7 @@ end</script>
     if protocol == "MSDP" then
       print("[GUI] Initializing MSDP variables")
       sendMSDP("REPORT", "CHARACTER_NAME")
+      sendMSDP("REPORT", "POSITION")
       sendMSDP("REPORT", "RACE")
       sendMSDP("REPORT", "CLASS")
       sendMSDP("REPORT", "ALIGNMENT")
@@ -2425,8 +2479,8 @@ end</script>
     else
       pct_health = 0
     end
-    GUI.Health.front:echo("H: " .. msdp.HEALTH .. "/" .. msdp.HEALTH_MAX)
-    GUI.Health.back:echo("H: " .. msdp.HEALTH .. "/" .. msdp.HEALTH_MAX)
+    GUI.Health.front:echo("H: " .. msdp.HEALTH .. "/" .. (msdp.HEALTH_MAX or msdp.HEALTH))
+    GUI.Health.back:echo("H: " .. msdp.HEALTH .. "/" .. (msdp.HEALTH_MAX or msdp.HEALTH))
     if pct_health &gt; 100 then
       GUI.Health:setValue(100, 100)
     else
@@ -2447,8 +2501,8 @@ end</script>
     else
       pct_moves = 0
     end
-    GUI.Moves.front:echo("Mv: " .. msdp.MOVEMENT .. "/" .. msdp.MOVEMENT_MAX)
-    GUI.Moves.back:echo("Mv: " .. msdp.MOVEMENT .. "/" .. msdp.MOVEMENT_MAX)
+    GUI.Moves.front:echo("Mv: " .. msdp.MOVEMENT .. "/" .. (msdp.MOVEMENT_MAX or msdp.MOVEMENT))
+    GUI.Moves.back:echo("Mv: " .. msdp.MOVEMENT .. "/" .. (msdp.MOVEMENT_MAX or msdp.MOVEMENT))
     GUI.Moves:setValue(pct_moves, 100)
   end
   
@@ -2581,7 +2635,7 @@ function GUI.init()
   --GUI.init_header_icons()
   GUI.tabbedInfoWindow.init()
   GUI.init_group()
-  if GUI.Affects then GUI.Affects.init() end
+  if GUI.Affects.init then GUI.Affects.init() end
   GUI.draw_frames()
   GUI.buttonWindow.init()
   GUI.init_castConsole()
@@ -2605,6 +2659,7 @@ function GUI.init()
   registerAnonymousEventHandler("msdp.EXPERIENCE_TNL", "GUI.updateExperienceGauge")
   registerAnonymousEventHandler("msdp.ACTIONS", "GUI.updateActionIcons")
   registerAnonymousEventHandler("msdp.CHARACTER_NAME", "GUI.updatePlayer")
+  registerAnonymousEventHandler("msdp.POSITION", "GUI.updatePlayer")
   registerAnonymousEventHandler("msdp.RACE", "GUI.updatePlayer")
   registerAnonymousEventHandler("msdp.CLASS", "GUI.updatePlayer")
   registerAnonymousEventHandler("msdp.ALIGNMENT", "GUI.updatePlayer")
