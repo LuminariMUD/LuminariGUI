@@ -988,6 +988,8 @@ LuminariGUI follows Semantic Versioning (SemVer):
    # Notify community
    ```
 
+For detailed package preparation instructions, see [PACKAGING.md](PACKAGING.md).
+
 ### Changelog Format
 
 ```markdown

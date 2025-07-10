@@ -1,14 +1,20 @@
 # LuminariGUI Quick Reference
 
 ## Installation Commands
+
+### Automatic Installation (Recommended)
+```bash
+# Simply connect to LuminariMUD
+Host: luminarimud.com
+Port: 4100
+# Package auto-installs via GMCP when available
+```
+
+### Manual Installation
 ```bash
 # Download and install
 wget https://github.com/LuminariMUD/LuminariGUI/releases/latest/LuminariGUI.xml
 # Import into Mudlet: Package Manager → Install Package
-
-# Connect to server
-Host: luminarimud.com
-Port: 4100
 ```
 
 ## Essential In-Game Commands

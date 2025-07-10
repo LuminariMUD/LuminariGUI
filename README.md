@@ -204,6 +204,7 @@ This project includes comprehensive documentation for all aspects of development
 | **Contribute to the project** | [`CONTRIBUTING.md`](CONTRIBUTING.md) |
 | **Deploy/install** | [`DEPLOYMENT.md`](DEPLOYMENT.md) |
 | **Fix issues** | [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md) |
+| **Prepare package for release** | [`PACKAGING.md`](PACKAGING.md) |
 | **Check version changes** | [`CHANGELOG.md`](CHANGELOG.md) |
 
 ## Development
