@@ -1,1 +1,17 @@
-For each affection in the game, an icon should be included in this folder.
+# Status Effect Icons
+
+This directory contains 90 status effect icons representing various character conditions, spell effects, and combat modes in LuminariMUD.
+
+## Quick Overview
+Icons are displayed in the LuminariGUI when corresponding effects are active on your character. Effects are automatically detected via MSDP and the appropriate icons are shown in real-time.
+
+## Categories
+- **Defensive Effects** (12 icons) - Shields, protections, wards
+- **Vision & Detection** (11 icons) - Enhanced sight, magical detection
+- **Combat Modes** (12 icons) - Attack stances, fighting techniques  
+- **Movement & Mobility** (7 icons) - Speed, flight, movement abilities
+- **Concealment** (10 icons) - Stealth, invisibility, illusions
+- **Debuffs** (26 icons) - Negative conditions and hindrances
+- **Special Abilities** (12 icons) - Unique powers and buffs
+
+For complete documentation with descriptions of each icon, see `STATUS_EFFECTS.md`.

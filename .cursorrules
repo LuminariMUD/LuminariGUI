@@ -1,0 +1,302 @@
+# LuminariGUI - Mudlet Package Development Rules
+
+## Project Overview
+LuminariGUI is a comprehensive Mudlet GUI package for LuminariMUD providing real-time MSDP integration, tabbed chat system, interactive mapping, and advanced status monitoring. The entire codebase is contained within a single XML file using Mudlet's package format with embedded Lua scripts.
+
+## Architecture & Technologies
+
+### Core Technologies
+- **Lua**: Primary scripting language for all logic
+- **XML**: Mudlet package format container
+- **Geyser**: Mudlet's UI framework for layout management
+- **MSDP**: MUD Server Data Protocol for real-time game data
+- **YATCO**: Yet Another Tabbed Chat Organization framework
+- **CSSMan**: CSS management system for UI styling
+
+### Key Components
+1. **MSDPMapper**: Handles MSDP protocol communication and automatic room mapping
+2. **GUI Framework**: Event-driven UI system using Geyser components
+3. **Chat System**: Tabbed chat interface with multiple channels
+4. **Status Monitoring**: Real-time health, movement, experience tracking
+5. **Group Management**: Live group member status and health tracking
+6. **Affects System**: Visual status effects and spell tracking
+7. **Spell Casting Console**: Real-time spell casting progress display
+
+## Code Organization & Standards
+
+### File Structure
+```
+LuminariGUI.xml - Single package file containing:
+├── TriggerPackage - Pattern matchers for game text
+├── AliasPackage - User command shortcuts
+├── ScriptPackage - Core functionality modules
+├── ActionPackage - UI actions and events
+└── TimerPackage - Scheduled events
+```
+
+### Naming Conventions
+- **Namespaces**: Use `GUI.` prefix for all GUI-related functions and variables
+- **Functions**: Use camelCase (`GUI.updateHealthGauge`, `GUI.init_background`)
+- **Variables**: Use camelCase for local variables, PascalCase for global objects
+- **Constants**: Use UPPER_SNAKE_CASE for configuration constants
+- **Event Handlers**: Use descriptive names with context (`GUI.onProtocolEnabled`)
+
+### Code Structure Patterns
+
+#### Script Organization
+```lua
+-- Script groups are hierarchical:
+LuminariGUI/
+├── MSDPMapper/
+├── GUI/
+│   ├── CSSman/
+│   ├── Boxes/
+│   ├── Gauges/
+│   └── Config/
+└── YATCO/
+    └── Demonnic/
+```
+
+#### Function Definition Patterns
+```lua
+-- Global functions use full namespace
+function GUI.updateHealthGauge()
+  -- Implementation
+end
+
+-- Local functions within scripts
+local function make_room()
+  -- Implementation
+end
+
+-- Event handlers with proper registration
+registerAnonymousEventHandler("msdp.HEALTH", "GUI.updateHealthGauge")
+```
+
+#### Variable Declaration Patterns
+```lua
+-- Initialize tables safely
+GUI.AffectIcons = GUI.AffectIcons or {}
+GUI.Affects = GUI.Affects or {}
+
+-- Local variables with proper scoping
+local function updateGauge()
+  local health = tonumber(msdp.HEALTH) or 0
+  local max_health = tonumber(msdp.HEALTH_MAX) or health
+  local pct_health = health > 0 and (health / max_health) * 100 or 0
+end
+```
+
+### UI Development Standards
+
+#### Geyser Component Creation
+```lua
+-- Use descriptive names and consistent structure
+GUI.Health = Geyser.Gauge:new({
+  name = "GUI.Health", 
+  height = 32, 
+  v_policy = Geyser.Fixed
+}, GUI.GaugeBar)
+
+-- Container hierarchy
+GUI.Left = Geyser.Label:new({
+  name = "GUI.Left", 
+  x = 0, y = 0, 
+  width = "25%", height = "100%"
+})
+```
+
+#### CSS Management
+```lua
+-- Use CSSMan for all styling
+GUI.BoxCSS = CSSMan.new([[
+  background-image: url(]] .. getMudletHomeDir():gsub("\\", "/") .. 
+  [[/LuminariGUI/images/ui_texture.png);
+  font-family: Tahoma, Geneva, sans-serif;
+]])
+
+-- Apply styles consistently
+component:setStyleSheet(GUI.BoxCSS:getCSS())
+```
+
+### Event Handling Patterns
+
+#### MSDP Event Registration
+```lua
+-- Register events in config/init functions
+registerAnonymousEventHandler("msdp.HEALTH", "GUI.updateHealthGauge")
+registerAnonymousEventHandler("msdp.GROUP", "GUI.updateGroup")
+registerAnonymousEventHandler("sysProtocolEnabled", "GUI.onProtocolEnabled")
+```
+
+#### Event Handler Implementation
+```lua
+function GUI.updateHealthGauge()
+  local health = tonumber(msdp.HEALTH) or 0
+  local max_health = tonumber(msdp.HEALTH_MAX) or health
+  local pct_health = health > 0 and (health / max_health) * 100 or 0
+  
+  -- Update gauge display
+  GUI.Health:setValue(pct_health > 100 and 100 or pct_health, 100)
+  GUI.Health.front:echo("H: " .. health .. "/" .. max_health)
+end
+```
+
+### Error Handling & Safety
+
+#### Defensive Programming
+```lua
+-- Always check for nil values
+local health = tonumber(msdp.HEALTH) or 0
+local group_data = msdp.GROUP or {}
+
+-- Safe table operations
+if msdp.AFFECTS and msdp.AFFECTS.SPELL_LIKE_AFFECTS then
+  for i = 1, #msdp.AFFECTS.SPELL_LIKE_AFFECTS do
+    -- Process affects
+  end
+end
+```
+
+#### Resource Management
+```lua
+-- Clean up timers
+if GUI.castConsoleTimer then
+  killTimer(GUI.castConsoleTimer)
+end
+
+-- Proper window clearing
+clearUserWindow("GUI.castConsole")
+```
+
+### Configuration Management
+
+#### Settings Persistence
+```lua
+-- Save/load user preferences
+function GUI.loadToggles()
+  if not io.exists(getMudletHomeDir().."/GUI.toggles.lua") then
+    GUI.toggles = { gagChat = false, includeInGroup = true }
+    table.save(getMudletHomeDir().."/GUI.toggles.lua", GUI.toggles)
+  else
+    table.load(getMudletHomeDir().."/GUI.toggles.lua", GUI.toggles)
+  end
+end
+```
+
+#### Event-Based Configuration
+```lua
+-- Register system events for cleanup
+registerAnonymousEventHandler("sysLoadEvent", "GUI.loadToggles")
+registerAnonymousEventHandler("sysExitEvent", "GUI.saveToggles")
+```
+
+## XML Structure Standards
+
+### Trigger Definition
+```xml
+<Trigger isActive="yes" isFolder="no">
+  <name>Tell</name>
+  <script>demonnic.chat:append("Tell")
+if GUI.toggles.gagChat == true then
+  deleteLineP()
+end</script>
+  <regexCodeList>
+    <string>^(\w+) tells you, '(.*)'</string>
+  </regexCodeList>
+</Trigger>
+```
+
+### Script Organization
+```xml
+<Script isActive="yes" isFolder="no">
+  <name>Descriptive Name</name>
+  <packageName>Optional Package</packageName>
+  <script>-- Lua code here</script>
+  <eventHandlerList />
+</Script>
+```
+
+## Development Best Practices
+
+### Code Quality
+- Use consistent indentation (2 spaces)
+- Include descriptive comments for complex logic
+- Implement proper error handling with fallback values
+- Use meaningful variable and function names
+- Organize code into logical modules/groups
+
+### Performance Considerations
+- Cache frequently accessed values
+- Use local variables for performance-critical code
+- Implement efficient event handling
+- Minimize UI updates and redraws
+
+### Testing & Debugging
+- Use `demonnic.debug` framework for debugging
+- Implement proper logging for troubleshooting
+- Test all MSDP event handlers thoroughly
+- Validate UI component creation and styling
+
+### Asset Management
+- Store images in organized directory structure
+- Use consistent naming for image assets
+- Implement proper path handling for cross-platform compatibility
+- Optimize image sizes for performance
+
+## Common Patterns & Utilities
+
+### MSDP Data Access
+```lua
+-- Always provide fallbacks
+local character_name = msdp.CHARACTER_NAME or "Unknown"
+local position = msdp.POSITION or "Sleeping"
+local room_info = msdp.ROOM or {}
+```
+
+### UI Component Updates
+```lua
+-- Update content safely
+component:clear()
+component:echo(formatted_content)
+component:show() -- or :hide() as needed
+```
+
+### Chat System Integration
+```lua
+-- Append to appropriate chat channel
+demonnic.chat:append("Tell")
+if GUI.toggles.gagChat == true then
+  deleteLineP()
+end
+```
+
+## Version Control & Maintenance
+
+### Development Workflow
+1. Edit `LuminariGUI.xml` directly
+2. Import into Mudlet for testing
+3. Use Mudlet's error console for debugging
+4. Test functionality manually in-game
+5. Commit working changes to version control
+
+### Documentation Standards
+- Maintain comprehensive README.md
+- Document all configuration options
+- Include installation and setup instructions
+- Provide troubleshooting guide for common issues
+
+## Security & Compatibility
+
+### Path Handling
+```lua
+-- Always use cross-platform path handling
+local image_path = getMudletHomeDir():gsub("\\", "/") .. "/LuminariGUI/images/"
+```
+
+### XML Escaping
+- Escape special characters in XML: `<` → `&lt;`, `>` → `&gt;`, `&` → `&amp;`
+- Use proper XML structure for all components
+- Validate XML syntax before deployment
+
+This ruleset ensures consistent, maintainable, and high-quality code that follows the established patterns and architecture of the LuminariGUI project. 

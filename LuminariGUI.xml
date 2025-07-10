@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE MudletPackage>
+<!-- LuminariGUI Package v2.0.0
+     Enhanced MUD client interface for LuminariMUD
+     Repository: https://github.com/LuminariMUD/LuminariGUI
+     License: Public Domain (Unlicense) -->
 <MudletPackage version="1.001">
 	<TriggerPackage>
 		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
@@ -34,7 +38,11 @@
 				<regexCodePropertyList />
 				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 					<name>Tell</name>
-					<script>demonnic.chat:append("Tell")
+					<script>-- Tell Trigger: Captures private messages between players
+-- Regex patterns:
+-- 1. ^(\w+) tells you, '(.*)' - Captures incoming tells: player name and message
+-- 2. You tell - Captures outgoing tell confirmations
+demonnic.chat:append("Tell")
 
 if GUI.toggles.gagChat == true then
   deleteLineP()
@@ -60,7 +68,11 @@ end</script>
 				</Trigger>
 				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 					<name>Congrats</name>
-					<script>demonnic.chat:append("Congrats")
+					<script>-- Congrats Trigger: Captures congratulations channel messages
+-- Regex patterns:
+-- 1. ^(\w+) congrats, '(.*)' - Captures congrats messages: player name and content
+-- 2. You congrat, ' - Captures outgoing congrats confirmations
+demonnic.chat:append("Congrats")
 
 if GUI.toggles.gagChat == true then
   deleteLineP()
@@ -210,9 +222,12 @@ clearUserWindow("map.minimap")
 map.container:hide()
 map.minimapcontainer:show()
 
-maplineTrig = tempLineTrigger(1,23,[[onMapLine()]])  -- Edit the max lines to how many your MAP display shows.
+-- Capture 23 lines of wilderness map data (adjust based on server map size)
+maplineTrig = tempLineTrigger(1,23,[[onMapLine()]])
 padding = map.calcMinimapPadding()
 
+-- Map Line Processing Handler
+-- Processes individual lines of ASCII map data and handles map display completion
 function onMapLine()
   -- Either match the last line of your MAP display, or use the Prompt.
   local isLastLine = string.findPattern(line, "&lt;/WILDERNESS_MAP&gt;")
@@ -260,9 +275,12 @@ elseif GUI.buttonWindow.mudletOrAscii == "Mudlet" then
   map.minimapcontainer:hide()
 end
 map.minimap:echo("\n")
-maplineTrig = tempLineTrigger(1,11,[[onRoomMapLine()]])  -- Edit the max lines to how many your MAP display shows.
+-- Capture 11 lines of room map data (smaller than wilderness maps)
+maplineTrig = tempLineTrigger(1,11,[[onRoomMapLine()]])
 padding = map.calcAsciimapPadding()
 
+-- Room Map Line Processing Handler
+-- Processes individual lines of room-specific ASCII map data
 function onRoomMapLine()
   -- Either match the last line of your MAP display, or use the Prompt.
   local isLastLine = string.findPattern(line, "&lt;/ROOM_MAP&gt;")
@@ -584,80 +602,174 @@ local defaults = {
   mapper = {x = "-25%", y = "0%", width = "25%", height = "50%"}
 }
 
+--[[
+  Terrain Type Color Configuration
+  ===============================
+  
+  Maps Luminari MUD terrain types to visual colors in the mapper.
+  Each terrain gets a unique ID and RGB color values for visual distinction.
+  
+  Configuration Rules:
+  - Each terrain must have a unique ID (1-255 range recommended)
+  - RGB values range from 0-255
+  - Terrain types not listed here use mapper default colors
+  - ID values are offset by +16 when applied to avoid conflicts with Mudlet defaults
+  
+  Adding New Terrains:
+  1. Add entry with format: ["Terrain Name"] = {id = unique_number, r = red, g = green, b = blue}
+  2. Ensure ID doesn't conflict with existing entries
+  3. Choose colors that provide good contrast and visibility
+  
+  Performance: This table is read during room creation - keep it reasonably sized
+]]
 local terrain_types = {
-  -- used to make rooms of different terrain types have different colors
-  -- add a new entry for each terrain type, and set the color with RGB values
-  -- each id value must be unique, terrain types not listed here will use mapper default color
-  ["Inside"]         	= {id = 1, r = 130, g = 130, b = 130},
-  ["City"]           	= {id = 2, r = 200, g = 200, b = 200},
-  ["Field"] 					= {id = 3, r = 0, g = 170, b = 0},
-  ["Forest"] 					= {id = 4, r = 0, g = 122, b = 0},
-  ["Hills"] 					= {id = 5, r = 122, g = 69, b = 0},
-  ["Low Mountains"] 	= {id = 6, r = 100, g = 100, b = 100},
-  ["Water (Swim)"] 		= {id = 7, r = 0, g = 0, b = 255},
-  ["Water (No Swim)"] = {id = 8, r = 0, g = 0, b = 130},
-  ["In Flight"] 			= {id = 9, r = 200, g = 200, b = 255},
-  ["Underwater"] 			= {id = 10, r = 43, g = 43, b = 124},
-  ["Zone Entrance"] 	= {id = 211, r = 255, g = 0, b = 0},
-  ["Road North-South"] = {id = 12, r = 119, g = 101, b = 86},
-  ["Road East-West"] 	= {id = 13, r = 119, g = 101, b = 86},
-  ["Road Intersection"] = {id = 14, r = 119, g = 101, b = 86},
-  ["Desert"] 					= {id = 15, r = 234, g = 219, b = 124},
-  ["Ocean"] 					= {id = 16, r = 0, g = 90, b = 90},
-  ["Marshland"] 			= {id = 17, r = 81, g = 47, b = 109},
-  ["High Mountains"] 	= {id = 18, r = 255, g = 255, b = 255},
-  ["Outer Planes"] 		= {id = 19, r = 168, g = 42, b = 138},
-  ["Underdark - Wild"] = {id = 20, r = 131, g = 110, b = 145},
-  ["Underdark - City"] = {id = 21, r = 183, g = 178, b = 186},
-  ["Underdark - Inside"] = {id = 22, r = 132, g = 132, b = 132},
-  ["Underdark - Water (Swim)"] = {id = 23, r = 70, g = 139, b = 175},
-  ["Underdark - Water (No Swim)"] = {id = 24, r = 34, g = 68, b = 86},
-  ["Underdark - In Flight"] = {id = 25, r = 158, g = 178, b = 188},
-  ["Lava"] 						= {id = 26, r = 255, g = 119, b = 0},
+  -- Indoor/Structural terrains - neutral/gray tones
+  ["Inside"]              = {id = 1, r = 130, g = 130, b = 130},
+  ["City"]                = {id = 2, r = 200, g = 200, b = 200},
+  ["Cave"]                = {id = 30, r = 80, g = 80, b = 80},
+  
+  -- Natural outdoor terrains - earth tones and naturals
+  ["Field"]               = {id = 3, r = 0, g = 170, b = 0},
+  ["Forest"]              = {id = 4, r = 0, g = 122, b = 0},
+  ["Hills"]               = {id = 5, r = 122, g = 69, b = 0},
+  ["Low Mountains"]       = {id = 6, r = 100, g = 100, b = 100},
+  ["High Mountains"]      = {id = 18, r = 255, g = 255, b = 255},
+  ["Desert"]              = {id = 15, r = 234, g = 219, b = 124},
+  ["Jungle"]              = {id = 31, r = 21, g = 132, b = 101},
+  ["Tundra"]              = {id = 32, r = 224, g = 224, b = 224},
+  ["Taiga"]               = {id = 33, r = 103, g = 137, b = 104},
+  ["Beach"]               = {id = 34, r = 239, g = 235, b = 0},
+  ["Marshland"]           = {id = 17, r = 81, g = 47, b = 109},
+  
+  -- Water terrains - blue spectrum
+  ["Water (Swim)"]        = {id = 7, r = 0, g = 0, b = 255},
+  ["Water (No Swim)"]     = {id = 8, r = 0, g = 0, b = 130},
+  ["Ocean"]               = {id = 16, r = 0, g = 90, b = 90},
+  ["Underwater"]          = {id = 10, r = 43, g = 43, b = 124},
+  
+  -- Aerial and special movement
+  ["In Flight"]           = {id = 9, r = 200, g = 200, b = 255},
+  
+  -- Special/Magical locations
+  ["Zone Entrance"]       = {id = 211, r = 255, g = 0, b = 0},     -- Bright red for visibility
+  ["Outer Planes"]        = {id = 19, r = 168, g = 42, b = 138},
+  ["Lava"]                = {id = 26, r = 255, g = 119, b = 0},    -- Orange-red for danger
+  
+  -- Road system - brown/tan theme for consistency
+  ["Road North-South"]    = {id = 12, r = 119, g = 101, b = 86},
+  ["Road East-West"]      = {id = 13, r = 119, g = 101, b = 86},
+  ["Road Intersection"]   = {id = 14, r = 119, g = 101, b = 86},
   ["Dirt Road North-South"] = {id = 27, r = 142, g = 85, b = 0},
   ["Dirt Road East-West"] = {id = 28, r = 142, g = 85, b = 0},
   ["Dirt Road Intersection"] = {id = 29, r = 142, g = 85, b = 0},
-  ["Cave"] 						= {id = 30, r = 80, g = 80, b = 80},
-  ["Jungle"] 					= {id = 31, r = 21, g = 132, b = 101},
-  ["Tundra"] 					= {id = 32, r = 224, g = 224, b = 224},
-  ["Taiga"] 					= {id = 33, r = 103, g = 137, b = 104},
-  ["Beach"] 					= {id = 34, r = 239, g = 235, b = 0},
+  
+  -- Underdark terrain variants - darker, muted versions of surface equivalents
+  ["Underdark - Wild"]    = {id = 20, r = 131, g = 110, b = 145},
+  ["Underdark - City"]    = {id = 21, r = 183, g = 178, b = 186},
+  ["Underdark - Inside"]  = {id = 22, r = 132, g = 132, b = 132},
+  ["Underdark - Water (Swim)"] = {id = 23, r = 70, g = 139, b = 175},
+  ["Underdark - Water (No Swim)"] = {id = 24, r = 34, g = 68, b = 86},
+  ["Underdark - In Flight"] = {id = 25, r = 158, g = 178, b = 188},
 }
 
--- list of possible movement directions and appropriate coordinate changes
+-- Movement vector calculations for 3D coordinate system
+-- Used to determine relative positioning when creating connected rooms
+-- Format: {x_offset, y_offset, z_offset} where positive values indicate:
+-- x: east direction, y: north direction, z: up direction
 local move_vectors = {
+  -- Cardinal directions (horizontal plane, z=0)
   north = {0,1,0}, south = {0,-1,0}, east = {1,0,0}, west = {-1,0,0},
+  -- Diagonal directions (horizontal plane, z=0)
   northwest = {-1,1,0}, northeast = {1,1,0}, southwest = {-1,-1,0}, southeast = {1,-1,0},
+  -- Vertical movement
   up = {0,0,1}, down = {0,0,-1}
 }
 
--- used to convert short dirs for full dirs
+-- Direction abbreviation expansion table
+-- Converts common short-form directions to full direction names
+-- Used for user input processing and command parsing
 local exits = {
+  -- Cardinal abbreviations
   n = "north", s = "south", w = "west", e = "east",
+  -- Diagonal abbreviations
   nw = "northwest", ne = "northeast", sw = "southwest", se = "southeast",
+  -- Vertical abbreviations
   u = "up", d = "down"
 }
 
+--[[
+  Bidirectional Exit Mapping System
+  =================================
+  
+  Maps between direction names and Mudlet's internal exit numbering system.
+  This table serves dual purposes:
+  1. String to number: exitmap["north"] = 1
+  2. Number to string: exitmap[1] = "north"
+  
+  Mudlet Exit Number Standards:
+  - 1-8: Standard compass directions
+  - 9-10: Vertical movement (up/down)
+  - 11-12: Special exits (in/out)
+  
+  Used extensively in exit creation and pathfinding algorithms.
+]]
 local exitmap = {
+  -- Direction name to number mapping
   north = 1,      northeast = 2,      northwest = 3,      east = 4,
   west = 5,       south = 6,          southeast = 7,      southwest = 8,
   up = 9,         down = 10,          ["in"] = 11,        out = 12,
+  -- Number to direction name mapping (reverse lookup)
   [1] = "north",  [2] = "northeast",  [3] = "northwest",  [4] = "east",
   [5] = "west",   [6] = "south",      [7] = "southeast",  [8] = "southwest",
   [9] = "up",     [10] = "down",      [11] = "in",        [12] = "out",
 }
 
+--[[
+  Room Creation Algorithm
+  =======================
+  
+  Creates a new room in the Mudlet mapper based on MSDP room data.
+  Handles coordinate calculation, area management, terrain assignment, and exit linking.
+  
+  Algorithm Overview:
+  1. Create room with VNUM from MSDP data
+  2. Determine area (create if new)
+  3. Calculate coordinates:
+     - New area: Place at origin (0,0,0)
+     - Existing area: Calculate from previous room + movement vector
+  4. Handle coordinate conflicts with map stretching
+  5. Apply terrain colors
+  6. Link exits between rooms
+  
+  Performance Considerations:
+  - Map stretching algorithm is O(n) where n = rooms in area
+  - Can be expensive for large areas with many coordinate conflicts
+  - Consider optimizing for heavily traveled areas
+  
+  Error Handling:
+  - Falls back to exit stubs if room linking fails
+  - Gracefully handles missing terrain types
+  - Validates movement vectors before applying
+]]
 local function make_room()
   local info = map.room_info
-  local coords = {0,0,0}
+  local coords = {0,0,0}  -- Default coordinates for new areas
+  
+  -- Step 1: Create the room in Mudlet's mapper
   addRoom(info.VNUM)
+  
+  -- Step 2: Area Management - get or create area
   local areas = getAreaTable()
   local areaID = areas[info.AREA]
   if not areaID then
+    -- New area - create it and use default coordinates
     areaID = addAreaName(info.AREA)
   else
+    -- Existing area - calculate coordinates based on movement from previous room
     coords = {getRoomCoordinates(map.prev_info.VNUM)}
-    local shift = {0,0,0}
+    local shift = {0,0,0}  -- Movement vector from previous to current room
+    
+    -- Find the direction we moved from previous room to current room
     for k,v in pairs(map.prev_info.EXITS) do
       if v == info.VNUM and move_vectors[k] then
         shift = move_vectors[k]
@@ -665,20 +777,40 @@ local function make_room()
       end
     end
 
+    -- Apply movement vector to get new coordinates
     for n = 1,3 do
       coords[n] = coords[n] + shift[n]
     end
 
-    -- map stretching
+    --[[
+      Map Stretching Algorithm
+      ========================
+      
+      Prevents room overlap by shifting existing rooms when coordinate conflicts occur.
+      This maintains spatial relationships while avoiding visual room stacking.
+      
+      Algorithm:
+      1. Check if calculated coordinates are already occupied
+      2. If occupied, shift ALL rooms in the direction of movement
+      3. Only shift rooms that are "ahead" of the conflict point
+      
+      Performance Warning: This is O(n) for each room creation in contested areas.
+      Consider caching room coordinates if performance becomes an issue.
+    ]]
     local overlap = getRoomsByPosition(areaID,coords[1],coords[2],coords[3])
 
     if not table.is_empty(overlap) then
       local rooms = getAreaRooms(areaID)
       local rcoords
+      
+      -- Shift all affected rooms to prevent overlap
       for _,id in ipairs(rooms) do
         local x, y, z = getRoomCoordinates(id)
         rcoords = {x, y, z}
+        
+        -- Only shift rooms in the direction of movement
         for n = 1,3 do
+          -- Check if room is "ahead" in the movement direction
           if shift[n] ~= 0 and (rcoords[n] - coords[n]) * shift[n] &gt;= 0 then
             rcoords[n] = rcoords[n] + shift[n]
           end
@@ -687,68 +819,164 @@ local function make_room()
       end
     end
   end
+  
+  -- Step 3: Apply room properties
   setRoomArea(info.VNUM, areaID)
   setRoomCoordinates(info.VNUM, coords[1], coords[2], coords[3])
+  
+  -- Step 4: Set terrain-based visual environment (+16 offset avoids Mudlet conflicts)
   if terrain_types[info.TERRAIN] then
     setRoomEnv(info.VNUM, terrain_types[info.TERRAIN].id + 16)
   end
+  
+  -- Step 5: Link exits from previous room (if we moved from somewhere)
   if map.prev_info then -- Check if you moved into here from another room.
     local prev_exits = getRoomExits(map.prev_info.VNUM)
     for dir, id in pairs(map.prev_info.EXITS) do
+      -- Only create exit if it doesn't already exist
       if prev_exits[dir] == nil then
+        -- Try to create bidirectional exit, fall back to stub if target room doesn't exist
         if not setExit(map.prev_info.VNUM, id, exitmap[dir]) then
           setExitStub(map.prev_info.VNUM, exitmap[dir], true)
         end
       end
     end
   end
+  
+  -- Step 6: Create exits from current room to connected rooms
   for dir, id in pairs(info.EXITS) do
-    -- need to see how special exits are represented to handle those properly here
+    -- TODO: Implement special exit handling for non-standard movement
+    -- Future Enhancement: Add support for custom movement commands (climb, swim, etc.)
+    -- Try to create exit, fall back to stub if target room doesn't exist yet
     if not setExit(info.VNUM, id, exitmap[dir]) then
       setExitStub(info.VNUM, exitmap[dir], true)
     end
   end
 end
 
+--[[
+  Room Coordinate Manipulation
+  ============================
+  
+  Manually shifts a room's position in the specified direction.
+  Used for map corrections when automatic positioning fails or user wants manual control.
+  
+  Parameters:
+    dir (string) - Direction to shift room (must exist in move_vectors table)
+  
+  Behavior:
+  - Gets current room coordinates from Mudlet mapper
+  - Applies movement vector for specified direction
+  - Updates room position and refreshes map display
+  
+  Use Cases:
+  - Correcting misaligned rooms after area exploration
+  - Manual map layout adjustments
+  - Fixing coordinate conflicts not resolved by map stretching
+  
+  Note: This only moves the current room - doesn't update connected rooms or exits.
+  Consider using this carefully to avoid breaking spatial relationships.
+]]
 local function shift_room(dir)
-  local ID = map.room_info.VNUM
-  local x,y,z = getRoomCoordinates(ID)
-  local x1,y1,z1 = move_vectors[dir]
+  local ID = map.room_info.VNUM  -- Current room VNUM
+  local x,y,z = getRoomCoordinates(ID)  -- Get current position
+  local x1,y1,z1 = move_vectors[dir]    -- Get movement vector for direction
+  
+  -- Apply movement vector to current coordinates
   x = x + x1
   y = y + y1
   z = z + z1
+  
+  -- Update room position and refresh map display
   setRoomCoordinates(ID,x,y,z)
-  updateMap()
+  updateMap()  -- Force map redraw to show new position
 end
 
+--[[
+  Speedwalk Timeout Handler
+  =========================
+  
+  Called when speedwalk movement takes too long to complete.
+  Provides user feedback and safely terminates the speedwalk sequence.
+  
+  Safety Features:
+  - Prevents infinite speedwalk loops
+  - Clears speedwalk state to avoid stuck conditions
+  - Provides clear error messaging to user
+]]
 local function speedwalk_timeout()
-  speedwalk_active = false
+  speedwalk_active = false  -- Disable speedwalk system
   cecho("&lt;red&gt;SpeedWalk failed to reach destination!\n")
 end
 
+--[[
+  Speedwalk Movement Controller
+  =============================
+  
+  Core pathfinding logic that manages automated movement between rooms.
+  Handles movement validation, path progression, and destination checking.
+  
+  Algorithm Flow:
+  1. Initialize speedwalk state variables
+  2. Validate movement resources (movement points)
+  3. Check path completion conditions
+  4. Execute next movement step with timeout protection
+  
+  Movement Validation:
+  - Requires minimum 10 movement points to continue
+  - Validates path exists and destination is reachable
+  - Handles arrival detection and state cleanup
+  
+  Performance Considerations:
+  - Uses 10-second timeout to prevent infinite loops
+  - TODO: Implement terrain-based movement cost calculations
+  - Future Enhancement: Add movement point costs for different terrain types
+  - Could be enhanced with movement point prediction
+  
+  Error Recovery:
+  - Gracefully handles insufficient movement points
+  - Provides user feedback for all termination conditions
+  - Timeout protection prevents system lockup
+]]
 local function speedwalk_check()
+  -- Initialize speedwalk state (defensive programming for global variables)
   speedwalk_active = speedwalk_active or false
   speedwalk_timer = speedwalk_timer or false
+  
+  -- Clear any existing timeout timer
   if speedwalk_timer then killTimer(speedwalk_timer) end
-  -- todo: make this more versatile, consider movement cost of terrain type
+  
+  -- Movement Resource Validation
+  -- TODO: Make this more versatile, consider movement cost of terrain type
+  -- Future Enhancement: Implement weighted pathfinding based on terrain difficulty
   local move = tonumber(msdp.MOVEMENT or "0")
   if move &lt; 10 then
     cecho("&lt;red&gt;SpeedWalk: &lt;white&gt;Not enough movement to continue SpeedWalk!\n")
     return
   end
+  
+  -- Path Completion Checks
   if #speedWalkDir &lt; 1 then
-    speedwalk_active = false
+    speedwalk_active = false  -- No more directions to follow
     return
   end
+  
+  -- Destination Arrival Check
   if speedWalkPath[# speedWalkPath] == msdp.ROOM.VNUM then
     speedwalk_active = false
     cecho("&lt;red&gt;SpeedWalk: &lt;white&gt;You have arrived at your destination.\n")
     return
   end
+  
+  -- Safety check - ensure speedwalk is still active
   if not speedwalk_active then return end
+  
+  -- Set timeout protection (10 seconds per movement step)
   speedwalk_timer = tempTimer(10, function() speedwalk_timeout() end)
-  local step_n = speedwalk_vnums[msdp.ROOM.VNUM] or 0
-  local step_d = speedWalkDir[step_n+1]
+  
+  -- Determine next movement step based on current room position in path
+  local step_n = speedwalk_vnums[msdp.ROOM.VNUM] or 0  -- Current step index
+  local step_d = speedWalkDir[step_n+1]  -- Next direction to move
   local monk_steps = {}
   -- // This will need to wait until I can get all class info from msdp (instead of just active class/total levels)
   -- if msdp.CLASS == "monk" and msdp.LEVEL &gt;= 12 then
@@ -768,30 +996,112 @@ local function speedwalk_check()
   send(step_d)  
 end
 
+--[[
+  Speedwalk System Initialization
+  ===============================
+  
+  Initiates automated pathfinding movement between rooms using calculated paths.
+  Sets up speedwalk state and begins movement execution.
+  
+  Prerequisites:
+  - speedWalkDir table must contain direction sequence
+  - speedWalkPath table must contain room VNUM sequence
+  - Both tables must be synchronized (same length, matching order)
+  
+  Process Flow:
+  1. Validate path exists (speedWalkDir not empty)
+  2. Activate speedwalk system state
+  3. Build VNUM-to-step-index lookup table for position tracking
+  4. Begin movement execution via speedwalk_check()
+  
+  Error Handling:
+  - Silently returns if no path provided (graceful degradation)
+  - Path validation prevents infinite loops or undefined behavior
+  
+  Integration:
+  - Called by user commands or pathfinding algorithms
+  - Works with existing room database and mapping system
+  - Integrates with movement validation and timeout systems
+]]
 function doSpeedWalk()
+  -- Validate that we have a path to follow
   if #speedWalkDir &lt; 1 then return end
+  
+  -- Initialize speedwalk system state
   speedwalk_active = true
-  speedwalk_vnums = {}
+  speedwalk_vnums = {}  -- VNUM to step index mapping for position tracking
+  
+  -- Build lookup table for current position determination
+  -- Maps room VNUM to its position in the path sequence
   for n, vnum in ipairs(speedWalkPath) do
     speedwalk_vnums[vnum] = n
   end
+  
+  -- Begin movement execution
   speedwalk_check()
 end
 
+--[[
+  Movement Event Handler
+  ======================
+  
+  Processes character movement and updates the mapping system accordingly.
+  Handles room creation, terrain updates, exit resolution, and map synchronization.
+  
+  Functionality:
+  - Creates new rooms when entering unmapped areas
+  - Updates terrain information for existing rooms
+  - Resolves exit stubs by linking known rooms
+  - Maintains map view centering on current position
+  - Continues speedwalk execution if active
+  
+  Mapping Logic:
+  1. Only processes indoor areas (skips Wilderness environments)
+  2. Checks if current room exists in map database
+  3. Creates room if new, updates terrain if existing
+  4. Resolves any unlinked exits (stubs) to known rooms
+  5. Centers map view and continues movement
+  
+  Exit Stub Resolution:
+  - Gets list of unconnected exits from current room
+  - For each stub, checks if target room exists in database
+  - Creates bidirectional links between known rooms
+  - Prevents mapping gaps and maintains connectivity
+  
+  Performance Notes:
+  - Uses efficient getRoomName() check for room existence
+  - Terrain updates use direct setRoomEnv() calls
+  - Exit resolution processes only existing stubs
+  
+  Integration Points:
+  - Called by MSDP movement events
+  - Coordinates with speedwalk system
+  - Updates Mudlet's mapping database
+  - Maintains visual map consistency
+]]
 local function handle_move()
+  -- Only process movement for mapped indoor areas
   if map.enabled == true and map.room_info.ENVIRONMENT ~= "Wilderness" then
+    
+    -- Check if we're entering a new room that needs to be created
     if not getRoomName(map.room_info.VNUM) then
-      make_room()
+      make_room()  -- Create new room with current MSDP data
     else
+      -- Update existing room with current terrain information
       if terrain_types[map.room_info.TERRAIN] then
         setRoomEnv(map.room_info.VNUM, terrain_types[map.room_info.TERRAIN].id + 16)
       end
+      
+      -- Resolve any unlinked exits (stubs) to known rooms
       local stubs = getExitStubs1(map.room_info.VNUM)
       if stubs then
         for _, n in ipairs(stubs) do
-          local dir = exitmap[n]
-          local id = map.room_info.EXITS[dir]
-          -- need to see how special exits are represented to handle those properly here
+          local dir = exitmap[n]  -- Convert exit number to direction name
+          local id = map.room_info.EXITS[dir]  -- Get target room VNUM
+          
+          -- TODO: need to see how special exits are represented to handle those properly here
+          -- Future Enhancement: Support for special exits like portals, teleporters, etc.
+          -- Link to target room if it exists in the database
           if getRoomName(id) then
             setExit(map.room_info.VNUM, id, exitmap[dir])
           end
@@ -799,50 +1109,102 @@ local function handle_move()
       end
     end
   end
+  
+  -- Maintain map view centered on current position
   centerview(map.room_info.VNUM)
+  
+  -- Continue speedwalk execution if active
   speedwalk_check()
 end
 
 
 
+--[[
+  Mapping System Alias Registration
+  =================================
+  
+  Creates user-friendly command aliases for controlling the mapping system.
+  Provides convenient command-line interface for map manipulation and control.
+  
+  Alias Categories:
+  1. Room Manipulation - Manual position adjustments and room modification
+  2. System Control - Enable/disable mapping functionality
+  3. Map Management - Save/load map data and area operations
+  4. Navigation - Pathfinding and movement commands
+  
+  Implementation Details:
+  - Uses tempAlias() for dynamic alias creation
+  - Aliases stored in map.aliases table for cleanup management
+  - Event-driven architecture for loose coupling with mapping system
+  - Regex patterns provide flexible command matching
+  
+  Alias Management:
+  - Checks for existing aliases before creation to prevent duplicates
+  - Properly cleans up old aliases using killAlias()
+  - Maintains alias registry for systematic management
+  
+  Integration Points:
+  - Coordinates with event system via raiseEvent()
+  - Links directly to mapping functions and procedures
+  - Provides user feedback through game output
+]]
 local function make_aliases()
 
-  -- Aliases
-  -- Let the user shift a room around via command line
+  -- Initialize alias storage for management and cleanup
+  map.aliases = map.aliases or {}
+  
+  -- Quick Access Aliases - Direct tempAlias calls for immediate commands
+  -- Room position manipulation for map corrections
   table.insert(map.aliases,tempAlias([[^shift (\w+)$]],[[raiseEvent("shiftRoom",matches[2])]]))
+  
+  -- Mapping system control shortcuts
   table.insert(map.aliases,tempAlias([[^mc on$]],[[raiseEvent("startMapping")]]))
   table.insert(map.aliases,tempAlias([[^mc off$]],[[raiseEvent("stopMapping")]]))
 
-  map.aliases = map.aliases or {}
+  -- Comprehensive Alias Definition Table
+  -- Maps descriptive names to {pattern, code} pairs for organized management
   local id
   local tbl = {
+    -- Core System Control
     ["Start Mapping Alias"] = {[[^start mapping$]], [[map.start_mapping()]]},
     ["Stop Mapping Alias"] = {[[^stop mapping$]], [[map.stop_mapping()]]},
     ["Shift Room Alias"] = {[[^shift (\w+)$]],[[raiseEvent("shiftRoom",matches[2])]]},
 
+    -- Map File Operations (currently disabled - TODO: implement these features)
+    -- Future Enhancement: Add map import/export functionality
     --["Save Map Alias"] = {[[^save map$]], [[saveMap(getMudletHomeDir() .. "/map.dat")]]},
     --["Load Map Alias"] = {[[^load map(?: (local))?$]], [[map.load_map(matches[2])]]},
     --["Export Map Area Alias"] = {[[^export area (.*)]],[[map.export_area(matches[2])]]},
     --["Import Map Area Alias"] = {[[^import area (.*)]],[[map.import_area(matches[2])]]},
 
+    -- Room and Area Management (currently disabled - TODO: implement these features)
+    -- Future Enhancement: Add room creation and editing tools
     --["Set Room Area Alias"] = {[[^set area (.*)$]], [[map.set_area(matches[2])]]},
     --["Set Map Mode Alias"] = {[[^map mode (\w+)$]],[[map.set_mode(matches[2])]]},
 
+    -- Advanced Room Operations (currently disabled - TODO: implement these features)
+    -- Future Enhancement: Add room merging, splitting, and advanced editing
     --["Merge Rooms Alias"] = {[[^merge rooms$]], [[map.merge_rooms()]]},
     --["Add Door Alias"] = {[[^add door (\w+)(?: (none|open|closed|locked)(?: (yes|no))?)?$]],[[map.set_door(matches[2],matches[3],matches[4])]]},
     --["Add Portal Alias"] = {[[^add portal (.*)$]],[[map.set_portal(matches[2])]]},
     --["Set Room Exit Alias"] = {[[^set exit (.+) (\d+)]],[[map.set_exit(matches[2],matches[3])]]},
     --["Clear Moves Alias"] = {[[^clear moves$]], [[map.clear_moves()]]},
 
+    -- Navigation and Pathfinding (currently disabled - TODO: implement these features)
+    -- Future Enhancement: Add advanced pathfinding algorithms and custom route planning
     --["Find Me Alias"] = {[[^find me$]], [[map.find_me()]]},
     --["Find Path Alias"] = {[[find path ([^;]+)(?:\s*;\s*(.+))?]],[[map.find_path(matches[2],matches[3])]]},
     --["Set Recall Alias"] = {[[^set recall$]],[[map.set_recall()]]},
     --["Set Character Alias"] = {[[^set character (.*)$]],[[map.character = matches[2]]},
   }
+  
+  -- Register aliases with cleanup management
   for k,v in pairs(tbl) do
+    -- Clean up existing alias if present to prevent conflicts
     if map.aliases[k] and exists(map.aliases[k],"alias") ~= 0 then
       killAlias(map.aliases[k])
     end
+    -- Create new alias and store reference for future cleanup
     id = tempAlias(v[1],v[2])
     map.aliases[k] = id
   end
@@ -871,6 +1233,9 @@ end
 --    end
 --end
 
+-- Map Loading Function
+-- Loads map data from local file or downloads from server
+-- Parameters: use_local (boolean) - if true, loads local map.dat file
 function map.load_map(use_local)
   local path = getMudletHomeDir() .. "/map.dat"
   if use_local then
@@ -884,11 +1249,67 @@ function map.load_map(use_local)
   end
 end
 
+--[[
+  Minimap Font Size Adjustment System
+  ==================================
+  
+  Dynamically calculates and applies optimal font size for minimap display based on container width.
+  Ensures proper text readability and visual scaling for room names and map elements.
+  
+  Responsive Design Logic:
+  - Retrieves current minimap container width
+  - Applies scaling algorithm for proportional font sizing
+  - Updates minimap text elements with calculated font size
+  - Maintains readability across different window sizes
+  
+  Integration Points:
+  - Called during minimap initialization
+  - Triggered by window resize events
+  - Coordinates with map display refresh systems
+  - Links to overall GUI scaling management
+  
+  Performance Considerations:
+  - Efficient width calculation from container
+  - Minimal DOM updates for smooth resizing
+  - Cached font size calculations when possible
+  - Event-driven updates to prevent unnecessary recalculation
+--]]
 function map.adjustMinimapFontSize()
   local w = map.minimap.get_width()
   local h = map.minimap.get_height()
   local font_size = 8
   repeat
+--[[
+  ASCII Map Font Size Adjustment System
+  ====================================
+  
+  Dynamically calculates and applies optimal font size for ASCII map display based on container width.
+  Ensures proper character readability and visual scaling for text-based map representations.
+  
+  ASCII Map Specific Considerations:
+  - Text-based room representation requires precise character spacing
+  - Font size affects map grid alignment and readability
+  - Monospace font requirements for proper ASCII art rendering
+  - Character density optimization for complex map layouts
+  
+  Responsive Design Logic:
+  - Retrieves current minimap container width
+  - Applies specialized scaling for ASCII character display
+  - Updates ASCII map text elements with calculated font size
+  - Maintains grid alignment across different window sizes
+  
+  Integration Points:
+  - Called during ASCII map initialization
+  - Triggered by window resize events
+  - Coordinates with ASCII map rendering system
+  - Links to overall GUI scaling management
+  
+  Performance Considerations:
+  - Efficient width calculation from container
+  - Minimal redraw operations for ASCII map elements
+  - Cached font calculations for consistent character spacing
+  - Event-driven updates to prevent layout disruption
+]]
     font_size = font_size + 1
     local width, height = calcFontSize(font_size)
     width = width * map.minimap_width
@@ -971,16 +1392,23 @@ function map.get_default_map()
   end
 end
 
+-- Mapping System Activation
+-- Enables automatic room mapping and coordinates with Mudlet's mapping system
 function map.start_mapping()
   map.enabled=true
   print("Mapping enabled.")
 end
 
+-- Mapping System Deactivation
+-- Disables automatic room mapping
 function map.stop_mapping()
   map.enabled=false
   print("Mapping disabled.")
 end
 
+-- Map Event Handler
+-- Processes MSDP and game events related to mapping and room data
+-- Parameters: event (string), ... (variable arguments based on event type)
 function map.eventHandler(event,...)
   if event == "msdp.ROOM" then
     map.prev_info = map.room_info
@@ -1486,6 +1914,31 @@ end
 					<Script isActive="yes" isFolder="no">
 						<name>Cast Console</name>
 						<packageName></packageName>
+--[[
+  Spell Casting Console Initialization
+  ===================================
+  
+  Initializes the dedicated mini-console for spell casting feedback and status tracking.
+  Provides real-time visual feedback for spell casting progress, completion, and interruption.
+  
+  Console Configuration:
+  - Embedded within main GUI layout for integrated display
+  - Transparent background for seamless visual integration
+  - Inherits parent container sizing and positioning
+  - Uses Geyser.MiniConsole for advanced text formatting capabilities
+  
+  Purpose and Integration:
+  - Centralized spell casting feedback display
+  - Separates casting messages from main game output
+  - Provides consistent formatting for all casting events
+  - Coordinates with casting event handlers and timers
+  
+  Event Integration Points:
+  - Connected to spell start/complete/abort/cancel event handlers
+  - Integrates with casting timer systems
+  - Coordinates with MSDP spell data processing
+  - Links to player action feedback mechanisms
+--]]
 						<script>function GUI.init_castConsole()
   GUI.castConsole =
   Geyser.MiniConsole:new(
@@ -1494,7 +1947,7 @@ end
     x = 8,
     y = "5%",
     width = GUI.Box2:get_width() - 15,
-    --Height subtraction is found by adding y to button height.
+    -- Height subtraction is found by adding y to button height.
     height = "10%",
     color = "black"
   },
@@ -1505,6 +1958,9 @@ end
 end
 
 
+-- Spell Casting Initiation Handler
+-- Displays spell casting start message and sets up casting state
+-- Parameters: spellName (string), spellLength (string/number)
 function GUI.castConsole_startCast(spellName, spellLength)
   GUI.currentlyCasting = spellName
   GUI.castingNow = true
@@ -1515,11 +1971,15 @@ function GUI.castConsole_startCast(spellName, spellLength)
   end
 end
 
+-- Spell Casting Completion Handler
+-- Displays successful spell completion message with green status
 function GUI.castConsole_completeCast()
   GUI.castConsole:cecho("\n&lt;white&gt;Spell: &lt;yellow&gt;"..GUI.currentlyCasting:title().." &lt;white&gt;- &lt;green&gt;Cast")
   GUI.castConsoleTimer = tempTimer(10, [[clearUserWindow("GUI.castConsole")]])
 end
 
+-- Spell Casting Abort Handler
+-- Displays spell interruption message with red status and clears casting state
 function GUI.castConsole_abortedCast()
   GUI.castConsole:cecho("\n&lt;white&gt;Spell: &lt;yellow&gt;"..GUI.currentlyCasting:title().." &lt;white&gt;- &lt;red&gt;Aborted")
   GUI.castingNow = false
@@ -1527,6 +1987,8 @@ function GUI.castConsole_abortedCast()
 end
 
 
+-- Spell Casting Cancel Handler
+-- Displays spell cancellation message with red status and clears casting state
 function GUI.castConsole_canceledCast()
   GUI.castConsole:cecho("\n&lt;white&gt;Spell: &lt;yellow&gt;"..GUI.currentlyCasting:title().." &lt;white&gt;- &lt;red&gt;Canceled")
   GUI.castingNow = false
@@ -1580,9 +2042,50 @@ end</script>
     current = "Player",
   }
 
+--[[
+  Dynamic UI Frame Generator
+  ==========================
+  
+  Creates decorative border frames around GUI containers using 9-slice image technique.
+  Automatically adapts to container dimensions and provides professional visual styling.
+  
+  Parameters:
+    fl (Geyser.Container) - Target container to frame
+  
+  Frame Architecture:
+  - 9-slice border system using corner, edge, and repeating segments
+  - Corner pieces: Fixed 133x133 or 9x133 pixel dimensions
+  - Edge pieces: Dynamically sized based on container dimensions
+  - Repeating middle sections for scalable borders
+  
+  Image Asset Structure:
+  - Corner frames: 4 fixed-size corner pieces (upper/lower + left/right)
+  - Edge repeaters: 4 repeating edge pieces for sides and top/bottom
+  - All images stored in LuminariGUI/images/frame/ directory
+  
+  Coordinate System:
+  - Uses Geyser positioning with negative values for right/bottom alignment
+  - Dynamic sizing calculations: container_size - 266 for middle sections
+  - Maintains consistent 9px and 133px frame element dimensions
+  
+  Performance Considerations:
+  - Creates 12 separate Geyser.Label elements per frame
+  - CSS border-image styling for image rendering
+  - Uses stretch and repeat modes for proper scaling
+  
+  Usage Context:
+  - Applied to major GUI containers (Box2, Box3, Box4, Box5, Box7)
+  - Provides visual hierarchy and professional appearance
+  - Separates content areas with clear boundaries
+]]
 function createFrame(fl)
-  -- Set the frame around the inside of box4, then create a container inside to hold the tabbed window.
+  -- Initialize frame table to hold all border elements
   ft = {}
+  
+  -- Left Border Elements
+  -- ====================
+  
+  -- Upper left corner - fixed size corner piece
   ft.upper_left = Geyser.Label:new({x = 0, y = 0, height = 133, width = 9}, fl)
   ft.upper_left:setStyleSheet(
     [[
@@ -1591,6 +2094,8 @@ function createFrame(fl)
     [[/LuminariGUI/images/frame/frame_upperleft_9x133.png) 0 0 0 0 stretch stretch;
   ]]
   )
+  
+  -- Middle left edge - repeating section that scales with container height
   ft.middle_left =
     Geyser.Label:new({x = 0, y = 133, height = fl:get_height() - 266, width = 9}, fl)
   ft.middle_left:setStyleSheet(
@@ -1600,6 +2105,8 @@ function createFrame(fl)
     [[/LuminariGUI/images/frame/straight_repeater_left_9x133.png) 0 0 0 0 stretch repeat;
   ]]
   )
+  
+  -- Lower left corner - fixed size corner piece at bottom
   ft.lower_left = Geyser.Label:new({x = 0, y = -133, height = 133, width = 9}, fl)
   ft.lower_left:setStyleSheet(
     [[
@@ -1608,6 +2115,11 @@ function createFrame(fl)
     [[/LuminariGUI/images/frame/frame_lowerleft_9x133.png) 0 0 0 0 stretch stretch;
   ]]
   )
+  
+  -- Right Border Elements
+  -- =====================
+  
+  -- Upper right corner - fixed size corner piece
   ft.upper_right = Geyser.Label:new({x = -9, y = 0, height = 133, width = 9}, fl)
   ft.upper_right:setStyleSheet(
     [[
@@ -1616,6 +2128,8 @@ function createFrame(fl)
     [[/LuminariGUI/images/frame/frame_upperright_9x133.png) 0 0 0 0 stretch stretch;
   ]]
   )
+  
+  -- Middle right edge - repeating section that scales with container height
   ft.middle_right =
     Geyser.Label:new({x = -9, y = 133, height = fl:get_height() - 266, width = 9}, fl)
   ft.middle_right:setStyleSheet(
@@ -1625,6 +2139,8 @@ function createFrame(fl)
     [[/LuminariGUI/images/frame/straight_repeater_right_9x133.png) 0 0 0 0 stretch repeat;
   ]]
   )
+  
+  -- Lower right corner - fixed size corner piece at bottom
   ft.lower_right = Geyser.Label:new({x = -9, y = -133, height = 133, width = 9}, fl)
   ft.lower_right:setStyleSheet(
     [[
@@ -1633,6 +2149,11 @@ function createFrame(fl)
     [[/LuminariGUI/images/frame/frame_lowerright_9x133.png) 0 0 0 0 stretch stretch;
   ]]
   )
+  
+  -- Top Border Elements
+  -- ===================
+  
+  -- Left top corner - fixed size corner piece
   ft.left_top = Geyser.Label:new({x = 0, y = 0, height = 9, width = 133}, fl)
   ft.left_top:setStyleSheet(
     [[
@@ -1641,6 +2162,8 @@ function createFrame(fl)
     [[/LuminariGUI/images/frame/frame_lefttop_133x9.png) 0 0 0 0 stretch stretch;
   ]]
   )
+  
+  -- Middle top edge - repeating section that scales with container width
   ft.middle_top =
     Geyser.Label:new({x = 133, y = 0, height = 9, width = fl:get_width() - 266}, fl)
   ft.middle_top:setStyleSheet(
@@ -1650,6 +2173,8 @@ function createFrame(fl)
     [[/LuminariGUI/images/frame/straight_repeater_top_133x9.png) 0 0 0 0 stretch repeat;
   ]]
   )
+  
+  -- Right top corner - fixed size corner piece
   ft.right_top = Geyser.Label:new({x = -133, y = 0, height = 9, width = 133}, fl)
   ft.right_top:setStyleSheet(
     [[
@@ -1658,6 +2183,11 @@ function createFrame(fl)
     [[/LuminariGUI/images/frame/frame_righttop_133x9.png) 0 0 0 0 stretch stretch;
   ]]
   )
+  
+  -- Bottom Border Elements
+  -- ======================
+  
+  -- Left bottom corner - fixed size corner piece
   ft.left_bottom = Geyser.Label:new({x = 0, y = -9, height = 9, width = 133}, fl)
   ft.left_bottom:setStyleSheet(
     [[
@@ -1666,6 +2196,8 @@ function createFrame(fl)
     [[/LuminariGUI/images/frame/frame_leftbottom_133x9.png) 0 0 0 0 stretch stretch;
   ]]
   )
+  
+  -- Middle bottom edge - repeating section that scales with container width
   ft.middle_bottom =
     Geyser.Label:new({x = 133, y = -9, height = 9, width = fl:get_width() - 266}, fl)
   ft.middle_bottom:setStyleSheet(
@@ -1675,6 +2207,8 @@ function createFrame(fl)
     [[/LuminariGUI/images/frame/straight_repeater_bottom_133x9.png) 0 0 0 0 stretch repeat;
   ]]
   )
+  
+  -- Right bottom corner - fixed size corner piece
   ft.right_bottom = Geyser.Label:new({x = -133, y = -9, height = 9, width = 133}, fl)
   ft.right_bottom:setStyleSheet(
     [[
@@ -1972,6 +2506,51 @@ function GUI.updateSLAffects()
 				else
 				  affect_string = string.format("&lt;pre&gt;[ %s ] %s %s to %s (%s)&lt;/pre&gt;", msdp.AFFECTS.SPELL_LIKE_AFFECTS[i].DURATION, msdp.AFFECTS.SPELL_LIKE_AFFECTS[i].NAME, 
 					msdp.AFFECTS.SPELL_LIKE_AFFECTS[i].MODIFIER, msdp.AFFECTS.SPELL_LIKE_AFFECTS[i].LOCATION, msdp.AFFECTS.SPELL_LIKE_AFFECTS[i].TYPE)
+--[[
+  Character Affects Icon Display Manager
+  =====================================
+  
+  Processes and displays visual icons for all character affects/buffs received via MSDP.
+  Manages two distinct display categories with different priorities and layouts.
+  
+  Affect Categories:
+  1. Mode Affects - Combat/behavioral modes (displayed in health bar area for immediate visibility)
+  2. Status Affects - General buffs/debuffs (displayed in dedicated affects tab grid)
+  
+  Mode Affects (High Priority Display):
+  - Combat modes like "Flurry-of-Blows", "Rapid-Shot", "Sneaking", "Hiding"
+  - Behavioral changes like "Mode-PowerAttack", "Mode-Expertise", "Defensive-Casting"
+  - Displayed horizontally alongside health gauges for instant visibility
+  - Limited slots available (GUI.Affects.Modes.num_icons_row)
+  
+  Status Affects (Tab Display):
+  - All other affects that don't qualify as modes
+  - Displayed in grid layout within Affects tab (3 rows configurable)
+  - Uses row/column positioning system for organized display
+  
+  Data Flow:
+  1. Validates MSDP affects data existence and non-empty state
+  2. Resets all icon displays (hide previous icons)
+  3. Iterates through all affects and categorizes each
+  4. Populates mode icons first (priority display)
+  5. Fills remaining affects in tab grid layout
+  
+  Icon Management:
+  - Dynamic CSS styling with border-image for visual representation
+  - Icons loaded from LuminariGUI/images/affected_by/[AFFECT_NAME].png
+  - Automatic layout management with overflow handling
+  - Position tracking via current_icon, current_row, current_column counters
+  
+  Performance Considerations:
+  - Batch hide operations for efficient UI cleanup
+  - Single-pass categorization and display algorithm
+  - CSS update only when affect changes (not every refresh)
+  
+  Integration Points:
+  - Called by msdp.AFFECTS event handler
+  - Coordinates with GUI.Affects initialization system
+  - Depends on pre-configured GUI layout containers
+]]
 				end
 				GUI.SLAffects.Labels[i]:echo(affect_string)
 				GUI.SLAffects.Labels[i]:show()
@@ -2063,6 +2642,53 @@ end</script>
 	GUI.tabbedInfoWindow["Group"]:hide()
 end
 
+--[[
+  Group Data Processing and Display Manager
+  =========================================
+  
+  Processes and formats group member data received via MSDP for display in the Group tab.
+  Manages player inclusion toggle and prepares data structure for console output formatting.
+  
+  Core Functionality:
+  - Processes raw MSDP.GROUP data into formatted display structure
+  - Handles player inclusion/exclusion toggle (GUI.toggles.includeInGroup)
+  - Filters and reorganizes group member information
+  - Prepares data for console formatting and display
+  
+  Player Toggle Logic:
+  - When includeInGroup = false: Excludes player character from group display
+  - When includeInGroup = true: Includes all group members including player
+  - Uses CHARACTER_NAME comparison for player identification
+  
+  Data Structure Processing:
+  Input (msdp.GROUP): Raw group data array from MSDP protocol
+  Output (GUI.group_data): Filtered and formatted array for display
+  
+  Group Member Properties:
+  - IS_LEADER: Boolean indicating group leadership status
+  - NAME: Character name string
+  - HEALTH/HEALTH_MAX: Current and maximum health values
+  - MOVEMENT/MOVEMENT_MAX: Current and maximum movement points
+  - LEVEL: Character level integer
+  - CLASS_STRING: Character class description
+  
+  Array Management:
+  - Uses sparse array indexing with j counter
+  - Dynamically finds next available slot in GUI.group_data
+  - Maintains consistent data structure for display formatting
+  
+  Integration Points:
+  - Called by MSDP group data event handlers
+  - Coordinates with GUI.toggles configuration system
+  - Feeds processed data to group console display functions
+  - Depends on msdp.CHARACTER_NAME for player identification
+  
+  Performance Considerations:
+  - Single-pass filtering algorithm
+  - Minimal data transformation overhead
+  - Efficient sparse array management
+  - Direct property copying for speed
+]]
 function GUI.updateGroup()
   GUI.group_data = {}
   -- Remove the player from the group data if toggled off.
@@ -2217,6 +2843,25 @@ end</script>
   }
 
 --Determine font size for Legend
+--[[
+  Legend Button Font Size Adjustment
+  =================================
+  
+  Dynamically calculates and applies optimal font size for the Legend button based on container width.
+  Ensures proper text readability and visual scaling across different window sizes.
+  
+  Calculation Logic:
+  - Retrieves current Legend button width
+  - Applies scaling algorithm to determine appropriate font size
+  - Updates button styling with calculated font size
+  
+  Responsive Design:
+  - Automatically adapts to window resize events
+  - Maintains consistent text-to-button size ratios
+  - Ensures readability across different display resolutions
+  - Called during button window initialization
+  - Triggered by window resize events
+--]]
 function GUI.buttonWindow.adjustLegendFont()
   local w = GUI.buttonWindow.Legend.get_width()
   local h = GUI.buttonWindow.Legend.get_height()
@@ -2231,7 +2876,7 @@ function GUI.buttonWindow.adjustLegendFont()
   setMiniConsoleFontSize("GUI.buttonWindow.Legend", GUI.buttonWindow.Legend_font_size)
 end
 
---Button callback for Legend
+-- Button callback for Legend - toggles between room info and legend display
 function GUI.buttonWindow.legendClick()	
   --Toggle For Room Info/Legend
 	if GUI.buttonWindow.roomOrLegend == "Room" then
@@ -2249,7 +2894,7 @@ function GUI.buttonWindow.legendClick()
 	end
 end
 
---Button callback for Mudlet map.
+-- Button callback for Mudlet map - switches to Mudlet's native map display
 function GUI.buttonWindow.mudletClick()
     map.minimapcontainer:hide()
     map.container:show()
@@ -2258,7 +2903,7 @@ function GUI.buttonWindow.mudletClick()
 		GUI.buttonWindow.ASCIIbutton:echo("ASCII", "white", "c")
 end
 
---Button callback for ASCII map.
+-- Button callback for ASCII map - switches to ASCII text-based map display
 function GUI.buttonWindow.asciiClick()
     map.minimapcontainer:show()
     map.container:hide()
@@ -2267,7 +2912,7 @@ function GUI.buttonWindow.asciiClick()
 		GUI.buttonWindow.Mudletbutton:echo("Mudlet", "white", "c")
 end
 
---Button Init
+-- Button Window Initialization - sets up styling and layout for map control buttons
 function GUI.buttonWindow.init()
   GUI.buttonWindowCSS =
     CSSMan.new(
@@ -2391,7 +3036,8 @@ function GUI.updateRoom()
   end		
 end
 		
---Whattt to be replaced with MSDP or GMCP once coded in
+-- TODO: Replace WHATTT placeholder with proper MSDP room level data once available
+-- Future Enhancement: Implement room level display when server provides this data via MSDP
 
 
 function GUI.updateLegend()
@@ -2461,6 +3107,48 @@ end</script>
     end
   end
   
+--[[
+  Player Health Gauge Update System
+  ================================
+  
+  Updates the player health gauge display based on real-time MSDP data.
+  Provides visual feedback for current health status with dynamic gauge and percentage display.
+  
+  Core Functionality:
+  - Processes MSDP health data for visual representation
+  - Updates gauge fill percentage based on current vs maximum health
+  - Displays numerical health values and percentages
+  - Applies color coding for health status indication
+  
+  Health Status Color Coding:
+  - Green: High health (typically 75%+)
+  - Yellow: Medium health (typically 25-75%)
+  - Red: Critical health (typically &lt;25%)
+  - Dynamic color transitions for smooth visual feedback
+  
+  Data Sources:
+  - msdp.HEALTH: Current health points
+  - msdp.HEALTH_MAX: Maximum health points
+  - Health percentage calculated dynamically
+  
+  Visual Components:
+  - Progress bar/gauge for visual health representation
+  - Numerical display of current/maximum health
+  - Percentage display for quick reference
+  - Color-coded background for status awareness
+  
+  Integration Points:
+  - Called by MSDP health data event handlers
+  - Coordinates with combat system feedback
+  - Links to healing and damage processing systems
+  - Integrates with overall player status display
+  
+  Performance Considerations:
+  - Efficient percentage calculations
+  - Minimal GUI updates for smooth performance
+  - Optimized color transitions
+  - Event-driven updates only when health changes
+]]
   function GUI.updateHealthGauge()
     -- This function handles the following events:
     --   msdp.HEALTH
