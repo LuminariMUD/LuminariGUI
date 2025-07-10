@@ -10,7 +10,9 @@
       "Bash(cp:*)",
       "Bash(rm:*)",
       "Bash(ls:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(sed:*)",
+      "Bash(grep:*)"
     ],
     "deny": []
   }

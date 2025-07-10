@@ -190,6 +190,7 @@ This project includes comprehensive documentation for all aspects of development
 - **[`LICENSE`](LICENSE)**: MIT License terms and conditions
 
 #### **🔧 Development Tools**
+- **[`create_package.py`](create_package.py)**: Automated .mpackage creation from XML source
 - **[`format_xml.py`](format_xml.py)**: XML formatting utility for maintaining code standards
 - **[`validate_xml.py`](validate_xml.py)**: XML validation tool for ensuring package integrity
 - **[`.cursorrules`](.cursorrules)**: Cursor IDE configuration and development rules
@@ -205,6 +206,7 @@ This project includes comprehensive documentation for all aspects of development
 | **Deploy/install** | [`DEPLOYMENT.md`](DEPLOYMENT.md) |
 | **Fix issues** | [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md) |
 | **Prepare package for release** | [`PACKAGING.md`](PACKAGING.md) |
+| **Create .mpackage files** | [`create_package.py`](create_package.py) |
 | **Check version changes** | [`CHANGELOG.md`](CHANGELOG.md) |
 
 ## Development
@@ -216,6 +218,34 @@ LuminariGUI uses an event-driven architecture built on:
 - **MSDP Protocol**: Real-time game data
 - **Event System**: Mudlet's event handling for data flow
 - **YATCO Integration**: Tabbed chat functionality
+
+### Package Creation Tools
+
+For maintainers and developers who need to create distributable packages:
+
+```bash
+# Create .mpackage file from XML source
+python create_package.py
+
+# Create with custom version
+python create_package.py --version 2.1.0
+
+# Create with custom output name
+python create_package.py --output LuminariGUI-v2.1.0.mpackage
+
+# XML validation and formatting
+python validate_xml.py      # Validate XML structure
+python format_xml.py        # Format and clean XML
+```
+
+**Package Creation Features:**
+- **Automated .mpackage creation** from XML source
+- **Version auto-detection** from CHANGELOG.md
+- **Resource bundling** (images, status icons, UI assets)
+- **Metadata generation** with proper config.lua
+- **Cross-platform compatibility** (Windows, Linux, macOS)
+
+See [`PACKAGING.md`](PACKAGING.md) for detailed usage instructions and release procedures.
 
 ### Extension Points
 

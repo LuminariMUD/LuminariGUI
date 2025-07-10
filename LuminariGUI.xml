@@ -1,60 +1,55 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE MudletPackage>
-<!-- LuminariGUI Package v2.0.0
-     Enhanced MUD client interface for LuminariMUD
-     Repository: https://github.com/LuminariMUD/LuminariGUI
-     License: Public Domain (Unlicense) -->
 <MudletPackage version="1.001">
 	<TriggerPackage>
 		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 			<name>LuminariGUI</name>
-			<script></script>
+			<script/>
 			<triggerType>0</triggerType>
-			<conditonLineDelta>0</conditonLineDelta>
+			<conditionLineDelta>0</conditionLineDelta>
 			<mStayOpen>0</mStayOpen>
-			<mCommand></mCommand>
+			<mCommand/>
 			<packageName>LuminariGUI</packageName>
 			<mFgColor>#ff0000</mFgColor>
 			<mBgColor>#ffff00</mBgColor>
-			<mSoundFile></mSoundFile>
+			<mSoundFile/>
 			<colorTriggerFgColor>#000000</colorTriggerFgColor>
 			<colorTriggerBgColor>#000000</colorTriggerBgColor>
-			<regexCodeList />
-			<regexCodePropertyList />
+			<regexCodeList/>
+			<regexCodePropertyList/>
 			<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>YATCOConfig</name>
-				<script></script>
+				<script/>
 				<triggerType>0</triggerType>
-				<conditonLineDelta>0</conditonLineDelta>
+				<conditionLineDelta>0</conditionLineDelta>
 				<mStayOpen>0</mStayOpen>
-				<mCommand></mCommand>
+				<mCommand/>
 				<packageName>YATCOConfig</packageName>
 				<mFgColor>#ff0000</mFgColor>
 				<mBgColor>#ffff00</mBgColor>
-				<mSoundFile></mSoundFile>
+				<mSoundFile/>
 				<colorTriggerFgColor>#000000</colorTriggerFgColor>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
-				<regexCodeList />
-				<regexCodePropertyList />
+				<regexCodeList/>
+				<regexCodePropertyList/>
 				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 					<name>Tell</name>
 					<script>-- Tell Trigger: Captures private messages between players
 -- Regex patterns:
 -- 1. ^(\w+) tells you, '(.*)' - Captures incoming tells: player name and message
 -- 2. You tell - Captures outgoing tell confirmations
-demonnic.chat:append("Tell")
-
+demonnic.chat:append(&quot;Tell&quot;)
 if GUI.toggles.gagChat == true then
   deleteLineP()
 end</script>
 					<triggerType>0</triggerType>
-					<conditonLineDelta>39</conditonLineDelta>
+					<conditionLineDelta>39</conditionLineDelta>
 					<mStayOpen>0</mStayOpen>
-					<mCommand></mCommand>
-					<packageName></packageName>
+					<mCommand/>
+					<packageName/>
 					<mFgColor>#ff0000</mFgColor>
 					<mBgColor>#ffff00</mBgColor>
-					<mSoundFile></mSoundFile>
+					<mSoundFile/>
 					<colorTriggerFgColor>#000000</colorTriggerFgColor>
 					<colorTriggerBgColor>#000000</colorTriggerBgColor>
 					<regexCodeList>
@@ -72,24 +67,23 @@ end</script>
 -- Regex patterns:
 -- 1. ^(\w+) congrats, '(.*)' - Captures congrats messages: player name and content
 -- 2. You congrat, ' - Captures outgoing congrats confirmations
-demonnic.chat:append("Congrats")
-
+demonnic.chat:append(&quot;Congrats&quot;)
 if GUI.toggles.gagChat == true then
   deleteLineP()
 end</script>
 					<triggerType>0</triggerType>
-					<conditonLineDelta>0</conditonLineDelta>
+					<conditionLineDelta>0</conditionLineDelta>
 					<mStayOpen>0</mStayOpen>
-					<mCommand></mCommand>
-					<packageName></packageName>
+					<mCommand/>
+					<packageName/>
 					<mFgColor>#ff0000</mFgColor>
 					<mBgColor>#ffff00</mBgColor>
-					<mSoundFile></mSoundFile>
+					<mSoundFile/>
 					<colorTriggerFgColor>#000000</colorTriggerFgColor>
 					<colorTriggerBgColor>#000000</colorTriggerBgColor>
 					<regexCodeList>
-						<string>^(\w+) congrats, '(.*)</string>
-						<string>You congrat, '</string>
+						<string>^(\w+) congrats, '(.*)'$</string>
+						<string>You congrat, '(.*)'$</string>
 					</regexCodeList>
 					<regexCodePropertyList>
 						<integer>1</integer>
@@ -98,24 +92,23 @@ end</script>
 				</Trigger>
 				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 					<name>Chat</name>
-					<script>demonnic.chat:append("Chat")
-
+					<script>demonnic.chat:append(&quot;Chat&quot;)
 if GUI.toggles.gagChat == true then
   deleteLineP()
 end</script>
 					<triggerType>0</triggerType>
-					<conditonLineDelta>39</conditonLineDelta>
+					<conditionLineDelta>39</conditionLineDelta>
 					<mStayOpen>0</mStayOpen>
-					<mCommand></mCommand>
-					<packageName></packageName>
+					<mCommand/>
+					<packageName/>
 					<mFgColor>#ff0000</mFgColor>
 					<mBgColor>#ffff00</mBgColor>
-					<mSoundFile></mSoundFile>
+					<mSoundFile/>
 					<colorTriggerFgColor>#000000</colorTriggerFgColor>
 					<colorTriggerBgColor>#000000</colorTriggerBgColor>
 					<regexCodeList>
-						<string>^(\w+) chats, '(.*)</string>
-						<string>You chat, '</string>
+						<string>^(\w+) chats, '(.*)'$</string>
+						<string>You chat, '(.*)'$</string>
 					</regexCodeList>
 					<regexCodePropertyList>
 						<integer>1</integer>
@@ -124,24 +117,23 @@ end</script>
 				</Trigger>
 				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 					<name>Auction</name>
-					<script>demonnic.chat:append("Auction")
-
+					<script>demonnic.chat:append(&quot;Auction&quot;)
 if GUI.toggles.gagChat == true then
   deleteLineP()
 end</script>
 					<triggerType>0</triggerType>
-					<conditonLineDelta>0</conditonLineDelta>
+					<conditionLineDelta>0</conditionLineDelta>
 					<mStayOpen>0</mStayOpen>
-					<mCommand></mCommand>
-					<packageName></packageName>
+					<mCommand/>
+					<packageName/>
 					<mFgColor>#ff0000</mFgColor>
 					<mBgColor>#ffff00</mBgColor>
-					<mSoundFile></mSoundFile>
+					<mSoundFile/>
 					<colorTriggerFgColor>#000000</colorTriggerFgColor>
 					<colorTriggerBgColor>#000000</colorTriggerBgColor>
 					<regexCodeList>
-						<string>^(\w+) auctions, '(.*)</string>
-						<string>You auction, '</string>
+						<string>^(\w+) auctions, '(.*)'$</string>
+						<string>You auction, '(.*)'$</string>
 					</regexCodeList>
 					<regexCodePropertyList>
 						<integer>1</integer>
@@ -150,19 +142,18 @@ end</script>
 				</Trigger>
 				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 					<name>Group</name>
-					<script>demonnic.chat:append("Group")
-
+					<script>demonnic.chat:append(&quot;Group&quot;)
 if GUI.toggles.gagChat == true then
   deleteLineP()
 end</script>
 					<triggerType>0</triggerType>
-					<conditonLineDelta>0</conditonLineDelta>
+					<conditionLineDelta>0</conditionLineDelta>
 					<mStayOpen>0</mStayOpen>
-					<mCommand></mCommand>
-					<packageName></packageName>
+					<mCommand/>
+					<packageName/>
 					<mFgColor>#ff0000</mFgColor>
 					<mBgColor>#ffff00</mBgColor>
-					<mSoundFile></mSoundFile>
+					<mSoundFile/>
 					<colorTriggerFgColor>#000000</colorTriggerFgColor>
 					<colorTriggerBgColor>#000000</colorTriggerBgColor>
 					<regexCodeList>
@@ -176,19 +167,18 @@ end</script>
 				</Trigger>
 				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 					<name>Wiznet</name>
-					<script>demonnic.chat:append("Wiz")
-
+					<script>demonnic.chat:append(&quot;Wiz&quot;)
 if GUI.toggles.gagChat == true then
   deleteLineP()
 end</script>
 					<triggerType>0</triggerType>
-					<conditonLineDelta>0</conditonLineDelta>
+					<conditionLineDelta>0</conditionLineDelta>
 					<mStayOpen>0</mStayOpen>
-					<mCommand></mCommand>
-					<packageName></packageName>
+					<mCommand/>
+					<packageName/>
 					<mFgColor>#ff0000</mFgColor>
 					<mBgColor>#ffff00</mBgColor>
-					<mSoundFile></mSoundFile>
+					<mSoundFile/>
 					<colorTriggerFgColor>#000000</colorTriggerFgColor>
 					<colorTriggerBgColor>#000000</colorTriggerBgColor>
 					<regexCodeList>
@@ -201,58 +191,55 @@ end</script>
 			</TriggerGroup>
 			<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>GUI</name>
-				<script></script>
+				<script/>
 				<triggerType>0</triggerType>
-				<conditonLineDelta>0</conditonLineDelta>
+				<conditionLineDelta>0</conditionLineDelta>
 				<mStayOpen>0</mStayOpen>
-				<mCommand></mCommand>
-				<packageName></packageName>
+				<mCommand/>
+				<packageName/>
 				<mFgColor>#ff0000</mFgColor>
 				<mBgColor>#ffff00</mBgColor>
-				<mSoundFile></mSoundFile>
+				<mSoundFile/>
 				<colorTriggerFgColor>#000000</colorTriggerFgColor>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
-				<regexCodeList />
-				<regexCodePropertyList />
+				<regexCodeList/>
+				<regexCodePropertyList/>
 				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 					<name>Capture Wilderness Map</name>
 					<script>deleteLine()
-clearUserWindow("map.minimap")
-
+clearUserWindow(&quot;map.minimap&quot;)
 map.container:hide()
 map.minimapcontainer:show()
-
 -- Capture 23 lines of wilderness map data (adjust based on server map size)
 maplineTrig = tempLineTrigger(1,23,[[onMapLine()]])
 padding = map.calcMinimapPadding()
-
 -- Map Line Processing Handler
 -- Processes individual lines of ASCII map data and handles map display completion
 function onMapLine()
   -- Either match the last line of your MAP display, or use the Prompt.
-  local isLastLine = string.findPattern(line, "&lt;/WILDERNESS_MAP&gt;")
+  local isLastLine = string.findPattern(line, &quot;&lt;/WILDERNESS_MAP&gt;&quot;)
   if isLastLine then
     deleteLine()
     killTrigger(maplineTrig)
   else
     selectCurrentLine()
     copy()
-		for i = 1, padding do		
-			map.minimap:echo(" ");
+		for i = 1, padding do
+			map.minimap:echo(&quot; &quot;);
 		end
 		map.adjustMinimapFontSize()
-    appendBuffer("map.minimap")
+    appendBuffer(&quot;map.minimap&quot;)
     deleteLine()
   end
 end</script>
 					<triggerType>0</triggerType>
-					<conditonLineDelta>0</conditonLineDelta>
+					<conditionLineDelta>0</conditionLineDelta>
 					<mStayOpen>0</mStayOpen>
-					<mCommand></mCommand>
-					<packageName></packageName>
+					<mCommand/>
+					<packageName/>
 					<mFgColor>#ff0000</mFgColor>
 					<mBgColor>#ffff00</mBgColor>
-					<mSoundFile></mSoundFile>
+					<mSoundFile/>
 					<colorTriggerFgColor>#000000</colorTriggerFgColor>
 					<colorTriggerBgColor>#000000</colorTriggerBgColor>
 					<regexCodeList>
@@ -265,45 +252,43 @@ end</script>
 				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 					<name>Capture Room Map</name>
 					<script>deleteLine()
-clearUserWindow("map.minimap")
-
-if GUI.buttonWindow.mudletOrAscii == "ASCII" then
+clearUserWindow(&quot;map.minimap&quot;)
+if GUI.buttonWindow.mudletOrAscii == &quot;ASCII&quot; then
   map.container:hide()
   map.minimapcontainer:show()
-elseif GUI.buttonWindow.mudletOrAscii == "Mudlet" then
+elseif GUI.buttonWindow.mudletOrAscii == &quot;Mudlet&quot; then
   map.container:show()
   map.minimapcontainer:hide()
 end
-map.minimap:echo("\n")
+map.minimap:echo(&quot;\n&quot;)
 -- Capture 11 lines of room map data (smaller than wilderness maps)
 maplineTrig = tempLineTrigger(1,11,[[onRoomMapLine()]])
 padding = map.calcAsciimapPadding()
-
 -- Room Map Line Processing Handler
 -- Processes individual lines of room-specific ASCII map data
 function onRoomMapLine()
   -- Either match the last line of your MAP display, or use the Prompt.
-  local isLastLine = string.findPattern(line, "&lt;/ROOM_MAP&gt;")
+  local isLastLine = string.findPattern(line, &quot;&lt;/ROOM_MAP&gt;&quot;)
   if isLastLine then
     deleteLine()
     killTrigger(maplineTrig)
   else
     selectCurrentLine()
     copy()
-		map.minimap:echo(" ")
+		map.minimap:echo(&quot; &quot;)
 		map.adjustAsciimapFontSize()
-    appendBuffer("map.minimap")
+    appendBuffer(&quot;map.minimap&quot;)
     deleteLine()
   end
 end</script>
 					<triggerType>0</triggerType>
-					<conditonLineDelta>0</conditonLineDelta>
+					<conditionLineDelta>0</conditionLineDelta>
 					<mStayOpen>0</mStayOpen>
-					<mCommand></mCommand>
-					<packageName></packageName>
+					<mCommand/>
+					<packageName/>
 					<mFgColor>#ff0000</mFgColor>
 					<mBgColor>#ffff00</mBgColor>
-					<mSoundFile></mSoundFile>
+					<mSoundFile/>
 					<colorTriggerFgColor>#000000</colorTriggerFgColor>
 					<colorTriggerBgColor>#000000</colorTriggerBgColor>
 					<regexCodeList>
@@ -317,13 +302,13 @@ end</script>
 					<name>Gag blank lines</name>
 					<script>deleteLine()</script>
 					<triggerType>0</triggerType>
-					<conditonLineDelta>0</conditonLineDelta>
+					<conditionLineDelta>0</conditionLineDelta>
 					<mStayOpen>0</mStayOpen>
-					<mCommand></mCommand>
-					<packageName></packageName>
+					<mCommand/>
+					<packageName/>
 					<mFgColor>#ff0000</mFgColor>
 					<mBgColor>#ffff00</mBgColor>
-					<mSoundFile></mSoundFile>
+					<mSoundFile/>
 					<colorTriggerFgColor>#000000</colorTriggerFgColor>
 					<colorTriggerBgColor>#000000</colorTriggerBgColor>
 					<regexCodeList>
@@ -335,30 +320,30 @@ end</script>
 				</Trigger>
 				<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 					<name>Cast Console</name>
-					<script></script>
+					<script/>
 					<triggerType>0</triggerType>
-					<conditonLineDelta>0</conditonLineDelta>
+					<conditionLineDelta>0</conditionLineDelta>
 					<mStayOpen>0</mStayOpen>
-					<mCommand></mCommand>
-					<packageName></packageName>
+					<mCommand/>
+					<packageName/>
 					<mFgColor>#ff0000</mFgColor>
 					<mBgColor>#ffff00</mBgColor>
-					<mSoundFile></mSoundFile>
+					<mSoundFile/>
 					<colorTriggerFgColor>#000000</colorTriggerFgColor>
 					<colorTriggerBgColor>#000000</colorTriggerBgColor>
-					<regexCodeList />
-					<regexCodePropertyList />
+					<regexCodeList/>
+					<regexCodePropertyList/>
 					<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 						<name>Started Cast</name>
 						<script>GUI.castConsole_startCast(matches[2], matches[3])</script>
 						<triggerType>0</triggerType>
-						<conditonLineDelta>0</conditonLineDelta>
+						<conditionLineDelta>0</conditionLineDelta>
 						<mStayOpen>0</mStayOpen>
-						<mCommand></mCommand>
-						<packageName></packageName>
+						<mCommand/>
+						<packageName/>
 						<mFgColor>#ff0000</mFgColor>
 						<mBgColor>#ffff00</mBgColor>
-						<mSoundFile></mSoundFile>
+						<mSoundFile/>
 						<colorTriggerFgColor>#000000</colorTriggerFgColor>
 						<colorTriggerBgColor>#000000</colorTriggerBgColor>
 						<regexCodeList>
@@ -372,13 +357,13 @@ end</script>
 						<name>Cast Complete</name>
 						<script>GUI.castConsole_completeCast()</script>
 						<triggerType>0</triggerType>
-						<conditonLineDelta>0</conditonLineDelta>
+						<conditionLineDelta>0</conditionLineDelta>
 						<mStayOpen>0</mStayOpen>
-						<mCommand></mCommand>
-						<packageName></packageName>
+						<mCommand/>
+						<packageName/>
 						<mFgColor>#ff0000</mFgColor>
 						<mBgColor>#ffff00</mBgColor>
-						<mSoundFile></mSoundFile>
+						<mSoundFile/>
 						<colorTriggerFgColor>#000000</colorTriggerFgColor>
 						<colorTriggerBgColor>#000000</colorTriggerBgColor>
 						<regexCodeList>
@@ -392,13 +377,13 @@ end</script>
 						<name>Cast Aborted</name>
 						<script>GUI.castConsole_abortedCast()</script>
 						<triggerType>0</triggerType>
-						<conditonLineDelta>0</conditonLineDelta>
+						<conditionLineDelta>0</conditionLineDelta>
 						<mStayOpen>0</mStayOpen>
-						<mCommand></mCommand>
-						<packageName></packageName>
+						<mCommand/>
+						<packageName/>
 						<mFgColor>#ff0000</mFgColor>
 						<mBgColor>#ffff00</mBgColor>
-						<mSoundFile></mSoundFile>
+						<mSoundFile/>
 						<colorTriggerFgColor>#000000</colorTriggerFgColor>
 						<colorTriggerBgColor>#000000</colorTriggerBgColor>
 						<regexCodeList>
@@ -420,13 +405,13 @@ end</script>
 						<name>Cast Canceled</name>
 						<script>GUI.castConsole_canceledCast()</script>
 						<triggerType>0</triggerType>
-						<conditonLineDelta>0</conditonLineDelta>
+						<conditionLineDelta>0</conditionLineDelta>
 						<mStayOpen>0</mStayOpen>
-						<mCommand></mCommand>
-						<packageName></packageName>
+						<mCommand/>
+						<packageName/>
 						<mFgColor>#ff0000</mFgColor>
 						<mBgColor>#ffff00</mBgColor>
-						<mSoundFile></mSoundFile>
+						<mSoundFile/>
 						<colorTriggerFgColor>#000000</colorTriggerFgColor>
 						<colorTriggerBgColor>#000000</colorTriggerBgColor>
 						<regexCodeList>
@@ -442,61 +427,61 @@ end</script>
 			</TriggerGroup>
 		</TriggerGroup>
 	</TriggerPackage>
-	<TimerPackage />
+	<TimerPackage/>
 	<AliasPackage>
 		<AliasGroup isActive="yes" isFolder="yes">
 			<name>LuminariGUI</name>
-			<script></script>
-			<command></command>
+			<script/>
+			<command/>
 			<packageName>LuminariGUI</packageName>
-			<regex></regex>
+			<regex/>
 			<AliasGroup isActive="yes" isFolder="yes">
 				<name>Toggles</name>
-				<script></script>
-				<command></command>
-				<packageName></packageName>
-				<regex></regex>
+				<script/>
+				<command/>
+				<packageName/>
+				<regex/>
 				<Alias isActive="yes" isFolder="no">
 					<name>Gag Chat</name>
 					<script>--[[Toggling this will determine if the line and follow up
     prompt are removed from the main buffer for chat.]]
 GUI.gagChatToggle()</script>
-					<command></command>
-					<packageName></packageName>
+					<command/>
+					<packageName/>
 					<regex>^gag chat$</regex>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
 					<name>Show Self</name>
 					<script>--Toggles whether or not you are shown in the group tab.
 GUI.showSelfToggle()</script>
-					<command></command>
-					<packageName></packageName>
+					<command/>
+					<packageName/>
 					<regex>^show self$</regex>
 				</Alias>
 			</AliasGroup>
 			<AliasGroup isActive="yes" isFolder="yes">
 				<name>YATCO</name>
-				<script></script>
-				<command></command>
+				<script/>
+				<command/>
 				<packageName>YATCO</packageName>
-				<regex></regex>
+				<regex/>
 				<AliasGroup isActive="yes" isFolder="yes">
 					<name>Demonnic</name>
-					<script></script>
-					<command></command>
-					<packageName></packageName>
-					<regex></regex>
+					<script/>
+					<command/>
+					<packageName/>
+					<regex/>
 					<AliasGroup isActive="yes" isFolder="yes">
 						<name>Shared</name>
-						<script></script>
-						<command></command>
-						<packageName></packageName>
-						<regex></regex>
+						<script/>
+						<command/>
+						<packageName/>
+						<regex/>
 						<Alias isActive="yes" isFolder="no">
 							<name>Reset chasing</name>
 							<script>demonnic.chaser:reset()</script>
-							<command></command>
-							<packageName></packageName>
+							<command/>
+							<packageName/>
 							<regex>^chaseres$</regex>
 						</Alias>
 						<Alias isActive="yes" isFolder="no">
@@ -506,8 +491,8 @@ GUI.showSelfToggle()</script>
 else
   demonnic:toggleDebug()
 end</script>
-							<command></command>
-							<packageName></packageName>
+							<command/>
+							<packageName/>
 							<regex>^debug(?: (list))?$</regex>
 						</Alias>
 						<Alias isActive="yes" isFolder="no">
@@ -517,52 +502,51 @@ end</script>
 else
   demonnic:listCategories()
 end</script>
-							<command></command>
-							<packageName></packageName>
+							<command/>
+							<packageName/>
 							<regex>^debugc(?: (.*))?$</regex>
 						</Alias>
 					</AliasGroup>
 					<AliasGroup isActive="yes" isFolder="yes">
 						<name>Tabbed Chat</name>
-						<script></script>
-						<command></command>
-						<packageName></packageName>
-						<regex></regex>
+						<script/>
+						<command/>
+						<packageName/>
+						<regex/>
 						<Alias isActive="yes" isFolder="no">
 							<name>Toggle blinking (temporary change)</name>
 							<script>if demonnic.chat.config.blink then
   demonnic.chat.config.blink = false
   demonnic.chat.tabsToBlink = {}
-  demonnic:echo("Blinking temporarily turned &lt;red&gt;off&lt;grey&gt;. It will reset if you edit your tabbed chat configuration, or close and reopen mudlet. To make it permanent, change demonnic.chat.config.blink to false in \"Demonnic-&gt;Tabbed Chat-&gt;Configuration options\" under scripts\n")
+  demonnic:echo(&quot;Blinking temporarily turned &lt;red&gt;off&lt;grey&gt;. It will reset if you edit your tabbed chat configuration, or close and reopen mudlet. To make it permanent, change demonnic.chat.config.blink to false in \&quot;Demonnic-&gt;Tabbed Chat-&gt;Configuration options\&quot; under scripts\n&quot;)
 else
   demonnic.chat.config.blink = true
   demonnic.chat:blink()
-  demonnic:echo("Blinking temporarily turned &lt;red&gt;on&lt;grey&gt;. It will reset if you edit your tabbed chat configuration, or close and reopen mudlet. To make it permanent, change demonnic.chat.config.blink to true in \"Demonnic-&gt;Tabbed Chat-&gt;Configuration options\" under scripts\n")
+  demonnic:echo(&quot;Blinking temporarily turned &lt;red&gt;on&lt;grey&gt;. It will reset if you edit your tabbed chat configuration, or close and reopen mudlet. To make it permanent, change demonnic.chat.config.blink to true in \&quot;Demonnic-&gt;Tabbed Chat-&gt;Configuration options\&quot; under scripts\n&quot;)
 end</script>
-							<command></command>
-							<packageName></packageName>
+							<command/>
+							<packageName/>
 							<regex>^dblink$</regex>
 						</Alias>
 						<Alias isActive="yes" isFolder="no">
 							<name>fixChat</name>
 							<script>local currentsetting = demonnic.chat.config.location
-local newsetting = ""
-if currentsetting == "topright" then 
-  newsetting = "bottomleft" 
-elseif currentsetting == "topleft" then
-  newsetting = "bottomright"
-elseif currentsetting == "bottomleft" then
-  newsetting = "topright"
-elseif currentsetting == "bottomright" then
-  newsetting = "topleft"
+local newsetting = &quot;&quot;
+if currentsetting == &quot;topright&quot; then
+  newsetting = &quot;bottomleft&quot;
+elseif currentsetting == &quot;topleft&quot; then
+  newsetting = &quot;bottomright&quot;
+elseif currentsetting == &quot;bottomleft&quot; then
+  newsetting = &quot;topright&quot;
+elseif currentsetting == &quot;bottomright&quot; then
+  newsetting = &quot;topleft&quot;
 end
-
 demonnic.chat.config.location = newsetting
 demonnic.chat:create()
 demonnic.chat.config.location = currentsetting
 demonnic.chat:create()</script>
-							<command></command>
-							<packageName></packageName>
+							<command/>
+							<packageName/>
 							<regex>^fixchat$</regex>
 						</Alias>
 					</AliasGroup>
@@ -570,21 +554,21 @@ demonnic.chat:create()</script>
 			</AliasGroup>
 		</AliasGroup>
 	</AliasPackage>
-	<ActionPackage />
+	<ActionPackage/>
 	<ScriptPackage>
 		<ScriptGroup isActive="yes" isFolder="yes">
 			<name>LuminariGUI</name>
 			<packageName>LuminariGUI</packageName>
-			<script></script>
-			<eventHandlerList />
+			<script/>
+			<eventHandlerList/>
 			<ScriptGroup isActive="yes" isFolder="yes">
 				<name>MSDPMapper</name>
 				<packageName>Generic Mapper</packageName>
-				<script></script>
-				<eventHandlerList />
+				<script/>
+				<eventHandlerList/>
 				<Script isActive="yes" isFolder="no">
 					<name>MSDPMapper</name>
-					<packageName></packageName>
+					<packageName/>
 					<script>mudlet = mudlet or {}
 mudlet.mapper_script = true
 map = map or {}
@@ -595,83 +579,69 @@ map.enabled = false
 map.minimap_font_size = 8
 map.minimap_width = 21
 map.minimap_height = 21
-
-
 local defaults = {
   -- using Geyser to handle the mapper in this, since this is a totally new script
-  mapper = {x = "-25%", y = "0%", width = "25%", height = "50%"}
+  mapper = {x = &quot;-25%&quot;, y = &quot;0%&quot;, width = &quot;25%&quot;, height = &quot;50%&quot;}
 }
-
 --[[
   Terrain Type Color Configuration
   ===============================
-  
   Maps Luminari MUD terrain types to visual colors in the mapper.
   Each terrain gets a unique ID and RGB color values for visual distinction.
-  
   Configuration Rules:
   - Each terrain must have a unique ID (1-255 range recommended)
   - RGB values range from 0-255
   - Terrain types not listed here use mapper default colors
   - ID values are offset by +16 when applied to avoid conflicts with Mudlet defaults
-  
   Adding New Terrains:
-  1. Add entry with format: ["Terrain Name"] = {id = unique_number, r = red, g = green, b = blue}
+  1. Add entry with format: [&quot;Terrain Name&quot;] = {id = unique_number, r = red, g = green, b = blue}
   2. Ensure ID doesn't conflict with existing entries
   3. Choose colors that provide good contrast and visibility
-  
   Performance: This table is read during room creation - keep it reasonably sized
 ]]
 local terrain_types = {
   -- Indoor/Structural terrains - neutral/gray tones
-  ["Inside"]              = {id = 1, r = 130, g = 130, b = 130},
-  ["City"]                = {id = 2, r = 200, g = 200, b = 200},
-  ["Cave"]                = {id = 30, r = 80, g = 80, b = 80},
-  
+  [&quot;Inside&quot;]              = {id = 1, r = 130, g = 130, b = 130},
+  [&quot;City&quot;]                = {id = 2, r = 200, g = 200, b = 200},
+  [&quot;Cave&quot;]                = {id = 30, r = 80, g = 80, b = 80},
   -- Natural outdoor terrains - earth tones and naturals
-  ["Field"]               = {id = 3, r = 0, g = 170, b = 0},
-  ["Forest"]              = {id = 4, r = 0, g = 122, b = 0},
-  ["Hills"]               = {id = 5, r = 122, g = 69, b = 0},
-  ["Low Mountains"]       = {id = 6, r = 100, g = 100, b = 100},
-  ["High Mountains"]      = {id = 18, r = 255, g = 255, b = 255},
-  ["Desert"]              = {id = 15, r = 234, g = 219, b = 124},
-  ["Jungle"]              = {id = 31, r = 21, g = 132, b = 101},
-  ["Tundra"]              = {id = 32, r = 224, g = 224, b = 224},
-  ["Taiga"]               = {id = 33, r = 103, g = 137, b = 104},
-  ["Beach"]               = {id = 34, r = 239, g = 235, b = 0},
-  ["Marshland"]           = {id = 17, r = 81, g = 47, b = 109},
-  
+  [&quot;Field&quot;]               = {id = 3, r = 0, g = 170, b = 0},
+  [&quot;Forest&quot;]              = {id = 4, r = 0, g = 122, b = 0},
+  [&quot;Hills&quot;]               = {id = 5, r = 122, g = 69, b = 0},
+  [&quot;Low Mountains&quot;]       = {id = 6, r = 100, g = 100, b = 100},
+  [&quot;High Mountains&quot;]      = {id = 18, r = 255, g = 255, b = 255},
+  [&quot;Desert&quot;]              = {id = 15, r = 234, g = 219, b = 124},
+  [&quot;Jungle&quot;]              = {id = 31, r = 21, g = 132, b = 101},
+  [&quot;Tundra&quot;]              = {id = 32, r = 224, g = 224, b = 224},
+  [&quot;Taiga&quot;]               = {id = 33, r = 103, g = 137, b = 104},
+  [&quot;Beach&quot;]               = {id = 34, r = 239, g = 235, b = 0},
+  [&quot;Marshland&quot;]           = {id = 17, r = 81, g = 47, b = 109},
   -- Water terrains - blue spectrum
-  ["Water (Swim)"]        = {id = 7, r = 0, g = 0, b = 255},
-  ["Water (No Swim)"]     = {id = 8, r = 0, g = 0, b = 130},
-  ["Ocean"]               = {id = 16, r = 0, g = 90, b = 90},
-  ["Underwater"]          = {id = 10, r = 43, g = 43, b = 124},
-  
+  [&quot;Water (Swim)&quot;]        = {id = 7, r = 0, g = 0, b = 255},
+  [&quot;Water (No Swim)&quot;]     = {id = 8, r = 0, g = 0, b = 130},
+  [&quot;Ocean&quot;]               = {id = 16, r = 0, g = 90, b = 90},
+  [&quot;Underwater&quot;]          = {id = 10, r = 43, g = 43, b = 124},
   -- Aerial and special movement
-  ["In Flight"]           = {id = 9, r = 200, g = 200, b = 255},
-  
+  [&quot;In Flight&quot;]           = {id = 9, r = 200, g = 200, b = 255},
   -- Special/Magical locations
-  ["Zone Entrance"]       = {id = 211, r = 255, g = 0, b = 0},     -- Bright red for visibility
-  ["Outer Planes"]        = {id = 19, r = 168, g = 42, b = 138},
-  ["Lava"]                = {id = 26, r = 255, g = 119, b = 0},    -- Orange-red for danger
-  
+  [&quot;Zone Entrance&quot;]       = {id = 211, r = 255, g = 0, b = 0},     -- Bright red for visibility
+  [&quot;Outer Planes&quot;]        = {id = 19, r = 168, g = 42, b = 138},
+  [&quot;Lava&quot;]                = {id = 26, r = 255, g = 119, b = 0},    -- Orange-red for danger
   -- Road system - brown/tan theme for consistency
-  ["Road North-South"]    = {id = 12, r = 119, g = 101, b = 86},
-  ["Road East-West"]      = {id = 13, r = 119, g = 101, b = 86},
-  ["Road Intersection"]   = {id = 14, r = 119, g = 101, b = 86},
-  ["Dirt Road North-South"] = {id = 27, r = 142, g = 85, b = 0},
-  ["Dirt Road East-West"] = {id = 28, r = 142, g = 85, b = 0},
-  ["Dirt Road Intersection"] = {id = 29, r = 142, g = 85, b = 0},
-  
+  [&quot;Road North-South&quot;]    = {id = 12, r = 119, g = 101, b = 86},
+  [&quot;Road East-West&quot;]      = {id = 13, r = 119, g = 101, b = 86},
+  [&quot;Road Intersection&quot;]   = {id = 14, r = 119, g = 101, b = 86},
+  [&quot;Dirt Road North-South&quot;] = {id = 27, r = 142, g = 85, b = 0},
+  [&quot;Dirt Road East-West&quot;] = {id = 28, r = 142, g = 85, b = 0},
+  [&quot;Dirt Road Intersection&quot;] = {id = 29, r = 142, g = 85, b = 0},
   -- Underdark terrain variants - darker, muted versions of surface equivalents
-  ["Underdark - Wild"]    = {id = 20, r = 131, g = 110, b = 145},
-  ["Underdark - City"]    = {id = 21, r = 183, g = 178, b = 186},
-  ["Underdark - Inside"]  = {id = 22, r = 132, g = 132, b = 132},
-  ["Underdark - Water (Swim)"] = {id = 23, r = 70, g = 139, b = 175},
-  ["Underdark - Water (No Swim)"] = {id = 24, r = 34, g = 68, b = 86},
-  ["Underdark - In Flight"] = {id = 25, r = 158, g = 178, b = 188},
+  [&quot;Underdark - Wild&quot;]    = {id = 20, r = 131, g = 110, b = 145},
+  [&quot;Underdark - City&quot;]    = {id = 21, r = 183, g = 178, b = 186},
+  [&quot;Underdark - Inside&quot;]  = {id = 22, r = 132, g = 132, b = 132},
+  [&quot;Underdark - Water (Swim)&quot;] = {id = 23, r = 70, g = 139, b = 175},
+  [&quot;Underdark - Water (No Swim)&quot;] = {id = 24, r = 34, g = 68, b = 86},
+  [&quot;Underdark - In Flight&quot;] = {id = 25, r = 158, g = 178, b = 188},
 }
-
 -- Movement vector calculations for 3D coordinate system
 -- Used to determine relative positioning when creating connected rooms
 -- Format: {x_offset, y_offset, z_offset} where positive values indicate:
@@ -684,53 +654,45 @@ local move_vectors = {
   -- Vertical movement
   up = {0,0,1}, down = {0,0,-1}
 }
-
 -- Direction abbreviation expansion table
 -- Converts common short-form directions to full direction names
 -- Used for user input processing and command parsing
 local exits = {
   -- Cardinal abbreviations
-  n = "north", s = "south", w = "west", e = "east",
+  n = &quot;north&quot;, s = &quot;south&quot;, w = &quot;west&quot;, e = &quot;east&quot;,
   -- Diagonal abbreviations
-  nw = "northwest", ne = "northeast", sw = "southwest", se = "southeast",
+  nw = &quot;northwest&quot;, ne = &quot;northeast&quot;, sw = &quot;southwest&quot;, se = &quot;southeast&quot;,
   -- Vertical abbreviations
-  u = "up", d = "down"
+  u = &quot;up&quot;, d = &quot;down&quot;
 }
-
 --[[
   Bidirectional Exit Mapping System
   =================================
-  
   Maps between direction names and Mudlet's internal exit numbering system.
   This table serves dual purposes:
-  1. String to number: exitmap["north"] = 1
-  2. Number to string: exitmap[1] = "north"
-  
+  1. String to number: exitmap[&quot;north&quot;] = 1
+  2. Number to string: exitmap[1] = &quot;north&quot;
   Mudlet Exit Number Standards:
   - 1-8: Standard compass directions
   - 9-10: Vertical movement (up/down)
   - 11-12: Special exits (in/out)
-  
   Used extensively in exit creation and pathfinding algorithms.
 ]]
 local exitmap = {
   -- Direction name to number mapping
   north = 1,      northeast = 2,      northwest = 3,      east = 4,
   west = 5,       south = 6,          southeast = 7,      southwest = 8,
-  up = 9,         down = 10,          ["in"] = 11,        out = 12,
+  up = 9,         down = 10,          [&quot;in&quot;] = 11,        out = 12,
   -- Number to direction name mapping (reverse lookup)
-  [1] = "north",  [2] = "northeast",  [3] = "northwest",  [4] = "east",
-  [5] = "west",   [6] = "south",      [7] = "southeast",  [8] = "southwest",
-  [9] = "up",     [10] = "down",      [11] = "in",        [12] = "out",
+  [1] = &quot;north&quot;,  [2] = &quot;northeast&quot;,  [3] = &quot;northwest&quot;,  [4] = &quot;east&quot;,
+  [5] = &quot;west&quot;,   [6] = &quot;south&quot;,      [7] = &quot;southeast&quot;,  [8] = &quot;southwest&quot;,
+  [9] = &quot;up&quot;,     [10] = &quot;down&quot;,      [11] = &quot;in&quot;,        [12] = &quot;out&quot;,
 }
-
 --[[
   Room Creation Algorithm
   =======================
-  
   Creates a new room in the Mudlet mapper based on MSDP room data.
   Handles coordinate calculation, area management, terrain assignment, and exit linking.
-  
   Algorithm Overview:
   1. Create room with VNUM from MSDP data
   2. Determine area (create if new)
@@ -740,12 +702,10 @@ local exitmap = {
   4. Handle coordinate conflicts with map stretching
   5. Apply terrain colors
   6. Link exits between rooms
-  
   Performance Considerations:
   - Map stretching algorithm is O(n) where n = rooms in area
   - Can be expensive for large areas with many coordinate conflicts
   - Consider optimizing for heavily traveled areas
-  
   Error Handling:
   - Falls back to exit stubs if room linking fails
   - Gracefully handles missing terrain types
@@ -754,10 +714,8 @@ local exitmap = {
 local function make_room()
   local info = map.room_info
   local coords = {0,0,0}  -- Default coordinates for new areas
-  
   -- Step 1: Create the room in Mudlet's mapper
   addRoom(info.VNUM)
-  
   -- Step 2: Area Management - get or create area
   local areas = getAreaTable()
   local areaID = areas[info.AREA]
@@ -768,7 +726,6 @@ local function make_room()
     -- Existing area - calculate coordinates based on movement from previous room
     coords = {getRoomCoordinates(map.prev_info.VNUM)}
     local shift = {0,0,0}  -- Movement vector from previous to current room
-    
     -- Find the direction we moved from previous room to current room
     for k,v in pairs(map.prev_info.EXITS) do
       if v == info.VNUM and move_vectors[k] then
@@ -776,41 +733,33 @@ local function make_room()
         break
       end
     end
-
     -- Apply movement vector to get new coordinates
     for n = 1,3 do
       coords[n] = coords[n] + shift[n]
     end
-
     --[[
       Map Stretching Algorithm
       ========================
-      
       Prevents room overlap by shifting existing rooms when coordinate conflicts occur.
       This maintains spatial relationships while avoiding visual room stacking.
-      
       Algorithm:
       1. Check if calculated coordinates are already occupied
       2. If occupied, shift ALL rooms in the direction of movement
-      3. Only shift rooms that are "ahead" of the conflict point
-      
+      3. Only shift rooms that are &quot;ahead&quot; of the conflict point
       Performance Warning: This is O(n) for each room creation in contested areas.
       Consider caching room coordinates if performance becomes an issue.
     ]]
     local overlap = getRoomsByPosition(areaID,coords[1],coords[2],coords[3])
-
     if not table.is_empty(overlap) then
       local rooms = getAreaRooms(areaID)
       local rcoords
-      
       -- Shift all affected rooms to prevent overlap
       for _,id in ipairs(rooms) do
         local x, y, z = getRoomCoordinates(id)
         rcoords = {x, y, z}
-        
         -- Only shift rooms in the direction of movement
         for n = 1,3 do
-          -- Check if room is "ahead" in the movement direction
+          -- Check if room is &quot;ahead&quot; in the movement direction
           if shift[n] ~= 0 and (rcoords[n] - coords[n]) * shift[n] &gt;= 0 then
             rcoords[n] = rcoords[n] + shift[n]
           end
@@ -819,16 +768,13 @@ local function make_room()
       end
     end
   end
-  
   -- Step 3: Apply room properties
   setRoomArea(info.VNUM, areaID)
   setRoomCoordinates(info.VNUM, coords[1], coords[2], coords[3])
-  
   -- Step 4: Set terrain-based visual environment (+16 offset avoids Mudlet conflicts)
   if terrain_types[info.TERRAIN] then
     setRoomEnv(info.VNUM, terrain_types[info.TERRAIN].id + 16)
   end
-  
   -- Step 5: Link exits from previous room (if we moved from somewhere)
   if map.prev_info then -- Check if you moved into here from another room.
     local prev_exits = getRoomExits(map.prev_info.VNUM)
@@ -842,7 +788,6 @@ local function make_room()
       end
     end
   end
-  
   -- Step 6: Create exits from current room to connected rooms
   for dir, id in pairs(info.EXITS) do
     -- TODO: Implement special exit handling for non-standard movement
@@ -853,27 +798,21 @@ local function make_room()
     end
   end
 end
-
 --[[
   Room Coordinate Manipulation
   ============================
-  
   Manually shifts a room's position in the specified direction.
   Used for map corrections when automatic positioning fails or user wants manual control.
-  
   Parameters:
     dir (string) - Direction to shift room (must exist in move_vectors table)
-  
   Behavior:
   - Gets current room coordinates from Mudlet mapper
   - Applies movement vector for specified direction
   - Updates room position and refreshes map display
-  
   Use Cases:
   - Correcting misaligned rooms after area exploration
   - Manual map layout adjustments
   - Fixing coordinate conflicts not resolved by map stretching
-  
   Note: This only moves the current room - doesn't update connected rooms or exits.
   Consider using this carefully to avoid breaking spatial relationships.
 ]]
@@ -881,24 +820,19 @@ local function shift_room(dir)
   local ID = map.room_info.VNUM  -- Current room VNUM
   local x,y,z = getRoomCoordinates(ID)  -- Get current position
   local x1,y1,z1 = move_vectors[dir]    -- Get movement vector for direction
-  
   -- Apply movement vector to current coordinates
   x = x + x1
   y = y + y1
   z = z + z1
-  
   -- Update room position and refresh map display
   setRoomCoordinates(ID,x,y,z)
   updateMap()  -- Force map redraw to show new position
 end
-
 --[[
   Speedwalk Timeout Handler
   =========================
-  
   Called when speedwalk movement takes too long to complete.
   Provides user feedback and safely terminates the speedwalk sequence.
-  
   Safety Features:
   - Prevents infinite speedwalk loops
   - Clears speedwalk state to avoid stuck conditions
@@ -906,33 +840,27 @@ end
 ]]
 local function speedwalk_timeout()
   speedwalk_active = false  -- Disable speedwalk system
-  cecho("&lt;red&gt;SpeedWalk failed to reach destination!\n")
+  cecho(&quot;&lt;red&gt;SpeedWalk failed to reach destination!\n&quot;)
 end
-
 --[[
   Speedwalk Movement Controller
   =============================
-  
   Core pathfinding logic that manages automated movement between rooms.
   Handles movement validation, path progression, and destination checking.
-  
   Algorithm Flow:
   1. Initialize speedwalk state variables
   2. Validate movement resources (movement points)
   3. Check path completion conditions
   4. Execute next movement step with timeout protection
-  
   Movement Validation:
   - Requires minimum 10 movement points to continue
   - Validates path exists and destination is reachable
   - Handles arrival detection and state cleanup
-  
   Performance Considerations:
   - Uses 10-second timeout to prevent infinite loops
   - TODO: Implement terrain-based movement cost calculations
   - Future Enhancement: Add movement point costs for different terrain types
   - Could be enhanced with movement point prediction
-  
   Error Recovery:
   - Gracefully handles insufficient movement points
   - Provides user feedback for all termination conditions
@@ -942,82 +870,69 @@ local function speedwalk_check()
   -- Initialize speedwalk state (defensive programming for global variables)
   speedwalk_active = speedwalk_active or false
   speedwalk_timer = speedwalk_timer or false
-  
   -- Clear any existing timeout timer
   if speedwalk_timer then killTimer(speedwalk_timer) end
-  
   -- Movement Resource Validation
   -- TODO: Make this more versatile, consider movement cost of terrain type
   -- Future Enhancement: Implement weighted pathfinding based on terrain difficulty
-  local move = tonumber(msdp.MOVEMENT or "0")
+  local move = tonumber(msdp.MOVEMENT or &quot;0&quot;)
   if move &lt; 10 then
-    cecho("&lt;red&gt;SpeedWalk: &lt;white&gt;Not enough movement to continue SpeedWalk!\n")
+    cecho(&quot;&lt;red&gt;SpeedWalk: &lt;white&gt;Not enough movement to continue SpeedWalk!\n&quot;)
     return
   end
-  
   -- Path Completion Checks
   if #speedWalkDir &lt; 1 then
     speedwalk_active = false  -- No more directions to follow
     return
   end
-  
   -- Destination Arrival Check
   if speedWalkPath[# speedWalkPath] == msdp.ROOM.VNUM then
     speedwalk_active = false
-    cecho("&lt;red&gt;SpeedWalk: &lt;white&gt;You have arrived at your destination.\n")
+    cecho(&quot;&lt;red&gt;SpeedWalk: &lt;white&gt;You have arrived at your destination.\n&quot;)
     return
   end
-  
   -- Safety check - ensure speedwalk is still active
   if not speedwalk_active then return end
-  
   -- Set timeout protection (10 seconds per movement step)
   speedwalk_timer = tempTimer(10, function() speedwalk_timeout() end)
-  
   -- Determine next movement step based on current room position in path
   local step_n = speedwalk_vnums[msdp.ROOM.VNUM] or 0  -- Current step index
   local step_d = speedWalkDir[step_n+1]  -- Next direction to move
   local monk_steps = {}
   -- // This will need to wait until I can get all class info from msdp (instead of just active class/total levels)
-  -- if msdp.CLASS == "monk" and msdp.LEVEL &gt;= 12 then
+  -- if msdp.CLASS == &quot;monk&quot; and msdp.LEVEL &gt;= 12 then
   --  for n, dir in ipairs(speedWalkDir) do
   --    if n &gt;= (step_n+1) then monk_steps[#monk_steps+1] = dir end
   --  end
   -- end
-  local pos = msdp.POSITION or "Sleeping"
-  if pos == "Sleeping" then send("wake") end
-  if pos ~= "Standing" then send("stand") end
+  local pos = msdp.POSITION or &quot;Sleeping&quot;
+  if pos == &quot;Sleeping&quot; then send(&quot;wake&quot;) end
+  if pos ~= &quot;Standing&quot; then send(&quot;stand&quot;) end
   if #monk_steps &gt; 0 then
-    send("abundantstep "..table.concat(monk_steps, " "))
+    send(&quot;abundantstep &quot;..table.concat(monk_steps, &quot; &quot;))
     return
   end
-  local door_check = msdp.ROOM.DOORS[exits[step_d]] or ""
-  if door_check ~= "" then send("open "..door_check.." "..exits[step_d]) end
-  send(step_d)  
+  local door_check = msdp.ROOM.DOORS[exits[step_d]] or &quot;&quot;
+  if door_check ~= &quot;&quot; then send(&quot;open &quot;..door_check..&quot; &quot;..exits[step_d]) end
+  send(step_d)
 end
-
 --[[
   Speedwalk System Initialization
   ===============================
-  
   Initiates automated pathfinding movement between rooms using calculated paths.
   Sets up speedwalk state and begins movement execution.
-  
   Prerequisites:
   - speedWalkDir table must contain direction sequence
   - speedWalkPath table must contain room VNUM sequence
   - Both tables must be synchronized (same length, matching order)
-  
   Process Flow:
   1. Validate path exists (speedWalkDir not empty)
   2. Activate speedwalk system state
   3. Build VNUM-to-step-index lookup table for position tracking
   4. Begin movement execution via speedwalk_check()
-  
   Error Handling:
   - Silently returns if no path provided (graceful degradation)
   - Path validation prevents infinite loops or undefined behavior
-  
   Integration:
   - Called by user commands or pathfinding algorithms
   - Works with existing room database and mapping system
@@ -1026,53 +941,43 @@ end
 function doSpeedWalk()
   -- Validate that we have a path to follow
   if #speedWalkDir &lt; 1 then return end
-  
   -- Initialize speedwalk system state
   speedwalk_active = true
   speedwalk_vnums = {}  -- VNUM to step index mapping for position tracking
-  
   -- Build lookup table for current position determination
   -- Maps room VNUM to its position in the path sequence
   for n, vnum in ipairs(speedWalkPath) do
     speedwalk_vnums[vnum] = n
   end
-  
   -- Begin movement execution
   speedwalk_check()
 end
-
 --[[
   Movement Event Handler
   ======================
-  
   Processes character movement and updates the mapping system accordingly.
   Handles room creation, terrain updates, exit resolution, and map synchronization.
-  
   Functionality:
   - Creates new rooms when entering unmapped areas
   - Updates terrain information for existing rooms
   - Resolves exit stubs by linking known rooms
   - Maintains map view centering on current position
   - Continues speedwalk execution if active
-  
   Mapping Logic:
   1. Only processes indoor areas (skips Wilderness environments)
   2. Checks if current room exists in map database
   3. Creates room if new, updates terrain if existing
   4. Resolves any unlinked exits (stubs) to known rooms
   5. Centers map view and continues movement
-  
   Exit Stub Resolution:
   - Gets list of unconnected exits from current room
   - For each stub, checks if target room exists in database
   - Creates bidirectional links between known rooms
   - Prevents mapping gaps and maintains connectivity
-  
   Performance Notes:
   - Uses efficient getRoomName() check for room existence
   - Terrain updates use direct setRoomEnv() calls
   - Exit resolution processes only existing stubs
-  
   Integration Points:
   - Called by MSDP movement events
   - Coordinates with speedwalk system
@@ -1081,8 +986,7 @@ end
 ]]
 local function handle_move()
   -- Only process movement for mapped indoor areas
-  if map.enabled == true and map.room_info.ENVIRONMENT ~= "Wilderness" then
-    
+  if map.enabled == true and map.room_info.ENVIRONMENT ~= &quot;Wilderness&quot; then
     -- Check if we're entering a new room that needs to be created
     if not getRoomName(map.room_info.VNUM) then
       make_room()  -- Create new room with current MSDP data
@@ -1091,14 +995,12 @@ local function handle_move()
       if terrain_types[map.room_info.TERRAIN] then
         setRoomEnv(map.room_info.VNUM, terrain_types[map.room_info.TERRAIN].id + 16)
       end
-      
       -- Resolve any unlinked exits (stubs) to known rooms
       local stubs = getExitStubs1(map.room_info.VNUM)
       if stubs then
         for _, n in ipairs(stubs) do
           local dir = exitmap[n]  -- Convert exit number to direction name
           local id = map.room_info.EXITS[dir]  -- Get target room VNUM
-          
           -- TODO: need to see how special exits are represented to handle those properly here
           -- Future Enhancement: Support for special exits like portals, teleporters, etc.
           -- Link to target room if it exists in the database
@@ -1109,99 +1011,80 @@ local function handle_move()
       end
     end
   end
-  
   -- Maintain map view centered on current position
   centerview(map.room_info.VNUM)
-  
   -- Continue speedwalk execution if active
   speedwalk_check()
 end
-
-
-
 --[[
   Mapping System Alias Registration
   =================================
-  
   Creates user-friendly command aliases for controlling the mapping system.
   Provides convenient command-line interface for map manipulation and control.
-  
   Alias Categories:
   1. Room Manipulation - Manual position adjustments and room modification
   2. System Control - Enable/disable mapping functionality
   3. Map Management - Save/load map data and area operations
   4. Navigation - Pathfinding and movement commands
-  
   Implementation Details:
   - Uses tempAlias() for dynamic alias creation
   - Aliases stored in map.aliases table for cleanup management
   - Event-driven architecture for loose coupling with mapping system
   - Regex patterns provide flexible command matching
-  
   Alias Management:
   - Checks for existing aliases before creation to prevent duplicates
   - Properly cleans up old aliases using killAlias()
   - Maintains alias registry for systematic management
-  
   Integration Points:
   - Coordinates with event system via raiseEvent()
   - Links directly to mapping functions and procedures
   - Provides user feedback through game output
 ]]
 local function make_aliases()
-
   -- Initialize alias storage for management and cleanup
   map.aliases = map.aliases or {}
-  
   -- Quick Access Aliases - Direct tempAlias calls for immediate commands
   -- Room position manipulation for map corrections
-  table.insert(map.aliases,tempAlias([[^shift (\w+)$]],[[raiseEvent("shiftRoom",matches[2])]]))
-  
+  table.insert(map.aliases,tempAlias([[^shift (\w+)$]],[[raiseEvent(&quot;shiftRoom&quot;,matches[2])]]))
   -- Mapping system control shortcuts
-  table.insert(map.aliases,tempAlias([[^mc on$]],[[raiseEvent("startMapping")]]))
-  table.insert(map.aliases,tempAlias([[^mc off$]],[[raiseEvent("stopMapping")]]))
-
+  table.insert(map.aliases,tempAlias([[^mc on$]],[[raiseEvent(&quot;startMapping&quot;)]]))
+  table.insert(map.aliases,tempAlias([[^mc off$]],[[raiseEvent(&quot;stopMapping&quot;)]]))
   -- Comprehensive Alias Definition Table
   -- Maps descriptive names to {pattern, code} pairs for organized management
   local id
   local tbl = {
     -- Core System Control
-    ["Start Mapping Alias"] = {[[^start mapping$]], [[map.start_mapping()]]},
-    ["Stop Mapping Alias"] = {[[^stop mapping$]], [[map.stop_mapping()]]},
-    ["Shift Room Alias"] = {[[^shift (\w+)$]],[[raiseEvent("shiftRoom",matches[2])]]},
-
+    [&quot;Start Mapping Alias&quot;] = {[[^start mapping$]], [[map.start_mapping()]]},
+    [&quot;Stop Mapping Alias&quot;] = {[[^stop mapping$]], [[map.stop_mapping()]]},
+    [&quot;Shift Room Alias&quot;] = {[[^shift (\w+)$]],[[raiseEvent(&quot;shiftRoom&quot;,matches[2])]]},
     -- Map File Operations (currently disabled - TODO: implement these features)
     -- Future Enhancement: Add map import/export functionality
-    --["Save Map Alias"] = {[[^save map$]], [[saveMap(getMudletHomeDir() .. "/map.dat")]]},
-    --["Load Map Alias"] = {[[^load map(?: (local))?$]], [[map.load_map(matches[2])]]},
-    --["Export Map Area Alias"] = {[[^export area (.*)]],[[map.export_area(matches[2])]]},
-    --["Import Map Area Alias"] = {[[^import area (.*)]],[[map.import_area(matches[2])]]},
-
+    --[&quot;Save Map Alias&quot;] = {[[^save map$]], [[saveMap(getMudletHomeDir() .. &quot;/map.dat&quot;)]]},
+    --[&quot;Load Map Alias&quot;] = {[[^load map(?: (local))?$]], [[map.load_map(matches[2])]]},
+    --[&quot;Export Map Area Alias&quot;] = {[[^export area (.*)]],[[map.export_area(matches[2])]]},
+    --[&quot;Import Map Area Alias&quot;] = {[[^import area (.*)]],[[map.import_area(matches[2])]]},
     -- Room and Area Management (currently disabled - TODO: implement these features)
     -- Future Enhancement: Add room creation and editing tools
-    --["Set Room Area Alias"] = {[[^set area (.*)$]], [[map.set_area(matches[2])]]},
-    --["Set Map Mode Alias"] = {[[^map mode (\w+)$]],[[map.set_mode(matches[2])]]},
-
+    --[&quot;Set Room Area Alias&quot;] = {[[^set area (.*)$]], [[map.set_area(matches[2])]]},
+    --[&quot;Set Map Mode Alias&quot;] = {[[^map mode (\w+)$]],[[map.set_mode(matches[2])]]},
     -- Advanced Room Operations (currently disabled - TODO: implement these features)
     -- Future Enhancement: Add room merging, splitting, and advanced editing
-    --["Merge Rooms Alias"] = {[[^merge rooms$]], [[map.merge_rooms()]]},
-    --["Add Door Alias"] = {[[^add door (\w+)(?: (none|open|closed|locked)(?: (yes|no))?)?$]],[[map.set_door(matches[2],matches[3],matches[4])]]},
-    --["Add Portal Alias"] = {[[^add portal (.*)$]],[[map.set_portal(matches[2])]]},
-    --["Set Room Exit Alias"] = {[[^set exit (.+) (\d+)]],[[map.set_exit(matches[2],matches[3])]]},
-    --["Clear Moves Alias"] = {[[^clear moves$]], [[map.clear_moves()]]},
-
+    --[&quot;Merge Rooms Alias&quot;] = {[[^merge rooms$]], [[map.merge_rooms()]]},
+    --[&quot;Add Door Alias&quot;] = {[[^add door (\w+)(?: (none|open|closed|locked)(?: (yes|no))?)?$]],[[map.set_door(matches[2],matches[3],matches[4])]]},
+    --[&quot;Add Portal Alias&quot;] = {[[^add portal (.*)$]],[[map.set_portal(matches[2])]]},
+    --[&quot;Set Room Exit Alias&quot;] = {[[^set exit (.+) (\d+)]],[[map.set_exit(matches[2],matches[3])]]},
+    --[&quot;Clear Moves Alias&quot;] = {[[^clear moves$]], [[map.clear_moves()]]},
     -- Navigation and Pathfinding (currently disabled - TODO: implement these features)
     -- Future Enhancement: Add advanced pathfinding algorithms and custom route planning
-    --["Find Me Alias"] = {[[^find me$]], [[map.find_me()]]},
-    --["Find Path Alias"] = {[[find path ([^;]+)(?:\s*;\s*(.+))?]],[[map.find_path(matches[2],matches[3])]]},
-    --["Set Recall Alias"] = {[[^set recall$]],[[map.set_recall()]]},
-    --["Set Character Alias"] = {[[^set character (.*)$]],[[map.character = matches[2]]},
+    --[&quot;Find Me Alias&quot;] = {[[^find me$]], [[map.find_me()]]},
+    --[&quot;Find Path Alias&quot;] = {[[find path ([^;]+)(?:\s*;\s*(.+))?]],[[map.find_path(matches[2],matches[3])]]},
+    --[&quot;Set Recall Alias&quot;] = {[[^set recall$]],[[map.set_recall()]]},
+    --[&quot;Set Character Alias&quot;] = {[[^set character (.*)$]],[[map.character = matches[2]]},
   }
-  
   -- Register aliases with cleanup management
   for k,v in pairs(tbl) do
     -- Clean up existing alias if present to prevent conflicts
-    if map.aliases[k] and exists(map.aliases[k],"alias") ~= 0 then
+    if map.aliases[k] and exists(map.aliases[k],&quot;alias&quot;) ~= 0 then
       killAlias(map.aliases[k])
     end
     -- Create new alias and store reference for future cleanup
@@ -1209,65 +1092,57 @@ local function make_aliases()
     map.aliases[k] = id
   end
 end
-
 --function map.set_door(dir,status,one_way)
 --    -- adds a door on a given exit
 --    if map.enabled then
---        if not map.room_info then error("Make Door: No room found.") end
+--        if not map.room_info then error(&quot;Make Door: No room found.&quot;) end
 --        dir = exitmap[dir] or dir
---        if not stubmap[dir] then error("Make Door: Invalid direction.") end
---        status = (status ~= "" and status) or "closed"
---        one_way = (one_way ~= "" and one_way) or "no"
---        if not table.contains({"yes","no"},one_way) then error("Make Door: Invalid one-way status, must be yes or no.") end
-
+--        if not stubmap[dir] then error(&quot;Make Door: Invalid direction.&quot;) end
+--        status = (status ~= &quot;&quot; and status) or &quot;closed&quot;
+--        one_way = (one_way ~= &quot;&quot; and one_way) or &quot;no&quot;
+--        if not table.contains({&quot;yes&quot;,&quot;no&quot;},one_way) then error(&quot;Make Door: Invalid one-way status, must be yes or no.&quot;) end
 --        local exits = getRoomExits(currentRoom)
 --        local target_room = exits[dir]
 --        if target_room then
 --            exits = getRoomExits(target_room)
 --        end
---        if one_way == "no" and (target_room and exits[reverse_dirs[dir]] == currentRoom) then
+--        if one_way == &quot;no&quot; and (target_room and exits[reverse_dirs[dir]] == currentRoom) then
 --            add_door(target_room,reverse_dirs[dir],status)
 --        end
 --        add_door(currentRoom,dir,status)
---				print("Door added.")
+--				print(&quot;Door added.&quot;)
 --    end
 --end
-
 -- Map Loading Function
 -- Loads map data from local file or downloads from server
 -- Parameters: use_local (boolean) - if true, loads local map.dat file
 function map.load_map(use_local)
-  local path = getMudletHomeDir() .. "/map.dat"
+  local path = getMudletHomeDir() .. &quot;/map.dat&quot;
   if use_local then
     loadMap(path)
-    print("Map reloaded from local copy.")
+    print(&quot;Map reloaded from local copy.&quot;)
   else
     local address = 'http://www.luminarimud.com/download/map.dat'
     downloading = true
     downloadFile(path,address)
-    print("Downloading Map File.")
+    print(&quot;Downloading Map File.&quot;)
   end
 end
-
 --[[
   Minimap Font Size Adjustment System
   ==================================
-  
   Dynamically calculates and applies optimal font size for minimap display based on container width.
   Ensures proper text readability and visual scaling for room names and map elements.
-  
   Responsive Design Logic:
   - Retrieves current minimap container width
   - Applies scaling algorithm for proportional font sizing
   - Updates minimap text elements with calculated font size
   - Maintains readability across different window sizes
-  
   Integration Points:
   - Called during minimap initialization
   - Triggered by window resize events
   - Coordinates with map display refresh systems
   - Links to overall GUI scaling management
-  
   Performance Considerations:
   - Efficient width calculation from container
   - Minimal DOM updates for smooth resizing
@@ -1282,28 +1157,23 @@ function map.adjustMinimapFontSize()
 --[[
   ASCII Map Font Size Adjustment System
   ====================================
-  
   Dynamically calculates and applies optimal font size for ASCII map display based on container width.
   Ensures proper character readability and visual scaling for text-based map representations.
-  
   ASCII Map Specific Considerations:
   - Text-based room representation requires precise character spacing
   - Font size affects map grid alignment and readability
   - Monospace font requirements for proper ASCII art rendering
   - Character density optimization for complex map layouts
-  
   Responsive Design Logic:
   - Retrieves current minimap container width
   - Applies specialized scaling for ASCII character display
   - Updates ASCII map text elements with calculated font size
   - Maintains grid alignment across different window sizes
-  
   Integration Points:
   - Called during ASCII map initialization
   - Triggered by window resize events
   - Coordinates with ASCII map rendering system
   - Links to overall GUI scaling management
-  
   Performance Considerations:
   - Efficient width calculation from container
   - Minimal redraw operations for ASCII map elements
@@ -1316,9 +1186,8 @@ function map.adjustMinimapFontSize()
     height = height * map.minimap_height
   until (w &lt; width) or (h &lt; height)
   map.minimap_font_size = font_size - 1
-  setMiniConsoleFontSize("map.minimap", map.minimap_font_size)
+  setMiniConsoleFontSize(&quot;map.minimap&quot;, map.minimap_font_size)
 end
-
 function map.adjustAsciimapFontSize()
   local w = map.minimap.get_width()
   local h = map.minimap.get_height()
@@ -1330,21 +1199,18 @@ function map.adjustAsciimapFontSize()
     height = height * 11
   until (w &lt; width) or (h &lt; height)
   map.minimap_font_size = font_size - 1
-  setMiniConsoleFontSize("map.minimap", map.minimap_font_size)
+  setMiniConsoleFontSize(&quot;map.minimap&quot;, map.minimap_font_size)
 end
-
 function map.calcMinimapPadding()
   local width = calcFontSize(map.minimap_font_size)
   local characters = map.minimap.get_width() / width
   return (characters - map.minimap_width) / 4
 end
-
 function map.calcAsciimapPadding()
   local width = calcFontSize(map.minimap_font_size)
   local characters = map.minimap.get_width() / width
   return (characters - 19) / 4
 end
-
 local function config()
   -- setting terrain colors
   for k,v in pairs(terrain_types) do
@@ -1352,274 +1218,243 @@ local function config()
   end
   -- making mapper window
   local info = defaults.mapper
-  map.container = Geyser.Container:new({name = "map.container", x = info.x, y = info.y, width = info.width, height = info.height})
-  map.minimapcontainer = Geyser.Container:new({name = "map.minimapcontainer", x = info.x, y = info.y, width = info.width, height = info.height})
+  map.container = Geyser.Container:new({name = &quot;map.container&quot;, x = info.x, y = info.y, width = info.width, height = info.height})
+  map.minimapcontainer = Geyser.Container:new({name = &quot;map.minimapcontainer&quot;, x = info.x, y = info.y, width = info.width, height = info.height})
   --map.minimapbackground = Geyser.Label:new({
-  --			name="map.minimapbackground",
+  --			name=&quot;map.minimapbackground&quot;,
   --			x=0, y=0,
-  --			width="100%", height="100%",
+  --			width=&quot;100%&quot;, height=&quot;100%&quot;,
   --	  }, map.minimapcontainer)
   --		map.minimapbackground:setColor(0,0,0)
-
   map.minimap = Geyser.MiniConsole:new({
-    name="map.minimap",
+    name=&quot;map.minimap&quot;,
     x=0, y= 0,
-    width="100%", height="100%",
+    width=&quot;100%&quot;, height=&quot;100%&quot;,
   }, map.minimapcontainer)
-
-  map.minimap:setColor("black")
+  map.minimap:setColor(&quot;black&quot;)
   map.minimapcontainer:hide()
-
-  map.mapwindow = Geyser.Mapper:new({name = "map.mapwindow", x = 0, y = 0, width = "100%", height = "100%"}, map.container)
-
+  map.mapwindow = Geyser.Mapper:new({name = &quot;map.mapwindow&quot;, x = 0, y = 0, width = &quot;100%&quot;, height = &quot;100%&quot;}, map.container)
   map.adjustMinimapFontSize()
   make_aliases()
-
   map.get_default_map()
 end
-
 function map.get_default_map()
   -- If the user has no map, download the default map from the server!
   local areas = getAreaTable()
-  local path = getMudletHomeDir() .. "/map.dat"
-
-
-  if (areas["Mosswood"] == nil) then
+  local path = getMudletHomeDir() .. &quot;/map.dat&quot;
+  if (areas[&quot;Mosswood&quot;] == nil) then
     local address = 'http://www.luminarimud.com/download/map.dat'
     downloading = true
     downloadFile(path,address)
-    print("Downloading Map File.")
+    print(&quot;Downloading Map File.&quot;)
   end
 end
-
 -- Mapping System Activation
 -- Enables automatic room mapping and coordinates with Mudlet's mapping system
 function map.start_mapping()
   map.enabled=true
-  print("Mapping enabled.")
+  print(&quot;Mapping enabled.&quot;)
 end
-
 -- Mapping System Deactivation
 -- Disables automatic room mapping
 function map.stop_mapping()
   map.enabled=false
-  print("Mapping disabled.")
+  print(&quot;Mapping disabled.&quot;)
 end
-
 -- Map Event Handler
 -- Processes MSDP and game events related to mapping and room data
 -- Parameters: event (string), ... (variable arguments based on event type)
 function map.eventHandler(event,...)
-  if event == "msdp.ROOM" then
+  if event == &quot;msdp.ROOM&quot; then
     map.prev_info = map.room_info
     map.room_info = table.update({},msdp.ROOM)
     -- Check if we have moved between regular and wilderness areas
-
-    if map.prev_info.ENVIRONMENT == "Wilderness" and map.room_info.ENVIRONMENT == "Room" then
+    if map.prev_info.ENVIRONMENT == &quot;Wilderness&quot; and map.room_info.ENVIRONMENT == &quot;Room&quot; then
       -- re-enable the mapper!
       map.minimapcontainer:hide()
       map.container:show()
-    elseif map.prev_info.ENVIRONMENT == "Room" and map.room_info.ENVIRONMENT == "Wilderness" then
+    elseif map.prev_info.ENVIRONMENT == &quot;Room&quot; and map.room_info.ENVIRONMENT == &quot;Wilderness&quot; then
       -- disable the mapper!
       map.container:hide()
       map.minimapcontainer:show()
     end
     handle_move()
-  elseif event == "shiftRoom" then
+  elseif event == &quot;shiftRoom&quot; then
     local dir = exits[arg[1]] or arg[1]
     if not table.contains(exits, dir) then
-      echo("Error: Invalid direction '" .. dir .. "'.")
+      echo(&quot;Error: Invalid direction '&quot; .. dir .. &quot;'.&quot;)
     else
       shift_room(dir)
     end
-  elseif event == "sysDownloadDone" and downloading then
-    loadMap(getMudletHomeDir() .. "/map.dat")
+  elseif event == &quot;sysDownloadDone&quot; and downloading then
+    loadMap(getMudletHomeDir() .. &quot;/map.dat&quot;)
     downloading = false
-    print("Map File Loaded.")
-  elseif event == "sysConnectionEvent" then
+    print(&quot;Map File Loaded.&quot;)
+  elseif event == &quot;sysConnectionEvent&quot; then
     config()
   end
-
 end
-
 function map.onProtocolEnabled(_, protocol)
-  if protocol == "MSDP" then
-    print("MSDP enabled!")
-    sendMSDP("REPORT", "ROOM")
-    sendMSDP("REPORT", "POSITION")
+  if protocol == &quot;MSDP&quot; then
+    print(&quot;MSDP enabled!&quot;)
+    sendMSDP(&quot;REPORT&quot;, &quot;ROOM&quot;)
+    sendMSDP(&quot;REPORT&quot;, &quot;POSITION&quot;)
     config()
   end
 end
-
-registerAnonymousEventHandler("msdp.ROOM","map.eventHandler")
-registerAnonymousEventHandler("msdp.POSITION","map.eventHandler")
-registerAnonymousEventHandler("shiftRoom","map.eventHandler")
-registerAnonymousEventHandler("sysConnectionEvent", "map.eventHandler")
-registerAnonymousEventHandler("sysProtocolEnabled", "map.onProtocolEnabled")
-registerAnonymousEventHandler("sysDownloadDone", "map.eventHandler")</script>
-					<eventHandlerList />
+registerAnonymousEventHandler(&quot;msdp.ROOM&quot;,&quot;map.eventHandler&quot;)
+registerAnonymousEventHandler(&quot;msdp.POSITION&quot;,&quot;map.eventHandler&quot;)
+registerAnonymousEventHandler(&quot;shiftRoom&quot;,&quot;map.eventHandler&quot;)
+registerAnonymousEventHandler(&quot;sysConnectionEvent&quot;, &quot;map.eventHandler&quot;)
+registerAnonymousEventHandler(&quot;sysProtocolEnabled&quot;, &quot;map.onProtocolEnabled&quot;)
+registerAnonymousEventHandler(&quot;sysDownloadDone&quot;, &quot;map.eventHandler&quot;)</script>
+					<eventHandlerList/>
 				</Script>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
 				<name>GUI</name>
 				<packageName>Template</packageName>
-				<script></script>
-				<eventHandlerList />
+				<script/>
+				<eventHandlerList/>
 				<ScriptGroup isActive="yes" isFolder="yes">
 					<name>CSSman</name>
 					<packageName>CSSman</packageName>
-					<script></script>
-					<eventHandlerList />
+					<script/>
+					<eventHandlerList/>
 					<Script isActive="yes" isFolder="no">
 						<name>CSSMan</name>
-						<packageName></packageName>
+						<packageName/>
 						<script>-- CSSMan by Vadi. Public domain.
-
 CSSMan = {}
 CSSMan.__index = CSSMan
-
 function CSSMan.new(stylesheet)
   local obj  = { stylesheet = {} }
   setmetatable(obj,CSSMan)
   local trim = string.trim
-
-  assert(type(stylesheet) == "string", "CSSMan.new: no stylesheet provided. A possible error is that you might have used CSSMan.new, not CSSMan:new")
-
-  for line in stylesheet:gmatch("[^\r\n]+") do
-    local attribute, value = line:match("^(.-):(.-);$")
+  assert(type(stylesheet) == &quot;string&quot;, &quot;CSSMan.new: no stylesheet provided. A possible error is that you might have used CSSMan.new, not CSSMan:new&quot;)
+  for line in stylesheet:gmatch(&quot;[^\r\n]+&quot;) do
+    local attribute, value = line:match(&quot;^(.-):(.-);$&quot;)
     if attribute and value then
       attribute, value = trim(attribute), trim(value)
       obj.stylesheet[attribute] = value
     end
   end
-
   return obj
 end
-
 function CSSMan:set(key, value)
   self.stylesheet[key] = value
 end
-
 function CSSMan:get(key)
   return self.stylesheet[key]
 end
-
 function CSSMan:getCSS(key)
   local lines, concat = {}, table.concat
-  for k,v in pairs(self.stylesheet) do lines[#lines+1] = concat({k,": ", v, ";"}) end
-  return concat(lines, "\n")
+  for k,v in pairs(self.stylesheet) do lines[#lines+1] = concat({k,&quot;: &quot;, v, &quot;;&quot;}) end
+  return concat(lines, &quot;\n&quot;)
 end
-
 function CSSMan:gettable()
   return self.stylesheet
 end
-
 function CSSMan:settable(tbl)
-  assert(type(tbl) == "table", "CSSMan:settable: table expected, got "..type(tbl))
-
+  assert(type(tbl) == &quot;table&quot;, &quot;CSSMan:settable: table expected, got &quot;..type(tbl))
   self.stylesheet = tbl
 end</script>
-						<eventHandlerList />
+						<eventHandlerList/>
 					</Script>
 				</ScriptGroup>
 				<ScriptGroup isActive="yes" isFolder="yes">
 					<name>GUI</name>
-					<packageName></packageName>
+					<packageName/>
 					<script>GUI = GUI or {}
 </script>
-					<eventHandlerList />
+					<eventHandlerList/>
 					<Script isActive="yes" isFolder="no">
 						<name>Toggles</name>
-						<packageName></packageName>
+						<packageName/>
 						<script>--Toggle the gagging of chat from main buffer.
 function GUI.gagChatToggle()
   if GUI.toggles.gagChat == false then
 	  GUI.toggles.gagChat = true
-		cecho("\n&lt;white&gt;Now gagging chat from main buffer.")
+		cecho(&quot;\n&lt;white&gt;Now gagging chat from main buffer.&quot;)
 	elseif GUI.toggles.gagChat == true then
 	  GUI.toggles.gagChat = false
-		cecho("\n&lt;white&gt;No longer gagging chat from main buffer.")
+		cecho(&quot;\n&lt;white&gt;No longer gagging chat from main buffer.&quot;)
 	else
 	  GUI.toggles = {
 		       gagChat = true,
 	  includeInGroup = true,
 		}
-		table.save(getMudletHomeDir().."/GUI.toggles.lua", GUI.toggles)
+		table.save(getMudletHomeDir()..&quot;/GUI.toggles.lua&quot;, GUI.toggles)
 	end
 end
-
 --Toggles whether or not you are shown in the group tab.
 function GUI.showSelfToggle()
   if GUI.toggles.includeInGroup == false then
 	  GUI.toggles.includeInGroup = true
 		GUI.updateGroup()
-		cecho("\n&lt;white&gt;Now showing self in group.")
+		cecho(&quot;\n&lt;white&gt;Now showing self in group.&quot;)
 	elseif GUI.toggles.includeInGroup == true then
 	  GUI.toggles.includeInGroup = false
 		GUI.updateGroup()
-		cecho("\n&lt;white&gt;No longer showing self in group.")
+		cecho(&quot;\n&lt;white&gt;No longer showing self in group.&quot;)
 	else
 	  GUI.toggles = {
 		       gagChat = true,
 	  includeInGroup = true,
 		}
-		table.save(getMudletHomeDir().."/GUI.toggles.lua", GUI.toggles)
-		cecho("\n&lt;white&gt;Now showing self in group.")
+		table.save(getMudletHomeDir()..&quot;/GUI.toggles.lua&quot;, GUI.toggles)
+		cecho(&quot;\n&lt;white&gt;Now showing self in group.&quot;)
 	end
 end
-
-
 function GUI.loadToggles()
 --Check for saved .lua. Create if not.
   GUI.toggles = {}
-  if not io.exists(getMudletHomeDir().."/GUI.toggles.lua") then
+  if not io.exists(getMudletHomeDir()..&quot;/GUI.toggles.lua&quot;) then
 	  GUI.toggles = {
 		       gagChat = true,
 	  includeInGroup = true,
 		}
-		table.save(getMudletHomeDir().."/GUI.toggles.lua", GUI.toggles)
+		table.save(getMudletHomeDir()..&quot;/GUI.toggles.lua&quot;, GUI.toggles)
 	else
-		table.load(getMudletHomeDir().."/GUI.toggles.lua", GUI.toggles)
+		table.load(getMudletHomeDir()..&quot;/GUI.toggles.lua&quot;, GUI.toggles)
   end
 end
-
 --Save Toggle Preferences
 function GUI.saveToggles()
-  table.save(getMudletHomeDir().."/GUI.toggles.lua", GUI.toggles)
+  table.save(getMudletHomeDir()..&quot;/GUI.toggles.lua&quot;, GUI.toggles)
 end
-
-registerAnonymousEventHandler("sysLoadEvent", "GUI.loadToggles")
-registerAnonymousEventHandler("sysExitEvent", "GUI.saveToggles")</script>
-						<eventHandlerList />
+registerAnonymousEventHandler(&quot;sysLoadEvent&quot;, &quot;GUI.loadToggles&quot;)
+registerAnonymousEventHandler(&quot;sysExitEvent&quot;, &quot;GUI.saveToggles&quot;)</script>
+						<eventHandlerList/>
 					</Script>
 					<Script isActive="yes" isFolder="no">
 						<name>Create Background</name>
-						<packageName></packageName>
+						<packageName/>
 						<script>function GUI.init_background()
   GUI.BackgroundCSS = CSSMan.new([[
   background-color: rgb(20,0,20);
 ]])
   -- Left
-  GUI.Left = Geyser.Label:new({name = "GUI.Left", x = 0, y = 0, width = "25%", height = "100%"})
+  GUI.Left = Geyser.Label:new({name = &quot;GUI.Left&quot;, x = 0, y = 0, width = &quot;25%&quot;, height = &quot;100%&quot;})
   GUI.Left:setStyleSheet(GUI.BackgroundCSS:getCSS())
   --Right
 	GUI.Right =
-    Geyser.Label:new({name = "GUI.Right", x = "-25%", y = "-50%", width = "25%", height = "50%"})
+    Geyser.Label:new({name = &quot;GUI.Right&quot;, x = &quot;-25%&quot;, y = &quot;-50%&quot;, width = &quot;25%&quot;, height = &quot;50%&quot;})
   GUI.Right:setStyleSheet(GUI.BackgroundCSS:getCSS())
 	--Top
 	--[[
-	GUI.Top = Geyser.Label:new({name = "GUI.Top", x = "25%", y = 0, width = "50%", height = "25%"})
+	GUI.Top = Geyser.Label:new({name = &quot;GUI.Top&quot;, x = &quot;25%&quot;, y = 0, width = &quot;50%&quot;, height = &quot;25%&quot;})
   GUI.Top:setStyleSheet(GUI.BackgroundCSS:getCSS())
 	]]
 	--Bottom
-	GUI.Bottom = Geyser.Label:new({name = "GUI.Bottom", x = "25%", y = "-25%", width = "50%", height = "25%"})
+	GUI.Bottom = Geyser.Label:new({name = &quot;GUI.Bottom&quot;, x = &quot;25%&quot;, y = &quot;-25%&quot;, width = &quot;50%&quot;, height = &quot;25%&quot;})
   GUI.Bottom:setStyleSheet(GUI.BackgroundCSS:getCSS())
 end</script>
-						<eventHandlerList />
+						<eventHandlerList/>
 					</Script>
 					<Script isActive="yes" isFolder="no">
 						<name>Set Borders</name>
-						<packageName></packageName>
+						<packageName/>
 						<script>function GUI.set_borders()
   local w, h = getMainWindowSize()
   setBorderLeft(w / 4)
@@ -1627,117 +1462,110 @@ end</script>
   setBorderBottom(h / 4)
   setBorderRight(w / 4)
 end</script>
-						<eventHandlerList />
+						<eventHandlerList/>
 					</Script>
 					<Script isActive="yes" isFolder="no">
 						<name>Boxes</name>
-						<packageName></packageName>
+						<packageName/>
 						<script>function GUI.init_boxes()
-
   GUI.BoxCSS =
     CSSMan.new(
-      [[    
+      [[
 	background-image: url(]] ..
-      getMudletHomeDir():gsub("\\", "/") ..
+      getMudletHomeDir():gsub(&quot;\\&quot;, &quot;/&quot;) ..
       [[/LuminariGUI/images/ui_texture.png);
 			font-family: Tahoma, Geneva, sans-serif;
 ]]
     )
   --GUI.Box1 = Geyser.Label:new({
-  --  name = "GUI.Box1",
+  --  name = &quot;GUI.Box1&quot;,
   --  x = 0, y = 0,
-  --  width = "100%",
-  --  height = "50%",
+  --  width = &quot;100%&quot;,
+  --  height = &quot;50%&quot;,
   --},GUI.Right)
   --GUI.Box1:setStyleSheet(GUI.BoxCSS:getCSS())
-  --GUI.Box1:echo("&lt;center&gt;GUI.Box1")
-	
+  --GUI.Box1:echo(&quot;&lt;center&gt;GUI.Box1&quot;)
 	--Box2
   GUI.Box2 =
-    Geyser.Label:new({name = "GUI.Box2", x = 0, y = 0, width = "100%", height = "100%", color = "black"}, GUI.Bottom)
+    Geyser.Label:new({name = &quot;GUI.Box2&quot;, x = 0, y = 0, width = &quot;100%&quot;, height = &quot;100%&quot;, color = &quot;black&quot;}, GUI.Bottom)
   GUI.Box2:setStyleSheet(GUI.BoxCSS:getCSS())
-  GUI.Box2:echo("&lt;center&gt;GUI.Box2")
+  GUI.Box2:echo(&quot;&lt;center&gt;GUI.Box2&quot;)
   GUI.chatContainer =
     Geyser.Label:new(
       {
-        name = "GUI.chatContainer",
+        name = &quot;GUI.chatContainer&quot;,
         x = 8,
-        y = "15%",
+        y = &quot;15%&quot;,
         width = GUI.Box2:get_width() - 14,
 				--Height subtraction is found by adding y to button height.
-        height = "70%",
+        height = &quot;70%&quot;,
       },
       GUI.Box2
     )
-
   --Box3
   GUI.Box3 =
     Geyser.Label:new(
-      {name = "GUI.Box3", x = "0%", y = "0%", width = "100%", height = "15%"}, GUI.Right
+      {name = &quot;GUI.Box3&quot;, x = &quot;0%&quot;, y = &quot;0%&quot;, width = &quot;100%&quot;, height = &quot;15%&quot;}, GUI.Right
     )
   GUI.Box3CSS = CSSMan.new(GUI.BoxCSS:getCSS())
-  GUI.Box3CSS:set("border-width", "0px")
+  GUI.Box3CSS:set(&quot;border-width&quot;, &quot;0px&quot;)
   GUI.Box3:setStyleSheet(GUI.Box3CSS:getCSS())
-  GUI.Box3:echo("&lt;center&gt;GUI.Box3")
-
+  GUI.Box3:echo(&quot;&lt;center&gt;GUI.Box3&quot;)
   --Box4
   GUI.Box4 =
     Geyser.Label:new(
-      {name = "GUI.Box4", x = "0%", y = "0%", width = "100%", height = "75%"}, GUI.Left
+      {name = &quot;GUI.Box4&quot;, x = &quot;0%&quot;, y = &quot;0%&quot;, width = &quot;100%&quot;, height = &quot;75%&quot;}, GUI.Left
     )
   GUI.Box4CSS = CSSMan.new(GUI.BoxCSS:getCSS())
-  GUI.Box4CSS:set("border-width", "0px")
+  GUI.Box4CSS:set(&quot;border-width&quot;, &quot;0px&quot;)
   GUI.Box4:setStyleSheet(GUI.Box4CSS:getCSS())
-  GUI.Box4:echo("&lt;center&gt;GUI.Box4")
-
+  GUI.Box4:echo(&quot;&lt;center&gt;GUI.Box4&quot;)
   --Box5
   GUI.Box5 =
     Geyser.Label:new(
-      {name = "GUI.Box5", x = "0%", y = "15%", width = "100%", height = "50%"}, GUI.Right
+      {name = &quot;GUI.Box5&quot;, x = &quot;0%&quot;, y = &quot;15%&quot;, width = &quot;100%&quot;, height = &quot;50%&quot;}, GUI.Right
     )
   GUI.Box5CSS = CSSMan.new(GUI.BoxCSS:getCSS())
-  GUI.Box5CSS:set("border-width", "0px")
+  GUI.Box5CSS:set(&quot;border-width&quot;, &quot;0px&quot;)
   GUI.Box5:setStyleSheet(GUI.Box5CSS:getCSS())
-  GUI.Box5:echo("&lt;center&gt;Legend When Toggled/Room Info")
- 
- --Commenting out Box 6 echo until skill Icons are finished. 
+  GUI.Box5:echo(&quot;&lt;center&gt;Legend When Toggled/Room Info&quot;)
+ --Commenting out Box 6 echo until skill Icons are finished.
 	GUI.Box6 =
     Geyser.Label:new(
-      {name = "GUI.Box6", x = "0%", y = "65%", width = "100%", height = "35%"}, GUI.Right
+      {name = &quot;GUI.Box6&quot;, x = &quot;0%&quot;, y = &quot;65%&quot;, width = &quot;100%&quot;, height = &quot;35%&quot;}, GUI.Right
     )
   GUI.Box6CSS = CSSMan.new(GUI.BoxCSS:getCSS())
-  GUI.Box6CSS:set("border-width", "0px")
+  GUI.Box6CSS:set(&quot;border-width&quot;, &quot;0px&quot;)
   GUI.Box6:setStyleSheet(GUI.Box6CSS:getCSS())
-  --GUI.Box6:echo("&lt;center&gt;Skill Icons")
-
+  --GUI.Box6:echo(&quot;&lt;center&gt;Skill Icons&quot;)
   --Box7
   GUI.Box7 =
     Geyser.Label:new(
-      {name = "GUI.Box7", x = "0%", y = "75%", width = "100%", height = "25%"}, GUI.Left
+      {name = &quot;GUI.Box7&quot;, x = &quot;0%&quot;, y = &quot;75%&quot;, width = &quot;100%&quot;, height = &quot;25%&quot;}, GUI.Left
     )
   GUI.Box7:setStyleSheet(GUI.BoxCSS:getCSS())
 end</script>
-						<eventHandlerList />
+						<eventHandlerList/>
 					</Script>
 					<Script isActive="yes" isFolder="no">
 						<name>Gauges</name>
-						<packageName></packageName>
+						<packageName/>
 						<script>function GUI.init_gauges()
   GUI.Footer =
     Geyser.HBox:new(
-      {name = "GUI.Footer", x = 0, y = 10, width = "100%", height = "75%"}, GUI.Bottom
+      {name = &quot;GUI.Footer&quot;, x = 0, y = 10, width = &quot;100%&quot;, height = &quot;75%&quot;}, GUI.Bottom
     )
   GUI.Status =
     Geyser.HBox:new(
-      {name = "GUI.Status", x = 12, y = 12, width = "100%", height = "100%", margin = 11}, GUI.Box7
+      {name = &quot;GUI.Status&quot;, x = 12, y = 12, width = &quot;100%&quot;, height = &quot;100%&quot;, margin = 11}, GUI.Box7
     )
   GUI.ActionIconsBox =
     Geyser.VBox:new(
       {
-        name = "GUI.ActionIconsBox",
+        name = &quot;GUI.ActionIconsBox&quot;,
         x = 0,
         y = 0,
-        height = "100%",
+        height = &quot;100%&quot;,
         width = 32,
         h_policy = Geyser.Fixed,
         v_policy = Geyser.Fixed,
@@ -1747,10 +1575,10 @@ end</script>
   GUI.GaugeBar =
     Geyser.VBox:new(
       {
-        name = "GUI.GaugeBar",
+        name = &quot;GUI.GaugeBar&quot;,
         x = 0,
         y = 0,
-        height = "100%",
+        height = &quot;100%&quot;,
         width = GUI.Status.get_width() - 20 - 32,
         h_policy = Geyser.Fixed,
         v_policy = Geyser.Fixed,
@@ -1758,10 +1586,10 @@ end</script>
       GUI.Status
     )
   --GUI.LeftColumn = Geyser.VBox:new({
-  --  name = "GUI.LeftColumn",
+  --  name = &quot;GUI.LeftColumn&quot;,
   --},GUI.Footer)
   --GUI.RightColumn = Geyser.VBox:new({
-  --  name = "GUI.RightColumn",
+  --  name = &quot;GUI.RightColumn&quot;,
   --},GUI.Footer)
   GUI.GaugeBackCSS =
     CSSMan.new(
@@ -1790,33 +1618,33 @@ end</script>
 ]]
     )
   GUI.Health =
-    Geyser.Gauge:new({name = "GUI.Health", height = 32, v_policy = Geyser.Fixed}, GUI.GaugeBar)
-  GUI.GaugeFrontCSS:set("background-color", "green")
-  GUI.GaugeBackCSS:set("background-color", "dark_green")
+    Geyser.Gauge:new({name = &quot;GUI.Health&quot;, height = 32, v_policy = Geyser.Fixed}, GUI.GaugeBar)
+  GUI.GaugeFrontCSS:set(&quot;background-color&quot;, &quot;green&quot;)
+  GUI.GaugeBackCSS:set(&quot;background-color&quot;, &quot;dark_green&quot;)
   GUI.Health.front:setStyleSheet(GUI.GaugeFrontCSS:getCSS())
   GUI.Health.back:setStyleSheet(GUI.GaugeBackCSS:getCSS())
   GUI.Health:setValue(math.random(100), 100)
-  GUI.Health.front:echo("GUI.Health")
+  GUI.Health.front:echo(&quot;GUI.Health&quot;)
   GUI.Moves =
-    Geyser.Gauge:new({name = "GUI.Moves", height = 32, v_policy = Geyser.Fixed}, GUI.GaugeBar)
-  GUI.GaugeFrontCSS:set("background-color", "purple")
-  GUI.GaugeBackCSS:set("background-color", "dark_purple")
+    Geyser.Gauge:new({name = &quot;GUI.Moves&quot;, height = 32, v_policy = Geyser.Fixed}, GUI.GaugeBar)
+  GUI.GaugeFrontCSS:set(&quot;background-color&quot;, &quot;purple&quot;)
+  GUI.GaugeBackCSS:set(&quot;background-color&quot;, &quot;dark_purple&quot;)
   GUI.Moves.front:setStyleSheet(GUI.GaugeFrontCSS:getCSS())
   GUI.Moves.back:setStyleSheet(GUI.GaugeBackCSS:getCSS())
   GUI.Moves:setValue(math.random(100), 100)
-  GUI.Moves.front:echo("GUI.Moves")
+  GUI.Moves.front:echo(&quot;GUI.Moves&quot;)
   GUI.Experience =
-    Geyser.Gauge:new({name = "GUI.Experience", height = 32, v_policy = Geyser.Fixed}, GUI.GaugeBar)
-  GUI.GaugeFrontCSS:set("background-color", "yellow")
-  GUI.GaugeBackCSS:set("background-color", "dark_yellow")
+    Geyser.Gauge:new({name = &quot;GUI.Experience&quot;, height = 32, v_policy = Geyser.Fixed}, GUI.GaugeBar)
+  GUI.GaugeFrontCSS:set(&quot;background-color&quot;, &quot;yellow&quot;)
+  GUI.GaugeBackCSS:set(&quot;background-color&quot;, &quot;dark_yellow&quot;)
   GUI.Experience.front:setStyleSheet(GUI.GaugeFrontCSS:getCSS())
   GUI.Experience.back:setStyleSheet(GUI.GaugeBackCSS:getCSS())
   GUI.Experience:setValue(math.random(100), 100)
-  GUI.Experience.front:echo([[&lt;span style = "color: black"&gt;GUI.Experience&lt;/span&gt;]])
+  GUI.Experience.front:echo([[&lt;span style = &quot;color: black&quot;&gt;GUI.Experience&lt;/span&gt;]])
   GUI.Enemy =
-    Geyser.Gauge:new({name = "GUI.Enemy", height = 32, v_policy = Geyser.Fixed}, GUI.GaugeBar)
-  GUI.GaugeFrontCSS:set("background-color", "brown")
-  GUI.GaugeBackCSS:set("background-color", "dark_brown")
+    Geyser.Gauge:new({name = &quot;GUI.Enemy&quot;, height = 32, v_policy = Geyser.Fixed}, GUI.GaugeBar)
+  GUI.GaugeFrontCSS:set(&quot;background-color&quot;, &quot;brown&quot;)
+  GUI.GaugeBackCSS:set(&quot;background-color&quot;, &quot;dark_brown&quot;)
   GUI.Enemy.front:setStyleSheet(GUI.GaugeFrontCSS:getCSS())
   GUI.Enemy.back:setStyleSheet(GUI.GaugeBackCSS:getCSS())
   GUI.Enemy:setValue(math.random(100), 100)
@@ -1824,18 +1652,17 @@ end</script>
   GUI.AffectedByIconsBox =
     Geyser.HBox:new(
       {
-        name = "GUI.AffectedByIconsBox",
+        name = &quot;GUI.AffectedByIconsBox&quot;,
         x = 0,
         y = 0,
         height = 48,
-        width = "100%",
+        width = &quot;100%&quot;,
         h_policy = Geyser.Fixed,
         v_policy = Geyser.Fixed,
       },
       GUI.GaugeBar
     )
 end
-
 function GUI.init_action_icons()
   GUI.ActionIconCSS = CSSMan.new([[
 	margin: 0px;
@@ -1843,7 +1670,7 @@ function GUI.init_action_icons()
   GUI.StandardActionIcon =
     Geyser.Label:new(
       {
-        name = "GUI.StandardActionIcon",
+        name = &quot;GUI.StandardActionIcon&quot;,
         width = 32,
         height = 32,
         h_policy = Geyser.Fixed,
@@ -1852,16 +1679,16 @@ function GUI.init_action_icons()
       GUI.ActionIconsBox
     )
   GUI.ActionIconCSS:set(
-    "border-image",
-    [[url("]] ..
-    getMudletHomeDir():gsub("\\", "/") ..
-    [[/LuminariGUI/images/action-standard.png");]]
+    &quot;border-image&quot;,
+    [[url(&quot;]] ..
+    getMudletHomeDir():gsub(&quot;\\&quot;, &quot;/&quot;) ..
+    [[/LuminariGUI/images/action-standard.png&quot;);]]
   )
   GUI.StandardActionIcon:setStyleSheet(GUI.ActionIconCSS:getCSS())
   GUI.MoveActionIcon =
     Geyser.Label:new(
       {
-        name = "GUI.MoveActionIcon",
+        name = &quot;GUI.MoveActionIcon&quot;,
         width = 32,
         height = 32,
         h_policy = Geyser.Fixed,
@@ -1870,14 +1697,14 @@ function GUI.init_action_icons()
       GUI.ActionIconsBox
     )
   GUI.ActionIconCSS:set(
-    "border-image",
-    [[url("]] .. getMudletHomeDir():gsub("\\", "/") .. [[/LuminariGUI/images/action-move.png");]]
+    &quot;border-image&quot;,
+    [[url(&quot;]] .. getMudletHomeDir():gsub(&quot;\\&quot;, &quot;/&quot;) .. [[/LuminariGUI/images/action-move.png&quot;);]]
   )
   GUI.MoveActionIcon:setStyleSheet(GUI.ActionIconCSS:getCSS())
   GUI.SwiftActionIcon =
     Geyser.Label:new(
       {
-        name = "GUI.SwiftActionIcon",
+        name = &quot;GUI.SwiftActionIcon&quot;,
         width = 32,
         height = 32,
         h_policy = Geyser.Fixed,
@@ -1886,53 +1713,48 @@ function GUI.init_action_icons()
       GUI.ActionIconsBox
     )
   GUI.ActionIconCSS:set(
-    "border-image",
-    [[url("]] .. getMudletHomeDir():gsub("\\", "/") .. [[/LuminariGUI/images/action-swift.png");]]
+    &quot;border-image&quot;,
+    [[url(&quot;]] .. getMudletHomeDir():gsub(&quot;\\&quot;, &quot;/&quot;) .. [[/LuminariGUI/images/action-swift.png&quot;);]]
   )
   GUI.SwiftActionIcon:setStyleSheet(GUI.ActionIconCSS:getCSS())
 end
-
 --GUI.Endurance = Geyser.Gauge:new({
---  name = "GUI.Endurance",
+--  name = &quot;GUI.Endurance&quot;,
 --},GUI.RightColumn)
 --GUI.Endurance.back:setStyleSheet(GUI.GaugeBackCSS:getCSS())
---GUI.GaugeFrontCSS:set("background-color","yellow")
+--GUI.GaugeFrontCSS:set(&quot;background-color&quot;,&quot;yellow&quot;)
 --GUI.Endurance.front:setStyleSheet(GUI.GaugeFrontCSS:getCSS())
 --GUI.Endurance:setValue(math.random(100),100)
---GUI.Endurance.front:echo("GUI.Endurance")
---GUI.Endurance.front:echo([[&lt;span style = "color: black"&gt;GUI.Endurance&lt;/span&gt;]])
+--GUI.Endurance.front:echo(&quot;GUI.Endurance&quot;)
+--GUI.Endurance.front:echo([[&lt;span style = &quot;color: black&quot;&gt;GUI.Endurance&lt;/span&gt;]])
 --GUI.Willpower = Geyser.Gauge:new({
---  name = "GUI.Willpower",
+--  name = &quot;GUI.Willpower&quot;,
 --},GUI.RightColumn)
 --GUI.Willpower.back:setStyleSheet(GUI.GaugeBackCSS:getCSS())
---GUI.GaugeFrontCSS:set("background-color","purple")
+--GUI.GaugeFrontCSS:set(&quot;background-color&quot;,&quot;purple&quot;)
 --GUI.Willpower.front:setStyleSheet(GUI.GaugeFrontCSS:getCSS())
 --GUI.Willpower:setValue(math.random(100),100)
---GUI.Willpower.front:echo("GUI.Willpower")</script>
-						<eventHandlerList />
+--GUI.Willpower.front:echo(&quot;GUI.Willpower&quot;)</script>
+						<eventHandlerList/>
 					</Script>
 					<Script isActive="yes" isFolder="no">
 						<name>Cast Console</name>
-						<packageName></packageName>
+						<packageName/>
 --[[
   Spell Casting Console Initialization
   ===================================
-  
   Initializes the dedicated mini-console for spell casting feedback and status tracking.
   Provides real-time visual feedback for spell casting progress, completion, and interruption.
-  
   Console Configuration:
   - Embedded within main GUI layout for integrated display
   - Transparent background for seamless visual integration
   - Inherits parent container sizing and positioning
   - Uses Geyser.MiniConsole for advanced text formatting capabilities
-  
   Purpose and Integration:
   - Centralized spell casting feedback display
   - Separates casting messages from main game output
   - Provides consistent formatting for all casting events
   - Coordinates with casting event handlers and timers
-  
   Event Integration Points:
   - Connected to spell start/complete/abort/cancel event handlers
   - Integrates with casting timer systems
@@ -1943,67 +1765,60 @@ end
   GUI.castConsole =
   Geyser.MiniConsole:new(
   {
-    name = "GUI.castConsole",
+    name = &quot;GUI.castConsole&quot;,
     x = 8,
-    y = "5%",
+    y = &quot;5%&quot;,
     width = GUI.Box2:get_width() - 15,
     -- Height subtraction is found by adding y to button height.
-    height = "10%",
-    color = "black"
+    height = &quot;10%&quot;,
+    color = &quot;black&quot;
   },
   GUI.Box2
   )
-  setMiniConsoleFontSize("GUI.castConsole", getFontSize("main"))
-  setFont("GUI.castConsole", getFont("main"))
+  setMiniConsoleFontSize(&quot;GUI.castConsole&quot;, getFontSize(&quot;main&quot;))
+  setFont(&quot;GUI.castConsole&quot;, getFont(&quot;main&quot;))
 end
-
-
 -- Spell Casting Initiation Handler
 -- Displays spell casting start message and sets up casting state
 -- Parameters: spellName (string), spellLength (string/number)
 function GUI.castConsole_startCast(spellName, spellLength)
   GUI.currentlyCasting = spellName
   GUI.castingNow = true
-  clearUserWindow("GUI.castConsole")
-  GUI.castConsole:cecho("\n&lt;white&gt;Spell: &lt;yellow&gt;"..spellName:title().." &lt;white&gt;- &lt;cyan&gt;"..spellLength)
+  clearUserWindow(&quot;GUI.castConsole&quot;)
+  GUI.castConsole:cecho(&quot;\n&lt;white&gt;Spell: &lt;yellow&gt;&quot;..spellName:title()..&quot; &lt;white&gt;- &lt;cyan&gt;&quot;..spellLength)
   if GUI.castConsoleTimer then
     killTimer(GUI.castConsoleTimer)
   end
 end
-
 -- Spell Casting Completion Handler
 -- Displays successful spell completion message with green status
 function GUI.castConsole_completeCast()
-  GUI.castConsole:cecho("\n&lt;white&gt;Spell: &lt;yellow&gt;"..GUI.currentlyCasting:title().." &lt;white&gt;- &lt;green&gt;Cast")
-  GUI.castConsoleTimer = tempTimer(10, [[clearUserWindow("GUI.castConsole")]])
+  GUI.castConsole:cecho(&quot;\n&lt;white&gt;Spell: &lt;yellow&gt;&quot;..GUI.currentlyCasting:title()..&quot; &lt;white&gt;- &lt;green&gt;Cast&quot;)
+  GUI.castConsoleTimer = tempTimer(10, [[clearUserWindow(&quot;GUI.castConsole&quot;)]])
 end
-
 -- Spell Casting Abort Handler
 -- Displays spell interruption message with red status and clears casting state
 function GUI.castConsole_abortedCast()
-  GUI.castConsole:cecho("\n&lt;white&gt;Spell: &lt;yellow&gt;"..GUI.currentlyCasting:title().." &lt;white&gt;- &lt;red&gt;Aborted")
+  GUI.castConsole:cecho(&quot;\n&lt;white&gt;Spell: &lt;yellow&gt;&quot;..GUI.currentlyCasting:title()..&quot; &lt;white&gt;- &lt;red&gt;Aborted&quot;)
   GUI.castingNow = false
-  GUI.castConsoleTimer = tempTimer(10, [[clearUserWindow("GUI.castConsole")]])
+  GUI.castConsoleTimer = tempTimer(10, [[clearUserWindow(&quot;GUI.castConsole&quot;)]])
 end
-
-
 -- Spell Casting Cancel Handler
 -- Displays spell cancellation message with red status and clears casting state
 function GUI.castConsole_canceledCast()
-  GUI.castConsole:cecho("\n&lt;white&gt;Spell: &lt;yellow&gt;"..GUI.currentlyCasting:title().." &lt;white&gt;- &lt;red&gt;Canceled")
+  GUI.castConsole:cecho(&quot;\n&lt;white&gt;Spell: &lt;yellow&gt;&quot;..GUI.currentlyCasting:title()..&quot; &lt;white&gt;- &lt;red&gt;Canceled&quot;)
   GUI.castingNow = false
-  GUI.castConsoleTimer = tempTimer(10, [[clearUserWindow("GUI.castConsole")]])
+  GUI.castConsoleTimer = tempTimer(10, [[clearUserWindow(&quot;GUI.castConsole&quot;)]])
 end
-
 </script>
-						<eventHandlerList />
+						<eventHandlerList/>
 					</Script>
 					<Script isActive="yes" isFolder="no">
 						<name>Header Icons</name>
-						<packageName></packageName>
+						<packageName/>
 						<script>function GUI.init_header_icons()
   GUI.Header =
-    Geyser.HBox:new({name = "GUI.Header", x = 0, y = 0, width = "100%", height = "100%"}, GUI.Top)
+    Geyser.HBox:new({name = &quot;GUI.Header&quot;, x = 0, y = 0, width = &quot;100%&quot;, height = &quot;100%&quot;}, GUI.Top)
   GUI.IconCSS =
     CSSMan.new(
       [[
@@ -2018,61 +1833,53 @@ end
     )
   --[[
 for i=1,12 do
-  GUI["Icon"..i] = Geyser.Label:new({
-    name = "GUI.Icon"..i,
+  GUI[&quot;Icon&quot;..i] = Geyser.Label:new({
+    name = &quot;GUI.Icon&quot;..i,
   },GUI.Header)
-  GUI["Icon"..i]:setStyleSheet(GUI.IconCSS:getCSS())
-  GUI["Icon"..i]:echo("&lt;center&gt;GUI. Icon"..i)
+  GUI[&quot;Icon&quot;..i]:setStyleSheet(GUI.IconCSS:getCSS())
+  GUI[&quot;Icon&quot;..i]:echo(&quot;&lt;center&gt;GUI. Icon&quot;..i)
 end
 ]]
 end</script>
-						<eventHandlerList />
+						<eventHandlerList/>
 					</Script>
 					<Script isActive="yes" isFolder="no">
 						<name>TabbedInfoWindow</name>
-						<packageName></packageName>
+						<packageName/>
 						<script>GUI.tabbedInfoWindow =
   GUI.tabbedInfoWindow or
   {
-    tabs = {"Player", "Affects", "Group"},
-    color1 = "rgba(0,0,0,0)",
-    color2 = "rgba(0,0,0,0)",
-    width = "100%",
-    height = "100%",
-    current = "Player",
+    tabs = {&quot;Player&quot;, &quot;Affects&quot;, &quot;Group&quot;},
+    color1 = &quot;rgba(0,0,0,0)&quot;,
+    color2 = &quot;rgba(0,0,0,0)&quot;,
+    width = &quot;100%&quot;,
+    height = &quot;100%&quot;,
+    current = &quot;Player&quot;,
   }
-
 --[[
   Dynamic UI Frame Generator
   ==========================
-  
   Creates decorative border frames around GUI containers using 9-slice image technique.
   Automatically adapts to container dimensions and provides professional visual styling.
-  
   Parameters:
     fl (Geyser.Container) - Target container to frame
-  
   Frame Architecture:
   - 9-slice border system using corner, edge, and repeating segments
   - Corner pieces: Fixed 133x133 or 9x133 pixel dimensions
   - Edge pieces: Dynamically sized based on container dimensions
   - Repeating middle sections for scalable borders
-  
   Image Asset Structure:
   - Corner frames: 4 fixed-size corner pieces (upper/lower + left/right)
   - Edge repeaters: 4 repeating edge pieces for sides and top/bottom
   - All images stored in LuminariGUI/images/frame/ directory
-  
   Coordinate System:
   - Uses Geyser positioning with negative values for right/bottom alignment
   - Dynamic sizing calculations: container_size - 266 for middle sections
   - Maintains consistent 9px and 133px frame element dimensions
-  
   Performance Considerations:
   - Creates 12 separate Geyser.Label elements per frame
   - CSS border-image styling for image rendering
   - Uses stretch and repeat modes for proper scaling
-  
   Usage Context:
   - Applied to major GUI containers (Box2, Box3, Box4, Box5, Box7)
   - Provides visual hierarchy and professional appearance
@@ -2081,166 +1888,148 @@ end</script>
 function createFrame(fl)
   -- Initialize frame table to hold all border elements
   ft = {}
-  
   -- Left Border Elements
   -- ====================
-  
   -- Upper left corner - fixed size corner piece
   ft.upper_left = Geyser.Label:new({x = 0, y = 0, height = 133, width = 9}, fl)
   ft.upper_left:setStyleSheet(
     [[
   border-image: url(]] ..
-    getMudletHomeDir():gsub("\\", "/") ..
+    getMudletHomeDir():gsub(&quot;\\&quot;, &quot;/&quot;) ..
     [[/LuminariGUI/images/frame/frame_upperleft_9x133.png) 0 0 0 0 stretch stretch;
   ]]
   )
-  
   -- Middle left edge - repeating section that scales with container height
   ft.middle_left =
     Geyser.Label:new({x = 0, y = 133, height = fl:get_height() - 266, width = 9}, fl)
   ft.middle_left:setStyleSheet(
     [[
   border-image: url(]] ..
-    getMudletHomeDir():gsub("\\", "/") ..
+    getMudletHomeDir():gsub(&quot;\\&quot;, &quot;/&quot;) ..
     [[/LuminariGUI/images/frame/straight_repeater_left_9x133.png) 0 0 0 0 stretch repeat;
   ]]
   )
-  
   -- Lower left corner - fixed size corner piece at bottom
   ft.lower_left = Geyser.Label:new({x = 0, y = -133, height = 133, width = 9}, fl)
   ft.lower_left:setStyleSheet(
     [[
   border-image: url(]] ..
-    getMudletHomeDir():gsub("\\", "/") ..
+    getMudletHomeDir():gsub(&quot;\\&quot;, &quot;/&quot;) ..
     [[/LuminariGUI/images/frame/frame_lowerleft_9x133.png) 0 0 0 0 stretch stretch;
   ]]
   )
-  
   -- Right Border Elements
   -- =====================
-  
   -- Upper right corner - fixed size corner piece
   ft.upper_right = Geyser.Label:new({x = -9, y = 0, height = 133, width = 9}, fl)
   ft.upper_right:setStyleSheet(
     [[
   border-image: url(]] ..
-    getMudletHomeDir():gsub("\\", "/") ..
+    getMudletHomeDir():gsub(&quot;\\&quot;, &quot;/&quot;) ..
     [[/LuminariGUI/images/frame/frame_upperright_9x133.png) 0 0 0 0 stretch stretch;
   ]]
   )
-  
   -- Middle right edge - repeating section that scales with container height
   ft.middle_right =
     Geyser.Label:new({x = -9, y = 133, height = fl:get_height() - 266, width = 9}, fl)
   ft.middle_right:setStyleSheet(
     [[
   border-image: url(]] ..
-    getMudletHomeDir():gsub("\\", "/") ..
+    getMudletHomeDir():gsub(&quot;\\&quot;, &quot;/&quot;) ..
     [[/LuminariGUI/images/frame/straight_repeater_right_9x133.png) 0 0 0 0 stretch repeat;
   ]]
   )
-  
   -- Lower right corner - fixed size corner piece at bottom
   ft.lower_right = Geyser.Label:new({x = -9, y = -133, height = 133, width = 9}, fl)
   ft.lower_right:setStyleSheet(
     [[
   border-image: url(]] ..
-    getMudletHomeDir():gsub("\\", "/") ..
+    getMudletHomeDir():gsub(&quot;\\&quot;, &quot;/&quot;) ..
     [[/LuminariGUI/images/frame/frame_lowerright_9x133.png) 0 0 0 0 stretch stretch;
   ]]
   )
-  
   -- Top Border Elements
   -- ===================
-  
   -- Left top corner - fixed size corner piece
   ft.left_top = Geyser.Label:new({x = 0, y = 0, height = 9, width = 133}, fl)
   ft.left_top:setStyleSheet(
     [[
   border-image: url(]] ..
-    getMudletHomeDir():gsub("\\", "/") ..
+    getMudletHomeDir():gsub(&quot;\\&quot;, &quot;/&quot;) ..
     [[/LuminariGUI/images/frame/frame_lefttop_133x9.png) 0 0 0 0 stretch stretch;
   ]]
   )
-  
   -- Middle top edge - repeating section that scales with container width
   ft.middle_top =
     Geyser.Label:new({x = 133, y = 0, height = 9, width = fl:get_width() - 266}, fl)
   ft.middle_top:setStyleSheet(
     [[
   border-image: url(]] ..
-    getMudletHomeDir():gsub("\\", "/") ..
+    getMudletHomeDir():gsub(&quot;\\&quot;, &quot;/&quot;) ..
     [[/LuminariGUI/images/frame/straight_repeater_top_133x9.png) 0 0 0 0 stretch repeat;
   ]]
   )
-  
   -- Right top corner - fixed size corner piece
   ft.right_top = Geyser.Label:new({x = -133, y = 0, height = 9, width = 133}, fl)
   ft.right_top:setStyleSheet(
     [[
   border-image: url(]] ..
-    getMudletHomeDir():gsub("\\", "/") ..
+    getMudletHomeDir():gsub(&quot;\\&quot;, &quot;/&quot;) ..
     [[/LuminariGUI/images/frame/frame_righttop_133x9.png) 0 0 0 0 stretch stretch;
   ]]
   )
-  
   -- Bottom Border Elements
   -- ======================
-  
   -- Left bottom corner - fixed size corner piece
   ft.left_bottom = Geyser.Label:new({x = 0, y = -9, height = 9, width = 133}, fl)
   ft.left_bottom:setStyleSheet(
     [[
   border-image: url(]] ..
-    getMudletHomeDir():gsub("\\", "/") ..
+    getMudletHomeDir():gsub(&quot;\\&quot;, &quot;/&quot;) ..
     [[/LuminariGUI/images/frame/frame_leftbottom_133x9.png) 0 0 0 0 stretch stretch;
   ]]
   )
-  
   -- Middle bottom edge - repeating section that scales with container width
   ft.middle_bottom =
     Geyser.Label:new({x = 133, y = -9, height = 9, width = fl:get_width() - 266}, fl)
   ft.middle_bottom:setStyleSheet(
     [[
   border-image: url(]] ..
-    getMudletHomeDir():gsub("\\", "/") ..
+    getMudletHomeDir():gsub(&quot;\\&quot;, &quot;/&quot;) ..
     [[/LuminariGUI/images/frame/straight_repeater_bottom_133x9.png) 0 0 0 0 stretch repeat;
   ]]
   )
-  
   -- Right bottom corner - fixed size corner piece
   ft.right_bottom = Geyser.Label:new({x = -133, y = -9, height = 9, width = 133}, fl)
   ft.right_bottom:setStyleSheet(
     [[
   border-image: url(]] ..
-    getMudletHomeDir():gsub("\\", "/") ..
+    getMudletHomeDir():gsub(&quot;\\&quot;, &quot;/&quot;) ..
     [[/LuminariGUI/images/frame/frame_rightbottom_133x9.png) 0 0 0 0 stretch stretch;
   ]]
   )
 end
-
 function GUI.tabbedInfoWindow.click(tab)
   GUI.tabbedInfoWindow[GUI.tabbedInfoWindow.current]:hide()
-  GUI.tabbedInfoWindow[GUI.tabbedInfoWindow.current .. "tab"]:echo(
-    GUI.tabbedInfoWindow.current, "white", "c"
+  GUI.tabbedInfoWindow[GUI.tabbedInfoWindow.current .. &quot;tab&quot;]:echo(
+    GUI.tabbedInfoWindow.current, &quot;white&quot;, &quot;c&quot;
   )
   GUI.tabbedInfoWindow.current = tab
   GUI.tabbedInfoWindow[GUI.tabbedInfoWindow.current]:show()
-  GUI.tabbedInfoWindow[tab .. "tab"]:echo(tab, "yellow", "c")
+  GUI.tabbedInfoWindow[tab .. &quot;tab&quot;]:echo(tab, &quot;yellow&quot;, &quot;c&quot;)
 end
-
 function GUI.tabbedInfoWindow.init()
   GUI.tabbedInfoWindowTabCSS =
     CSSMan.new(
-      [[font-family: Tahoma, Geneva, sans-serif; 
+      [[font-family: Tahoma, Geneva, sans-serif;
 			border-image: url(]] ..
-      getMudletHomeDir():gsub("\\", "/") ..
+      getMudletHomeDir():gsub(&quot;\\&quot;, &quot;/&quot;) ..
       [[/LuminariGUI/images/buttons/button.png) 0 0 0 0 stretch stretch;]]
     )
   GUI.tabbedInfoWindow.container =
     Geyser.Container:new(
       {
-        name = "GUI.tabbedInfoWindow.back",
+        name = &quot;GUI.tabbedInfoWindow.back&quot;,
         x = 9,
         y = 9,
         width = GUI.Box4:get_width() - 18,
@@ -2250,19 +2039,19 @@ function GUI.tabbedInfoWindow.init()
     )
   GUI.tabbedInfoWindow.header =
     Geyser.HBox:new(
-      {name = "GUI.tabbedInfoWindow.header", x = 0, y = 0, width = "100%", height = "5%"},
+      {name = &quot;GUI.tabbedInfoWindow.header&quot;, x = 0, y = 0, width = &quot;100%&quot;, height = &quot;5%&quot;},
       GUI.tabbedInfoWindow.container
     )
   GUI.tabbedInfoWindow.footer =
     Geyser.Label:new(
-      {name = "GUI.tabbedInfoWindow.footer", x = 0, y = "5%", width = "100%", height = "95%"},
+      {name = &quot;GUI.tabbedInfoWindow.footer&quot;, x = 0, y = &quot;5%&quot;, width = &quot;100%&quot;, height = &quot;95%&quot;},
       GUI.tabbedInfoWindow.container
     )
   GUI.tabbedInfoWindow.footer:setStyleSheet([[font-family: Tahoma, Geneva, sans-serif;
 ]])
   GUI.tabbedInfoWindow.center =
     Geyser.Label:new(
-      {name = "GUI.tabbedInfoWindow.center", x = 0, y = 0, width = "100%", height = "100%"},
+      {name = &quot;GUI.tabbedInfoWindow.center&quot;, x = 0, y = 0, width = &quot;100%&quot;, height = &quot;100%&quot;},
       GUI.tabbedInfoWindow.footer
     )
   GUI.tabbedInfoWindow.center:setStyleSheet(
@@ -2274,42 +2063,42 @@ function GUI.tabbedInfoWindow.init()
 	]]
   )
   for k, v in pairs(GUI.tabbedInfoWindow.tabs) do
-    GUI.tabbedInfoWindow[v .. "tab"] =
-      Geyser.Label:new({name = "GUI.tabbedInfoWindow." .. v .. "tab"}, GUI.tabbedInfoWindow.header)
-    GUI.tabbedInfoWindow[v .. "tab"]:setStyleSheet(GUI.tabbedInfoWindowTabCSS:getCSS())
-    GUI.tabbedInfoWindow[v .. "tab"]:echo("&lt;center&gt;" .. v)
-    GUI.tabbedInfoWindow[v .. "tab"]:setClickCallback("GUI.tabbedInfoWindow.click", v)
+    GUI.tabbedInfoWindow[v .. &quot;tab&quot;] =
+      Geyser.Label:new({name = &quot;GUI.tabbedInfoWindow.&quot; .. v .. &quot;tab&quot;}, GUI.tabbedInfoWindow.header)
+    GUI.tabbedInfoWindow[v .. &quot;tab&quot;]:setStyleSheet(GUI.tabbedInfoWindowTabCSS:getCSS())
+    GUI.tabbedInfoWindow[v .. &quot;tab&quot;]:echo(&quot;&lt;center&gt;&quot; .. v)
+    GUI.tabbedInfoWindow[v .. &quot;tab&quot;]:setClickCallback(&quot;GUI.tabbedInfoWindow.click&quot;, v)
     GUI.tabbedInfoWindow[v] =
       Geyser.Label:new(
-        {name = "GUI.tabbedInfoWindow." .. v, x = 0, y = 0, width = "100%", height = "100%"},
+        {name = &quot;GUI.tabbedInfoWindow.&quot; .. v, x = 0, y = 0, width = &quot;100%&quot;, height = &quot;100%&quot;},
         GUI.tabbedInfoWindow.footer
       )
     GUI.tabbedInfoWindow[v]:setStyleSheet(
       [[
     background-color: ]] ..
       GUI.tabbedInfoWindow.color1 ..
-      [[;    
+      [[;
 	  font-family: Tahoma, Geneva, sans-serif;
 	]]
     )
-    GUI.tabbedInfoWindow[v .. "center"] =
+    GUI.tabbedInfoWindow[v .. &quot;center&quot;] =
       Geyser.Label:new(
         {
-          name = "GUI.tabbedInfoWindow." .. v .. "center",
+          name = &quot;GUI.tabbedInfoWindow.&quot; .. v .. &quot;center&quot;,
           x = 0,
           y = 0,
-          width = "100%",
-          height = "100%",
+          width = &quot;100%&quot;,
+          height = &quot;100%&quot;,
         },
         GUI.tabbedInfoWindow[v]
       )
-    GUI.tabbedInfoWindow[v .. "center"]:setStyleSheet(
+    GUI.tabbedInfoWindow[v .. &quot;center&quot;]:setStyleSheet(
       [[
     background-color: ]] ..
       GUI.tabbedInfoWindow.color2 ..
       [[;
 		border-image: url(]] ..
-      getMudletHomeDir():gsub("\\", "/") ..
+      getMudletHomeDir():gsub(&quot;\\&quot;, &quot;/&quot;) ..
       [[/LuminariGUI/images/ui_texture.png) 0 0 0 0 stretch stretch;
 		font-family: Tahoma, Geneva, sans-serif;
   ]]
@@ -2318,13 +2107,13 @@ function GUI.tabbedInfoWindow.init()
     GUI.tabbedInfoWindow.current = v
   end
   -- Init to player tab
-  GUI.tabbedInfoWindow.click("Player")
+  GUI.tabbedInfoWindow.click(&quot;Player&quot;)
 end</script>
-						<eventHandlerList />
+						<eventHandlerList/>
 					</Script>
 					<Script isActive="yes" isFolder="no">
 						<name>Affects</name>
-						<packageName></packageName>
+						<packageName/>
 						<script>-- Affects
 -- -------
 -- There are several types of affects in Luminari - Affected By (Status), Spell-Like Affects, Resistances and Damage Reduction
@@ -2336,9 +2125,8 @@ end</script>
 --
 -- All other affects are displayed in the 'Affects' tab in the upper left.
 --
--- Container: GUI.tabbedInfoWindow["Affectscenter"]
+-- Container: GUI.tabbedInfoWindow[&quot;Affectscenter&quot;]
 --
-
 -- Initialize tables
 GUI.AffectIcons = GUI.AffectIcons or {}
 GUI.SLAffects = GUI.SLAffects or {}
@@ -2346,9 +2134,8 @@ GUI.SLAffects.Labels = GUI.SLAffects.Labels or {}
 GUI.Affects = GUI.Affects or {}
 GUI.Affects.Rows = GUI.Affects.Rows or {}
 GUI.Affects.Modes = GUI.Affects.Modes or {}
-
 function GUI.Affects.init()
-  -- Initialize all the labels and such	
+  -- Initialize all the labels and such
   GUI.Affects = {}
   GUI.Affects.Labels = {}
   GUI.Affects.Modes = {}
@@ -2356,34 +2143,33 @@ function GUI.Affects.init()
   GUI.Affects.Rows = {}
   -- CSS
   GUI.Affects.IconCSS = CSSMan.new([[
-	  margin: 0px;	
+	  margin: 0px;
   ]])
   GUI.Affects.Modes.IconCSS = CSSMan.new([[
 	  margin: 0px;
-  ]])  
+  ]])
   -- Calculate how many labels will fit into the container
   GUI.Affects.icon_width = 48
   GUI.Affects.icon_height = 48
   GUI.Affects.Modes.icon_width = 48
   GUI.Affects.Modes.icon_height = 48
   GUI.Affects.num_icons_row =
-    (GUI.tabbedInfoWindow["Affectscenter"]:get_width()) / GUI.Affects.icon_width
-  GUI.Affects.num_rows = 3 -- This is so we have room below for the other affect types.	
-    --(GUI.tabbedInfoWindow["Affectscenter"]:get_height()) / GUI.Affects.icon_height
-  
+    (GUI.tabbedInfoWindow[&quot;Affectscenter&quot;]:get_width()) / GUI.Affects.icon_width
+  GUI.Affects.num_rows = 3 -- This is so we have room below for the other affect types.
+    --(GUI.tabbedInfoWindow[&quot;Affectscenter&quot;]:get_height()) / GUI.Affects.icon_height
 	-- Create the VBox
   GUI.Affects.container =
     Geyser.VBox:new(
       {
-        name = "GUI.Affects.container",
+        name = &quot;GUI.Affects.container&quot;,
         x = 0,
         y = 0,
-        width = "100%",
+        width = &quot;100%&quot;,
         height = GUI.Affects.num_rows * GUI.Affects.icon_height,
         h_policy = Geyser.Fixed,
         v_policy = Geyser.Fixed,
       },
-      GUI.tabbedInfoWindow["Affectscenter"]
+      GUI.tabbedInfoWindow[&quot;Affectscenter&quot;]
     )
 	-- Create the Affect Labels
   for i = 1, GUI.Affects.num_rows do
@@ -2393,11 +2179,11 @@ function GUI.Affects.init()
     GUI.Affects.Rows[i].container =
       Geyser.HBox:new(
         {
-          name = "GUI.Affects.Row" .. i,
+          name = &quot;GUI.Affects.Row&quot; .. i,
           x = 0,
           y = 0,
           height = GUI.Affects.icon_height,
-          width = "100%",
+          width = &quot;100%&quot;,
           h_policy = Geyser.Fixed,
           v_policy = Geyser.Fixed,
         },
@@ -2407,7 +2193,7 @@ function GUI.Affects.init()
       GUI.Affects.Rows[i].Labels[j] =
         Geyser.Label:new(
           {
-            name = "GUI.Affects.Label" .. tostring(i) .. '_' .. tostring(j),
+            name = &quot;GUI.Affects.Label&quot; .. tostring(i) .. '_' .. tostring(j),
             width = GUI.Affects.icon_width,
             height = GUI.Affects.icon_height,
             h_policy = Geyser.Fixed,
@@ -2426,27 +2212,27 @@ function GUI.Affects.init()
     GUI.AffectedByIconsBox:get_width() / GUI.Affects.Modes.icon_width
   GUI.Affects.Modes.ModeList =
     {
-      ["Mode-RapidShot"] = true,
-      ["Flurry-of-Blows"] = true,
-      ["Sneaking"] = true,
-      ["Hiding"] = true,
-      ["Mode-PowerAttack"] = true,
-      ["Mode-Expertise"] = true,
-      ["Mode-Total-Defense"] = true,
-      ["Spot-Mode"] = true,
-      ["Listen-Mode"] = true,
-      ["Mode-Spellbattle"] = true,
-      ["Counterspell"] = true,
-      ["Defensive-Casting"] = true,
-      ["Charging"] = true,
-      ["WildShape"] = true,
+      [&quot;Mode-RapidShot&quot;] = true,
+      [&quot;Flurry-of-Blows&quot;] = true,
+      [&quot;Sneaking&quot;] = true,
+      [&quot;Hiding&quot;] = true,
+      [&quot;Mode-PowerAttack&quot;] = true,
+      [&quot;Mode-Expertise&quot;] = true,
+      [&quot;Mode-Total-Defense&quot;] = true,
+      [&quot;Spot-Mode&quot;] = true,
+      [&quot;Listen-Mode&quot;] = true,
+      [&quot;Mode-Spellbattle&quot;] = true,
+      [&quot;Counterspell&quot;] = true,
+      [&quot;Defensive-Casting&quot;] = true,
+      [&quot;Charging&quot;] = true,
+      [&quot;WildShape&quot;] = true,
     }
   -- Create the Mode Labels
   for i = 1, GUI.Affects.Modes.num_icons_row do
     GUI.Affects.Modes.Labels[i] =
       Geyser.Label:new(
         {
-          name = "GUI.AffectIcon" .. tostring(i),
+          name = &quot;GUI.AffectIcon&quot; .. tostring(i),
           width = GUI.Affects.Modes.icon_width,
           height = GUI.Affects.Modes.icon_height,
           h_policy = Geyser.Fixed,
@@ -2456,32 +2242,30 @@ function GUI.Affects.init()
       )
     GUI.Affects.Modes.Labels[i]:setStyleSheet(GUI.Affects.Modes.IconCSS:getCSS())
   end
-	GUI.tabbedInfoWindow["Affects"]:hide()
-	
+	GUI.tabbedInfoWindow[&quot;Affects&quot;]:hide()
 	-- Initialize the area for the Spell Like Affects - GUI.Affects.SLAffects
 	GUI.SLAffects.row_height = 20
 	-- Calculate how many rows we can have:
-	GUI.SLAffects.num_rows = (GUI.tabbedInfoWindow["Affectscenter"]:get_height() - (GUI.Affects.icon_height*GUI.Affects.num_rows)) / GUI.SLAffects.row_height
+	GUI.SLAffects.num_rows = (GUI.tabbedInfoWindow[&quot;Affectscenter&quot;]:get_height() - (GUI.Affects.icon_height*GUI.Affects.num_rows)) / GUI.SLAffects.row_height
 	-- Set up the VBox
-	GUI.SLAffects.container = 
+	GUI.SLAffects.container =
 	Geyser.VBox:new(
       {
-        name = "GUI.SLAffects.container",
+        name = &quot;GUI.SLAffects.container&quot;,
         x = 0,
         y = GUI.Affects.icon_height*GUI.Affects.num_rows,
-        width = "100%",
-        height = GUI.tabbedInfoWindow["Affectscenter"].get_height() - (GUI.Affects.icon_height*GUI.Affects.num_rows),        
+        width = &quot;100%&quot;,
+        height = GUI.tabbedInfoWindow[&quot;Affectscenter&quot;].get_height() - (GUI.Affects.icon_height*GUI.Affects.num_rows),
         v_policy = Geyser.Fixed,
       },
-      GUI.tabbedInfoWindow["Affectscenter"]
+      GUI.tabbedInfoWindow[&quot;Affectscenter&quot;]
   )
-
 	for i = 1, GUI.SLAffects.num_rows do
-		GUI.SLAffects.Labels[i] = 
+		GUI.SLAffects.Labels[i] =
 			Geyser.Label:new(
 				{
-					name = "GUI.SLAffect" .. tostring(i),
-					width = "100%",
+					name = &quot;GUI.SLAffect&quot; .. tostring(i),
+					width = &quot;100%&quot;,
 					height = GUI.SLAffects.row_height,
 					h_policy = Geyser.Fixed,
 				}, GUI.SLAffects.container
@@ -2490,62 +2274,53 @@ function GUI.Affects.init()
         background-color: rgba(0,0,0,0%);
       ]])
     GUI.SLAffects.Labels[i]:hide()
-	end 
+	end
 end
-
 function GUI.updateSLAffects()
 	if msdp.AFFECTS and msdp.AFFECTS.SPELL_LIKE_AFFECTS and #msdp.AFFECTS.SPELL_LIKE_AFFECTS &gt; 0 then
-		-- We have spell like affects to process!		
+		-- We have spell like affects to process!
 		for i = 1, GUI.SLAffects.num_rows do
-			GUI.SLAffects.Labels[i]:echo("")
+			GUI.SLAffects.Labels[i]:echo(&quot;&quot;)
 			GUI.SLAffects.Labels[i]:hide()
 			if i &lt;= #msdp.AFFECTS.SPELL_LIKE_AFFECTS then
-			  if (msdp.AFFECTS.SPELL_LIKE_AFFECTS[i].LOCATION == "Damage-Reduction") then
-					affect_string = string.format("&lt;pre&gt;[ %s ] %s %s (%s)&lt;/pre&gt;", msdp.AFFECTS.SPELL_LIKE_AFFECTS[i].DURATION, msdp.AFFECTS.SPELL_LIKE_AFFECTS[i].NAME, 
+			  if (msdp.AFFECTS.SPELL_LIKE_AFFECTS[i].LOCATION == &quot;Damage-Reduction&quot;) then
+					affect_string = string.format(&quot;&lt;pre&gt;[ %s ] %s %s (%s)&lt;/pre&gt;&quot;, msdp.AFFECTS.SPELL_LIKE_AFFECTS[i].DURATION, msdp.AFFECTS.SPELL_LIKE_AFFECTS[i].NAME,
 					msdp.AFFECTS.SPELL_LIKE_AFFECTS[i].LOCATION, msdp.AFFECTS.SPELL_LIKE_AFFECTS[i].TYPE)
 				else
-				  affect_string = string.format("&lt;pre&gt;[ %s ] %s %s to %s (%s)&lt;/pre&gt;", msdp.AFFECTS.SPELL_LIKE_AFFECTS[i].DURATION, msdp.AFFECTS.SPELL_LIKE_AFFECTS[i].NAME, 
+				  affect_string = string.format(&quot;&lt;pre&gt;[ %s ] %s %s to %s (%s)&lt;/pre&gt;&quot;, msdp.AFFECTS.SPELL_LIKE_AFFECTS[i].DURATION, msdp.AFFECTS.SPELL_LIKE_AFFECTS[i].NAME,
 					msdp.AFFECTS.SPELL_LIKE_AFFECTS[i].MODIFIER, msdp.AFFECTS.SPELL_LIKE_AFFECTS[i].LOCATION, msdp.AFFECTS.SPELL_LIKE_AFFECTS[i].TYPE)
 --[[
   Character Affects Icon Display Manager
   =====================================
-  
   Processes and displays visual icons for all character affects/buffs received via MSDP.
   Manages two distinct display categories with different priorities and layouts.
-  
   Affect Categories:
   1. Mode Affects - Combat/behavioral modes (displayed in health bar area for immediate visibility)
   2. Status Affects - General buffs/debuffs (displayed in dedicated affects tab grid)
-  
   Mode Affects (High Priority Display):
-  - Combat modes like "Flurry-of-Blows", "Rapid-Shot", "Sneaking", "Hiding"
-  - Behavioral changes like "Mode-PowerAttack", "Mode-Expertise", "Defensive-Casting"
+  - Combat modes like &quot;Flurry-of-Blows&quot;, &quot;Rapid-Shot&quot;, &quot;Sneaking&quot;, &quot;Hiding&quot;
+  - Behavioral changes like &quot;Mode-PowerAttack&quot;, &quot;Mode-Expertise&quot;, &quot;Defensive-Casting&quot;
   - Displayed horizontally alongside health gauges for instant visibility
   - Limited slots available (GUI.Affects.Modes.num_icons_row)
-  
   Status Affects (Tab Display):
   - All other affects that don't qualify as modes
   - Displayed in grid layout within Affects tab (3 rows configurable)
   - Uses row/column positioning system for organized display
-  
   Data Flow:
   1. Validates MSDP affects data existence and non-empty state
   2. Resets all icon displays (hide previous icons)
   3. Iterates through all affects and categorizes each
   4. Populates mode icons first (priority display)
   5. Fills remaining affects in tab grid layout
-  
   Icon Management:
   - Dynamic CSS styling with border-image for visual representation
   - Icons loaded from LuminariGUI/images/affected_by/[AFFECT_NAME].png
   - Automatic layout management with overflow handling
   - Position tracking via current_icon, current_row, current_column counters
-  
   Performance Considerations:
   - Batch hide operations for efficient UI cleanup
   - Single-pass categorization and display algorithm
   - CSS update only when affect changes (not every refresh)
-  
   Integration Points:
   - Called by msdp.AFFECTS event handler
   - Coordinates with GUI.Affects initialization system
@@ -2555,10 +2330,9 @@ function GUI.updateSLAffects()
 				GUI.SLAffects.Labels[i]:echo(affect_string)
 				GUI.SLAffects.Labels[i]:show()
 			end
-		end		 
+		end
 	end
 end
-
 function GUI.updateAffectIcons()
   if msdp.AFFECTS and msdp.AFFECTS.AFFECTED_BY and #msdp.AFFECTS.AFFECTED_BY &gt; 0 then
     -- We have a status to process!  Do MODES first.
@@ -2582,14 +2356,14 @@ function GUI.updateAffectIcons()
           (GUI.Affects.Modes.ModeList[affected_by[i].NAME] == true)
         )
       then
-        -- Create the Icon!				
+        -- Create the Icon!
         GUI.Affects.Modes.IconCSS:set(
-          "border-image",
-          [[url("]] ..
-          getMudletHomeDir():gsub("\\", "/") ..
+          &quot;border-image&quot;,
+          [[url(&quot;]] ..
+          getMudletHomeDir():gsub(&quot;\\&quot;, &quot;/&quot;) ..
           [[/LuminariGUI/images/affected_by/]] ..
           affected_by[i].NAME ..
-          [[.png");]]
+          [[.png&quot;);]]
         )
         GUI.Affects.Modes.Labels[GUI.Affects.Modes.current_icon]:setStyleSheet(
           GUI.Affects.Modes.IconCSS:getCSS()
@@ -2604,14 +2378,14 @@ function GUI.updateAffectIcons()
             (GUI.Affects.current_row &lt;= GUI.Affects.num_rows)
           )
         then
-          -- Create the Icon!				
+          -- Create the Icon!
           GUI.Affects.IconCSS:set(
-            "border-image",
-            [[url("]] ..
-            getMudletHomeDir():gsub("\\", "/") ..
+            &quot;border-image&quot;,
+            [[url(&quot;]] ..
+            getMudletHomeDir():gsub(&quot;\\&quot;, &quot;/&quot;) ..
             [[/LuminariGUI/images/affected_by/]] ..
             affected_by[i].NAME ..
-            [[.png");]]
+            [[.png&quot;);]]
           )
           GUI.Affects.Rows[GUI.Affects.current_row].Labels[GUI.Affects.current_column]:setStyleSheet(
             GUI.Affects.IconCSS:getCSS()
@@ -2627,43 +2401,37 @@ function GUI.updateAffectIcons()
     end
   end
 end</script>
-						<eventHandlerList />
+						<eventHandlerList/>
 					</Script>
 					<Script isActive="yes" isFolder="no">
 						<name>Group</name>
-						<packageName></packageName>
+						<packageName/>
 						<script>function GUI.init_group()
   GUI.GroupConsole =
     Geyser.MiniConsole:new(
-      {name = "GUI.GroupConsole", x = 0, y = 0, width = "100%", height = "100%"},
-      GUI.tabbedInfoWindow["Groupcenter"]
+      {name = &quot;GUI.GroupConsole&quot;, x = 0, y = 0, width = &quot;100%&quot;, height = &quot;100%&quot;},
+      GUI.tabbedInfoWindow[&quot;Groupcenter&quot;]
     )
   GUI.GroupConsole:setColor({r=0, b=0, g=0, a=0})
-	GUI.tabbedInfoWindow["Group"]:hide()
+	GUI.tabbedInfoWindow[&quot;Group&quot;]:hide()
 end
-
 --[[
   Group Data Processing and Display Manager
   =========================================
-  
   Processes and formats group member data received via MSDP for display in the Group tab.
   Manages player inclusion toggle and prepares data structure for console output formatting.
-  
   Core Functionality:
   - Processes raw MSDP.GROUP data into formatted display structure
   - Handles player inclusion/exclusion toggle (GUI.toggles.includeInGroup)
   - Filters and reorganizes group member information
   - Prepares data for console formatting and display
-  
   Player Toggle Logic:
   - When includeInGroup = false: Excludes player character from group display
   - When includeInGroup = true: Includes all group members including player
   - Uses CHARACTER_NAME comparison for player identification
-  
   Data Structure Processing:
   Input (msdp.GROUP): Raw group data array from MSDP protocol
   Output (GUI.group_data): Filtered and formatted array for display
-  
   Group Member Properties:
   - IS_LEADER: Boolean indicating group leadership status
   - NAME: Character name string
@@ -2671,18 +2439,15 @@ end
   - MOVEMENT/MOVEMENT_MAX: Current and maximum movement points
   - LEVEL: Character level integer
   - CLASS_STRING: Character class description
-  
   Array Management:
   - Uses sparse array indexing with j counter
   - Dynamically finds next available slot in GUI.group_data
   - Maintains consistent data structure for display formatting
-  
   Integration Points:
   - Called by MSDP group data event handlers
   - Coordinates with GUI.toggles configuration system
   - Feeds processed data to group console display functions
   - Depends on msdp.CHARACTER_NAME for player identification
-  
   Performance Considerations:
   - Single-pass filtering algorithm
   - Minimal data transformation overhead
@@ -2721,10 +2486,10 @@ function GUI.updateGroup()
       GUI.group_data[j].MOVEMENT = msdp.GROUP[i].MOVEMENT
       GUI.group_data[j].MOVEMENT_MAX = msdp.GROUP[i].MOVEMENT_MAX
       GUI.group_data[j].LEVEL = msdp.GROUP[i].LEVEL
-      GUI.group_data[j].CLASS_STRING = msdp.GROUP[i].CLASS_STRING	
+      GUI.group_data[j].CLASS_STRING = msdp.GROUP[i].CLASS_STRING
     end -- if/elseif
   end -- for
-	clearUserWindow("GUI.GroupConsole")
+	clearUserWindow(&quot;GUI.GroupConsole&quot;)
   num_grouped = #GUI.group_data
   for i = 1, num_grouped do
     -- Build the group member data and send it.
@@ -2732,11 +2497,11 @@ function GUI.updateGroup()
     --  | [level] Name                     |
     --  | hp: 90%  |=================    | |
     --  | Crown (leader), Shield (Tank)    |
-    --  +----------------------------------+		
-    if GUI.group_data[i].IS_LEADER == "1" then
-      status_msg = "&lt;green&gt;LEADER"
+    --  +----------------------------------+
+    if GUI.group_data[i].IS_LEADER == &quot;1&quot; then
+      status_msg = &quot;&lt;green&gt;LEADER&quot;
     else
-      status_msg = ""
+      status_msg = &quot;&quot;
     end
     local pct_health
     local health = tonumber(GUI.group_data[i].HEALTH)
@@ -2747,19 +2512,17 @@ function GUI.updateGroup()
       pct_health = 0
     end
     if pct_health &gt; 60 then
-      hp_color = "&lt;green&gt;"
+      hp_color = &quot;&lt;green&gt;&quot;
     elseif pct_health &gt; 15 then
-        hp_color = "&lt;yellow&gt;"
+        hp_color = &quot;&lt;yellow&gt;&quot;
       else
-        hp_color = "&lt;red&gt;"
+        hp_color = &quot;&lt;red&gt;&quot;
       end
-			
-			local formatted_level = "[" .. GUI.group_data[i].LEVEL .. "]"
-			local formatted_name = GUI.group_data[i].NAME 
-			formatted_level = string.cut(formatted_level.."   ", 4)			
-			formatted_name = string.cut(formatted_name.."                     ", 23)
-			
-			local member = string.format("&lt;green&gt;[%2s] &lt;white&gt;%-23s: &lt;green&gt;[%s%3s&lt;green&gt;/%-3s]H [%3s/%-3s]V\n"
+			local formatted_level = &quot;[&quot; .. GUI.group_data[i].LEVEL .. &quot;]&quot;
+			local formatted_name = GUI.group_data[i].NAME
+			formatted_level = string.cut(formatted_level..&quot;   &quot;, 4)
+			formatted_name = string.cut(formatted_name..&quot;                     &quot;, 23)
+			local member = string.format(&quot;&lt;green&gt;[%2s] &lt;white&gt;%-23s: &lt;green&gt;[%s%3s&lt;green&gt;/%-3s]H [%3s/%-3s]V\n&quot;
 																	 , GUI.group_data[i].LEVEL
 																	 , GUI.group_data[i].NAME
 																	 , hp_color
@@ -2768,93 +2531,84 @@ function GUI.updateGroup()
 																	 , GUI.group_data[i].MOVEMENT
 																	 , GUI.group_data[i].MOVEMENT_MAX)
       GUI.GroupConsole:cecho(member)
-      --GUI.GroupConsole:cecho(status_msg .. "\n")
+      --GUI.GroupConsole:cecho(status_msg .. &quot;\n&quot;)
     end
   end
-
-
 </script>
-						<eventHandlerList />
+						<eventHandlerList/>
 					</Script>
 					<Script isActive="yes" isFolder="no">
 						<name>Player</name>
-						<packageName></packageName>
+						<packageName/>
 						<script>function GUI.init_player()
   -- Set stylesheet with : qproperty-alignment: 'AlignLeft | AlignTop';
-	GUI.tabbedInfoWindow["Playercenter"]:setStyleSheet([[
+	GUI.tabbedInfoWindow[&quot;Playercenter&quot;]:setStyleSheet([[
 		qproperty-alignment: 'AlignLeft | AlignTop';
 	]]);
-
 end
-
 function GUI.updatePlayer()
-    GUI.tabbedInfoWindow["Playercenter"]:echo(
-		[[&lt;p style="font-size:16px;font-style:normal;font-family: 'Bitstream Vera Sans Mono'"&gt;]] .. 
-    (msdp.CHARACTER_NAME or "Unknown") ..	" ("..(msdp.POSITION or "Unknown")..")"..
+    GUI.tabbedInfoWindow[&quot;Playercenter&quot;]:echo(
+		[[&lt;p style=&quot;font-size:16px;font-style:normal;font-family: 'Bitstream Vera Sans Mono'&quot;&gt;]] ..
+    (msdp.CHARACTER_NAME or &quot;Unknown&quot;) ..	&quot; (&quot;..(msdp.POSITION or &quot;Unknown&quot;)..&quot;)&quot;..
     [[&lt;br/&gt;Level ]] ..
-    (msdp.LEVEL or "Unknown") ..
+    (msdp.LEVEL or &quot;Unknown&quot;) ..
     [[ ]] ..
-    (msdp.CLASS or "Unknown") ..
+    (msdp.CLASS or &quot;Unknown&quot;) ..
     [[&lt;br/&gt;]] ..
-    (msdp.RACE or "Unknown") ..
-    [[&lt;br/&gt;]] ..    
+    (msdp.RACE or &quot;Unknown&quot;) ..
+    [[&lt;br/&gt;]] ..
     [[&lt;br/&gt;Str: ]] ..
-    (msdp.STR or "Unknown") ..
+    (msdp.STR or &quot;Unknown&quot;) ..
     [[&lt;br/&gt;Dex: ]] ..
-    (msdp.DEX or "Unknown") ..
+    (msdp.DEX or &quot;Unknown&quot;) ..
     [[&lt;br/&gt;Con: ]] ..
-    (msdp.CON or "Unknown") ..
+    (msdp.CON or &quot;Unknown&quot;) ..
     [[&lt;br/&gt;Int: ]] ..
-    (msdp.INT or "Unknown") ..
+    (msdp.INT or &quot;Unknown&quot;) ..
     [[&lt;br/&gt;Wis: ]] ..
-    (msdp.WIS or "Unknown") ..
+    (msdp.WIS or &quot;Unknown&quot;) ..
     [[&lt;br/&gt;Cha: ]] ..
-    (msdp.CHA or "Unknown") ..
+    (msdp.CHA or &quot;Unknown&quot;) ..
     [[&lt;br/&gt;]] ..
     [[&lt;br/&gt;AC: ]] ..
-    (msdp.AC or "Unknown") ..
+    (msdp.AC or &quot;Unknown&quot;) ..
     [[&lt;br/&gt;]] ..
     [[&lt;br/&gt;Gold: ]] ..
-    (msdp.MONEY or "Unknown") ..
+    (msdp.MONEY or &quot;Unknown&quot;) ..
     [[&lt;br/&gt;]] ..
 		[[&lt;/font&gt;&lt;/p&gt;]]
   )
-
 end</script>
-						<eventHandlerList />
+						<eventHandlerList/>
 					</Script>
 					<Script isActive="yes" isFolder="no">
 						<name>Buttons</name>
-						<packageName></packageName>
+						<packageName/>
 						<script>GUI.buttonWindow =
   GUI.buttonWindow or
   {
-    button = {"Legend", "Mudlet", "ASCII"},
-    color1 = "rgba(0,0,0,0)",
-    color2 = "rgba(0,0,0,0)",
-    width = "100%",
-    height = "100%",
-		roomOrLegend = "Room",
-		mudletOrAscii = "Mudlet",
+    button = {&quot;Legend&quot;, &quot;Mudlet&quot;, &quot;ASCII&quot;},
+    color1 = &quot;rgba(0,0,0,0)&quot;,
+    color2 = &quot;rgba(0,0,0,0)&quot;,
+    width = &quot;100%&quot;,
+    height = &quot;100%&quot;,
+		roomOrLegend = &quot;Room&quot;,
+		mudletOrAscii = &quot;Mudlet&quot;,
 		--# of chars wide text needs to be
 		legendWidth = 50,
 		--# of lines needed to display text
 		legendHeight = 11,
   }
-
 --Determine font size for Legend
 --[[
   Legend Button Font Size Adjustment
   =================================
-  
   Dynamically calculates and applies optimal font size for the Legend button based on container width.
   Ensures proper text readability and visual scaling across different window sizes.
-  
   Calculation Logic:
   - Retrieves current Legend button width
   - Applies scaling algorithm to determine appropriate font size
   - Updates button styling with calculated font size
-  
   Responsive Design:
   - Automatically adapts to window resize events
   - Maintains consistent text-to-button size ratios
@@ -2873,60 +2627,55 @@ function GUI.buttonWindow.adjustLegendFont()
     height = height * GUI.buttonWindow.legendHeight
   until (w &lt; width) or (h &lt; height)
 	GUI.buttonWindow.Legend_font_size = font_size - 1
-  setMiniConsoleFontSize("GUI.buttonWindow.Legend", GUI.buttonWindow.Legend_font_size)
+  setMiniConsoleFontSize(&quot;GUI.buttonWindow.Legend&quot;, GUI.buttonWindow.Legend_font_size)
 end
-
 -- Button callback for Legend - toggles between room info and legend display
-function GUI.buttonWindow.legendClick()	
+function GUI.buttonWindow.legendClick()
   --Toggle For Room Info/Legend
-	if GUI.buttonWindow.roomOrLegend == "Room" then
+	if GUI.buttonWindow.roomOrLegend == &quot;Room&quot; then
 		GUI.buttonWindow.roomInfo:hide()
     GUI.buttonWindow.Legend:show()
-		GUI.buttonWindow.roomOrLegend = "Legend"
+		GUI.buttonWindow.roomOrLegend = &quot;Legend&quot;
 		GUI.updateRoom()
-		GUI.buttonWindow.Legendbutton:echo("Legend", "yellow", "c")
-	elseif GUI.buttonWindow.roomOrLegend == "Legend" then
+		GUI.buttonWindow.Legendbutton:echo(&quot;Legend&quot;, &quot;yellow&quot;, &quot;c&quot;)
+	elseif GUI.buttonWindow.roomOrLegend == &quot;Legend&quot; then
 		GUI.updateLegend()
 		GUI.buttonWindow.roomInfo:show()
     GUI.buttonWindow.Legend:hide()
-		GUI.buttonWindow.roomOrLegend = "Room"
-		GUI.buttonWindow.Legendbutton:echo("Legend", "white", "c")
+		GUI.buttonWindow.roomOrLegend = &quot;Room&quot;
+		GUI.buttonWindow.Legendbutton:echo(&quot;Legend&quot;, &quot;white&quot;, &quot;c&quot;)
 	end
 end
-
 -- Button callback for Mudlet map - switches to Mudlet's native map display
 function GUI.buttonWindow.mudletClick()
     map.minimapcontainer:hide()
     map.container:show()
-	  GUI.buttonWindow.mudletOrAscii = "Mudlet"
-		GUI.buttonWindow.Mudletbutton:echo("Mudlet", "yellow", "c")
-		GUI.buttonWindow.ASCIIbutton:echo("ASCII", "white", "c")
+	  GUI.buttonWindow.mudletOrAscii = &quot;Mudlet&quot;
+		GUI.buttonWindow.Mudletbutton:echo(&quot;Mudlet&quot;, &quot;yellow&quot;, &quot;c&quot;)
+		GUI.buttonWindow.ASCIIbutton:echo(&quot;ASCII&quot;, &quot;white&quot;, &quot;c&quot;)
 end
-
 -- Button callback for ASCII map - switches to ASCII text-based map display
 function GUI.buttonWindow.asciiClick()
     map.minimapcontainer:show()
     map.container:hide()
-		GUI.buttonWindow.mudletOrAscii = "ASCII"
-		GUI.buttonWindow.ASCIIbutton:echo("ASCII", "yellow", "c")
-		GUI.buttonWindow.Mudletbutton:echo("Mudlet", "white", "c")
+		GUI.buttonWindow.mudletOrAscii = &quot;ASCII&quot;
+		GUI.buttonWindow.ASCIIbutton:echo(&quot;ASCII&quot;, &quot;yellow&quot;, &quot;c&quot;)
+		GUI.buttonWindow.Mudletbutton:echo(&quot;Mudlet&quot;, &quot;white&quot;, &quot;c&quot;)
 end
-
 -- Button Window Initialization - sets up styling and layout for map control buttons
 function GUI.buttonWindow.init()
   GUI.buttonWindowCSS =
     CSSMan.new(
-      [[font-family: Tahoma, Geneva, sans-serif; 
+      [[font-family: Tahoma, Geneva, sans-serif;
 			border-image: url(]] ..
-      getMudletHomeDir():gsub("\\", "/") ..
+      getMudletHomeDir():gsub(&quot;\\&quot;, &quot;/&quot;) ..
       [[/LuminariGUI/images/buttons/button.png) 0 0 0 0 stretch stretch;]]
     )
-		
 --Entire Box3 Container for Buttons
   GUI.buttonWindow.container =
     Geyser.Container:new(
       {
-        name = "GUI.buttonWindow.container",
+        name = &quot;GUI.buttonWindow.container&quot;,
         x = 9,
         y = 9,
         width = GUI.Box3:get_width() - 18,
@@ -2934,12 +2683,11 @@ function GUI.buttonWindow.init()
       },
       GUI.Box3
     )
-
 --Room Info
-  GUI.buttonWindow.roomInfo = 
+  GUI.buttonWindow.roomInfo =
 	Geyser.Label:new(
 		{
-		  name = "GUI.buttonWindow.roomInfo",
+		  name = &quot;GUI.buttonWindow.roomInfo&quot;,
 			x = 9,
 			y = 9,
 			width = GUI.Box5:get_width()- 18,
@@ -2947,118 +2695,107 @@ function GUI.buttonWindow.init()
 			},
 			GUI.Box5
 		)
-
 --Map Legend
-  GUI.buttonWindow.Legend = 
+  GUI.buttonWindow.Legend =
 	Geyser.MiniConsole:new(
 		{
-		  name = "GUI.buttonWindow.Legend",
+		  name = &quot;GUI.buttonWindow.Legend&quot;,
 			x = 9,
 			y = 9,
 			width = GUI.Box5:get_width()- 18,
 			height = GUI.Box5:get_height() - 18,
-			color = "black",
+			color = &quot;black&quot;,
 			},
 			GUI.Box5
 		)
 		GUI.buttonWindow.adjustLegendFont()
-		
 --Button Container
   GUI.buttonWindow.buttonContainer =
     Geyser.HBox:new(
-      {name = "GUI.buttonWindow.buttonContainer", x = 0, y = 0, width = "100%", height = "100%"},
+      {name = &quot;GUI.buttonWindow.buttonContainer&quot;, x = 0, y = 0, width = &quot;100%&quot;, height = &quot;100%&quot;},
       GUI.buttonWindow.container
     )
-
 --Draw Buttons
   for k, v in pairs(GUI.buttonWindow.button) do
-    GUI.buttonWindow[v .. "button"] =
-      Geyser.Label:new({name = "GUI.buttonWindow." .. v .. "button"}, GUI.buttonWindow.buttonContainer)
-    GUI.buttonWindow[v .. "button"]:setStyleSheet(GUI.buttonWindowCSS:getCSS())
-    GUI.buttonWindow[v .. "button"]:echo("&lt;center&gt;" .. v)
+    GUI.buttonWindow[v .. &quot;button&quot;] =
+      Geyser.Label:new({name = &quot;GUI.buttonWindow.&quot; .. v .. &quot;button&quot;}, GUI.buttonWindow.buttonContainer)
+    GUI.buttonWindow[v .. &quot;button&quot;]:setStyleSheet(GUI.buttonWindowCSS:getCSS())
+    GUI.buttonWindow[v .. &quot;button&quot;]:echo(&quot;&lt;center&gt;&quot; .. v)
   end
-
 --Legend Call Back
-  GUI.buttonWindow.Legendbutton:setClickCallback("GUI.buttonWindow.legendClick")		
+  GUI.buttonWindow.Legendbutton:setClickCallback(&quot;GUI.buttonWindow.legendClick&quot;)
 --Mudlet/ASCII Callback
-  GUI.buttonWindow.Mudletbutton:setClickCallback("GUI.buttonWindow.mudletClick")	
-  GUI.buttonWindow.ASCIIbutton:setClickCallback("GUI.buttonWindow.asciiClick")	
-	
+  GUI.buttonWindow.Mudletbutton:setClickCallback(&quot;GUI.buttonWindow.mudletClick&quot;)
+  GUI.buttonWindow.ASCIIbutton:setClickCallback(&quot;GUI.buttonWindow.asciiClick&quot;)
 --Show Room Info on Startup
 	GUI.buttonWindow.roomInfo:show()
   GUI.buttonWindow.Legend:hide()
-	
 --Populating Legend
 	GUI.updateLegend()
-
 --[[Will error line 33 if we call mudletClick callback
   so handling echo this way since Mudlet loads its map
   by default. ]]
-	GUI.buttonWindow.Mudletbutton:echo("Mudlet", "yellow", "c")
-	GUI.buttonWindow.ASCIIbutton:echo("ASCII", "white", "c")
-	
+	GUI.buttonWindow.Mudletbutton:echo(&quot;Mudlet&quot;, &quot;yellow&quot;, &quot;c&quot;)
+	GUI.buttonWindow.ASCIIbutton:echo(&quot;ASCII&quot;, &quot;white&quot;, &quot;c&quot;)
 end </script>
-						<eventHandlerList />
+						<eventHandlerList/>
 					</Script>
 					<Script isActive="yes" isFolder="no">
 						<name>Room Info/Legend</name>
-						<packageName></packageName>
+						<packageName/>
 						<script>
 function GUI.updateRoom()
-  if msdp.ROOM.ENVIRONMENT == "Wilderness" then
+  if msdp.ROOM.ENVIRONMENT == &quot;Wilderness&quot; then
     GUI.buttonWindow.roomInfo:echo(
-		  [[&lt;p style="font-size:]]..tostring(getFontSize())..[[px;font-style:normal;font-family: ']]..getFont()..[['"&gt;]] .. 	
+		  [[&lt;p style=&quot;font-size:]]..tostring(getFontSize())..[[px;font-style:normal;font-family: ']]..getFont()..[['&quot;&gt;]] ..
       [[ ]] ..
-      (msdp.ROOM.ENVIRONMENT or "Unknown") ..
+      (msdp.ROOM.ENVIRONMENT or &quot;Unknown&quot;) ..
       [[&lt;br/&gt;&amp;nbsp;Coords: ]] ..
-      ("("..msdp.ROOM.COORDS.X..", "..msdp.ROOM.COORDS.Y..")" or "Unknown") ..
+      (&quot;(&quot;..msdp.ROOM.COORDS.X..&quot;, &quot;..msdp.ROOM.COORDS.Y..&quot;)&quot; or &quot;Unknown&quot;) ..
       [[&lt;br/&gt;Terrain: ]] ..
-      (msdp.ROOM.TERRAIN or "Unknown") ..
-      [[&lt;br/&gt;]] ..
-		  [[&lt;/font&gt;&lt;/p&gt;]]
-    )	
-	else
-    GUI.buttonWindow.roomInfo:echo(
-		  [[&lt;p style="font-size:]]..tostring(getFontSize())..[[px;font-style:normal;font-family: ']]..getFont()..[['"&gt;]] .. 	
-      [[&lt;br/&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;Room: ]] ..
-      (msdp.ROOM.NAME or "Unknown") ..
-      [[&lt;br/&gt;&amp;nbsp;Room #: ]] ..
-      (msdp.ROOM.VNUM or "Unknown") ..
-      [[&lt;br/&gt;Terrain: ]] ..
-      (msdp.ROOM.TERRAIN or "Unknown") ..
-      [[&lt;br/&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;Area: ]] ..
-      (msdp.ROOM.AREA or "Unknown") ..
-	 -- [[&lt;br/&gt;&amp;nbsp;Levels: ]] ..
-   -- (msdp.ROOM.WHATTT or "Unknown") ..
+      (msdp.ROOM.TERRAIN or &quot;Unknown&quot;) ..
       [[&lt;br/&gt;]] ..
 		  [[&lt;/font&gt;&lt;/p&gt;]]
     )
-  end		
+	else
+    GUI.buttonWindow.roomInfo:echo(
+		  [[&lt;p style=&quot;font-size:]]..tostring(getFontSize())..[[px;font-style:normal;font-family: ']]..getFont()..[['&quot;&gt;]] ..
+      [[&lt;br/&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;Room: ]] ..
+      (msdp.ROOM.NAME or &quot;Unknown&quot;) ..
+      [[&lt;br/&gt;&amp;nbsp;Room #: ]] ..
+      (msdp.ROOM.VNUM or &quot;Unknown&quot;) ..
+      [[&lt;br/&gt;Terrain: ]] ..
+      (msdp.ROOM.TERRAIN or &quot;Unknown&quot;) ..
+      [[&lt;br/&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;Area: ]] ..
+      (msdp.ROOM.AREA or &quot;Unknown&quot;) ..
+	 -- [[&lt;br/&gt;&amp;nbsp;Levels: ]] ..
+   -- (msdp.ROOM.WHATTT or &quot;Unknown&quot;) ..
+      [[&lt;br/&gt;]] ..
+		  [[&lt;/font&gt;&lt;/p&gt;]]
+    )
+  end
 end
-		
 -- TODO: Replace WHATTT placeholder with proper MSDP room level data once available
 -- Future Enhancement: Implement room level display when server provides this data via MSDP
-
-
 function GUI.updateLegend()
-  clearUserWindow("GUI.buttonWindow.Legend")
-	GUI.buttonWindow.Legend:decho("\n &lt;102,0,0&gt; + &lt;255,255,255&gt; Up           &lt;0,102,102&gt;[&lt;0,255,255&gt;^&lt;0,102,102&gt;] &lt;255,255,255&gt;Air           &lt;0,102,102&gt;[&lt;255,0,255&gt;Y&lt;0,102,102&gt;] &lt;255,255,255&gt;UD Wild")
-	GUI.buttonWindow.Legend:decho("\n &lt;102,0,0&gt; - &lt;255,255,255&gt; Down         &lt;0,102,102&gt;[&lt;0,0,102&gt;U&lt;0,102,102&gt;] &lt;255,255,255&gt;Underwater    &lt;0,102,102&gt;[&lt;102,0,102&gt;C&lt;0,102,102&gt;] &lt;255,255,255&gt;UD City")
-	GUI.buttonWindow.Legend:decho("\n &lt;0,102,102&gt;[&lt;255,255,255&gt;&amp;&lt;0,102,102&gt;] &lt;255,255,255&gt;You          &lt;0,102,102&gt;[&lt;255,0,0&gt;X&lt;0,102,102&gt;] &lt;255,255,255&gt;Zone Entry    &lt;0,102,102&gt;[&lt;102,0,102&gt;.&lt;0,102,102&gt;] &lt;255,255,255&gt;UD Inside")  
-	GUI.buttonWindow.Legend:decho("\n &lt;0,102,102&gt;[&lt;192,192,192&gt;.&lt;0,102,102&gt;] &lt;255,255,255&gt;Inside       &lt;0,102,102&gt;[&lt;51,51,51&gt;|&lt;0,102,102&gt;] &lt;255,255,255&gt;Road N-S      &lt;0,102,102&gt;[&lt;102,0,102&gt;~&lt;0,102,102&gt;] &lt;255,255,255&gt;UD Water") 
-	GUI.buttonWindow.Legend:decho("\n &lt;0,102,102&gt;[&lt;102,102,102&gt;C&lt;0,102,102&gt;] &lt;255,255,255&gt;City         &lt;0,102,102&gt;[&lt;51,51,51&gt;-&lt;0,102,102&gt;] &lt;255,255,255&gt;Road E-W      &lt;0,102,102&gt;[&lt;255,0,255&gt;=&lt;0,102,102&gt;] &lt;255,255,255&gt;UD D Water")  
-	GUI.buttonWindow.Legend:decho("\n &lt;0,102,102&gt;[&lt;0,102,0&gt;,&lt;0,102,102&gt;] &lt;255,255,255&gt;Field        &lt;0,102,102&gt;[&lt;51,51,51&gt;+&lt;0,102,102&gt;] &lt;255,255,255&gt;Intersect     &lt;0,102,102&gt;[&lt;102,0,102&gt;^&lt;0,102,102&gt;] &lt;255,255,255&gt;UD Air")  
-	GUI.buttonWindow.Legend:decho("\n &lt;0,102,102&gt;[&lt;0,255,0&gt;Y&lt;0,102,102&gt;] &lt;255,255,255&gt;Forest       &lt;0,102,102&gt;[&lt;255,255,0&gt;.&lt;0,102,102&gt;] &lt;255,255,255&gt;Desert        &lt;0,102,102&gt;[&lt;255,0,0&gt;.&lt;0,102,102&gt;] &lt;255,255,255&gt;Lava")  
-	GUI.buttonWindow.Legend:decho("\n &lt;0,102,102&gt;[&lt;102,102,0&gt;^&lt;0,102,102&gt;] &lt;255,255,255&gt;Hills        &lt;0,102,102&gt;[&lt;0,0,255&gt;o&lt;0,102,102&gt;] &lt;255,255,255&gt;Ocean         &lt;0,102,102&gt;[&lt;102,102,0&gt;|&lt;0,102,102&gt;] &lt;255,255,255&gt;D Rd N-S")  
-	GUI.buttonWindow.Legend:decho("\n &lt;0,102,102&gt;[&lt;102,0,0&gt;m&lt;0,102,102&gt;] &lt;255,255,255&gt;Mountain     &lt;0,102,102&gt;[&lt;255,0,255&gt;,&lt;0,102,102&gt;] &lt;255,255,255&gt;Marsh         &lt;0,102,102&gt;[&lt;102,102,0&gt;-&lt;0,102,102&gt;] &lt;255,255,255&gt;D Rd E-W")  
-	GUI.buttonWindow.Legend:decho("\n &lt;0,102,102&gt;[&lt;0,102,102&gt;~&lt;0,102,102&gt;] &lt;255,255,255&gt;Water        &lt;0,102,102&gt;[&lt;255,0,0&gt;M&lt;0,102,102&gt;] &lt;255,255,255&gt;High Mount    &lt;0,102,102&gt;[&lt;102,102,0&gt;+&lt;0,102,102&gt;] &lt;255,255,255&gt;D Inters") 
-	GUI.buttonWindow.Legend:decho("\n &lt;0,102,102&gt;[&lt;0,0,102&gt;=&lt;0,102,102&gt;] &lt;255,255,255&gt;Deep Water   &lt;0,102,102&gt;[&lt;51,51,51&gt;.&lt;0,102,102&gt;] &lt;255,255,255&gt;Planes        &lt;0,102,102&gt;[&lt;51,51,51&gt;C&lt;0,102,102&gt;] &lt;255,255,255&gt;Cave") 
+  clearUserWindow(&quot;GUI.buttonWindow.Legend&quot;)
+	GUI.buttonWindow.Legend:decho(&quot;\n &lt;102,0,0&gt; + &lt;255,255,255&gt; Up           &lt;0,102,102&gt;[&lt;0,255,255&gt;^&lt;0,102,102&gt;] &lt;255,255,255&gt;Air           &lt;0,102,102&gt;[&lt;255,0,255&gt;Y&lt;0,102,102&gt;] &lt;255,255,255&gt;UD Wild&quot;)
+	GUI.buttonWindow.Legend:decho(&quot;\n &lt;102,0,0&gt; - &lt;255,255,255&gt; Down         &lt;0,102,102&gt;[&lt;0,0,102&gt;U&lt;0,102,102&gt;] &lt;255,255,255&gt;Underwater    &lt;0,102,102&gt;[&lt;102,0,102&gt;C&lt;0,102,102&gt;] &lt;255,255,255&gt;UD City&quot;)
+	GUI.buttonWindow.Legend:decho(&quot;\n &lt;0,102,102&gt;[&lt;255,255,255&gt;&amp;&lt;0,102,102&gt;] &lt;255,255,255&gt;You          &lt;0,102,102&gt;[&lt;255,0,0&gt;X&lt;0,102,102&gt;] &lt;255,255,255&gt;Zone Entry    &lt;0,102,102&gt;[&lt;102,0,102&gt;.&lt;0,102,102&gt;] &lt;255,255,255&gt;UD Inside&quot;)
+	GUI.buttonWindow.Legend:decho(&quot;\n &lt;0,102,102&gt;[&lt;192,192,192&gt;.&lt;0,102,102&gt;] &lt;255,255,255&gt;Inside       &lt;0,102,102&gt;[&lt;51,51,51&gt;|&lt;0,102,102&gt;] &lt;255,255,255&gt;Road N-S      &lt;0,102,102&gt;[&lt;102,0,102&gt;~&lt;0,102,102&gt;] &lt;255,255,255&gt;UD Water&quot;)
+	GUI.buttonWindow.Legend:decho(&quot;\n &lt;0,102,102&gt;[&lt;102,102,102&gt;C&lt;0,102,102&gt;] &lt;255,255,255&gt;City         &lt;0,102,102&gt;[&lt;51,51,51&gt;-&lt;0,102,102&gt;] &lt;255,255,255&gt;Road E-W      &lt;0,102,102&gt;[&lt;255,0,255&gt;=&lt;0,102,102&gt;] &lt;255,255,255&gt;UD D Water&quot;)
+	GUI.buttonWindow.Legend:decho(&quot;\n &lt;0,102,102&gt;[&lt;0,102,0&gt;,&lt;0,102,102&gt;] &lt;255,255,255&gt;Field        &lt;0,102,102&gt;[&lt;51,51,51&gt;+&lt;0,102,102&gt;] &lt;255,255,255&gt;Intersect     &lt;0,102,102&gt;[&lt;102,0,102&gt;^&lt;0,102,102&gt;] &lt;255,255,255&gt;UD Air&quot;)
+	GUI.buttonWindow.Legend:decho(&quot;\n &lt;0,102,102&gt;[&lt;0,255,0&gt;Y&lt;0,102,102&gt;] &lt;255,255,255&gt;Forest       &lt;0,102,102&gt;[&lt;255,255,0&gt;.&lt;0,102,102&gt;] &lt;255,255,255&gt;Desert        &lt;0,102,102&gt;[&lt;255,0,0&gt;.&lt;0,102,102&gt;] &lt;255,255,255&gt;Lava&quot;)
+	GUI.buttonWindow.Legend:decho(&quot;\n &lt;0,102,102&gt;[&lt;102,102,0&gt;^&lt;0,102,102&gt;] &lt;255,255,255&gt;Hills        &lt;0,102,102&gt;[&lt;0,0,255&gt;o&lt;0,102,102&gt;] &lt;255,255,255&gt;Ocean         &lt;0,102,102&gt;[&lt;102,102,0&gt;|&lt;0,102,102&gt;] &lt;255,255,255&gt;D Rd N-S&quot;)
+	GUI.buttonWindow.Legend:decho(&quot;\n &lt;0,102,102&gt;[&lt;102,0,0&gt;m&lt;0,102,102&gt;] &lt;255,255,255&gt;Mountain     &lt;0,102,102&gt;[&lt;255,0,255&gt;,&lt;0,102,102&gt;] &lt;255,255,255&gt;Marsh         &lt;0,102,102&gt;[&lt;102,102,0&gt;-&lt;0,102,102&gt;] &lt;255,255,255&gt;D Rd E-W&quot;)
+	GUI.buttonWindow.Legend:decho(&quot;\n &lt;0,102,102&gt;[&lt;0,102,102&gt;~&lt;0,102,102&gt;] &lt;255,255,255&gt;Water        &lt;0,102,102&gt;[&lt;255,0,0&gt;M&lt;0,102,102&gt;] &lt;255,255,255&gt;High Mount    &lt;0,102,102&gt;[&lt;102,102,0&gt;+&lt;0,102,102&gt;] &lt;255,255,255&gt;D Inters&quot;)
+	GUI.buttonWindow.Legend:decho(&quot;\n &lt;0,102,102&gt;[&lt;0,0,102&gt;=&lt;0,102,102&gt;] &lt;255,255,255&gt;Deep Water   &lt;0,102,102&gt;[&lt;51,51,51&gt;.&lt;0,102,102&gt;] &lt;255,255,255&gt;Planes        &lt;0,102,102&gt;[&lt;51,51,51&gt;C&lt;0,102,102&gt;] &lt;255,255,255&gt;Cave&quot;)
 end</script>
-						<eventHandlerList />
+						<eventHandlerList/>
 					</Script>
 					<Script isActive="yes" isFolder="no">
 						<name>DrawFrames</name>
-						<packageName></packageName>
+						<packageName/>
 						<script>function GUI.draw_frames()
   createFrame(GUI.Box2)
 	createFrame(GUI.Box3)
@@ -3068,81 +2805,73 @@ end</script>
 	--createFrame(GUI.Box6)
   createFrame(GUI.Box7)
 end</script>
-						<eventHandlerList />
+						<eventHandlerList/>
 					</Script>
 					<Script isActive="yes" isFolder="no">
 						<name>MSDP</name>
-						<packageName></packageName>
+						<packageName/>
 						<script>function GUI.onProtocolEnabled(_, protocol)
-    if protocol == "MSDP" then
-      print("[GUI] Initializing MSDP variables")
-      sendMSDP("REPORT", "CHARACTER_NAME")
-      sendMSDP("REPORT", "POSITION")
-      sendMSDP("REPORT", "RACE")
-      sendMSDP("REPORT", "CLASS")
-      sendMSDP("REPORT", "ALIGNMENT")
-      sendMSDP("REPORT", "LEVEL")
-      sendMSDP("REPORT", "STR")
-      sendMSDP("REPORT", "DEX")
-      sendMSDP("REPORT", "CON")
-      sendMSDP("REPORT", "INT")
-      sendMSDP("REPORT", "WIS")
-      sendMSDP("REPORT", "CHA")
-      sendMSDP("REPORT", "AC")
-      sendMSDP("REPORT", "MONEY")
-      sendMSDP("REPORT", "HEALTH")
-      sendMSDP("REPORT", "HEALTH_MAX")
-      sendMSDP("REPORT", "OPPONENT_HEALTH")
-      sendMSDP("REPORT", "OPPONENT_HEALTH_MAX")
-      sendMSDP("REPORT", "OPPONENT_NAME")
-      sendMSDP("REPORT", "MOVEMENT")
-      sendMSDP("REPORT", "MOVEMENT_MAX")
-      sendMSDP("REPORT", "EXPERIENCE")
-      sendMSDP("REPORT", "EXPERIENCE_TNL")
-      sendMSDP("REPORT", "EXPERIENCE_MAX")
-      sendMSDP("REPORT", "ACTIONS")
-      sendMSDP("REPORT", "GROUP")
-      --sendMSDP("REPORT", "INVENTORY")
-      sendMSDP("REPORT", "AFFECTS")
+    if protocol == &quot;MSDP&quot; then
+      print(&quot;[GUI] Initializing MSDP variables&quot;)
+      sendMSDP(&quot;REPORT&quot;, &quot;CHARACTER_NAME&quot;)
+      sendMSDP(&quot;REPORT&quot;, &quot;POSITION&quot;)
+      sendMSDP(&quot;REPORT&quot;, &quot;RACE&quot;)
+      sendMSDP(&quot;REPORT&quot;, &quot;CLASS&quot;)
+      sendMSDP(&quot;REPORT&quot;, &quot;ALIGNMENT&quot;)
+      sendMSDP(&quot;REPORT&quot;, &quot;LEVEL&quot;)
+      sendMSDP(&quot;REPORT&quot;, &quot;STR&quot;)
+      sendMSDP(&quot;REPORT&quot;, &quot;DEX&quot;)
+      sendMSDP(&quot;REPORT&quot;, &quot;CON&quot;)
+      sendMSDP(&quot;REPORT&quot;, &quot;INT&quot;)
+      sendMSDP(&quot;REPORT&quot;, &quot;WIS&quot;)
+      sendMSDP(&quot;REPORT&quot;, &quot;CHA&quot;)
+      sendMSDP(&quot;REPORT&quot;, &quot;AC&quot;)
+      sendMSDP(&quot;REPORT&quot;, &quot;MONEY&quot;)
+      sendMSDP(&quot;REPORT&quot;, &quot;HEALTH&quot;)
+      sendMSDP(&quot;REPORT&quot;, &quot;HEALTH_MAX&quot;)
+      sendMSDP(&quot;REPORT&quot;, &quot;OPPONENT_HEALTH&quot;)
+      sendMSDP(&quot;REPORT&quot;, &quot;OPPONENT_HEALTH_MAX&quot;)
+      sendMSDP(&quot;REPORT&quot;, &quot;OPPONENT_NAME&quot;)
+      sendMSDP(&quot;REPORT&quot;, &quot;MOVEMENT&quot;)
+      sendMSDP(&quot;REPORT&quot;, &quot;MOVEMENT_MAX&quot;)
+      sendMSDP(&quot;REPORT&quot;, &quot;EXPERIENCE&quot;)
+      sendMSDP(&quot;REPORT&quot;, &quot;EXPERIENCE_TNL&quot;)
+      sendMSDP(&quot;REPORT&quot;, &quot;EXPERIENCE_MAX&quot;)
+      sendMSDP(&quot;REPORT&quot;, &quot;ACTIONS&quot;)
+      sendMSDP(&quot;REPORT&quot;, &quot;GROUP&quot;)
+      --sendMSDP(&quot;REPORT&quot;, &quot;INVENTORY&quot;)
+      sendMSDP(&quot;REPORT&quot;, &quot;AFFECTS&quot;)
     end
   end
-  
 --[[
   Player Health Gauge Update System
   ================================
-  
   Updates the player health gauge display based on real-time MSDP data.
   Provides visual feedback for current health status with dynamic gauge and percentage display.
-  
   Core Functionality:
   - Processes MSDP health data for visual representation
   - Updates gauge fill percentage based on current vs maximum health
   - Displays numerical health values and percentages
   - Applies color coding for health status indication
-  
   Health Status Color Coding:
   - Green: High health (typically 75%+)
   - Yellow: Medium health (typically 25-75%)
   - Red: Critical health (typically &lt;25%)
   - Dynamic color transitions for smooth visual feedback
-  
   Data Sources:
   - msdp.HEALTH: Current health points
   - msdp.HEALTH_MAX: Maximum health points
   - Health percentage calculated dynamically
-  
   Visual Components:
   - Progress bar/gauge for visual health representation
   - Numerical display of current/maximum health
   - Percentage display for quick reference
   - Color-coded background for status awareness
-  
   Integration Points:
   - Called by MSDP health data event handlers
   - Coordinates with combat system feedback
   - Links to healing and damage processing systems
   - Integrates with overall player status display
-  
   Performance Considerations:
   - Efficient percentage calculations
   - Minimal GUI updates for smooth performance
@@ -3158,7 +2887,6 @@ end</script>
     local health = tonumber(msdp.HEALTH) or 0
     local max_health = tonumber(msdp.HEALTH_MAX) or health
     local overfilled = false
-  
     if health &gt; max_health then
       health = max_health
       overfilled = true
@@ -3168,15 +2896,14 @@ end</script>
     else
       pct_health = 0
     end
-    GUI.Health.front:echo("H: " .. msdp.HEALTH .. "/" .. (msdp.HEALTH_MAX or msdp.HEALTH))
-    GUI.Health.back:echo("H: " .. msdp.HEALTH .. "/" .. (msdp.HEALTH_MAX or msdp.HEALTH))
+    GUI.Health.front:echo(&quot;H: &quot; .. msdp.HEALTH .. &quot;/&quot; .. (msdp.HEALTH_MAX or msdp.HEALTH))
+    GUI.Health.back:echo(&quot;H: &quot; .. msdp.HEALTH .. &quot;/&quot; .. (msdp.HEALTH_MAX or msdp.HEALTH))
     if pct_health &gt; 100 then
       GUI.Health:setValue(100, 100)
     else
       GUI.Health:setValue(pct_health, 100)
     end
   end
-  
   function GUI.updateMovesGauge()
     -- This function handles the following events:
     --   msdp.MOVEMENT
@@ -3190,11 +2917,10 @@ end</script>
     else
       pct_moves = 0
     end
-    GUI.Moves.front:echo("Mv: " .. msdp.MOVEMENT .. "/" .. (msdp.MOVEMENT_MAX or msdp.MOVEMENT))
-    GUI.Moves.back:echo("Mv: " .. msdp.MOVEMENT .. "/" .. (msdp.MOVEMENT_MAX or msdp.MOVEMENT))
+    GUI.Moves.front:echo(&quot;Mv: &quot; .. msdp.MOVEMENT .. &quot;/&quot; .. (msdp.MOVEMENT_MAX or msdp.MOVEMENT))
+    GUI.Moves.back:echo(&quot;Mv: &quot; .. msdp.MOVEMENT .. &quot;/&quot; .. (msdp.MOVEMENT_MAX or msdp.MOVEMENT))
     GUI.Moves:setValue(pct_moves, 100)
   end
-  
   function GUI.updateExperienceGauge()
     -- This function handles the following events:
     --   msdp.EXPERIENCE
@@ -3209,23 +2935,22 @@ end</script>
       pct_xp = 0
     end
     GUI.Experience.front:echo(
-    [[&lt;span style = "color: black"&gt;XP: ]] .. xp .. "/" .. (xp + xp_tnl) .. [[&lt;/span&gt;]]
+    [[&lt;span style = &quot;color: black&quot;&gt;XP: ]] .. xp .. &quot;/&quot; .. (xp + xp_tnl) .. [[&lt;/span&gt;]]
     )
-    GUI.Experience.back:echo([[&lt;span&gt;XP: ]] .. xp .. "/" .. (xp + xp_tnl) .. [[&lt;/span&gt;]])
+    GUI.Experience.back:echo([[&lt;span&gt;XP: ]] .. xp .. &quot;/&quot; .. (xp + xp_tnl) .. [[&lt;/span&gt;]])
     if pct_xp &gt; 100 then
       GUI.Experience:setValue(100, 100)
     else
       GUI.Experience:setValue(pct_xp, 100)
     end
   end
-  
   function GUI.updateEnemyGauge()
     -- This function handles the following events:
     --   msdp.OPPONENT_HEALTH
     --   msdp.OPPONENT_HEALTH_MAX
     --   msdp.OPPONENT_NAME
     -- Show/Hide the gauge.
-    if msdp.OPPONENT_NAME == "" then
+    if msdp.OPPONENT_NAME == &quot;&quot; then
       GUI.Enemy:hide()
     else
       GUI.Enemy:show()
@@ -3239,80 +2964,78 @@ end</script>
     else
       pct_health = 0
     end
-    local opponent_name = msdp.OPPONENT_NAME or "Unknown"
-    GUI.Enemy.front:echo(opponent_name .. ": " .. health .. "/" .. max_health)
-    GUI.Enemy.back:echo(opponent_name .. ": " .. health .. "/" .. max_health)
+    local opponent_name = msdp.OPPONENT_NAME or &quot;Unknown&quot;
+    GUI.Enemy.front:echo(opponent_name .. &quot;: &quot; .. health .. &quot;/&quot; .. max_health)
+    GUI.Enemy.back:echo(opponent_name .. &quot;: &quot; .. health .. &quot;/&quot; .. max_health)
     if pct_health &gt; 100 then
       GUI.Enemy:setValue(100, 100)
     else
       GUI.Enemy:setValue(pct_health, 100)
     end
   end
-  
   function GUI.updateActionIcons()
-    if (msdp.ACTIONS.STANDARD_ACTION == "1") then
+    if (msdp.ACTIONS.STANDARD_ACTION == &quot;1&quot;) then
       GUI.ActionIconCSS:set(
-      "border-image",
-      [[url("]] ..
-      getMudletHomeDir():gsub("\\", "/") ..
-      [[/LuminariGUI/images/action-standard.png");]]
+      &quot;border-image&quot;,
+      [[url(&quot;]] ..
+      getMudletHomeDir():gsub(&quot;\\&quot;, &quot;/&quot;) ..
+      [[/LuminariGUI/images/action-standard.png&quot;);]]
       )
       GUI.StandardActionIcon:setStyleSheet(GUI.ActionIconCSS:getCSS())
     end
-    if (msdp.ACTIONS.MOVE_ACTION == "1") then
+    if (msdp.ACTIONS.MOVE_ACTION == &quot;1&quot;) then
       GUI.ActionIconCSS:set(
-      "border-image",
-      [[url("]] .. getMudletHomeDir():gsub("\\", "/") .. [[/LuminariGUI/images/action-move.png");]]
+      &quot;border-image&quot;,
+      [[url(&quot;]] .. getMudletHomeDir():gsub(&quot;\\&quot;, &quot;/&quot;) .. [[/LuminariGUI/images/action-move.png&quot;);]]
       )
       GUI.MoveActionIcon:setStyleSheet(GUI.ActionIconCSS:getCSS())
     end
-    if (msdp.ACTIONS.SWIFT_ACTION == "1") then
+    if (msdp.ACTIONS.SWIFT_ACTION == &quot;1&quot;) then
       GUI.ActionIconCSS:set(
-      "border-image",
-      [[url("]] .. getMudletHomeDir():gsub("\\", "/") .. [[/LuminariGUI/images/action-swift.png");]]
+      &quot;border-image&quot;,
+      [[url(&quot;]] .. getMudletHomeDir():gsub(&quot;\\&quot;, &quot;/&quot;) .. [[/LuminariGUI/images/action-swift.png&quot;);]]
       )
       GUI.SwiftActionIcon:setStyleSheet(GUI.ActionIconCSS:getCSS())
     end
-    if (msdp.ACTIONS.STANDARD_ACTION == "0") then
+    if (msdp.ACTIONS.STANDARD_ACTION == &quot;0&quot;) then
       GUI.ActionIconCSS:set(
-      "border-image",
-      [[url("]] ..
-      getMudletHomeDir():gsub("\\", "/") ..
-      [[/LuminariGUI/images/action-standard-50.png");]]
+      &quot;border-image&quot;,
+      [[url(&quot;]] ..
+      getMudletHomeDir():gsub(&quot;\\&quot;, &quot;/&quot;) ..
+      [[/LuminariGUI/images/action-standard-50.png&quot;);]]
       )
       GUI.StandardActionIcon:setStyleSheet(GUI.ActionIconCSS:getCSS())
     end
-    if (msdp.ACTIONS.MOVE_ACTION == "0") then
+    if (msdp.ACTIONS.MOVE_ACTION == &quot;0&quot;) then
       GUI.ActionIconCSS:set(
-      "border-image",
-      [[url("]] ..
-      getMudletHomeDir():gsub("\\", "/") ..
-      [[/LuminariGUI/images/action-move-50.png");]]
+      &quot;border-image&quot;,
+      [[url(&quot;]] ..
+      getMudletHomeDir():gsub(&quot;\\&quot;, &quot;/&quot;) ..
+      [[/LuminariGUI/images/action-move-50.png&quot;);]]
       )
       GUI.MoveActionIcon:setStyleSheet(GUI.ActionIconCSS:getCSS())
     end
-    if (msdp.ACTIONS.SWIFT_ACTION == "0") then
+    if (msdp.ACTIONS.SWIFT_ACTION == &quot;0&quot;) then
       GUI.ActionIconCSS:set(
-      "border-image",
-      [[url("]] ..
-      getMudletHomeDir():gsub("\\", "/") ..
-      [[/LuminariGUI/images/action-swift-50.png");]]
+      &quot;border-image&quot;,
+      [[url(&quot;]] ..
+      getMudletHomeDir():gsub(&quot;\\&quot;, &quot;/&quot;) ..
+      [[/LuminariGUI/images/action-swift-50.png&quot;);]]
       )
       GUI.SwiftActionIcon:setStyleSheet(GUI.ActionIconCSS:getCSS())
     end
   end
   </script>
-						<eventHandlerList />
+						<eventHandlerList/>
 					</Script>
 					<Script isActive="yes" isFolder="no">
 						<name>Config</name>
-						<packageName></packageName>
+						<packageName/>
 						<script>-- This needs to be outside the config, since YATCO needs to have the boxes set.
-GUI.image_location = getMudletHomeDir():gsub("\\", "/") .. "/LuminariGUI/images/"
+GUI.image_location = getMudletHomeDir():gsub(&quot;\\&quot;, &quot;/&quot;) .. &quot;/LuminariGUI/images/&quot;
 GUI.init_background()
 GUI.set_borders()
 GUI.init_boxes()
-
 function GUI.init()
   GUI.AffectIcons = GUI.AffectIcons or {}
   GUI.Affects = GUI.Affects or {}
@@ -3329,52 +3052,49 @@ function GUI.init()
   GUI.buttonWindow.init()
   GUI.init_castConsole()
   GUI.styleScrollbar()
-
-
   --
-  registerAnonymousEventHandler("msdp.GROUP", "GUI.updateGroup")
-  registerAnonymousEventHandler("msdp.AFFECTS", "GUI.updateAffectIcons")
-  --registerAnonymousEventHandler("msdp.AFFECTS", "GUI.updateSLAffects")
-  --registerAnonymousEventHandler("sysConnectionEvent", "GUI.eventHandler")
-  registerAnonymousEventHandler("sysProtocolEnabled", "GUI.onProtocolEnabled")
-  registerAnonymousEventHandler("msdp.HEALTH", "GUI.updateHealthGauge")
-  registerAnonymousEventHandler("msdp.HEALTH_MAX", "GUI.updateHealthGauge")
-  registerAnonymousEventHandler("msdp.OPPONENT_HEALTH", "GUI.updateEnemyGauge")
-  registerAnonymousEventHandler("msdp.OPPONENT_HEALTH_MAX", "GUI.updateEnemyGauge")
-  registerAnonymousEventHandler("msdp.OPPONENT_NAME", "GUI.updateEnemyGauge")
-  registerAnonymousEventHandler("msdp.MOVEMENT", "GUI.updateMovesGauge")
-  registerAnonymousEventHandler("msdp.MOVEMENT_MAX", "GUI.updateMovesGauge")
-  registerAnonymousEventHandler("msdp.EXPERIENCE", "GUI.updateExperienceGauge")
-  registerAnonymousEventHandler("msdp.EXPERIENCE_TNL", "GUI.updateExperienceGauge")
-  registerAnonymousEventHandler("msdp.EXPERIENCE_MAX", "GUI.updateExperienceGauge")
-  registerAnonymousEventHandler("msdp.ACTIONS", "GUI.updateActionIcons")
-  registerAnonymousEventHandler("msdp.CHARACTER_NAME", "GUI.updatePlayer")
-  registerAnonymousEventHandler("msdp.POSITION", "GUI.updatePlayer")
-  registerAnonymousEventHandler("msdp.RACE", "GUI.updatePlayer")
-  registerAnonymousEventHandler("msdp.CLASS", "GUI.updatePlayer")
-  registerAnonymousEventHandler("msdp.ALIGNMENT", "GUI.updatePlayer")
-  registerAnonymousEventHandler("msdp.LEVEL", "GUI.updatePlayer")
-  registerAnonymousEventHandler("msdp.STR", "GUI.updatePlayer")
-  registerAnonymousEventHandler("msdp.DEX", "GUI.updatePlayer")
-  registerAnonymousEventHandler("msdp.CON", "GUI.updatePlayer")
-  registerAnonymousEventHandler("msdp.INT", "GUI.updatePlayer")
-  registerAnonymousEventHandler("msdp.WIS", "GUI.updatePlayer")
-  registerAnonymousEventHandler("msdp.CHA", "GUI.updatePlayer")
-  registerAnonymousEventHandler("msdp.AC", "GUI.updatePlayer")
-  registerAnonymousEventHandler("msdp.MONEY", "GUI.updatePlayer")
-  registerAnonymousEventHandler("msdp.ROOM", "GUI.updateRoom")
+  registerAnonymousEventHandler(&quot;msdp.GROUP&quot;, &quot;GUI.updateGroup&quot;)
+  registerAnonymousEventHandler(&quot;msdp.AFFECTS&quot;, &quot;GUI.updateAffectIcons&quot;)
+  --registerAnonymousEventHandler(&quot;msdp.AFFECTS&quot;, &quot;GUI.updateSLAffects&quot;)
+  --registerAnonymousEventHandler(&quot;sysConnectionEvent&quot;, &quot;GUI.eventHandler&quot;)
+  registerAnonymousEventHandler(&quot;sysProtocolEnabled&quot;, &quot;GUI.onProtocolEnabled&quot;)
+  registerAnonymousEventHandler(&quot;msdp.HEALTH&quot;, &quot;GUI.updateHealthGauge&quot;)
+  registerAnonymousEventHandler(&quot;msdp.HEALTH_MAX&quot;, &quot;GUI.updateHealthGauge&quot;)
+  registerAnonymousEventHandler(&quot;msdp.OPPONENT_HEALTH&quot;, &quot;GUI.updateEnemyGauge&quot;)
+  registerAnonymousEventHandler(&quot;msdp.OPPONENT_HEALTH_MAX&quot;, &quot;GUI.updateEnemyGauge&quot;)
+  registerAnonymousEventHandler(&quot;msdp.OPPONENT_NAME&quot;, &quot;GUI.updateEnemyGauge&quot;)
+  registerAnonymousEventHandler(&quot;msdp.MOVEMENT&quot;, &quot;GUI.updateMovesGauge&quot;)
+  registerAnonymousEventHandler(&quot;msdp.MOVEMENT_MAX&quot;, &quot;GUI.updateMovesGauge&quot;)
+  registerAnonymousEventHandler(&quot;msdp.EXPERIENCE&quot;, &quot;GUI.updateExperienceGauge&quot;)
+  registerAnonymousEventHandler(&quot;msdp.EXPERIENCE_TNL&quot;, &quot;GUI.updateExperienceGauge&quot;)
+  registerAnonymousEventHandler(&quot;msdp.EXPERIENCE_MAX&quot;, &quot;GUI.updateExperienceGauge&quot;)
+  registerAnonymousEventHandler(&quot;msdp.ACTIONS&quot;, &quot;GUI.updateActionIcons&quot;)
+  registerAnonymousEventHandler(&quot;msdp.CHARACTER_NAME&quot;, &quot;GUI.updatePlayer&quot;)
+  registerAnonymousEventHandler(&quot;msdp.POSITION&quot;, &quot;GUI.updatePlayer&quot;)
+  registerAnonymousEventHandler(&quot;msdp.RACE&quot;, &quot;GUI.updatePlayer&quot;)
+  registerAnonymousEventHandler(&quot;msdp.CLASS&quot;, &quot;GUI.updatePlayer&quot;)
+  registerAnonymousEventHandler(&quot;msdp.ALIGNMENT&quot;, &quot;GUI.updatePlayer&quot;)
+  registerAnonymousEventHandler(&quot;msdp.LEVEL&quot;, &quot;GUI.updatePlayer&quot;)
+  registerAnonymousEventHandler(&quot;msdp.STR&quot;, &quot;GUI.updatePlayer&quot;)
+  registerAnonymousEventHandler(&quot;msdp.DEX&quot;, &quot;GUI.updatePlayer&quot;)
+  registerAnonymousEventHandler(&quot;msdp.CON&quot;, &quot;GUI.updatePlayer&quot;)
+  registerAnonymousEventHandler(&quot;msdp.INT&quot;, &quot;GUI.updatePlayer&quot;)
+  registerAnonymousEventHandler(&quot;msdp.WIS&quot;, &quot;GUI.updatePlayer&quot;)
+  registerAnonymousEventHandler(&quot;msdp.CHA&quot;, &quot;GUI.updatePlayer&quot;)
+  registerAnonymousEventHandler(&quot;msdp.AC&quot;, &quot;GUI.updatePlayer&quot;)
+  registerAnonymousEventHandler(&quot;msdp.MONEY&quot;, &quot;GUI.updatePlayer&quot;)
+  registerAnonymousEventHandler(&quot;msdp.ROOM&quot;, &quot;GUI.updateRoom&quot;)
 end
-
-registerAnonymousEventHandler("sysLoadEvent", "GUI.init")
-registerAnonymousEventHandler("sysInstall", "GUI.init")</script>
-						<eventHandlerList />
+registerAnonymousEventHandler(&quot;sysLoadEvent&quot;, &quot;GUI.init&quot;)
+registerAnonymousEventHandler(&quot;sysInstall&quot;, &quot;GUI.init&quot;)</script>
+						<eventHandlerList/>
 					</Script>
 					<Script isActive="yes" isFolder="no">
 						<name>Custom Scrollbar</name>
-						<packageName></packageName>
+						<packageName/>
 						<script>function GUI.styleScrollbar()
-  local background_color = "#202020"
-  local border_color = "#515151"
+  local background_color = &quot;#202020&quot;
+  local border_color = &quot;#515151&quot;
   setAppStyleSheet(
     [[
   QScrollBar:vertical {
@@ -3437,70 +3157,61 @@ registerAnonymousEventHandler("sysInstall", "GUI.init")</script>
 ]]
   )
 end</script>
-						<eventHandlerList />
+						<eventHandlerList/>
 					</Script>
 					<Script isActive="yes" isFolder="no">
 						<name>Delete Line and  Prompt</name>
-						<packageName></packageName>
+						<packageName/>
 						<script>function deleteLineP()
   deleteLine()
   tempLineTrigger(1, 1, [[if isPrompt() then deleteLine() end]])
 end</script>
-						<eventHandlerList />
+						<eventHandlerList/>
 					</Script>
 				</ScriptGroup>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
 				<name>YATCOConfig</name>
 				<packageName>YATCOConfig</packageName>
-				<script></script>
-				<eventHandlerList />
+				<script/>
+				<eventHandlerList/>
 				<ScriptGroup isActive="yes" isFolder="yes">
 					<name>YATCOCONFIG</name>
-					<packageName></packageName>
+					<packageName/>
 					<script>demonnic = demonnic or {}
 demonnic.chat = demonnic.chat or {}
 demonnic.chat.config = demonnic.chat.config or {}</script>
-					<eventHandlerList />
+					<eventHandlerList/>
 					<Script isActive="yes" isFolder="no">
 						<name>Configuration Options</name>
-						<packageName></packageName>
+						<packageName/>
 						<script>--[[
-This is where all of the configuration options can be set. 
+This is where all of the configuration options can be set.
 Anything I've put in this script object can be changed, but please do pay attention to what you're doing.
-If you change one of the values to something it shouldn't be, you could break it. 
+If you change one of the values to something it shouldn't be, you could break it.
 ]]
-
 --This is where you tell it to use tabbed chat.
 demonnic.chat.use = true
-
 --[[
 This is where you put what container to put the tabbed chat stuff into. Make it
 equal to the actual container object you want it in, or false for none. Defaults to false
-Which is to say if you want to put the tabbed chat stuff into a container made using 
+Which is to say if you want to put the tabbed chat stuff into a container made using
 uiRight = Geyser.Container:new()
-
 you would put
-
 demonnic.chat.useContainer = uiRight
-
 and if you don't want it in a container you would put
-
 demonnic.chat.useContainer = false
 ]]
-
 demonnic.chat.useContainer = GUI.chatContainer
-
 --[[
 The timestamp option is set here.
 Set to false if you do not want any timestamps displayed for chat.
-If you do want it displayed, set to the string for the format you wish. 
+If you do want it displayed, set to the string for the format you wish.
 see http://wiki.mudlet.org/w/Manual:Lua_Functions#getTime for information
 how to format the string
 ]]
---demonnic.chat.config.timestamp = "HH:mm:ss"
+--demonnic.chat.config.timestamp = &quot;HH:mm:ss&quot;
 demonnic.chat.config.timestamp = false
-
 --[[ Should we use our own colors for the timestamp?
 Set to true if you want to specify foreground and background colors
 for the timestamp.
@@ -3511,9 +3222,8 @@ demonnic.chat.config.timestampCustomColor = false
 --[[
 and what foreground color? You can either use one of the 'named' colors
 (see http://wiki.mudlet.org/images/c/c3/ShowColors.png for available colors)
-demonnic.chat.config.timestampFG = "slate_grey"
-
-Or you can use a table of R,G,B values. 
+demonnic.chat.config.timestampFG = &quot;slate_grey&quot;
+Or you can use a table of R,G,B values.
 demonnic.chat.config.timestampFG = {
   255,
     0,
@@ -3521,180 +3231,142 @@ demonnic.chat.config.timestampFG = {
 }
 then the foreground for the timestamp would be 255 read, 100 green, and 0 blue
 ]]
-demonnic.chat.config.timestampFG = "red"
-
+demonnic.chat.config.timestampFG = &quot;red&quot;
 --and background? Same rules as for the foreground above
-demonnic.chat.config.timestampBG = "blue"
-
+demonnic.chat.config.timestampBG = &quot;blue&quot;
 --[[
 This is where you say what corner of the screen you want the tabbed chat on
-Valid settings are "topright", "topleft", "bottomright", "bottomleft"
+Valid settings are &quot;topright&quot;, &quot;topleft&quot;, &quot;bottomright&quot;, &quot;bottomleft&quot;
 ]]--
-demonnic.chat.config.location = "topright"
-
+demonnic.chat.config.location = &quot;topright&quot;
 --[[
 This is a table of channels you would like.
 AKA the place you tell the script what tabs you want.
 Each entry must be a string. The defaults should be a pretty effective guide.
 ]]
-
 demonnic.chat.config.channels = {
-  "All",
-  "Tell",
-  "Chat",
-	"Wiz",
-	"Group",
-	"Congrats",
-	"Auction",  
+  &quot;All&quot;,
+  &quot;Tell&quot;,
+  &quot;Chat&quot;,
+	&quot;Wiz&quot;,
+	&quot;Group&quot;,
+	&quot;Congrats&quot;,
+	&quot;Auction&quot;,
 }
-
-
---Set this to the name of the channel you want to have everything sent to. 
---Per the default, this would be the "All" channel. If you have a different name for it:
+--Set this to the name of the channel you want to have everything sent to.
+--Per the default, this would be the &quot;All&quot; channel. If you have a different name for it:
 --
---demonnic.chat.config.Alltab = "Bucket"  
+--demonnic.chat.config.Alltab = &quot;Bucket&quot;
 --
 --And if you don't want it turned on at all:
 --
 --demonnic.chat.config.Alltab = false
-
-demonnic.chat.config.Alltab = "All"
-
---Set this to the name of the channel you want to display your map. Set to "" if you
+demonnic.chat.config.Alltab = &quot;All&quot;
+--Set this to the name of the channel you want to display your map. Set to &quot;&quot; if you
 --don't want to display the map in your YATCO tabs
-demonnic.chat.config.Maptab = ""
-
-
+demonnic.chat.config.Maptab = &quot;&quot;
 ---------------------------------------------------------------------------------
 --                                                                             --
 --The infamous blinking stuff!!!                                               --
 --                                                                             --
 ---------------------------------------------------------------------------------
-
 --[[
 Do you want tabs to blink when you get new messages, until you click on the tab?
 True if yes, false if no.
 ]]
 demonnic.chat.config.blink = true
-
 --How long (in seconds) between blinks? For example, 1 would mean a 1 second pause in between blinks.
 demonnic.chat.config.blinkTime = 3
-
---Blink if the bucket tab ("All" by default, but configured above) is in focus?
+--Blink if the bucket tab (&quot;All&quot; by default, but configured above) is in focus?
 demonnic.chat.config.blinkFromAll = false
-
-
-
-
 --Font size for the chat messages
-
-demonnic.chat.config.fontSize = getFontSize("main")
-
+demonnic.chat.config.fontSize = getFontSize(&quot;main&quot;)
 --[[
-Should we preserve the formatting of the text. 
+Should we preserve the formatting of the text.
 Or should we set the background of it to match the window color?
 Set this to false if you want the background for all chat to match the background of the window.
 Useful if you change the background from black, and don't like the way the pasted chat makes blocks in it
 ]]
-
 demonnic.chat.config.preserveBackground = true
-
 --[[
 Gag the chat lines in the main window?
 defaults to false, set to true if you want to gag.
 ]]
-
 demonnic.chat.config.gag = false
-
 --[[
-Number of lines of chat visible at once. 
+Number of lines of chat visible at once.
 Will determine how tall the window for the chats is.
 ]]
-
 demonnic.chat.config.lines = 22
-
 --[[
 Number of characters to wrap the chatlines at.
 This will also determine how wide the chat windows are.
 ]]
-
-demonnic.chat.config.width = getColumnCount("main")
-
+demonnic.chat.config.width = getColumnCount(&quot;main&quot;)
 --[[
 Set the color for the active tab. R,G,B format.
 The default here is a brightish green
 ]]
-
 demonnic.chat.config.activeColors = {
   r = 0,
   g = 180,
   b = 0,
 }
-
 --[[
 Set the color for the inactive tab. R,G,B format.
 The default here is a drab grey
 ]]
-
 demonnic.chat.config.inactiveColors = {
   r = 60,
   g = 60,
   b = 60,
 }
-
 --[[
 Set the color for the chat window itself. R,G,B format.
 Defaulted to the black of my twisted hardened soul. Or something.
 ]]
-
 demonnic.chat.config.windowColors = {
   r = 0,
   g = 0,
   b = 0,
 }
-
 --[[
 Set the color for the text on the active tab. Uses color names.
-Set the default to purple. So the tab you're looking at, by default will be purple on bright green. 
+Set the default to purple. So the tab you're looking at, by default will be purple on bright green.
 Did I mention I'm a bit colorblind?
 ]]
-
-demonnic.chat.config.activeTabText = "yellow"
-
+demonnic.chat.config.activeTabText = &quot;yellow&quot;
 --[[
 Set the color for the text on the inactive tabs. Uses color names.
 Defaulted this to white. So the tabs you're not looking at will be white text on boring grey background.
 ]]
-
-demonnic.chat.config.inactiveTabText = "white"
-
+demonnic.chat.config.inactiveTabText = &quot;white&quot;
 --[[
-have to make sure a currentTab is set... 
+have to make sure a currentTab is set...
 so we'll use the one for the bucket, or the first one in the channels table
 Or, you know... what it's currently set to, if it's already set.
 ]]
 demonnic.chat.currentTab = demonnic.chat.currentTab or demonnic.chat.config.Alltab or demonnic.chat.config.channels[1]
 </script>
-						<eventHandlerList />
+						<eventHandlerList/>
 					</Script>
 				</ScriptGroup>
 			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
 				<name>YATCO</name>
 				<packageName>YATCO</packageName>
-				<script></script>
-				<eventHandlerList />
+				<script/>
+				<eventHandlerList/>
 				<ScriptGroup isActive="yes" isFolder="yes">
 					<name>Demonnic</name>
-					<packageName></packageName>
-					<script></script>
-					<eventHandlerList />
+					<packageName/>
+					<script/>
+					<eventHandlerList/>
 					<ScriptGroup isActive="yes" isFolder="yes">
 						<name>Shared</name>
-						<packageName></packageName>
+						<packageName/>
 						<script>--Bootstrapping variables/etc. Don't touch this unless you really know what you're doing
-
---I mean it. I'll point. AND laugh. loudly. 
+--I mean it. I'll point. AND laugh. loudly.
 demonnic = demonnic or {}
 demonnic.config = demonnic.config or {}
 demonnic.balances = demonnic.balances or {}
@@ -3703,53 +3375,47 @@ demonnic.balances.equilibrium = demonnic.balances.equilibrium or 1
 demonnic.debug = demonnic.debug or {}
 demonnic.debug.active = demonnic.debug.active or nil
 demonnic.debug.categories = demonnic.debug.categories or { }
-
-
 function demonnic:echo(msg)
- cecho(string.format("\n&lt;blue&gt;(&lt;green&gt;Demonnic&lt;blue&gt;):&lt;white&gt; %s", msg))
+ cecho(string.format(&quot;\n&lt;blue&gt;(&lt;green&gt;Demonnic&lt;blue&gt;):&lt;white&gt; %s&quot;, msg))
 end</script>
-						<eventHandlerList />
+						<eventHandlerList/>
 						<Script isActive="yes" isFolder="no">
 							<name>Debugging</name>
-							<packageName></packageName>
-							<script>--Adds debugging functionality 
-
+							<packageName/>
+							<script>--Adds debugging functionality
 function demonnic:Debug(category,debugData)
    if category then
       if table.contains(demonnic.debug.categories, category) then
-         if type(debugData) == "table" then
-            demonnic:echo("&lt;red&gt;DEBUG " .. category .. ":&lt;white&gt;")
+         if type(debugData) == &quot;table&quot; then
+            demonnic:echo(&quot;&lt;red&gt;DEBUG &quot; .. category .. &quot;:&lt;white&gt;&quot;)
             display(debugData)
-         elseif type(debugData) == "string" or type(debugData) == "number" then
-            demonnic:echo("&lt;red&gt;DEBUG " .. category .. ":&lt;white&gt; " .. debugData .. "\n" )
+         elseif type(debugData) == &quot;string&quot; or type(debugData) == &quot;number&quot; then
+            demonnic:echo(&quot;&lt;red&gt;DEBUG &quot; .. category .. &quot;:&lt;white&gt; &quot; .. debugData .. &quot;\n&quot; )
          else
-            demonnic:echo("&lt;red&gt;DEBUG " .. category .. ":&lt;white&gt; " .. tostring(debugData) .. "\n" )
+            demonnic:echo(&quot;&lt;red&gt;DEBUG &quot; .. category .. &quot;:&lt;white&gt; &quot; .. tostring(debugData) .. &quot;\n&quot; )
          end
       end
    else
-      if type(debugData) == "table" then
-         demonnic:echo("&lt;red&gt;DEBUG:&lt;white&gt;")
+      if type(debugData) == &quot;table&quot; then
+         demonnic:echo(&quot;&lt;red&gt;DEBUG:&lt;white&gt;&quot;)
          display(debugData)
-      elseif type(debugData) == "string" or type(debugData) == "number" then
-         demonnic:echo("&lt;red&gt;DEBUG:&lt;white&gt; " .. debugData)
+      elseif type(debugData) == &quot;string&quot; or type(debugData) == &quot;number&quot; then
+         demonnic:echo(&quot;&lt;red&gt;DEBUG:&lt;white&gt; &quot; .. debugData)
       else
-         demonnic:echo("&lt;red&gt;DEBUG:&lt;white&gt; " .. tostring(debugData))
+         demonnic:echo(&quot;&lt;red&gt;DEBUG:&lt;white&gt; &quot; .. tostring(debugData))
       end
    end
 end
-
 function demonnic:printDebug(category, debugData)
    if not demonnic.debug.active then return end
    demonnic:Debug(category, debugData)
 end
-
 function demonnic:toggleDebug()
    if demonnic.debug.active then demonnic.debug.active = nil
    else demonnic.debug.active = true
    end
-   demonnic:echo("Debugging is currently " .. (( demonnic.debug.active and "&lt;green&gt;ON&lt;white&gt;") or "&lt;red&gt;OFF&lt;white&gt;"))
+   demonnic:echo(&quot;Debugging is currently &quot; .. (( demonnic.debug.active and &quot;&lt;green&gt;ON&lt;white&gt;&quot;) or &quot;&lt;red&gt;OFF&lt;white&gt;&quot;))
 end
-
 function demonnic:watchCategory( category )
    if table.contains(demonnic.debug.categories, category) then
       for i,v in ipairs(demonnic.debug.categories) do
@@ -3757,40 +3423,38 @@ function demonnic:watchCategory( category )
             table.remove(demonnic.debug.categories, i)
          end
       end
-      demonnic:echo("No longer watching the '&lt;red&gt;"..category.."&lt;white&gt;' category.") 
+      demonnic:echo(&quot;No longer watching the '&lt;red&gt;&quot;..category..&quot;&lt;white&gt;' category.&quot;)
    else
       table.insert(demonnic.debug.categories, category)
-      demonnic:echo("Now watching the '&lt;red&gt;"..category.."&lt;white&gt;' category.")
+      demonnic:echo(&quot;Now watching the '&lt;red&gt;&quot;..category..&quot;&lt;white&gt;' category.&quot;)
    end
-   demonnic:echo("Debugging is currently " .. (( demonnic.debug.active and "&lt;green&gt;ON&lt;white&gt;") or "&lt;red&gt;OFF&lt;white&gt;"))
+   demonnic:echo(&quot;Debugging is currently &quot; .. (( demonnic.debug.active and &quot;&lt;green&gt;ON&lt;white&gt;&quot;) or &quot;&lt;red&gt;OFF&lt;white&gt;&quot;))
 end
-
 function demonnic:listCategories()
    if #demonnic.debug.categories &gt; 0 then
-      demonnic:echo("You are currently watching the following categories:\n" .. table.concat(demonnic.debug.categories,", ") )
+      demonnic:echo(&quot;You are currently watching the following categories:\n&quot; .. table.concat(demonnic.debug.categories,&quot;, &quot;) )
    else
-      demonnic:echo("You are not watching any debugs.")
+      demonnic:echo(&quot;You are not watching any debugs.&quot;)
    end
 end
 </script>
-							<eventHandlerList />
+							<eventHandlerList/>
 						</Script>
 						<Script isActive="yes" isFolder="no">
 							<name>Geyser Additions</name>
-							<packageName></packageName>
+							<packageName/>
 							<script>function Geyser.MiniConsole:clear()
    clearWindow(self.name)
 end
-
 function Geyser.MiniConsole:append()
   appendBuffer(self.name)
 end</script>
-							<eventHandlerList />
+							<eventHandlerList/>
 						</Script>
 					</ScriptGroup>
 					<ScriptGroup isActive="yes" isFolder="yes">
 						<name>Tabbed Chat</name>
-						<packageName></packageName>
+						<packageName/>
 						<script>--Do not remove the following lines. Or change them.
 demonnic = demonnic or {}
 demonnic.chat = demonnic.chat or {}
@@ -3798,13 +3462,13 @@ demonnic.chat.tabsToBlink = demonnic.chat.tabsToBlink or {}
 demonnic.chat.tabs = demonnic.chat.tabs or {}
 demonnic.chat.windows = demonnic.chat.windows or {}
 if not demonnic.chat.config then
-  cecho("&lt;red:white&gt;YOU DO NOT HAVE THE YATCO CONFIG PACKAGE IN PLACE. THINGS WILL NOT WORK AS EXPECTED\n\n")
-  demonnic.chat.error = "NO CONFIG"
+  cecho(&quot;&lt;red:white&gt;YOU DO NOT HAVE THE YATCO CONFIG PACKAGE IN PLACE. THINGS WILL NOT WORK AS EXPECTED\n\n&quot;)
+  demonnic.chat.error = &quot;NO CONFIG&quot;
 end</script>
-						<eventHandlerList />
+						<eventHandlerList/>
 						<Script isActive="yes" isFolder="no">
 							<name>Code</name>
-							<packageName></packageName>
+							<packageName/>
 							<script>--[[
 If the label callbacks ever decide to start taking a function which is part of a table, 0then this will change.
 Or if it's modified to take actual functions. Anonymouse function clickcallback would be awfully nice.
@@ -3820,7 +3484,7 @@ function demonnicChatSwitch(chat)
   if demonnic.chat.currentTab ~= chat then
     demonnic.chat.windows[oldchat]:hide()
     demonnic.chat.tabs[oldchat]:setColor(r, g, b)
-    demonnic.chat.tabs[oldchat]:echo(oldchat, demonnic.chat.config.inactiveTabText, "c")
+    demonnic.chat.tabs[oldchat]:echo(oldchat, demonnic.chat.config.inactiveTabText, &quot;c&quot;)
     if demonnic.chat.config.blink and demonnic.chat.tabsToBlink[chat] then
       demonnic.chat.tabsToBlink[chat] = nil
     end
@@ -3829,11 +3493,10 @@ function demonnicChatSwitch(chat)
     end
   end
   demonnic.chat.tabs[chat]:setColor(newr, newg, newb)
-  demonnic.chat.tabs[chat]:echo(chat, demonnic.chat.config.activeTabText, "c")
+  demonnic.chat.tabs[chat]:echo(chat, demonnic.chat.config.activeTabText, &quot;c&quot;)
   demonnic.chat.windows[chat]:show()
   demonnic.chat.currentTab = chat
 end
-
 function demonnic.chat:resetUI()
   demonnic.chat.container =
   demonnic.chat.useContainer or Geyser.Container:new(demonnic.chat[demonnic.chat.config.location]())
@@ -3842,14 +3505,13 @@ function demonnic.chat:resetUI()
   {
     x = 0,
     y = 0,
-    width = "100%",
-    height = "25px",
-    name = "DemonChatTabs"
+    width = &quot;100%&quot;,
+    height = &quot;25px&quot;,
+    name = &quot;DemonChatTabs&quot;
   },
   demonnic.chat.container
   )
 end
-
 function demonnic.chat:create()
   --reset the UI
   demonnic.chat:resetUI()
@@ -3860,53 +3522,50 @@ function demonnic.chat:create()
   local winr = demonnic.chat.config.windowColors.r
   local wing = demonnic.chat.config.windowColors.g
   local winb = demonnic.chat.config.windowColors.b
-
   --iterate the table of channels and create some windows and tabs
   for i, tab in ipairs(demonnic.chat.config.channels) do
     demonnic.chat.tabs[tab] =
     Geyser.Label:new(
     {
-      name = string.format("tab%s", tab)
+      name = string.format(&quot;tab%s&quot;, tab)
     },
     demonnic.chat.tabBox
     )
-    demonnic.chat.tabs[tab]:echo(tab, demonnic.chat.config.inactiveTabText, "c")
+    demonnic.chat.tabs[tab]:echo(tab, demonnic.chat.config.inactiveTabText, &quot;c&quot;)
     demonnic.chat.tabs[tab]:setColor(r, g, b)
-    demonnic.chat.tabs[tab]:setClickCallback("demonnicChatSwitch", tab)
-
+    demonnic.chat.tabs[tab]:setClickCallback(&quot;demonnicChatSwitch&quot;, tab)
     demonnic.chat.tabs[tab]:setStyleSheet(
     [[font-family: Tahoma, Geneva, sans-serif;
     border-image: url(]] ..
-    getMudletHomeDir():gsub("\\", "/") ..
+    getMudletHomeDir():gsub(&quot;\\&quot;, &quot;/&quot;) ..
     [[/LuminariGUI/images/buttons/button.png) 0 0 0 0 stretch stretch;]]
     )
-
     demonnic.chat.windows[tab] =
     Geyser.MiniConsole:new(
     {
       --      fontSize = demonnic.chat.config.fontSize,
       x = 0,
       y = 25,
-      height = "100%",
-      width = "100%",
-      name = string.format("win%s", tab)
+      height = &quot;100%&quot;,
+      width = &quot;100%&quot;,
+      name = string.format(&quot;win%s&quot;, tab)
     },
     demonnic.chat.container
     )
     demonnic.chat.windows[tab]:setFontSize(demonnic.chat.config.fontSize)
-    demonnic.chat.windows[tab]:setFont(getFont("main"))
+    demonnic.chat.windows[tab]:setFont(getFont(&quot;main&quot;))
     demonnic.chat.windows[tab]:setColor(winr, wing, winb)
     demonnic.chat.windows[tab]:setWrap(demonnic.chat.config.width)
     demonnic.chat.windows[tab]:hide()
   end
-  if demonnic.chat.config.Maptab and demonnic.chat.config.Maptab ~= "" then
+  if demonnic.chat.config.Maptab and demonnic.chat.config.Maptab ~= &quot;&quot; then
     demonnic.chat.mapWindow =
     Geyser.Mapper:new(
     {
       x = 0,
       y = 0,
-      height = "100%",
-      width = "100%"
+      height = &quot;100%&quot;,
+      width = &quot;100%&quot;
     },
     demonnic.chat.windows[demonnic.chat.config.Maptab]
     )
@@ -3919,7 +3578,6 @@ function demonnic.chat:create()
     demonnic.chat:blink()
   end
 end
-
 function demonnic.chat:append(chat)
   local r = demonnic.chat.config.windowColors.r
   local g = demonnic.chat.config.windowColors.g
@@ -3935,28 +3593,28 @@ function demonnic.chat:append(chat)
     local timestamp = getTime(true, demonnic.chat.config.timestamp)
     local tsfg = {}
     local tsbg = {}
-    local colorLeader = ""
+    local colorLeader = &quot;&quot;
     if demonnic.chat.config.timestampCustomColor then
-      if type(demonnic.chat.config.timestampFG) == "string" then
+      if type(demonnic.chat.config.timestampFG) == &quot;string&quot; then
         tsfg = color_table[demonnic.chat.config.timestampFG]
       else
         tsfg = demonnic.chat.config.timestampFG
       end
-      if type(demonnic.chat.config.timestampBG) == "string" then
+      if type(demonnic.chat.config.timestampBG) == &quot;string&quot; then
         tsbg = color_table[demonnic.chat.config.timestampBG]
       else
         tsbg = demonnic.chat.config.timestampBG
       end
-      colorLeader = string.format("&lt;%s,%s,%s:%s,%s,%s&gt;", tsfg[1], tsfg[2], tsfg[3], tsbg[1], tsbg[2], tsbg[3])
+      colorLeader = string.format(&quot;&lt;%s,%s,%s:%s,%s,%s&gt;&quot;, tsfg[1], tsfg[2], tsfg[3], tsbg[1], tsbg[2], tsbg[3])
     else
-      colorLeader = string.format("&lt;%s,%s,%s:%s,%s,%s&gt;", ofr, ofg, ofb, obr, obg, obb)
+      colorLeader = string.format(&quot;&lt;%s,%s,%s:%s,%s,%s&gt;&quot;, ofr, ofg, ofb, obr, obg, obb)
     end
-    local fullstamp = string.format("%s%s", colorLeader, timestamp)
+    local fullstamp = string.format(&quot;%s%s&quot;, colorLeader, timestamp)
     demonnic.chat.windows[chat]:decho(fullstamp)
-    demonnic.chat.windows[chat]:echo(" ")
+    demonnic.chat.windows[chat]:echo(&quot; &quot;)
     if demonnic.chat.config.Alltab then
       demonnic.chat.windows[demonnic.chat.config.Alltab]:decho(fullstamp)
-      demonnic.chat.windows[demonnic.chat.config.Alltab]:echo(" ")
+      demonnic.chat.windows[demonnic.chat.config.Alltab]:echo(&quot; &quot;)
     end
   end
   demonnic.chat.windows[chat]:append()
@@ -3965,7 +3623,7 @@ function demonnic.chat:append(chat)
     tempLineTrigger(1, 1, [[if isPrompt() then deleteLine() end]])
   end
   if demonnic.chat.config.Alltab then
-    appendBuffer(string.format("win%s", demonnic.chat.config.Alltab))
+    appendBuffer(string.format(&quot;win%s&quot;, demonnic.chat.config.Alltab))
   end
   if demonnic.chat.config.blink and chat ~= demonnic.chat.currentTab then
     if (demonnic.chat.config.Alltab == demonnic.chat.currentTab) and not demonnic.chat.config.blinkOnAll then
@@ -3975,7 +3633,6 @@ function demonnic.chat:append(chat)
     end
   end
 end
-
 function demonnic.chat:blink()
   if demonnic.chat.blinkID then
     killTimer(demonnic.chat.blinkID)
@@ -3997,52 +3654,48 @@ function demonnic.chat:blink()
   end
   )
 end
-
 function demonnic.chat:topright()
   return {
     fontSize = demonnic.chat.config.fontSize,
-    x = string.format("-%sc", demonnic.chat.config.width + 2),
+    x = string.format(&quot;-%sc&quot;, demonnic.chat.config.width + 2),
     y = 0,
-    width = "-15px",
-    height = string.format("%ic", demonnic.chat.config.lines + 2)
+    width = &quot;-15px&quot;,
+    height = string.format(&quot;%ic&quot;, demonnic.chat.config.lines + 2)
   }
 end
-
 function demonnic.chat:topleft()
   return {
     fontSize = demonnic.chat.config.fontSize,
     x = 0,
     y = 0,
-    width = string.format("%sc", demonnic.chat.config.width),
-    height = string.format("%ic", demonnic.chat.config.lines + 2)
+    width = string.format(&quot;%sc&quot;, demonnic.chat.config.width),
+    height = string.format(&quot;%ic&quot;, demonnic.chat.config.lines + 2)
   }
 end
-
 function demonnic.chat:bottomright()
   return {
     fontSize = demonnic.chat.config.fontSize,
-    x = string.format("-%sc", demonnic.chat.config.width + 2),
-    y = string.format("-%sc", demonnic.chat.config.lines + 2),
-    width = "-15px",
-    height = string.format("%ic", demonnic.chat.config.lines + 2)
+    x = string.format(&quot;-%sc&quot;, demonnic.chat.config.width + 2),
+    y = string.format(&quot;-%sc&quot;, demonnic.chat.config.lines + 2),
+    width = &quot;-15px&quot;,
+    height = string.format(&quot;%ic&quot;, demonnic.chat.config.lines + 2)
   }
 end
-
 function demonnic.chat:bottomleft()
   return {
     fontSize = demonnic.chat.config.fontSize,
     x = 0,
-    y = string.format("-%sc", demonnic.chat.config.lines + 2),
-    width = string.format("%sc", demonnic.chat.config.width),
-    height = string.format("%ic", demonnic.chat.config.lines + 2)
+    y = string.format(&quot;-%sc&quot;, demonnic.chat.config.lines + 2),
+    width = string.format(&quot;%sc&quot;, demonnic.chat.config.width),
+    height = string.format(&quot;%ic&quot;, demonnic.chat.config.lines + 2)
   }
 end
 </script>
-							<eventHandlerList />
+							<eventHandlerList/>
 						</Script>
 						<Script isActive="yes" isFolder="no">
 							<name>demonnicOnStart</name>
-							<packageName></packageName>
+							<packageName/>
 							<script>function demonnicOnStart()
   if demonnic.chat.use then
     demonnic.chat:create()
@@ -4054,14 +3707,14 @@ end</script>
 						</Script>
 						<Script isActive="yes" isFolder="no">
 							<name>echo functions</name>
-							<packageName></packageName>
+							<packageName/>
 							<script>
 function demonnic.chat:cecho(chat, message)
   local alltab = demonnic.chat.config.Alltab
   local blink = demonnic.chat.config.blink
-  cecho(string.format("win%s",chat), message)
-  if alltab and chat ~= alltab then 
-    cecho(string.format("win%s", alltab), message)
+  cecho(string.format(&quot;win%s&quot;,chat), message)
+  if alltab and chat ~= alltab then
+    cecho(string.format(&quot;win%s&quot;, alltab), message)
   end
   if blink and chat ~= demonnic.chat.currentTab then
     if (alltab == demonnic.chat.currentTab) and not demonnic.chat.config.blinkOnAll then
@@ -4071,13 +3724,12 @@ function demonnic.chat:cecho(chat, message)
     end
   end
 end
-
 function demonnic.chat:decho(chat, message)
   local alltab = demonnic.chat.config.Alltab
   local blink = demonnic.chat.config.blink
-  decho(string.format("win%s",chat), message)
-  if alltab and chat ~= alltab then 
-    decho(string.format("win%s", alltab), message)
+  decho(string.format(&quot;win%s&quot;,chat), message)
+  if alltab and chat ~= alltab then
+    decho(string.format(&quot;win%s&quot;, alltab), message)
   end
   if blink and chat ~= demonnic.chat.currentTab then
     if (alltab == demonnic.chat.currentTab) and not demonnic.chat.config.blinkOnAll then
@@ -4087,13 +3739,12 @@ function demonnic.chat:decho(chat, message)
     end
   end
 end
-
 function demonnic.chat:hecho(chat, message)
   local alltab = demonnic.chat.config.Alltab
   local blink = demonnic.chat.config.blink
-  hecho(string.format("win%s",chat), message)
-  if alltab and chat ~= alltab then 
-    hecho(string.format("win%s", alltab), message)
+  hecho(string.format(&quot;win%s&quot;,chat), message)
+  if alltab and chat ~= alltab then
+    hecho(string.format(&quot;win%s&quot;, alltab), message)
   end
   if blink and chat ~= demonnic.chat.currentTab then
     if (alltab == demonnic.chat.currentTab) and not demonnic.chat.config.blinkOnAll then
@@ -4103,13 +3754,12 @@ function demonnic.chat:hecho(chat, message)
     end
   end
 end
-
 function demonnic.chat:echo(chat, message)
   local alltab = demonnic.chat.config.Alltab
   local blink = demonnic.chat.config.blink
-  echo(string.format("win%s",chat), message)
-  if alltab and chat ~= alltab then 
-    echo(string.format("win%s", alltab), message)
+  echo(string.format(&quot;win%s&quot;,chat), message)
+  if alltab and chat ~= alltab then
+    echo(string.format(&quot;win%s&quot;, alltab), message)
   end
   if blink and chat ~= demonnic.chat.currentTab then
     if (alltab == demonnic.chat.currentTab) and not demonnic.chat.config.blinkOnAll then
@@ -4119,13 +3769,13 @@ function demonnic.chat:echo(chat, message)
     end
   end
 end</script>
-							<eventHandlerList />
+							<eventHandlerList/>
 						</Script>
 						<Script isActive="yes" isFolder="no">
 							<name>demonnicOnInstall</name>
-							<packageName></packageName>
+							<packageName/>
 							<script>function demonnicOnInstall(_, package)
-  if package:find("YATCO") then
+  if package:find(&quot;YATCO&quot;) then
   	demonnicOnStart()
   end
 end</script>
@@ -4138,14 +3788,10 @@ end</script>
 			</ScriptGroup>
 			<Script isActive="no" isFolder="no">
 				<name>Changelog</name>
-				<packageName></packageName>
+				<packageName/>
 				<script>--Changelog
-
 --[[
-
-
    1.) Changed the following to support moving chatbox to bottom:
-	   
 	   -Added GUI.Bottom to Create Background Script
 	   -Changed bottom border in Set Borders Script from setBorderBottom(0) to setBorderBottom(h / 4)
 	   -Now Utilizing GUI.Box2 fot chatbox at bottom.
@@ -4154,10 +3800,7 @@ end</script>
 	   -Adjusted chatContainer height to fit frame nicely.
 	   -Adjusted chatContainer x and y to fit frame nicely.
 	   -Changed GUI.chatContainer name from GUI.Box2 to GUI.chatContainer
-		
-			 
 	 2.) Added the following to support adding buttons to Box3
-	     
 		 -Created a new Script named Button which handles buttons individually by row.
 		 -Creating button drawing functions so that they will each be called in an init
 		  alias to generate them row by row. This will make it easier to change buttons
@@ -4170,32 +3813,21 @@ end</script>
 		  Mudlet/ASCII are separate callbacks.
 	     -Legend and room info script created in Room Info/Legend script and proper event
 		  handlers added to config for room info.
-		 -Added check to Capture Room Map trigger to only display ASCII map if 
-		  GUI.buttonWindow.mudletOrAscii == "ASCII". 
-				
-				
+		 -Added check to Capture Room Map trigger to only display ASCII map if
+		  GUI.buttonWindow.mudletOrAscii == &quot;ASCII&quot;.
 	 3.) Changed the following to support release this week.
-	   
 	     -Commenting out box 6 draw frame function.
-				
-					 
 	 4.) Various Bug Fixes:
-	     
 	     -Fixed the trigger for Group chat to capture others talking in group.
          -Fixed gauges so they can no longer overfill into the main buffer by adding:
-       
           if pct_health &gt; 100 then
             GUI.Health:setValue(100, 100)
           else
             GUI.Health:setValue(pct_health, 100)
           end
-  
           *Equivalent added for each gauge. May look to add an effect to show a bar
            is overfilled when an enemy rages in the future*
-
-  
 	 5.) Quality of life:
-	     
 		 -Added a function to delete a line and the following prompt. It can be
 		  utilized in any trigger to delete any line and the prompt it would have
 		  created, but I created it primarily for the chatbox. Function is called
@@ -4204,17 +3836,15 @@ end</script>
 		  Currently they're used to determine if you're shown in the group or not
 		  and if you would like to gag chat from main buffer with the above
 		  function. (deleteLineP())
-			 
 	     -
-
 ]]
 </script>
-				<eventHandlerList />
+				<eventHandlerList/>
 			</Script>
 		</ScriptGroup>
 	</ScriptPackage>
-	<KeyPackage />
+	<KeyPackage/>
 	<HelpPackage>
-		<helpURL></helpURL>
+		<helpURL/>
 	</HelpPackage>
 </MudletPackage>
