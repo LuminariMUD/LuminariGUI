@@ -8,6 +8,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Enhanced
+- **Comprehensive State Validation System**: Addresses "Shared Global State Corruption" critical issue
+  - **Central StateValidator Module**: New `GUI.StateValidator` system with comprehensive validation rules
+    - Type checking and structure validation for all shared state access
+    - Safe accessor functions with fallback defaults for MSDP, toggles, and map data
+    - State corruption detection and automatic recovery mechanisms
+    - Graceful degradation when state is invalid or missing
+  - **Safe MSDP Access Functions**: Replace direct `msdp.*` access with validated functions
+    - `GUI.getMSDPHealth()`, `GUI.getMSDPMovement()`, `GUI.getMSDPRoom()` etc.
+    - Automatic type validation and conversion for numeric values
+    - Structure validation for complex data like ROOM, AFFECTS, GROUP
+    - Prevents crashes from nil, malformed, or partially updated MSDP data
+  - **Protected Toggle Management**: Enhanced toggle system with validation and recovery
+    - `GUI.getToggle()` and `GUI.setToggle()` with automatic corruption recovery
+    - Type validation for boolean toggles with fallback defaults
+    - Automatic reinitialization when toggle table is corrupted
+    - Auto-save functionality with error handling
+  - **Map State Protection**: Validated access to `map.room_info` and related structures
+    - `GUI.validateRoomInfo()` prevents crashes from missing or corrupt room data
+    - Safe access to room VNUM, ENVIRONMENT, TERRAIN, and EXITS
+    - Fallback defaults for all room information fields
+  - **State Recovery Functions**: Automatic recovery from corrupted shared state
+    - `GUI.recoverCorruptedState()` rebuilds missing or invalid state structures
+    - Comprehensive status reporting with `GUI.getStateStatus()`
+    - Debug logging system with `GUI.setStateDebug()` for troubleshooting
+  - **Addresses Critical Architecture Issues**: Solves "fix one, break another" instability
+    - Prevents race conditions between map updates and UI refreshes
+    - Eliminates crashes from partial MSDP data updates
+    - Provides rollback mechanisms for state consistency
+    - Comprehensive test suite verifies all validation scenarios
 - **Enhanced Resource Cleanup System**: Significantly improved resource management to prevent memory leaks
   - **Enhanced Timer Creation**: `GUI.createTimer()` now includes comprehensive validation and error handling
     - Input validation for timer duration and function parameters
@@ -34,6 +63,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Comprehensive reporting aids in debugging resource issues
 
 ### Fixed
+- **Critical Runtime Issues**: Addressed major stability problems discovered during user testing
+  - **Invalid Alignment Errors**: Fixed incomplete HTML center tags in GeyserLabel initialization
+    - Corrected `"<center>text"` patterns to proper `"<center>text</center>"` format
+    - Affected GUI.Box2 and tabbedInfoWindow tab initialization
+    - Prevents GeyserLabel rendering errors that could crash the GUI
+  - **Cast Console Initialization Timing**: Resolved YATCO interference with cast console visibility
+    - Added cast console backup and restoration logic during YATCO initialization
+    - Prevents cast console from being hidden or destroyed when YATCO creates its UI containers
+    - Includes automatic re-showing if cast console becomes hidden during YATCO setup
+  - **Toggle Saving Failures**: Fixed critical bugs in settings persistence system
+    - Corrected `table.load()` usage - now properly assigns loaded data: `GUI.toggles = table.load(file)`
+    - Added comprehensive validation for loaded toggle data with fallback defaults
+    - Enhanced `GUI.saveToggles()` with error handling and data validation
+    - Prevents corruption of user preferences and ensures settings persist across sessions
 - **XML Escaping Issues**: Corrected all cecho statements to use proper XML entity escaping
 - **Vararg Scope Errors**: Fixed incorrect usage of `...` parameters inside pcall functions
 - **Timer Creation Race Conditions**: Enhanced validation prevents double-creation of timers

@@ -39,7 +39,7 @@
 -- 1. ^(\w+) tells you, '(.*)' - Captures incoming tells: player name and message
 -- 2. You tell - Captures outgoing tell confirmations
 demonnic.chat:append(&quot;Tell&quot;)
-if GUI.toggles.gagChat == true then
+if GUI.getToggle(&quot;gagChat&quot;, true) == true then
   deleteLineP()
 end</script>
 					<triggerType>0</triggerType>
@@ -68,7 +68,7 @@ end</script>
 -- 1. ^(\w+) congrats, '(.*)' - Captures congrats messages: player name and content
 -- 2. You congrat, ' - Captures outgoing congrats confirmations
 demonnic.chat:append(&quot;Congrats&quot;)
-if GUI.toggles.gagChat == true then
+if GUI.getToggle(&quot;gagChat&quot;, true) == true then
   deleteLineP()
 end</script>
 					<triggerType>0</triggerType>
@@ -93,7 +93,7 @@ end</script>
 				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 					<name>Chat</name>
 					<script>demonnic.chat:append(&quot;Chat&quot;)
-if GUI.toggles.gagChat == true then
+if GUI.getToggle(&quot;gagChat&quot;, true) == true then
   deleteLineP()
 end</script>
 					<triggerType>0</triggerType>
@@ -118,7 +118,7 @@ end</script>
 				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 					<name>Auction</name>
 					<script>demonnic.chat:append(&quot;Auction&quot;)
-if GUI.toggles.gagChat == true then
+if GUI.getToggle(&quot;gagChat&quot;, true) == true then
   deleteLineP()
 end</script>
 					<triggerType>0</triggerType>
@@ -143,7 +143,7 @@ end</script>
 				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 					<name>Group</name>
 					<script>demonnic.chat:append(&quot;Group&quot;)
-if GUI.toggles.gagChat == true then
+if GUI.getToggle(&quot;gagChat&quot;, true) == true then
   deleteLineP()
 end</script>
 					<triggerType>0</triggerType>
@@ -168,7 +168,7 @@ end</script>
 				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 					<name>Wiznet</name>
 					<script>demonnic.chat:append(&quot;Wiz&quot;)
-if GUI.toggles.gagChat == true then
+if GUI.getToggle(&quot;gagChat&quot;, true) == true then
   deleteLineP()
 end</script>
 					<triggerType>0</triggerType>
@@ -957,7 +957,7 @@ local function speedwalk_check()
   -- Movement Resource Validation
   -- TODO: Make this more versatile, consider movement cost of terrain type
   -- Future Enhancement: Implement weighted pathfinding based on terrain difficulty
-  local move = tonumber(msdp.MOVEMENT or &quot;0&quot;)
+  local move = GUI.getMSDPMovement()
   if move &lt; 10 then
     cecho(&quot;&lt;red&gt;SpeedWalk: &lt;white&gt;Not enough movement to continue SpeedWalk!\n&quot;)
     return
@@ -968,7 +968,8 @@ local function speedwalk_check()
     return
   end
   -- Destination Arrival Check
-  if speedWalkPath[# speedWalkPath] == msdp.ROOM.VNUM then
+  local currentRoom = GUI.getMSDPRoom()
+  if speedWalkPath[# speedWalkPath] == currentRoom.VNUM then
     speedwalk_active = false
     cecho(&quot;&lt;red&gt;SpeedWalk: &lt;white&gt;You have arrived at your destination.\n&quot;)
     return
@@ -982,7 +983,7 @@ local function speedwalk_check()
     speedwalk_timer = tempTimer(10, function () speedwalk_timeout() end)
   end
   -- Determine next movement step based on current room position in path
-  local step_n = speedwalk_vnums[msdp.ROOM.VNUM] or 0  -- Current step index
+  local step_n = speedwalk_vnums[currentRoom.VNUM] or 0  -- Current step index
   local step_d = speedWalkDir[step_n+1]  -- Next direction to move
   local monk_steps = {}
   -- // This will need to wait until I can get all class info from msdp (instead of just active class/total levels)
@@ -991,14 +992,14 @@ local function speedwalk_check()
   --    if n &gt;= (step_n+1) then monk_steps[#monk_steps+1] = dir end
   --  end
   -- end
-  local pos = msdp.POSITION or &quot;Sleeping&quot;
+  local pos = GUI.getMSDPPosition()
   if pos == &quot;Sleeping&quot; then send(&quot;wake&quot;) end
   if pos ~= &quot;Standing&quot; then send(&quot;stand&quot;) end
   if #monk_steps &gt; 0 then
     send(&quot;abundantstep &quot;..table.concat(monk_steps, &quot; &quot;))
     return
   end
-  local door_check = msdp.ROOM.DOORS[exits[step_d]] or &quot;&quot;
+  local door_check = (currentRoom.DOORS and currentRoom.DOORS[exits[step_d]]) or &quot;&quot;
   if door_check ~= &quot;&quot; then send(&quot;open &quot;..door_check..&quot; &quot;..exits[step_d]) end
   send(step_d)
 end
@@ -1071,34 +1072,42 @@ end
   - Maintains visual map consistency
 ]]
 local function handle_move()
+  -- Get validated room info to prevent crashes from corrupted state
+  local roomVnum = GUI.validateRoomInfo(&quot;VNUM&quot;, nil)
+  local roomEnvironment = GUI.validateRoomInfo(&quot;ENVIRONMENT&quot;, &quot;Unknown&quot;)
+  local roomTerrain = GUI.validateRoomInfo(&quot;TERRAIN&quot;, nil)
+  local roomExits = GUI.validateRoomInfo(&quot;EXITS&quot;, {})
+  
   -- Only process movement for mapped indoor areas
-  if map.enabled == true and map.room_info.ENVIRONMENT ~= &quot;Wilderness&quot; then
+  if map.enabled == true and roomEnvironment ~= &quot;Wilderness&quot; and roomVnum then
     -- Check if we're entering a new room that needs to be created
-    if not getRoomName(map.room_info.VNUM) then
+    if not getRoomName(roomVnum) then
       make_room()  -- Create new room with current MSDP data
     else
       -- Update existing room with current terrain information
-      if terrain_types[map.room_info.TERRAIN] then
-        setRoomEnv(map.room_info.VNUM, terrain_types[map.room_info.TERRAIN].id + 16)
+      if roomTerrain and terrain_types[roomTerrain] then
+        setRoomEnv(roomVnum, terrain_types[roomTerrain].id + 16)
       end
       -- Resolve any unlinked exits (stubs) to known rooms
-      local stubs = getExitStubs1(map.room_info.VNUM)
+      local stubs = getExitStubs1(roomVnum)
       if stubs then
         for _, n in ipairs(stubs) do
           local dir = exitmap[n]  -- Convert exit number to direction name
-          local id = map.room_info.EXITS[dir]  -- Get target room VNUM
+          local id = roomExits[dir]  -- Get target room VNUM
           -- TODO: need to see how special exits are represented to handle those properly here
           -- Future Enhancement: Support for special exits like portals, teleporters, etc.
           -- Link to target room if it exists in the database
-          if getRoomName(id) then
-            setExit(map.room_info.VNUM, id, exitmap[dir])
+          if id and getRoomName(id) then
+            setExit(roomVnum, id, exitmap[dir])
           end
         end
       end
     end
   end
   -- Maintain map view centered on current position
-  centerview(map.room_info.VNUM)
+  if roomVnum then
+    centerview(roomVnum)
+  end
   -- Continue speedwalk execution if active
   speedwalk_check()
 end
@@ -1357,7 +1366,7 @@ end
 function map.eventHandler(event,...)
   if event == &quot;msdp.ROOM&quot; then
     map.prev_info = map.room_info
-    map.room_info = table.update({},msdp.ROOM)
+    map.room_info = table.update({}, GUI.getMSDPRoom())
     -- Check if we have moved between regular and wilderness areas
     if map.prev_info.ENVIRONMENT == &quot;Wilderness&quot; and map.room_info.ENVIRONMENT == &quot;Room&quot; then
       -- re-enable the mapper!
@@ -1479,42 +1488,30 @@ end</script>
 						<packageName/>
 						<script>--Toggle the gagging of chat from main buffer.
 function GUI.gagChatToggle()
-  if GUI.toggles.gagChat == false then
-	  GUI.toggles.gagChat = true
+  local currentValue = GUI.getToggle(&quot;gagChat&quot;, true)
+  if currentValue == false then
+	  GUI.setToggle(&quot;gagChat&quot;, true)
 		cecho(&quot;\n&lt;white&gt;Now gagging chat from main buffer.&quot;)
-	elseif GUI.toggles.gagChat == true then
-	  GUI.toggles.gagChat = false
-		cecho(&quot;\n&lt;white&gt;No longer gagging chat from main buffer.&quot;)
 	else
-	  GUI.toggles = {
-		       gagChat = true,
-	  includeInGroup = true,
-		}
-		table.save(getMudletHomeDir()..&quot;/GUI.toggles.lua&quot;, GUI.toggles)
+	  GUI.setToggle(&quot;gagChat&quot;, false)
+		cecho(&quot;\n&lt;white&gt;No longer gagging chat from main buffer.&quot;)
 	end
 end
 --Toggles whether or not you are shown in the group tab.
 function GUI.showSelfToggle()
-  if GUI.toggles.includeInGroup == false then
-	  GUI.toggles.includeInGroup = true
+  local currentValue = GUI.getToggle(&quot;includeInGroup&quot;, true)
+  if currentValue == false then
+	  GUI.setToggle(&quot;includeInGroup&quot;, true)
 		GUI.updateGroup()
 		cecho(&quot;\n&lt;white&gt;Now showing self in group.&quot;)
-	elseif GUI.toggles.includeInGroup == true then
-	  GUI.toggles.includeInGroup = false
+	else
+	  GUI.setToggle(&quot;includeInGroup&quot;, false)
 		GUI.updateGroup()
 		cecho(&quot;\n&lt;white&gt;No longer showing self in group.&quot;)
-	else
-	  GUI.toggles = {
-		       gagChat = true,
-	  includeInGroup = true,
-		}
-		table.save(getMudletHomeDir()..&quot;/GUI.toggles.lua&quot;, GUI.toggles)
-		cecho(&quot;\n&lt;white&gt;Now showing self in group.&quot;)
 	end
 end
 function GUI.loadToggles()
 --Check for saved .lua. Create if not.
-  GUI.toggles = {}
   if not io.exists(getMudletHomeDir()..&quot;/GUI.toggles.lua&quot;) then
 	  GUI.toggles = {
 		       gagChat = true,
@@ -1522,12 +1519,37 @@ function GUI.loadToggles()
 		}
 		table.save(getMudletHomeDir()..&quot;/GUI.toggles.lua&quot;, GUI.toggles)
 	else
-		table.load(getMudletHomeDir()..&quot;/GUI.toggles.lua&quot;, GUI.toggles)
+		GUI.toggles = table.load(getMudletHomeDir()..&quot;/GUI.toggles.lua&quot;)
+		-- Validate loaded data and provide defaults if corrupted
+		if not GUI.toggles or type(GUI.toggles) ~= &quot;table&quot; then
+		  GUI.toggles = {
+		    gagChat = true,
+		    includeInGroup = true,
+		  }
+		  cecho(&quot;&lt;yellow&gt;[WARNING] Toggles file corrupted, using defaults\n&quot;)
+		else
+		  -- Ensure all required fields exist
+		  if GUI.toggles.gagChat == nil then GUI.toggles.gagChat = true end
+		  if GUI.toggles.includeInGroup == nil then GUI.toggles.includeInGroup = true end
+		end
   end
 end
 --Save Toggle Preferences
 function GUI.saveToggles()
-  table.save(getMudletHomeDir()..&quot;/GUI.toggles.lua&quot;, GUI.toggles)
+  -- Ensure toggles table exists before saving
+  if not GUI.toggles or type(GUI.toggles) ~= &quot;table&quot; then
+    cecho(&quot;&lt;yellow&gt;[WARNING] GUI.toggles not initialized, creating defaults\n&quot;)
+    GUI.toggles = {
+      gagChat = true,
+      includeInGroup = true,
+    }
+  end
+  
+  -- Save with error handling
+  local success, error = pcall(table.save, getMudletHomeDir()..&quot;/GUI.toggles.lua&quot;, GUI.toggles)
+  if not success then
+    cecho(&quot;&lt;red&gt;[ERROR] Failed to save toggles: &quot; .. tostring(error) .. &quot;\n&quot;)
+  end
 end
 -- Event handlers moved to Resource Cleanup migration function</script>
 						<eventHandlerList/>
@@ -1597,7 +1619,7 @@ end</script>
   GUI.Box2 =
     Geyser.Label:new({name = &quot;GUI.Box2&quot;, x = 0, y = 0, width = &quot;100%&quot;, height = &quot;100%&quot;}, GUI.Bottom)
   GUI.Box2:setStyleSheet(GUI.BoxCSS:getCSS())
-  GUI.Box2:echo(&quot;&lt;center&gt;GUI.Box2&quot;)
+  GUI.Box2:echo(&quot;&lt;center&gt;GUI.Box2&lt;/center&gt;&quot;)
   GUI.chatContainer =
     Geyser.Label:new(
       {
@@ -1618,7 +1640,7 @@ end</script>
   GUI.Box3CSS = CSSMan.new(GUI.BoxCSS:getCSS())
   GUI.Box3CSS:set(&quot;border-width&quot;, &quot;0px&quot;)
   GUI.Box3:setStyleSheet(GUI.Box3CSS:getCSS())
-  GUI.Box3:echo(&quot;&lt;center&gt;GUI.Box3&quot;)
+  GUI.Box3:echo(&quot;&lt;center&gt;GUI.Box3&lt;/center&gt;&quot;)
   --Box4
   GUI.Box4 =
     Geyser.Label:new(
@@ -1627,7 +1649,7 @@ end</script>
   GUI.Box4CSS = CSSMan.new(GUI.BoxCSS:getCSS())
   GUI.Box4CSS:set(&quot;border-width&quot;, &quot;0px&quot;)
   GUI.Box4:setStyleSheet(GUI.Box4CSS:getCSS())
-  GUI.Box4:echo(&quot;&lt;center&gt;GUI.Box4&quot;)
+  GUI.Box4:echo(&quot;&lt;center&gt;GUI.Box4&lt;/center&gt;&quot;)
   --Box5
   GUI.Box5 =
     Geyser.Label:new(
@@ -1636,7 +1658,7 @@ end</script>
   GUI.Box5CSS = CSSMan.new(GUI.BoxCSS:getCSS())
   GUI.Box5CSS:set(&quot;border-width&quot;, &quot;0px&quot;)
   GUI.Box5:setStyleSheet(GUI.Box5CSS:getCSS())
-  GUI.Box5:echo(&quot;&lt;center&gt;Legend When Toggled/Room Info&quot;)
+  GUI.Box5:echo(&quot;&lt;center&gt;Legend When Toggled/Room Info&lt;/center&gt;&quot;)
  --Commenting out Box 6 echo until skill Icons are finished.
 	GUI.Box6 =
     Geyser.Label:new(
@@ -2202,7 +2224,7 @@ function GUI.tabbedInfoWindow.init()
     GUI.tabbedInfoWindow[v .. &quot;tab&quot;] =
       Geyser.Label:new({name = &quot;GUI.tabbedInfoWindow.&quot; .. v .. &quot;tab&quot;}, GUI.tabbedInfoWindow.header)
     GUI.tabbedInfoWindow[v .. &quot;tab&quot;]:setStyleSheet(GUI.tabbedInfoWindowTabCSS:getCSS())
-    GUI.tabbedInfoWindow[v .. &quot;tab&quot;]:echo(&quot;&lt;center&gt;&quot; .. v)
+    GUI.tabbedInfoWindow[v .. &quot;tab&quot;]:echo(&quot;&lt;center&gt;&quot; .. v .. &quot;&lt;/center&gt;&quot;)
     GUI.tabbedInfoWindow[v .. &quot;tab&quot;]:setClickCallback(&quot;GUI.tabbedInfoWindow.click&quot;, v)
     GUI.tabbedInfoWindow[v] =
       Geyser.Label:new(
@@ -2500,9 +2522,10 @@ function GUI.updateSLAffects()
 	end
 end
 function GUI.updateAffectIcons()
-  if msdp.AFFECTS and msdp.AFFECTS.AFFECTED_BY and #msdp.AFFECTS.AFFECTED_BY &gt; 0 then
+  local affectsData = GUI.getMSDPAffects()
+  if affectsData and affectsData.AFFECTED_BY and #affectsData.AFFECTED_BY &gt; 0 then
     -- We have a status to process!  Do MODES first.
-    affected_by = msdp.AFFECTS.AFFECTED_BY
+    affected_by = affectsData.AFFECTED_BY
     for k, _ in ipairs(GUI.Affects.Modes.Labels) do
       GUI.Affects.Modes.Labels[k]:hide()
     end
@@ -2629,36 +2652,41 @@ end
 ]]
 function GUI.updateGroup()
   GUI.group_data = {}
+  -- Get validated group and character data
+  local groupData = GUI.getMSDPGroup()
+  local characterName = GUI.getMSDPCharacterName()
+  local includeInGroup = GUI.getToggle(&quot;includeInGroup&quot;, true)
+  
   -- Remove the player from the group data if toggled off.
   local j = 1
-  for i = 1, #msdp.GROUP do
-    if GUI.toggles.includeInGroup == false and msdp.GROUP[i].NAME ~= msdp.CHARACTER_NAME then
+  for i = 1, #groupData do
+    if includeInGroup == false and groupData[i].NAME ~= characterName then
       while GUI.group_data[j] ~= nil do
         j = j + 1
       end
       GUI.group_data[j] = {}
-      GUI.group_data[j].IS_LEADER = msdp.GROUP[i].IS_LEADER
-      GUI.group_data[j].NAME = msdp.GROUP[i].NAME
-      GUI.group_data[j].HEALTH = msdp.GROUP[i].HEALTH
-      GUI.group_data[j].HEALTH_MAX = msdp.GROUP[i].HEALTH_MAX
-      GUI.group_data[j].MOVEMENT = msdp.GROUP[i].MOVEMENT
-      GUI.group_data[j].MOVEMENT_MAX = msdp.GROUP[i].MOVEMENT_MAX
-      GUI.group_data[j].LEVEL = msdp.GROUP[i].LEVEL
-      GUI.group_data[j].CLASS_STRING = msdp.GROUP[i].CLASS_STRING
+      GUI.group_data[j].IS_LEADER = groupData[i].IS_LEADER
+      GUI.group_data[j].NAME = groupData[i].NAME
+      GUI.group_data[j].HEALTH = groupData[i].HEALTH
+      GUI.group_data[j].HEALTH_MAX = groupData[i].HEALTH_MAX
+      GUI.group_data[j].MOVEMENT = groupData[i].MOVEMENT
+      GUI.group_data[j].MOVEMENT_MAX = groupData[i].MOVEMENT_MAX
+      GUI.group_data[j].LEVEL = groupData[i].LEVEL
+      GUI.group_data[j].CLASS_STRING = groupData[i].CLASS_STRING
   -- Add the player from the group data if toggled on.
-		elseif GUI.toggles.includeInGroup == true then
+		elseif includeInGroup == true then
       while GUI.group_data[j] ~= nil do
         j = j + 1
       end
       GUI.group_data[j] = {}
-      GUI.group_data[j].IS_LEADER = msdp.GROUP[i].IS_LEADER
-      GUI.group_data[j].NAME = msdp.GROUP[i].NAME
-      GUI.group_data[j].HEALTH = msdp.GROUP[i].HEALTH
-      GUI.group_data[j].HEALTH_MAX = msdp.GROUP[i].HEALTH_MAX
-      GUI.group_data[j].MOVEMENT = msdp.GROUP[i].MOVEMENT
-      GUI.group_data[j].MOVEMENT_MAX = msdp.GROUP[i].MOVEMENT_MAX
-      GUI.group_data[j].LEVEL = msdp.GROUP[i].LEVEL
-      GUI.group_data[j].CLASS_STRING = msdp.GROUP[i].CLASS_STRING
+      GUI.group_data[j].IS_LEADER = groupData[i].IS_LEADER
+      GUI.group_data[j].NAME = groupData[i].NAME
+      GUI.group_data[j].HEALTH = groupData[i].HEALTH
+      GUI.group_data[j].HEALTH_MAX = groupData[i].HEALTH_MAX
+      GUI.group_data[j].MOVEMENT = groupData[i].MOVEMENT
+      GUI.group_data[j].MOVEMENT_MAX = groupData[i].MOVEMENT_MAX
+      GUI.group_data[j].LEVEL = groupData[i].LEVEL
+      GUI.group_data[j].CLASS_STRING = groupData[i].CLASS_STRING
     end -- if/elseif
   end -- for
 	clearUserWindow(&quot;GUI.GroupConsole&quot;)
@@ -3815,6 +3843,318 @@ end
 						<eventHandlerList/>
 					</Script>
 					<Script isActive="yes" isFolder="no">
+						<name>State Validator</name>
+						<packageName/>
+						<script>--[[
+State Validation System
+========================
+Addresses "Shared Global State Corruption" critical issue from stability audit.
+Provides centralized validation for all shared state access to prevent cascading failures.
+
+Problem Solved:
+- Multiple systems write to shared globals without synchronization 
+- No state validation or rollback mechanisms
+- MSDP data can be partially updated, leaving inconsistent state
+- Race conditions between map updates and UI refreshes
+
+Solution Approach:
+- Validate all shared state before use with type checking and structure validation
+- Provide safe accessor functions with fallback defaults
+- Add state corruption detection and logging
+- Implement graceful degradation when state is invalid
+]]
+
+-- Initialize StateValidator namespace
+GUI.StateValidator = GUI.StateValidator or {}
+GUI.StateValidator.debug = false  -- Set to true for verbose logging
+
+-- MSDP State Validation
+-- =====================
+
+-- Validate basic MSDP values with type checking
+function GUI.validateMSDP(key, defaultValue, expectedType)
+  if not msdp then
+    if GUI.StateValidator.debug then
+      cecho(string.format(&quot;&lt;yellow&gt;[State] MSDP table not available, using default for %s\n&quot;, key))
+    end
+    return defaultValue
+  end
+  
+  local value = msdp[key]
+  
+  -- Check if value exists
+  if value == nil then
+    if GUI.StateValidator.debug then
+      cecho(string.format(&quot;&lt;yellow&gt;[State] MSDP.%s is nil, using default: %s\n&quot;, key, tostring(defaultValue)))
+    end
+    return defaultValue
+  end
+  
+  -- Type validation if specified
+  if expectedType and type(value) ~= expectedType then
+    cecho(string.format(&quot;&lt;red&gt;[State] MSDP.%s has invalid type %s, expected %s, using default\n&quot;, 
+      key, type(value), expectedType))
+    return defaultValue
+  end
+  
+  -- Additional validation for numbers (ensure they're valid)
+  if expectedType == &quot;number&quot; then
+    local numValue = tonumber(value)
+    if not numValue then
+      cecho(string.format(&quot;&lt;red&gt;[State] MSDP.%s is not a valid number, using default\n&quot;, key))
+      return defaultValue
+    end
+    return numValue
+  end
+  
+  return value
+end
+
+-- Validate complex MSDP structures (like ROOM, AFFECTS, GROUP)
+function GUI.validateMSDPTable(key, defaultValue, requiredFields)
+  if not msdp then
+    if GUI.StateValidator.debug then
+      cecho(string.format(&quot;&lt;yellow&gt;[State] MSDP table not available, using default for %s\n&quot;, key))
+    end
+    return defaultValue
+  end
+  
+  local value = msdp[key]
+  
+  -- Check if value exists and is a table
+  if not value or type(value) ~= &quot;table&quot; then
+    if GUI.StateValidator.debug then
+      cecho(string.format(&quot;&lt;yellow&gt;[State] MSDP.%s is not a valid table, using default\n&quot;, key))
+    end
+    return defaultValue
+  end
+  
+  -- Check required fields if specified
+  if requiredFields then
+    for _, field in ipairs(requiredFields) do
+      if value[field] == nil then
+        cecho(string.format(&quot;&lt;red&gt;[State] MSDP.%s missing required field '%s', using default\n&quot;, key, field))
+        return defaultValue
+      end
+    end
+  end
+  
+  return value
+end
+
+-- GUI State Validation
+-- ====================
+
+-- Validate GUI toggles with automatic recovery
+function GUI.getToggle(key, defaultValue)
+  -- Ensure toggles table exists
+  if not GUI.toggles or type(GUI.toggles) ~= &quot;table&quot; then
+    cecho(&quot;&lt;yellow&gt;[State] GUI.toggles corrupted, reinitializing\n&quot;)
+    GUI.toggles = {
+      gagChat = true,
+      includeInGroup = true
+    }
+  end
+  
+  local value = GUI.toggles[key]
+  
+  -- Return default if key doesn't exist or has wrong type
+  if value == nil then
+    if GUI.StateValidator.debug then
+      cecho(string.format(&quot;&lt;yellow&gt;[State] Toggle '%s' not found, using default: %s\n&quot;, key, tostring(defaultValue)))
+    end
+    GUI.toggles[key] = defaultValue  -- Set the default for future use
+    return defaultValue
+  end
+  
+  -- Type validation for boolean toggles
+  if type(defaultValue) == &quot;boolean&quot; and type(value) ~= &quot;boolean&quot; then
+    cecho(string.format(&quot;&lt;red&gt;[State] Toggle '%s' has invalid type %s, expected boolean, using default\n&quot;, 
+      key, type(value)))
+    GUI.toggles[key] = defaultValue
+    return defaultValue
+  end
+  
+  return value
+end
+
+-- Set toggle with validation
+function GUI.setToggle(key, value)
+  -- Ensure toggles table exists
+  if not GUI.toggles or type(GUI.toggles) ~= &quot;table&quot; then
+    GUI.toggles = {
+      gagChat = true,
+      includeInGroup = true
+    }
+  end
+  
+  GUI.toggles[key] = value
+  
+  -- Auto-save if save function exists
+  if GUI.saveToggles then
+    local success = pcall(GUI.saveToggles)
+    if not success then
+      cecho(string.format(&quot;&lt;red&gt;[State] Failed to save toggle '%s'\n&quot;, key))
+    end
+  end
+end
+
+-- Map State Validation
+-- ====================
+
+-- Validate map room info with structure checking
+function GUI.validateRoomInfo(key, defaultValue)
+  -- Ensure map and room_info exist
+  if not map or type(map) ~= &quot;table&quot; then
+    if GUI.StateValidator.debug then
+      cecho(&quot;&lt;yellow&gt;[State] Map table not available\n&quot;)
+    end
+    return defaultValue
+  end
+  
+  if not map.room_info or type(map.room_info) ~= &quot;table&quot; then
+    if GUI.StateValidator.debug then
+      cecho(&quot;&lt;yellow&gt;[State] Map room_info not available\n&quot;)
+    end
+    return defaultValue
+  end
+  
+  local value = map.room_info[key]
+  
+  if value == nil then
+    if GUI.StateValidator.debug then
+      cecho(string.format(&quot;&lt;yellow&gt;[State] Room info '%s' not found, using default: %s\n&quot;, key, tostring(defaultValue)))
+    end
+    return defaultValue
+  end
+  
+  return value
+end
+
+-- Convenience Functions for Common Patterns
+-- ==========================================
+
+-- Safe MSDP numeric accessors
+function GUI.getMSDPHealth()
+  return GUI.validateMSDP(&quot;HEALTH&quot;, 0, &quot;number&quot;)
+end
+
+function GUI.getMSDPMaxHealth()
+  return GUI.validateMSDP(&quot;HEALTH_MAX&quot;, 100, &quot;number&quot;)
+end
+
+function GUI.getMSDPMovement()
+  return GUI.validateMSDP(&quot;MOVEMENT&quot;, 0, &quot;number&quot;)
+end
+
+function GUI.getMSDPMaxMovement()
+  return GUI.validateMSDP(&quot;MOVEMENT_MAX&quot;, 100, &quot;number&quot;)
+end
+
+function GUI.getMSDPExperience()
+  return GUI.validateMSDP(&quot;EXPERIENCE&quot;, 0, &quot;number&quot;)
+end
+
+function GUI.getMSDPExperienceTNL()
+  return GUI.validateMSDP(&quot;EXPERIENCE_TNL&quot;, 0, &quot;number&quot;)
+end
+
+-- Safe MSDP string accessors
+function GUI.getMSDPCharacterName()
+  return GUI.validateMSDP(&quot;CHARACTER_NAME&quot;, &quot;Unknown&quot;, &quot;string&quot;)
+end
+
+function GUI.getMSDPOpponentName()
+  return GUI.validateMSDP(&quot;OPPONENT_NAME&quot;, &quot;&quot;, &quot;string&quot;)
+end
+
+function GUI.getMSDPPosition()
+  return GUI.validateMSDP(&quot;POSITION&quot;, &quot;Standing&quot;, &quot;string&quot;)
+end
+
+-- Safe MSDP table accessors
+function GUI.getMSDPRoom()
+  return GUI.validateMSDPTable(&quot;ROOM&quot;, {}, {&quot;VNUM&quot;, &quot;NAME&quot;})
+end
+
+function GUI.getMSDPAffects()
+  return GUI.validateMSDPTable(&quot;AFFECTS&quot;, {}, {&quot;AFFECTED_BY&quot;})
+end
+
+function GUI.getMSDPGroup()
+  return GUI.validateMSDPTable(&quot;GROUP&quot;, {}, nil)  -- GROUP structure can be empty
+end
+
+-- State Recovery Functions
+-- ========================
+
+-- Attempt to recover from corrupted state
+function GUI.recoverCorruptedState()
+  cecho(&quot;&lt;cyan&gt;[State] Attempting state recovery...\n&quot;)
+  
+  -- Recover toggles
+  if not GUI.toggles or type(GUI.toggles) ~= &quot;table&quot; then
+    cecho(&quot;&lt;yellow&gt;[State] Recovering GUI.toggles\n&quot;)
+    GUI.toggles = {
+      gagChat = true,
+      includeInGroup = true
+    }
+    if GUI.saveToggles then
+      pcall(GUI.saveToggles)
+    end
+  end
+  
+  -- Recover map structure
+  if not map or type(map) ~= &quot;table&quot; then
+    cecho(&quot;&lt;yellow&gt;[State] Recovering map structure\n&quot;)
+    map = map or {}
+    map.room_info = map.room_info or {}
+    map.prev_info = map.prev_info or {}
+  end
+  
+  cecho(&quot;&lt;green&gt;[State] State recovery complete\n&quot;)
+end
+
+-- Validation Debugging
+-- ====================
+
+-- Enable/disable debug logging
+function GUI.setStateDebug(enabled)
+  GUI.StateValidator.debug = enabled
+  cecho(string.format(&quot;&lt;cyan&gt;[State] Debug logging %s\n&quot;, enabled and &quot;enabled&quot; or &quot;disabled&quot;))
+end
+
+-- Get current state validation status
+function GUI.getStateStatus()
+  local status = {
+    msdp_available = (msdp ~= nil),
+    toggles_valid = (GUI.toggles ~= nil and type(GUI.toggles) == &quot;table&quot;),
+    map_available = (map ~= nil and type(map) == &quot;table&quot;),
+    room_info_valid = (map and map.room_info and type(map.room_info) == &quot;table&quot;)
+  }
+  
+  cecho(&quot;&lt;cyan&gt;[State] Current state status:\n&quot;)
+  cecho(string.format(&quot;  MSDP Available: %s\n&quot;, status.msdp_available and &quot;Yes&quot; or &quot;No&quot;))
+  cecho(string.format(&quot;  Toggles Valid: %s\n&quot;, status.toggles_valid and &quot;Yes&quot; or &quot;No&quot;))
+  cecho(string.format(&quot;  Map Available: %s\n&quot;, status.map_available and &quot;Yes&quot; or &quot;No&quot;))
+  cecho(string.format(&quot;  Room Info Valid: %s\n&quot;, status.room_info_valid and &quot;Yes&quot; or &quot;No&quot;))
+  
+  return status
+end
+
+-- Initialize state validation on load
+function GUI.initStateValidation()
+  cecho(&quot;&lt;green&gt;[State] State validation system initialized\n&quot;)
+  -- Perform initial state recovery if needed
+  GUI.recoverCorruptedState()
+end
+
+-- Auto-initialize when script loads
+GUI.initStateValidation()
+</script>
+						<eventHandlerList/>
+					</Script>
+					<Script isActive="yes" isFolder="no">
 						<name>Custom Scrollbar</name>
 						<packageName/>
 						<script>function GUI.styleScrollbar()
@@ -4442,10 +4782,28 @@ end
 						else
 							 cecho(&quot;&lt;red&gt;[DEBUG] Cast console missing before YATCO init!\n&quot;)
 						end
+						
+						-- Store cast console reference before YATCO init
+						local castConsoleBackup = GUI.castConsole
+						
 						if GUI.chatContainer then
 							 cecho(&quot;&lt;cyan&gt;[DEBUG] Installing YATCO chat system...\n&quot;)
 							 demonnic.chat:create()
 							 cecho(&quot;&lt;cyan&gt;YATCO chat system initialized.\n&quot;)
+							 
+							 -- Check if cast console was affected and restore if needed
+							 if not GUI.castConsole and castConsoleBackup then
+							   cecho(&quot;&lt;yellow&gt;[DEBUG] Cast console lost during YATCO init, restoring...\n&quot;)
+							   GUI.castConsole = castConsoleBackup
+							   -- Re-show the console if it was hidden
+							   if GUI.castConsole.hidden then
+							     GUI.castConsole:show()
+							   end
+							 elseif GUI.castConsole and GUI.castConsole.hidden and castConsoleBackup and not castConsoleBackup.hidden then
+							   cecho(&quot;&lt;yellow&gt;[DEBUG] Cast console was hidden during YATCO init, reshowing...\n&quot;)
+							   GUI.castConsole:show()
+							 end
+							 
 							 -- DEBUG: Check cast console state after YATCO init
 							 if GUI.castConsole then
 							   cecho(&quot;&lt;yellow&gt;[DEBUG] Cast console exists after YATCO init: visible=&quot; .. tostring(not GUI.castConsole.hidden) .. &quot;\n&quot;)
