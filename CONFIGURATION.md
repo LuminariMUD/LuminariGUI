@@ -1,43 +1,236 @@
 # LuminariGUI Configuration Guide
 
-This document provides comprehensive configuration options for LuminariGUI, including default settings, customization examples, and advanced configuration scenarios.
+This document provides configuration options for LuminariGUI, from the minimal default setup to advanced customization scenarios.
 
 ## Table of Contents
 
 - [Configuration Overview](#configuration-overview)
-- [GUI Layout Configuration](#gui-layout-configuration)
+- [Current State: Basic Package Configuration](#current-state-basic-package-configuration)
+- [Enhanced Configuration via Python Toolchain](#enhanced-configuration-via-python-toolchain)
+- [Configuration Architecture](#configuration-architecture)
+- [Quick Start Guide](#quick-start-guide)
+- [Progressive Enhancement Pathway](#progressive-enhancement-pathway)
+- [GUI Runtime Configuration](#gui-runtime-configuration)
 - [Chat System Configuration](#chat-system-configuration)
 - [Display Settings](#display-settings)
 - [MSDP Configuration](#msdp-configuration)
 - [Performance Settings](#performance-settings)
 - [Advanced Customization](#advanced-customization)
+- [Development Workflow](#development-workflow)
 - [Troubleshooting](#troubleshooting)
 
 ## Configuration Overview
 
-LuminariGUI uses multiple configuration systems:
+LuminariGUI uses a multi-layered configuration system that supports both minimal setup and comprehensive customization:
 
-1. **Core GUI Configuration** - Layout, styling, and component settings
-2. **YATCO Chat Configuration** - Channel settings, display options, and chat behavior
-3. **MSDP Configuration** - Protocol settings and variable requests
-4. **User Preferences** - Personal customizations and toggles
+### Configuration Layers
 
-### Configuration File Locations
+1. **Package Configuration** - Basic metadata in [`config.lua`](config.lua)
+2. **XML-Based Capabilities** - Core functionality defined in [`LuminariGUI.xml`](LuminariGUI.xml)
+3. **Python Toolchain Enhancement** - Metadata enrichment via [`create_package.py`](PYTHON_TOOLS.md)
+4. **Runtime Configuration** - Dynamic GUI, chat, and MSDP settings
+
+### Current Reality vs Documentation
+
+**Current State:**
+- Minimal [`config.lua`](config.lua) with only: `mpackage = "LuminariGUI"`
+- Rich functionality available through XML structure
+- Enhanced configuration possible via Python toolchain
+
+**Previous Documentation Assumed:**
+- Extensive pre-configured [`GUI.config`](CONFIGURATION.md:41) structures
+- Complex chat system configurations
+- Built-in MSDP configuration systems
+
+This guide bridges that gap by showing you how to progress from minimal to advanced configuration.
+
+## Current State: Basic Package Configuration
+
+### The Minimal config.lua
+
+Currently, [`config.lua`](config.lua) contains only:
 
 ```lua
--- Core configuration stored in GUI namespace
-GUI.config = {...}
-
--- YATCO configuration in demonnic namespace  
-demonnic.chat.config = {...}
-
--- Package configuration
-config.lua  -- Package metadata
+mpackage = "LuminariGUI"
 ```
+
+This minimal configuration is sufficient for basic operation because:
+
+1. **XML Structure Provides Defaults**: The [`LuminariGUI.xml`](LuminariGUI.xml) file (4,205 lines) defines:
+   - YATCO chat system integration
+   - Mapping system capabilities
+   - GUI layout components
+   - Toggle systems for user preferences
+   - MSDP integration points
+
+2. **Runtime Configuration**: Most customization happens through runtime variables and functions
+
+3. **No Complex Setup Required**: The package works immediately with MUD clients
+
+### What You Get Out of the Box
+
+With the minimal configuration, you automatically have:
+
+- **GUI Layout**: Default panel arrangements and sizing
+- **Chat Integration**: YATCO-based chat system with standard channels
+- **Mapping System**: Terrain display and coordinate systems
+- **Status Displays**: Health, movement, and experience gauges
+- **MSDP Support**: Basic protocol integration for real-time data
+
+## Enhanced Configuration via Python Toolchain
+
+### The create_package.py Enhancement
+
+The Python toolchain provides configuration enhancement through [`create_package.py`](PYTHON_TOOLS.md). This tool can generate enriched metadata:
+
+```python
+def create_config_lua(package_name, author_name, version="1.0.0"):
+    """Generate enhanced config.lua with metadata"""
+    return f"""
+mpackage = "{package_name}"
+mauthor = "{author_name}"
+mtitle = "{package_name}"
+mdescription = "Enhanced LuminariGUI package"
+mversion = "{version}"
+micon = ""
+mdate = "{datetime.now().strftime('%Y-%m-%d')}"
+mdependencies = {{}}
+"""
+```
+
+### Enhanced config.lua Example
+
+After Python toolchain enhancement:
+
+```lua
+mpackage = "LuminariGUI"
+mauthor = "YourName"
+mtitle = "LuminariGUI"
+mdescription = "Enhanced LuminariGUI package with rich metadata"
+mversion = "1.0.0"
+micon = ""
+mdate = "2024-01-15"
+mdependencies = {}
+```
+
+### Benefits of Enhancement
+
+1. **Package Management**: Proper versioning and dependency tracking
+2. **Development Workflow**: Integration with build and deployment systems
+3. **Metadata Rich**: Author, description, and date information
+4. **Future Compatibility**: Prepared for advanced package management features
+
+## Configuration Architecture
+
+### Three-Tier Configuration System
+
+```mermaid
+graph TB
+    subgraph "Tier 1: Package Level"
+        A[config.lua] --> B[Package Metadata]
+        B --> C[Version Information]
+        B --> D[Dependencies]
+    end
+    
+    subgraph "Tier 2: Capability Level"
+        E[LuminariGUI.xml] --> F[GUI Components]
+        F --> G[YATCO Integration]
+        F --> H[Mapping System]
+        F --> I[MSDP Handlers]
+    end
+    
+    subgraph "Tier 3: Runtime Level"
+        J[GUI.config] --> K[Layout Settings]
+        J --> L[Display Options]
+        J --> M[Performance Tuning]
+        N[demonnic.chat.config] --> O[Chat Channels]
+        N --> P[Display Behavior]
+        Q[MSDP Variables] --> R[Data Requests]
+        Q --> S[Update Frequencies]
+    end
+    
+    A --> E
+    E --> J
+    E --> N
+    E --> Q
+```
+
+### Configuration Flow
+
+1. **Package Bootstrap**: [`config.lua`](config.lua) provides package identity
+2. **XML Processing**: [`LuminariGUI.xml`](LuminariGUI.xml) defines capabilities and defaults
+3. **Runtime Initialization**: Dynamic configuration objects are created
+4. **User Customization**: Runtime settings can be modified
+
+## Quick Start Guide
+
+### For Immediate Use (Current State)
+
+1. **Install the Package**: The minimal [`config.lua`](config.lua) is sufficient
+2. **Load in MUD Client**: Import the package
+3. **Default Operation**: Everything works with XML-defined defaults
+
+### For Enhanced Metadata
+
+1. **Use Python Toolchain**: Run [`create_package.py`](PYTHON_TOOLS.md)
+2. **Enhanced config.lua**: Get rich metadata
+3. **Better Integration**: Improved development workflow
+
+### For Advanced Customization
+
+1. **Study XML Structure**: Understand [`LuminariGUI.xml`](LuminariGUI.xml) capabilities
+2. **Runtime Configuration**: Modify [`GUI.config`](CONFIGURATION.md:41) and related objects
+3. **Custom Extensions**: Add your own configuration layers
+
+## Progressive Enhancement Pathway
+
+### Level 1: Basic Package (Current State)
+
+**What You Have:**
+- Minimal [`config.lua`](config.lua) with package name
+- Full GUI functionality via XML defaults
+- Standard MUD client integration
+
+**What You Can Do:**
+- Use the system immediately
+- Rely on sensible defaults
+- Basic runtime customization
+
+### Level 2: Enhanced Metadata (Python Toolchain)
+
+**Enhancement Steps:**
+1. Install Python toolchain (see [`PYTHON_TOOLS.md`](PYTHON_TOOLS.md))
+2. Run `create_package.py` for your package
+3. Get enhanced [`config.lua`](config.lua) with metadata
+
+**Benefits:**
+- Proper versioning and author information
+- Better package management
+- Integration with development tools
+- Future-proofed configuration
+
+### Level 3: Full Customization (Advanced)
+
+**Advanced Configuration:**
+- Custom GUI layouts and themes
+- Advanced chat system configuration
+- Performance optimization
+- Plugin development
+- Custom MSDP variable handling
+
+**Prerequisites:**
+- Understanding of Lua programming
+- Familiarity with Mudlet architecture
+- Knowledge of XML structure
+
+## GUI Runtime Configuration
 
 ### Default Configuration Structure
 
+Once the package is loaded, you can access and modify:
+
 ```lua
+-- This structure is created at runtime from XML definitions
 GUI.config = {
     layout = {
         leftPanelWidth = 300,
@@ -52,15 +245,6 @@ GUI.config = {
         showControlButtons = true,
         showTabbedInfo = true
     },
-    gauges = {
-        showPercentages = true,
-        animateChanges = true,
-        updateFrequency = 100,
-        colorThresholds = {
-            health = {low = 25, medium = 50},
-            movement = {low = 20, medium = 40}
-        }
-    },
     styling = {
         theme = "default",
         transparency = 180,
@@ -70,37 +254,27 @@ GUI.config = {
 }
 ```
 
-## GUI Layout Configuration
-
-### Panel Dimensions
-
-Configure the main layout panels:
+### Panel Dimension Customization
 
 ```lua
--- Adjust left panel width (character info area)
-GUI.config.layout.leftPanelWidth = 350  -- Default: 300
+-- Adjust layout after GUI is loaded
+GUI.config.layout.leftPanelWidth = 350  -- Character info area
+GUI.config.layout.rightPanelWidth = 280  -- Map/controls area
+GUI.config.layout.bottomPanelHeight = 250  -- Chat/status area
+GUI.config.layout.gaugePanelHeight = 50  -- Status gauges
 
--- Adjust right panel width (map/controls area) 
-GUI.config.layout.rightPanelWidth = 280  -- Default: 250
-
--- Adjust bottom panel height (chat/status area)
-GUI.config.layout.bottomPanelHeight = 250  -- Default: 200
-
--- Adjust status gauge panel height
-GUI.config.layout.gaugePanelHeight = 50  -- Default: 40
+-- Apply changes
+GUI.refresh()
 ```
 
 ### Component Positioning
 
-Fine-tune individual component positions:
-
 ```lua
--- Custom component positioning
+-- Fine-tune component positions
 GUI.config.positions = {
     healthGauge = {x = 5, y = 5, width = 120, height = 25},
     movesGauge = {x = 130, y = 5, width = 120, height = 25},
     experienceGauge = {x = 255, y = 5, width = 150, height = 25},
-    enemyGauge = {x = 410, y = 5, width = 100, height = 25},
     
     controlButtons = {
         map = {x = 5, y = 5, width = 60, height = 25},
@@ -110,253 +284,112 @@ GUI.config.positions = {
 }
 ```
 
-### Visibility Toggles
-
-Control which components are visible by default:
-
-```lua
--- Component visibility settings
-GUI.config.display = {
-    showMap = true,           -- Show/hide map panel
-    showChat = true,          -- Show/hide chat panel
-    showStatusGauges = true,  -- Show/hide status gauges
-    showControlButtons = true, -- Show/hide control buttons
-    showTabbedInfo = true,    -- Show/hide tabbed info window
-    showActionIcons = true,   -- Show/hide action icons
-    showAffectIcons = true,   -- Show/hide spell affect icons
-    showGroupInfo = true      -- Show/hide group information
-}
-```
-
 ## Chat System Configuration
 
-### YATCO Channel Settings
+### YATCO Integration
 
-Configure chat channels and their behavior:
+The chat system is built on YATCO (Yet Another TabbedChatwindOw) and configured through:
 
 ```lua
+-- Runtime configuration after YATCO is loaded
 demonnic.chat.config = {
-    -- Channel definitions
     channels = {
         all = {
             color = "white",
             timestamp = true,
             timestampFormat = "[HH:mm:ss] ",
-            blink = false,
-            preserveBackground = false
+            blink = false
         },
         chat = {
             color = "white",
             timestamp = true,
-            timestampFormat = "[HH:mm:ss] ",
-            blink = true,
-            preserveBackground = false
+            blink = true
         },
         tell = {
             color = "cyan",
             timestamp = true,
-            timestampFormat = "[HH:mm:ss] ",
-            blink = true,
-            preserveBackground = true
-        },
-        group = {
-            color = "yellow",
-            timestamp = true,
-            timestampFormat = "[HH:mm:ss] ",
-            blink = false,
-            preserveBackground = false
-        },
-        ooc = {
-            color = "magenta",
-            timestamp = true,
-            timestampFormat = "[HH:mm:ss] ",
-            blink = false,
-            preserveBackground = false
+            blink = true
         }
     },
     
-    -- Tab display settings
+    -- Visual settings
     tabFont = "Arial",
     tabFontSize = 10,
-    activeTabColor = "#4A90E2",
-    inactiveTabColor = "#2C2C2C",
-    blinkingTabColor = "#FF6B6B",
-    
-    -- Chat window settings
     chatHeight = 150,
-    maxScrollback = 1000,
-    wordWrap = true,
-    showTimestamps = true
+    maxScrollback = 1000
 }
 ```
 
-### Custom Channel Creation
-
-Add new chat channels:
+### Adding Custom Channels
 
 ```lua
--- Add a guild channel
-demonnic.chat.config.channels.guild = {
-    color = "green",
-    timestamp = true,
-    timestampFormat = "[HH:mm:ss] ",
-    blink = true,
-    preserveBackground = false
-}
-
--- Add a newbie channel  
-demonnic.chat.config.channels.newbie = {
-    color = "lightblue",
-    timestamp = true,
-    timestampFormat = "[HH:mm:ss] ",
-    blink = false,
-    preserveBackground = false
-}
-
--- Function to add channels dynamically
+-- Function to add new channels
 function addChatChannel(name, config)
     demonnic.chat.config.channels[name] = config
     if demonnic.chat then
         demonnic.chat:addTab(name)
     end
 end
-```
 
-### Chat Triggers Configuration
-
-Configure chat message routing:
-
-```lua
--- Chat trigger patterns
-GUI.chatTriggers = {
-    {
-        pattern = "^(.+) chats '(.+)'$",
-        channel = "chat",
-        format = function(matches)
-            return string.format("%s chats '%s'", matches[2], matches[3])
-        end
-    },
-    {
-        pattern = "^(.+) tells you '(.+)'$", 
-        channel = "tell",
-        format = function(matches)
-            return string.format("%s tells you '%s'", matches[2], matches[3])
-        end
-    },
-    {
-        pattern = "^(.+) group-says '(.+)'$",
-        channel = "group", 
-        format = function(matches)
-            return string.format("%s group-says '%s'", matches[2], matches[3])
-        end
-    }
-}
+-- Add a guild channel
+addChatChannel("guild", {
+    color = "green",
+    timestamp = true,
+    blink = true
+})
 ```
 
 ## Display Settings
 
-### Color Themes
-
-Configure visual themes and colors:
+### Theme Configuration
 
 ```lua
--- Default color theme
-GUI.themes.default = {
-    background = "rgba(0, 0, 0, 180)",
-    border = "#666666",
-    text = "#FFFFFF",
-    accent = "#4A90E2",
+-- Define custom themes
+GUI.themes = {
+    default = {
+        background = "rgba(0, 0, 0, 180)",
+        border = "#666666",
+        text = "#FFFFFF",
+        accent = "#4A90E2"
+    },
     
-    gauges = {
-        health = {
-            high = "#00FF00",    -- Green for high health
-            medium = "#FFFF00",  -- Yellow for medium health
-            low = "#FF0000"      -- Red for low health
-        },
-        movement = {
-            high = "#00FFFF",    -- Cyan for high movement
-            medium = "#FFFF00",  -- Yellow for medium movement 
-            low = "#FF6600"      -- Orange for low movement
-        },
-        experience = {
-            bar = "#9966FF",     -- Purple for experience
-            text = "#FFFFFF"
-        },
-        enemy = {
-            bar = "#FF4444",     -- Red for enemy health
-            text = "#FFFFFF"
-        }
+    dark = {
+        background = "rgba(20, 20, 20, 200)",
+        border = "#444444",
+        text = "#CCCCCC",
+        accent = "#6A9BD2"
     }
 }
 
--- Dark theme variant
-GUI.themes.dark = {
-    background = "rgba(20, 20, 20, 200)",
-    border = "#444444",
-    text = "#CCCCCC", 
-    accent = "#6A9BD2",
-    
-    gauges = {
-        health = {high = "#22AA22", medium = "#CCCC22", low = "#CC2222"},
-        movement = {high = "#22AAAA", medium = "#CCCC22", low = "#CC6622"},
-        experience = {bar = "#8855CC", text = "#CCCCCC"},
-        enemy = {bar = "#CC3333", text = "#CCCCCC"}
-    }
-}
+-- Apply theme
+function GUI.applyTheme(themeName)
+    local theme = GUI.themes[themeName]
+    if theme then
+        for key, value in pairs(theme) do
+            GUI.config.styling[key] = value
+        end
+        GUI.refresh()
+    end
+end
 ```
 
 ### Font Configuration
 
-Configure fonts and text display:
-
 ```lua
 GUI.config.fonts = {
-    default = {
-        family = "Arial",
-        size = 12,
-        weight = "normal"
-    },
-    gauges = {
-        family = "Arial",
-        size = 11, 
-        weight = "bold"
-    },
-    buttons = {
-        family = "Arial",
-        size = 10,
-        weight = "normal"
-    },
-    chat = {
-        family = "Consolas", -- Monospace for chat
-        size = 11,
-        weight = "normal"
-    }
-}
-```
-
-### Transparency Settings
-
-Configure component transparency:
-
-```lua
-GUI.config.transparency = {
-    background = 180,      -- Main background (0-255)
-    panels = 150,          -- Panel backgrounds
-    gauges = 200,          -- Status gauges
-    buttons = 180,         -- Control buttons
-    chat = 160            -- Chat windows
+    default = {family = "Arial", size = 12, weight = "normal"},
+    gauges = {family = "Arial", size = 11, weight = "bold"},
+    chat = {family = "Consolas", size = 11, weight = "normal"}
 }
 ```
 
 ## MSDP Configuration
 
-### Variable Requests
-
-Configure which MSDP variables to request:
+### Variable Management
 
 ```lua
+-- Configure MSDP variables to request
 GUI.msdpConfig = {
-    -- Core character variables
     character = {
         "HEALTH", "MAX_HEALTH",
         "MOVEMENT", "MAX_MOVEMENT", 
@@ -364,30 +397,18 @@ GUI.msdpConfig = {
         "LEVEL", "CLASS", "RACE"
     },
     
-    -- Combat variables
     combat = {
         "OPPONENT_HEALTH", "OPPONENT_NAME",
-        "ACTIONS", "COMBAT_STATE"
+        "COMBAT_STATE"
     },
     
-    -- Environment variables
     environment = {
         "ROOM", "ROOM_NAME", "ROOM_EXITS",
-        "AREA_NAME", "WORLD_TIME"
-    },
-    
-    -- Social variables
-    social = {
-        "GROUP", "AFFECTS", "PARTY"
-    },
-    
-    -- Custom variables (server-specific)
-    custom = {
-        "WEATHER", "REPUTATION", "GUILD_RANK"
+        "AREA_NAME"
     }
 }
 
--- Function to request all configured variables
+-- Request all configured variables
 function GUI.requestMSDPVariables()
     for category, variables in pairs(GUI.msdpConfig) do
         for _, variable in ipairs(variables) do
@@ -397,27 +418,23 @@ function GUI.requestMSDPVariables()
 end
 ```
 
-### MSDP Update Frequencies
-
-Control how often MSDP variables are updated:
+### Update Frequencies
 
 ```lua
+-- Control update frequencies
 GUI.msdpFrequencies = {
-    -- High frequency updates (every 100ms)
     fast = {
         variables = {"HEALTH", "MOVEMENT", "OPPONENT_HEALTH"},
-        interval = 100
+        interval = 100  -- milliseconds
     },
     
-    -- Medium frequency updates (every 500ms)
     medium = {
-        variables = {"EXPERIENCE", "ACTIONS", "AFFECTS"},
-        interval = 500  
+        variables = {"EXPERIENCE", "AFFECTS"},
+        interval = 500
     },
     
-    -- Low frequency updates (every 2000ms)
     slow = {
-        variables = {"ROOM", "GROUP", "AREA_NAME"},
+        variables = {"ROOM", "AREA_NAME"},
         interval = 2000
     }
 }
@@ -427,48 +444,34 @@ GUI.msdpFrequencies = {
 
 ### Update Optimization
 
-Configure update frequencies and performance settings:
-
 ```lua
 GUI.config.performance = {
-    -- GUI update frequencies (milliseconds)
-    gaugeUpdateFreq = 100,     -- Status gauge updates
-    mapUpdateFreq = 500,       -- Map display updates 
-    chatUpdateFreq = 50,       -- Chat message processing
-    iconUpdateFreq = 1000,     -- Action/affect icon updates
+    -- Update frequencies
+    gaugeUpdateFreq = 100,
+    mapUpdateFreq = 500,
+    chatUpdateFreq = 50,
     
     -- Memory management
-    maxChatHistory = 1000,     -- Maximum chat lines to keep
-    maxMapNodes = 5000,        -- Maximum map nodes in memory
-    garbageCollectFreq = 30000, -- Lua garbage collection frequency
+    maxChatHistory = 1000,
+    maxMapNodes = 5000,
+    garbageCollectFreq = 30000,
     
     -- Visual performance
-    animateGauges = true,      -- Enable gauge animations
-    animationSpeed = 200,      -- Animation duration (ms)
-    reduceTransparency = false, -- Reduce transparency for performance
-    limitFPS = false           -- Limit GUI updates to reduce CPU usage
+    animateGauges = true,
+    animationSpeed = 200,
+    reduceTransparency = false
 }
 ```
 
 ### Memory Management
 
-Configure memory usage and cleanup:
-
 ```lua
 GUI.config.memory = {
-    -- Automatic cleanup settings
     autoCleanup = true,
-    cleanupInterval = 60000,   -- 1 minute
-    
-    -- Component cleanup thresholds
+    cleanupInterval = 60000,
     maxEventHandlers = 100,
     maxTimers = 50,
-    maxTriggers = 200,
-    
-    -- Data retention limits
-    maxHistoryEntries = 500,
-    maxLogEntries = 1000,
-    maxCacheSize = 5000       -- Maximum cached objects
+    maxCacheSize = 5000
 }
 ```
 
@@ -476,12 +479,10 @@ GUI.config.memory = {
 
 ### Custom Component Layouts
 
-Create custom layouts for different screen sizes:
-
 ```lua
--- Layout profiles for different screen resolutions
+-- Layout profiles for different screen sizes
 GUI.layoutProfiles = {
-    small = {  -- For smaller screens (1024x768)
+    small = {
         leftPanelWidth = 250,
         rightPanelWidth = 200,
         bottomPanelHeight = 150,
@@ -489,15 +490,7 @@ GUI.layoutProfiles = {
         compactMode = true
     },
     
-    medium = { -- For medium screens (1280x1024) 
-        leftPanelWidth = 300,
-        rightPanelWidth = 250,
-        bottomPanelHeight = 200,
-        fontSize = 12,
-        compactMode = false
-    },
-    
-    large = {  -- For large screens (1920x1080+)
+    large = {
         leftPanelWidth = 400,
         rightPanelWidth = 300,
         bottomPanelHeight = 250,
@@ -506,180 +499,87 @@ GUI.layoutProfiles = {
     }
 }
 
--- Function to apply layout profile
+-- Apply layout profile
 function GUI.applyLayoutProfile(profileName)
     local profile = GUI.layoutProfiles[profileName]
-    if not profile then return end
-    
-    for key, value in pairs(profile) do
-        GUI.config.layout[key] = value
+    if profile then
+        for key, value in pairs(profile) do
+            GUI.config.layout[key] = value
+        end
+        GUI.refresh()
     end
-    
-    -- Refresh GUI with new layout
-    GUI.refresh()
 end
-```
-
-### Custom Styling
-
-Advanced CSS styling for components:
-
-```lua
-GUI.customStyles = {
-    modernGauges = [[
-        QProgressBar {
-            border: 2px solid #4A90E2;
-            border-radius: 8px;
-            background-color: rgba(30, 30, 30, 200);
-            text-align: center;
-            font-weight: bold;
-            color: white;
-        }
-        QProgressBar::chunk {
-            background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                stop:0 #4A90E2, stop:1 #2171B5);
-            border-radius: 6px;
-        }
-    ]],
-    
-    glassButtons = [[
-        QPushButton {
-            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                stop:0 rgba(255,255,255,50), stop:1 rgba(255,255,255,20));
-            border: 1px solid rgba(255,255,255,80);
-            border-radius: 6px;
-            color: white;
-            font-weight: bold;
-            padding: 4px 8px;
-        }
-        QPushButton:hover {
-            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                stop:0 rgba(255,255,255,80), stop:1 rgba(255,255,255,40));
-        }
-        QPushButton:pressed {
-            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                stop:0 rgba(255,255,255,20), stop:1 rgba(255,255,255,50));
-        }
-    ]]
-}
 ```
 
 ### Event-Based Customization
 
-Advanced event handling and customization:
-
 ```lua
--- Custom event handlers for advanced features
+-- Custom event handlers
 GUI.customEvents = {
     onHealthCritical = function(health, maxHealth)
         local percentage = (health / maxHealth) * 100
         if percentage <= 10 then
-            -- Flash screen red
             GUI.flashWarning("CRITICAL HEALTH!", "red")
-            
-            -- Play sound (if available)
-            if playSound then
-                playSound("critical_health.wav")
-            end
-            
-            -- Send emergency commands
             send("wimpy 90")
-            send("flee")
         end
     end,
     
     onLevelUp = function(newLevel)
-        GUI.showCelebration("LEVEL UP!", string.format("Welcome to level %d!", newLevel))
-        
-        -- Log achievement
-        GUI.logAchievement("level", newLevel, getEpoch())
-        
-        -- Request updated stats
-        sendMSDP("REQUEST", "HEALTH")
-        sendMSDP("REQUEST", "MAX_HEALTH")
-    end,
-    
-    onCombatStart = function(opponent)
-        -- Start combat timer
-        GUI.combatStartTime = getEpoch()
-        
-        -- Enable combat-specific UI elements
-        GUI.showCombatMode(true)
-        
-        -- Log combat start
-        GUI.logCombat("start", opponent, getEpoch())
+        GUI.showCelebration("LEVEL UP!", 
+            string.format("Welcome to level %d!", newLevel))
     end
 }
 
--- Register custom events
+-- Register events
 registerAnonymousEventHandler("msdp.HEALTH", function()
     if msdp.HEALTH and msdp.MAX_HEALTH then
-        GUI.customEvents.onHealthCritical(tonumber(msdp.HEALTH), tonumber(msdp.MAX_HEALTH))
+        GUI.customEvents.onHealthCritical(
+            tonumber(msdp.HEALTH), 
+            tonumber(msdp.MAX_HEALTH)
+        )
     end
 end)
 ```
 
-### Plugin Configuration
+## Development Workflow
 
-Configuration for plugin development:
+### Configuration Enhancement Process
 
-```lua
-GUI.pluginConfig = {
-    -- Plugin directories
-    pluginPath = getMudletHomeDir() .. "/LuminariGUI_Plugins/",
-    
-    -- Plugin loading settings
-    autoLoadPlugins = true,
-    loadOrder = {"core", "ui", "data", "optional"},
-    
-    -- Plugin API settings
-    allowFileAccess = false,    -- Restrict file system access
-    allowNetworkAccess = false, -- Restrict network access
-    sandboxMode = true,         -- Run plugins in sandbox
-    
-    -- Plugin data sharing
-    sharedData = {
-        allowRead = true,
-        allowWrite = false,
-        dataPath = getMudletHomeDir() .. "/LuminariGUI_Data/"
-    }
-}
-```
+1. **Start with Minimal**: Use default [`config.lua`](config.lua)
+2. **Test Basic Functionality**: Verify XML-based defaults work
+3. **Enhance with Python**: Use [`create_package.py`](PYTHON_TOOLS.md) for metadata
+4. **Customize Runtime**: Modify [`GUI.config`](CONFIGURATION.md:41) as needed
+5. **Test and Iterate**: Validate changes and performance
 
-## Troubleshooting
+### Integration with Python Toolchain
 
-### Common Configuration Issues
+The Python toolchain (documented in [`PYTHON_TOOLS.md`](PYTHON_TOOLS.md)) provides:
 
-#### Layout Problems
+- **Package Creation**: Enhanced [`config.lua`](config.lua) generation
+- **Version Management**: Automated versioning and metadata
+- **Build Integration**: Seamless development workflow
+- **Deployment Support**: Package preparation for distribution
+
+### Configuration Validation
 
 ```lua
--- Reset layout to defaults
-function GUI.resetLayout()
-    GUI.config.layout = {
-        leftPanelWidth = 300,
-        rightPanelWidth = 250,
-        bottomPanelHeight = 200,
-        gaugePanelHeight = 40
-    }
-    GUI.refresh()
-    print("Layout reset to defaults")
-end
-
--- Validate layout values
-function GUI.validateLayout()
-    local layout = GUI.config.layout
+-- Validate configuration integrity
+function GUI.validateConfig()
     local issues = {}
     
-    if layout.leftPanelWidth < 200 or layout.leftPanelWidth > 500 then
-        table.insert(issues, "leftPanelWidth should be between 200-500")
+    -- Check layout bounds
+    if GUI.config.layout.leftPanelWidth < 200 then
+        table.insert(issues, "leftPanelWidth too small")
     end
     
-    if layout.rightPanelWidth < 200 or layout.rightPanelWidth > 400 then
-        table.insert(issues, "rightPanelWidth should be between 200-400")
+    -- Check performance settings
+    if GUI.config.performance.gaugeUpdateFreq < 50 then
+        table.insert(issues, "gaugeUpdateFreq too frequent")
     end
     
+    -- Report issues
     if #issues > 0 then
-        print("Layout validation issues:")
+        print("Configuration issues found:")
         for _, issue in ipairs(issues) do
             print("  - " .. issue)
         end
@@ -690,79 +590,43 @@ function GUI.validateLayout()
 end
 ```
 
-#### MSDP Connection Issues
+## Troubleshooting
 
+### Common Configuration Issues
+
+#### The Documentation Gap
+
+**Problem**: Documentation assumes extensive built-in configuration that doesn't exist
+
+**Solution**: Understand the three-tier system:
+1. Minimal [`config.lua`](config.lua) (current state)
+2. XML-based capabilities (always available)
+3. Runtime configuration (created dynamically)
+
+#### Missing GUI.config Structure
+
+**Problem**: [`GUI.config`](CONFIGURATION.md:41) doesn't exist initially
+
+**Solution**: 
 ```lua
--- Diagnose MSDP problems
-function GUI.diagnoseMSDP()
-    print("MSDP Diagnosis:")
-    print("Protocol enabled:", msdp and "Yes" or "No")
-    
-    if msdp then
-        print("Available variables:")
-        for var, value in pairs(msdp) do
-            print(string.format("  %s = %s", var, tostring(value)))
-        end
-    else
-        print("MSDP not available. Check server settings.")
-        print("Try: MSDP ON")
-    end
-end
-
--- Reset MSDP configuration
-function GUI.resetMSDP()
-    print("Resetting MSDP configuration...")
-    
-    -- Clear existing handlers
-    for _, variable in ipairs({"HEALTH", "MOVEMENT", "EXPERIENCE", "ROOM", "GROUP"}) do
-        local eventName = "msdp." .. variable
-        if eventHandlers and eventHandlers[eventName] then
-            killAnonymousEventHandler(eventName)
-        end
-    end
-    
-    -- Re-register handlers
-    GUI.registerMSDPHandlers()
-    
-    -- Request variables again
-    GUI.requestMSDPVariables()
-    
-    print("MSDP reset complete")
+-- Configuration is created at runtime
+-- Check if GUI is loaded before accessing config
+if GUI and GUI.config then
+    -- Safe to modify configuration
+    GUI.config.layout.leftPanelWidth = 350
+else
+    print("GUI not yet initialized")
 end
 ```
 
-#### Chat System Issues
+#### Python Toolchain Integration
 
-```lua
--- Fix chat display problems
-function GUI.fixChatDisplay()
-    print("Fixing chat display...")
-    
-    -- Reset YATCO configuration
-    if demonnic and demonnic.chat then
-        demonnic.chat:clear()
-        
-        -- Recreate tabs
-        for channel, config in pairs(demonnic.chat.config.channels) do
-            demonnic.chat:addTab(channel)
-        end
-        
-        print("Chat tabs recreated")
-    else
-        print("YATCO not available. Check installation.")
-    end
-end
+**Problem**: Enhanced configuration requires Python toolchain
 
--- Clear chat history
-function GUI.clearChatHistory()
-    if demonnic and demonnic.chat then
-        for channel, _ in pairs(demonnic.chat.config.channels) do
-            demonnic.chat:clear(channel)
-        end
-        print("Chat history cleared")
-    end
-end
-```
+**Solution**:
+1. Install Python toolchain (see [`PYTHON_TOOLS.md`](PYTHON_TOOLS.md))
+2. Run `create_package.py` for enhanced metadata
+3. Understand that basic functionality works without enhancement
 
 ### Performance Troubleshooting
 
@@ -775,43 +639,42 @@ function GUI.checkPerformance()
     local memBefore = collectgarbage("count")
     collectgarbage()
     local memAfter = collectgarbage("count")
-    
-    print(string.format("Memory usage: %.2f KB (freed %.2f KB)", 
+    print(string.format("Memory: %.2f KB (freed %.2f KB)", 
                        memAfter, memBefore - memAfter))
     
-    -- Timer count
+    -- Active components
     local timerCount = 0
     if timers then
-        for _ in pairs(timers) do
-            timerCount = timerCount + 1
-        end
+        for _ in pairs(timers) do timerCount = timerCount + 1 end
     end
     print("Active timers:", timerCount)
-    
-    -- Event handler count  
-    local handlerCount = 0
-    if eventHandlers then
-        for _ in pairs(eventHandlers) do
-            handlerCount = handlerCount + 1
-        end
-    end
-    print("Event handlers:", handlerCount)
     
     -- Recommendations
     if timerCount > 20 then
         print("WARNING: High timer count may affect performance")
     end
-    
-    if handlerCount > 50 then
-        print("WARNING: High event handler count may affect performance")
-    end
+end
+```
+
+### Reset Functions
+
+```lua
+-- Reset to minimal configuration
+function GUI.resetToMinimal()
+    GUI.config = {
+        layout = {leftPanelWidth = 300, rightPanelWidth = 250, 
+                 bottomPanelHeight = 200, gaugePanelHeight = 40},
+        display = {showMap = true, showChat = true, 
+                  showStatusGauges = true, showControlButtons = true},
+        styling = {theme = "default", transparency = 180, 
+                  fontSize = 12, fontFamily = "Arial"}
+    }
+    GUI.refresh()
+    print("Configuration reset to minimal defaults")
 end
 
--- Clean up resources
+-- Clean up all resources
 function GUI.cleanup()
-    print("Cleaning up LuminariGUI resources...")
-    
-    -- Kill timers
     if GUI.timers then
         for _, timerID in pairs(GUI.timers) do
             killTimer(timerID)
@@ -819,7 +682,6 @@ function GUI.cleanup()
         GUI.timers = {}
     end
     
-    -- Remove event handlers
     if GUI.eventHandlers then
         for _, handlerID in pairs(GUI.eventHandlers) do
             killAnonymousEventHandler(handlerID)
@@ -827,51 +689,44 @@ function GUI.cleanup()
         GUI.eventHandlers = {}
     end
     
-    -- Force garbage collection
     collectgarbage()
-    
-    print("Cleanup complete")
+    print("LuminariGUI cleanup complete")
 end
 ```
 
-### Configuration Validation
+## Migration from Previous Documentation
 
-```lua
--- Validate entire configuration
-function GUI.validateConfig()
-    local valid = true
-    local issues = {}
-    
-    -- Check layout configuration
-    if not GUI.validateLayout() then
-        valid = false
-        table.insert(issues, "Layout configuration invalid")
-    end
-    
-    -- Check chat configuration
-    if not demonnic or not demonnic.chat then
-        valid = false
-        table.insert(issues, "Chat system not available")
-    end
-    
-    -- Check MSDP configuration
-    if not msdp then
-        valid = false
-        table.insert(issues, "MSDP not available")
-    end
-    
-    -- Report results
-    if valid then
-        print("Configuration validation passed")
-    else
-        print("Configuration validation failed:")
-        for _, issue in ipairs(issues) do
-            print("  - " .. issue)
-        end
-    end
-    
-    return valid
-end
-```
+### Understanding the Changes
 
-This configuration guide provides comprehensive control over all aspects of LuminariGUI's behavior and appearance, enabling users to customize the system to their specific needs and preferences.
+**Previous Assumption**: Complex configuration existed by default
+**Current Reality**: Minimal configuration with enhancement pathways
+
+**Migration Strategy**:
+1. Start with minimal [`config.lua`](config.lua)
+2. Use Python toolchain for metadata enhancement
+3. Build runtime configuration progressively
+4. Leverage XML-based defaults
+
+### Configuration Examples Context
+
+When you see configuration examples in this document:
+
+- **Runtime Examples**: Apply after GUI initialization
+- **Enhancement Examples**: Require Python toolchain
+- **XML Examples**: Reference underlying capability structure
+
+## Conclusion
+
+LuminariGUI's configuration system is designed for progressive enhancement:
+
+1. **Start Simple**: Minimal [`config.lua`](config.lua) gets you running
+2. **Enhance Gradually**: Python toolchain adds metadata richness
+3. **Customize Extensively**: Runtime configuration provides full control
+4. **Extend Infinitely**: XML structure supports unlimited customization
+
+This approach ensures that users can start immediately with sensible defaults while providing clear pathways to advanced customization as their needs grow.
+
+For implementation details on the Python toolchain, see [`PYTHON_TOOLS.md`](PYTHON_TOOLS.md).
+For XML structure reference, see [`LuminariGUI.xml`](LuminariGUI.xml).
+
+The configuration system bridges the gap between simplicity and power, ensuring that LuminariGUI works well for both beginners and advanced users.

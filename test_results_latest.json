@@ -1,0 +1,62 @@
+LuminariGUI Test Report
+==================================================
+Generated: 2025-07-14 16:35:29
+XML File: LuminariGUI.xml
+
+SUMMARY
+--------------------
+Total test suites: 6
+Passed: 6
+Failed: 0
+Duration: 1.89 seconds
+
+EVENT SYSTEM
+------------
+Status: PASS
+Errors: 0
+Warnings: 0
+
+FUNCTION TESTS
+--------------
+Status: PASS
+Errors: 0
+Warnings: 0
+
+SYSTEM TESTS
+------------
+Status: PASS
+Errors: 0
+Warnings: 0
+
+PERFORMANCE
+-----------
+Status: PASS
+Errors: 0
+Warnings: 0
+
+LUA SYNTAX
+----------
+Status: PASS
+Errors: 0
+Warnings: 13
+
+Warnings:
+  Warning in 'Capture Wilderness Map': Missing space after 'function' keyword
+  Warning in 'Capture Wilderness Map': 'end)' pattern may indicate missing semicolon
+  Warning in 'Capture Room Map': Missing space after 'function' keyword
+  Warning in 'Capture Room Map': 'end)' pattern may indicate missing semicolon
+  Warning in 'MSDPMapper': Missing space after 'function' keyword
+  Warning in 'MSDPMapper': 'end)' pattern may indicate missing semicolon
+  Warning in 'Affects': Missing space after 'function' keyword
+  Warning in 'Affects': 'end)' pattern may indicate missing semicolon
+  Warning in 'Room Info/Legend': Missing space after 'function' keyword
+  Warning in 'Room Info/Legend': 'end)' pattern may indicate missing semicolon
+  Warning in 'Code': Missing space after 'function' keyword
+  Warning in 'demonnicOnStart': Missing space after 'function' keyword
+  Warning in 'demonnicOnStart': 'end)' pattern may indicate missing semicolon
+
+LUA QUALITY
+-----------
+Status: PASS
+Errors: 0
+Warnings: 0

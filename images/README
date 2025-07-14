@@ -13,4 +13,19 @@ This directory contains all image assets used by the LuminariGUI package:
 - **UI Components**: Buttons, frames, and interface elements
 - **Decorative Elements**: Background images and aesthetic enhancements
 
+## Testing & Validation
+
+Image assets are validated as part of the automated testing infrastructure:
+- **Asset validation**: Tests verify all referenced images exist
+- **Path testing**: Cross-platform path handling is tested
+- **Performance testing**: Image loading performance is benchmarked
+
 For detailed information about status effect icons, see `affected_by/STATUS_EFFECTS.md`.
+
+## Development Notes
+
+When adding new images:
+1. Follow existing naming conventions
+2. Optimize file sizes for performance
+3. Update any hardcoded references in test files
+4. Run `python3 run_tests.py` to ensure no tests are broken

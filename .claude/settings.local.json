@@ -12,7 +12,12 @@
       "Bash(ls:*)",
       "Bash(curl:*)",
       "Bash(sed:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(echo:*)",
+      "Bash(mkdir:*)",
+      "Bash(mv:*)",
+      "Bash(lua:*)",
+      "Bash(git add:*)"
     ],
     "deny": []
   }

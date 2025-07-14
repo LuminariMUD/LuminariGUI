@@ -1,0 +1,41 @@
+[
+  {
+    "NAME": "TestPlayer",
+    "HEALTH": 100,
+    "HEALTH_MAX": 100,
+    "MANA": 45,
+    "MANA_MAX": 50,
+    "MOVEMENT": 80,
+    "MOVEMENT_MAX": 100,
+    "LEVEL": 10,
+    "CLASS": "warrior",
+    "POSITION": "standing",
+    "LOCATION": 3001
+  },
+  {
+    "NAME": "MageAlly",
+    "HEALTH": 75,
+    "HEALTH_MAX": 85,
+    "MANA": 30,
+    "MANA_MAX": 60,
+    "MOVEMENT": 90,
+    "MOVEMENT_MAX": 95,
+    "LEVEL": 12,
+    "CLASS": "wizard",
+    "POSITION": "standing",
+    "LOCATION": 3001
+  },
+  {
+    "NAME": "ClericFriend",
+    "HEALTH": 90,
+    "HEALTH_MAX": 95,
+    "MANA": 55,
+    "MANA_MAX": 70,
+    "MOVEMENT": 85,
+    "MOVEMENT_MAX": 85,
+    "LEVEL": 11,
+    "CLASS": "cleric",
+    "POSITION": "standing",
+    "LOCATION": 3001
+  }
+]

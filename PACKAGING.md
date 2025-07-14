@@ -26,7 +26,7 @@ Before preparing a package for release, ensure the following steps are completed
 
 ```bash
 # Validate XML structure
-python3 validate_xml.py
+python3 validate_package.py
 
 # Format XML (optional - creates backup)
 python3 format_xml.py
@@ -68,7 +68,7 @@ Update version information in key locations:
 git status
 
 # Validate XML structure
-python3 validate_xml.py
+python3 validate_package.py
 # Should show: ✅ XML validation passed
 
 # Optional: Format XML for consistency
@@ -393,7 +393,7 @@ After release, validate the package:
    wget https://github.com/LuminariMUD/LuminariGUI/releases/latest/LuminariGUI.xml -O test-download.xml
    
    # Validate downloaded file
-   python3 validate_xml.py test-download.xml
+   python3 validate_package.py test-download.xml
    ```
 
 2. **Installation Test**:
@@ -434,7 +434,7 @@ After release, validate the package:
 
 ### Support Resources
 
-- **Validation Tool**: `python3 validate_xml.py`
+- **Validation Tool**: `python3 validate_package.py`
 - **Format Tool**: `python3 format_xml.py`
 - **Issue Tracker**: GitHub Issues
 - **Community**: LuminariMUD Discord #mudlet-help

@@ -1,0 +1,26 @@
+{
+  "VNUM": 3001,
+  "NAME": "The Temple of Midgaard",
+  "EXITS": {
+    "north": 3002,
+    "south": 3000,
+    "east": 3004,
+    "west": 3003
+  },
+  "DOORS": {
+    "north": "closed",
+    "east": "locked"
+  },
+  "AREA": "Midgaard",
+  "ZONE": 30,
+  "TERRAIN": "inside",
+  "SECTOR": "city",
+  "FLAGS": ["safe", "no_mob", "no_attack"],
+  "DESCRIPTION": "You are in the Temple of Midgaard, a place of worship and healing.",
+  "EXTRA_DESCRIPTIONS": [
+    {
+      "keywords": ["altar", "temple"],
+      "description": "The altar is made of white marble and radiates a holy aura."
+    }
+  ]
+}

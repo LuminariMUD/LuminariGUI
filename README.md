@@ -190,9 +190,11 @@ This project includes comprehensive documentation for all aspects of development
 - **[`LICENSE`](LICENSE)**: MIT License terms and conditions
 
 #### **🔧 Development Tools**
-- **[`create_package.py`](create_package.py)**: Automated .mpackage creation from XML source
+- **[`create_package.py`](create_package.py)**: Automated .mpackage creation with optional testing integration
 - **[`format_xml.py`](format_xml.py)**: XML formatting utility for maintaining code standards
-- **[`validate_xml.py`](validate_xml.py)**: XML validation tool for ensuring package integrity
+- **[`validate_package.py`](validate_package.py)**: Package validation tool with integrated Lua syntax checking
+- **[`run_tests.py`](run_tests.py)**: Comprehensive test suite runner with parallel execution
+- **Testing Infrastructure**: Complete testing framework for code quality, syntax, functions, events, system, and performance
 - **[`.cursorrules`](.cursorrules)**: Cursor IDE configuration and development rules
 
 ### Quick Reference
@@ -227,19 +229,52 @@ For maintainers and developers who need to create distributable packages:
 # Create .mpackage file from XML source
 python create_package.py
 
+# Create with comprehensive testing
+python create_package.py --run-tests
+
+# Create release with full testing
+python create_package.py --release --run-tests
+
 # Create with custom version
 python create_package.py --version 2.1.0
 
-# Create with custom output name
-python create_package.py --output LuminariGUI-v2.1.0.mpackage
-
 # XML validation and formatting
-python validate_xml.py      # Validate XML structure
+python validate_package.py      # Validate package (XML structure and Lua syntax)
 python format_xml.py        # Format and clean XML
+```
+
+### Testing Infrastructure
+
+The project includes comprehensive automated testing to ensure code quality and prevent regressions:
+
+```bash
+# Run complete test suite
+python run_tests.py
+
+# Run specific test types
+python run_tests.py --test syntax      # Lua syntax validation
+python run_tests.py --test quality     # Static code analysis
+python run_tests.py --test functions   # Unit tests
+python run_tests.py --test events      # Event system testing
+python run_tests.py --test system      # Memory leak detection
+python run_tests.py --test performance # Performance benchmarks
+
+# Generate detailed reports
+python run_tests.py --report results.json --format json
+
+# Individual test tools
+python test_lua_syntax.py     # Syntax validation using luac
+python test_lua_quality.py    # Static analysis using luacheck
+python test_functions.py      # Unit tests with mocks
+python test_events.py         # Event handler testing
+python test_system.py         # System stability tests
+python test_performance.py    # Performance benchmarks
 ```
 
 **Package Creation Features:**
 - **Automated .mpackage creation** from XML source
+- **Integrated testing** with optional test suite execution
+- **Comprehensive validation** including XML structure and Lua syntax
 - **Version auto-detection** from CHANGELOG.md
 - **Resource bundling** (images, status icons, UI assets)
 - **Metadata generation** with proper config.lua

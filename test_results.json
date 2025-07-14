@@ -1,0 +1,2041 @@
+{
+  "summary": {
+    "total_tests": 6,
+    "passed_tests": 6,
+    "failed_tests": 0,
+    "duration": 1.9181950092315674,
+    "timestamp": "2025-07-14 16:25:06"
+  },
+  "results": {
+    "Event System": {
+      "name": "Event System",
+      "success": true,
+      "results": {
+        "event_handlers": [],
+        "test_results": [],
+        "errors": [],
+        "warnings": []
+      },
+      "errors": [],
+      "warnings": []
+    },
+    "Function Tests": {
+      "name": "Function Tests",
+      "success": true,
+      "results": {
+        "test_results": [],
+        "errors": [],
+        "warnings": []
+      },
+      "errors": [],
+      "warnings": []
+    },
+    "System Tests": {
+      "name": "System Tests",
+      "success": true,
+      "results": {
+        "test_results": [],
+        "errors": [],
+        "warnings": []
+      },
+      "errors": [],
+      "warnings": []
+    },
+    "Performance": {
+      "name": "Performance",
+      "success": true,
+      "results": {
+        "benchmark_results": {
+          "string_operations": {
+            "Average": "0.58ms",
+            "Min": "0.58ms",
+            "Max": "0.58ms",
+            "Count": "1"
+          },
+          "table_operations": {
+            "Average": "0.49ms",
+            "Min": "0.49ms",
+            "Max": "0.49ms",
+            "Count": "1"
+          },
+          "room_creation_simulation": {},
+          "affect_processing": {
+            "Average": "0.03ms",
+            "Min": "0.03ms",
+            "Max": "0.03ms",
+            "Count": "1"
+          },
+          "group_data_processing": {},
+          "font_calculation_simulation": {},
+          "regex_pattern_matching": {}
+        },
+        "errors": [],
+        "warnings": []
+      },
+      "errors": [],
+      "warnings": []
+    },
+    "Lua Syntax": {
+      "name": "Lua Syntax",
+      "success": true,
+      "results": {
+        "passed": true,
+        "errors": [],
+        "warnings": [
+          "Warning in 'Capture Wilderness Map': Missing space after 'function' keyword",
+          "Warning in 'Capture Wilderness Map': 'end)' pattern may indicate missing semicolon",
+          "Warning in 'Capture Room Map': Missing space after 'function' keyword",
+          "Warning in 'Capture Room Map': 'end)' pattern may indicate missing semicolon",
+          "Warning in 'MSDPMapper': Missing space after 'function' keyword",
+          "Warning in 'MSDPMapper': 'end)' pattern may indicate missing semicolon",
+          "Warning in 'Affects': Missing space after 'function' keyword",
+          "Warning in 'Affects': 'end)' pattern may indicate missing semicolon",
+          "Warning in 'Room Info/Legend': Missing space after 'function' keyword",
+          "Warning in 'Room Info/Legend': 'end)' pattern may indicate missing semicolon",
+          "Warning in 'Code': Missing space after 'function' keyword",
+          "Warning in 'demonnicOnStart': Missing space after 'function' keyword",
+          "Warning in 'demonnicOnStart': 'end)' pattern may indicate missing semicolon"
+        ]
+      },
+      "errors": [],
+      "warnings": [
+        "Warning in 'Capture Wilderness Map': Missing space after 'function' keyword",
+        "Warning in 'Capture Wilderness Map': 'end)' pattern may indicate missing semicolon",
+        "Warning in 'Capture Room Map': Missing space after 'function' keyword",
+        "Warning in 'Capture Room Map': 'end)' pattern may indicate missing semicolon",
+        "Warning in 'MSDPMapper': Missing space after 'function' keyword",
+        "Warning in 'MSDPMapper': 'end)' pattern may indicate missing semicolon",
+        "Warning in 'Affects': Missing space after 'function' keyword",
+        "Warning in 'Affects': 'end)' pattern may indicate missing semicolon",
+        "Warning in 'Room Info/Legend': Missing space after 'function' keyword",
+        "Warning in 'Room Info/Legend': 'end)' pattern may indicate missing semicolon",
+        "Warning in 'Code': Missing space after 'function' keyword",
+        "Warning in 'demonnicOnStart': Missing space after 'function' keyword",
+        "Warning in 'demonnicOnStart': 'end)' pattern may indicate missing semicolon"
+      ]
+    },
+    "Lua Quality": {
+      "name": "Lua Quality",
+      "success": true,
+      "results": {
+        "passed": true,
+        "issues": {
+          "critical": [],
+          "errors": [],
+          "warnings": [
+            {
+              "script": "Tell",
+              "line": 7,
+              "column": 3,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mdeleteLineP\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Congrats",
+              "line": 7,
+              "column": 3,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mdeleteLineP\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Chat",
+              "line": 3,
+              "column": 3,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mdeleteLineP\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Auction",
+              "line": 3,
+              "column": 3,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mdeleteLineP\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Group",
+              "line": 3,
+              "column": 3,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mdeleteLineP\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Wiznet",
+              "line": 3,
+              "column": 3,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mdeleteLineP\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Capture Wilderness Map",
+              "line": 6,
+              "column": 15,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mtempLineTrigger\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Capture Wilderness Map",
+              "line": 7,
+              "column": 1,
+              "code": "W",
+              "message": "setting non-standard global variable \u001b[0m\u001b[1mpadding\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Capture Wilderness Map",
+              "line": 11,
+              "column": 10,
+              "code": "W",
+              "message": "setting non-standard global variable \u001b[0m\u001b[1monMapLine\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Capture Wilderness Map",
+              "line": 13,
+              "column": 10,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mline\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Capture Wilderness Map",
+              "line": 13,
+              "column": 18,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mline\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Capture Wilderness Map",
+              "line": 17,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "Capture Wilderness Map",
+              "line": 19,
+              "column": 41,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mline\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Capture Wilderness Map",
+              "line": 29,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "Capture Wilderness Map",
+              "line": 34,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "Capture Wilderness Map",
+              "line": 38,
+              "column": 10,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mpadding\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Capture Wilderness Map",
+              "line": 38,
+              "column": 27,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mpadding\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Capture Wilderness Map",
+              "line": 39,
+              "column": 41,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mpadding\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Capture Wilderness Map",
+              "line": 43,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "Capture Wilderness Map",
+              "line": 48,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "Capture Wilderness Map",
+              "line": 51,
+              "column": 9,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mappendBuffer\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Capture Wilderness Map",
+              "line": 58,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "Capture Wilderness Map",
+              "line": 61,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "Capture Room Map",
+              "line": 13,
+              "column": 15,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mtempLineTrigger\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Capture Room Map",
+              "line": 14,
+              "column": 1,
+              "code": "W",
+              "message": "setting non-standard global variable \u001b[0m\u001b[1mpadding\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Capture Room Map",
+              "line": 18,
+              "column": 10,
+              "code": "W",
+              "message": "setting non-standard global variable \u001b[0m\u001b[1monRoomMapLine\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Capture Room Map",
+              "line": 20,
+              "column": 10,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mline\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Capture Room Map",
+              "line": 20,
+              "column": 18,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mline\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Capture Room Map",
+              "line": 24,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "Capture Room Map",
+              "line": 26,
+              "column": 41,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mline\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Capture Room Map",
+              "line": 36,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "Capture Room Map",
+              "line": 41,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "Capture Room Map",
+              "line": 45,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "Capture Room Map",
+              "line": 50,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "Capture Room Map",
+              "line": 53,
+              "column": 9,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mappendBuffer\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Capture Room Map",
+              "line": 60,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "Capture Room Map",
+              "line": 63,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "Toggle blinking (temporary change)",
+              "line": 4,
+              "column": 121,
+              "code": "W",
+              "message": "line is too long (281 > 120)",
+              "severity": "warning"
+            },
+            {
+              "script": "Toggle blinking (temporary change)",
+              "line": 8,
+              "column": 121,
+              "code": "W",
+              "message": "line is too long (279 > 120)",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDPMapper",
+              "line": 1,
+              "column": 1,
+              "code": "W",
+              "message": "setting non-standard global variable \u001b[0m\u001b[1mmudlet\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDPMapper",
+              "line": 1,
+              "column": 10,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mmudlet\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDPMapper",
+              "line": 2,
+              "column": 1,
+              "code": "W",
+              "message": "mutating non-standard global variable \u001b[0m\u001b[1mmudlet\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDPMapper",
+              "line": 185,
+              "column": 21,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mgetRoomsByPosition\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDPMapper",
+              "line": 255,
+              "column": 12,
+              "code": "W",
+              "message": "variable \u001b[0m\u001b[1my1\u001b[0m is never set",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDPMapper",
+              "line": 255,
+              "column": 15,
+              "code": "W",
+              "message": "variable \u001b[0m\u001b[1mz1\u001b[0m is never set",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDPMapper",
+              "line": 262,
+              "column": 3,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mupdateMap\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDPMapper",
+              "line": 275,
+              "column": 3,
+              "code": "W",
+              "message": "setting non-standard global variable \u001b[0m\u001b[1mspeedwalk_active\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDPMapper",
+              "line": 304,
+              "column": 3,
+              "code": "W",
+              "message": "setting non-standard global variable \u001b[0m\u001b[1mspeedwalk_active\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDPMapper",
+              "line": 304,
+              "column": 22,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mspeedwalk_active\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDPMapper",
+              "line": 317,
+              "column": 7,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mspeedWalkDir\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDPMapper",
+              "line": 318,
+              "column": 5,
+              "code": "W",
+              "message": "setting non-standard global variable \u001b[0m\u001b[1mspeedwalk_active\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDPMapper",
+              "line": 323,
+              "column": 5,
+              "code": "W",
+              "message": "setting non-standard global variable \u001b[0m\u001b[1mspeedwalk_active\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDPMapper",
+              "line": 328,
+              "column": 10,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mspeedwalk_active\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDPMapper",
+              "line": 333,
+              "column": 18,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mspeedWalkDir\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDPMapper",
+              "line": 374,
+              "column": 10,
+              "code": "W",
+              "message": "setting non-standard global variable \u001b[0m\u001b[1mdoSpeedWalk\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDPMapper",
+              "line": 376,
+              "column": 7,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mspeedWalkDir\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDPMapper",
+              "line": 378,
+              "column": 3,
+              "code": "W",
+              "message": "setting non-standard global variable \u001b[0m\u001b[1mspeedwalk_active\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDPMapper",
+              "line": 432,
+              "column": 21,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mgetExitStubs1\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDPMapper",
+              "line": 448,
+              "column": 3,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mcenterview\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDPMapper",
+              "line": 506,
+              "column": 121,
+              "code": "W",
+              "message": "line is too long (146 > 120)",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDPMapper",
+              "line": 536,
+              "column": 121,
+              "code": "W",
+              "message": "line is too long (125 > 120)",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDPMapper",
+              "line": 555,
+              "column": 5,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mloadMap\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDPMapper",
+              "line": 559,
+              "column": 5,
+              "code": "W",
+              "message": "setting non-standard global variable \u001b[0m\u001b[1mdownloading\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDPMapper",
+              "line": 560,
+              "column": 5,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mdownloadFile\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDPMapper",
+              "line": 590,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDPMapper",
+              "line": 603,
+              "column": 27,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mcalcFontSize\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDPMapper",
+              "line": 608,
+              "column": 3,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1msetMiniConsoleFontSize\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDPMapper",
+              "line": 615,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDPMapper",
+              "line": 628,
+              "column": 27,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mcalcFontSize\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDPMapper",
+              "line": 633,
+              "column": 3,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1msetMiniConsoleFontSize\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDPMapper",
+              "line": 636,
+              "column": 17,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mcalcFontSize\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDPMapper",
+              "line": 641,
+              "column": 17,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mcalcFontSize\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDPMapper",
+              "line": 649,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDPMapper",
+              "line": 655,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDPMapper",
+              "line": 658,
+              "column": 5,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1msetCustomEnvColor\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDPMapper",
+              "line": 660,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDPMapper",
+              "line": 663,
+              "column": 121,
+              "code": "W",
+              "message": "line is too long (130 > 120)",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDPMapper",
+              "line": 664,
+              "column": 121,
+              "code": "W",
+              "message": "line is too long (144 > 120)",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDPMapper",
+              "line": 665,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDPMapper",
+              "line": 673,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDPMapper",
+              "line": 674,
+              "column": 121,
+              "code": "W",
+              "message": "line is too long (123 > 120)",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDPMapper",
+              "line": 675,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDPMapper",
+              "line": 679,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDPMapper",
+              "line": 694,
+              "column": 5,
+              "code": "W",
+              "message": "setting non-standard global variable \u001b[0m\u001b[1mdownloading\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDPMapper",
+              "line": 695,
+              "column": 5,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mdownloadFile\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDPMapper",
+              "line": 736,
+              "column": 41,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mdownloading\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDPMapper",
+              "line": 737,
+              "column": 5,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mloadMap\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDPMapper",
+              "line": 738,
+              "column": 5,
+              "code": "W",
+              "message": "setting non-standard global variable \u001b[0m\u001b[1mdownloading\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "CSSMan",
+              "line": 8,
+              "column": 121,
+              "code": "W",
+              "message": "line is too long (149 > 120)",
+              "severity": "warning"
+            },
+            {
+              "script": "Set Borders",
+              "line": 3,
+              "column": 3,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1msetBorderLeft\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Set Borders",
+              "line": 4,
+              "column": 3,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1msetBorderTop\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Set Borders",
+              "line": 5,
+              "column": 3,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1msetBorderBottom\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Set Borders",
+              "line": 6,
+              "column": 3,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1msetBorderRight\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Cast Console",
+              "line": 5,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "Cast Console",
+              "line": 18,
+              "column": 3,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1msetMiniConsoleFontSize\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Cast Console",
+              "line": 18,
+              "column": 45,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mgetFontSize\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Cast Console",
+              "line": 19,
+              "column": 3,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1msetFont\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Cast Console",
+              "line": 19,
+              "column": 30,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mgetFont\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Cast Console",
+              "line": 20,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "TabbedInfoWindow",
+              "line": 40,
+              "column": 10,
+              "code": "W",
+              "message": "setting non-standard global variable \u001b[0m\u001b[1mcreateFrame\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "TabbedInfoWindow",
+              "line": 42,
+              "column": 3,
+              "code": "W",
+              "message": "setting non-standard global variable \u001b[0m\u001b[1mft\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "TabbedInfoWindow",
+              "line": 46,
+              "column": 3,
+              "code": "W",
+              "message": "mutating non-standard global variable \u001b[0m\u001b[1mft\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "TabbedInfoWindow",
+              "line": 47,
+              "column": 3,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mft\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "TabbedInfoWindow",
+              "line": 55,
+              "column": 3,
+              "code": "W",
+              "message": "mutating non-standard global variable \u001b[0m\u001b[1mft\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "TabbedInfoWindow",
+              "line": 57,
+              "column": 3,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mft\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "TabbedInfoWindow",
+              "line": 65,
+              "column": 3,
+              "code": "W",
+              "message": "mutating non-standard global variable \u001b[0m\u001b[1mft\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "TabbedInfoWindow",
+              "line": 66,
+              "column": 3,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mft\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "TabbedInfoWindow",
+              "line": 76,
+              "column": 3,
+              "code": "W",
+              "message": "mutating non-standard global variable \u001b[0m\u001b[1mft\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "TabbedInfoWindow",
+              "line": 77,
+              "column": 3,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mft\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "TabbedInfoWindow",
+              "line": 85,
+              "column": 3,
+              "code": "W",
+              "message": "mutating non-standard global variable \u001b[0m\u001b[1mft\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "TabbedInfoWindow",
+              "line": 87,
+              "column": 3,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mft\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "TabbedInfoWindow",
+              "line": 95,
+              "column": 3,
+              "code": "W",
+              "message": "mutating non-standard global variable \u001b[0m\u001b[1mft\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "TabbedInfoWindow",
+              "line": 96,
+              "column": 3,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mft\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "TabbedInfoWindow",
+              "line": 106,
+              "column": 3,
+              "code": "W",
+              "message": "mutating non-standard global variable \u001b[0m\u001b[1mft\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "TabbedInfoWindow",
+              "line": 107,
+              "column": 3,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mft\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "TabbedInfoWindow",
+              "line": 115,
+              "column": 3,
+              "code": "W",
+              "message": "mutating non-standard global variable \u001b[0m\u001b[1mft\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "TabbedInfoWindow",
+              "line": 117,
+              "column": 3,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mft\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "TabbedInfoWindow",
+              "line": 125,
+              "column": 3,
+              "code": "W",
+              "message": "mutating non-standard global variable \u001b[0m\u001b[1mft\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "TabbedInfoWindow",
+              "line": 126,
+              "column": 3,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mft\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "TabbedInfoWindow",
+              "line": 136,
+              "column": 3,
+              "code": "W",
+              "message": "mutating non-standard global variable \u001b[0m\u001b[1mft\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "TabbedInfoWindow",
+              "line": 137,
+              "column": 3,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mft\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "TabbedInfoWindow",
+              "line": 145,
+              "column": 3,
+              "code": "W",
+              "message": "mutating non-standard global variable \u001b[0m\u001b[1mft\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "TabbedInfoWindow",
+              "line": 147,
+              "column": 3,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mft\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "TabbedInfoWindow",
+              "line": 155,
+              "column": 3,
+              "code": "W",
+              "message": "mutating non-standard global variable \u001b[0m\u001b[1mft\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "TabbedInfoWindow",
+              "line": 156,
+              "column": 3,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mft\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Affects",
+              "line": 3,
+              "column": 121,
+              "code": "W",
+              "message": "line is too long (126 > 120)",
+              "severity": "warning"
+            },
+            {
+              "script": "Affects",
+              "line": 4,
+              "column": 121,
+              "code": "W",
+              "message": "line is too long (122 > 120)",
+              "severity": "warning"
+            },
+            {
+              "script": "Affects",
+              "line": 5,
+              "column": 121,
+              "code": "W",
+              "message": "line is too long (123 > 120)",
+              "severity": "warning"
+            },
+            {
+              "script": "Affects",
+              "line": 79,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "Affects",
+              "line": 92,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "Affects",
+              "line": 105,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "Affects",
+              "line": 118,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "Affects",
+              "line": 167,
+              "column": 121,
+              "code": "W",
+              "message": "line is too long (154 > 120)",
+              "severity": "warning"
+            },
+            {
+              "script": "Affects",
+              "line": 205,
+              "column": 6,
+              "code": "W",
+              "message": "setting non-standard global variable \u001b[0m\u001b[1maffect_string\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Affects",
+              "line": 205,
+              "column": 121,
+              "code": "W",
+              "message": "line is too long (152 > 120)",
+              "severity": "warning"
+            },
+            {
+              "script": "Affects",
+              "line": 208,
+              "column": 7,
+              "code": "W",
+              "message": "setting non-standard global variable \u001b[0m\u001b[1maffect_string\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Affects",
+              "line": 208,
+              "column": 121,
+              "code": "W",
+              "message": "line is too long (159 > 120)",
+              "severity": "warning"
+            },
+            {
+              "script": "Affects",
+              "line": 209,
+              "column": 121,
+              "code": "W",
+              "message": "line is too long (135 > 120)",
+              "severity": "warning"
+            },
+            {
+              "script": "Affects",
+              "line": 248,
+              "column": 34,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1maffect_string\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Affects",
+              "line": 257,
+              "column": 5,
+              "code": "W",
+              "message": "setting non-standard global variable \u001b[0m\u001b[1maffected_by\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Affects",
+              "line": 270,
+              "column": 17,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1maffected_by\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Affects",
+              "line": 275,
+              "column": 39,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1maffected_by\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Affects",
+              "line": 284,
+              "column": 11,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1maffected_by\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Affects",
+              "line": 302,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "Affects",
+              "line": 309,
+              "column": 13,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1maffected_by\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Affects",
+              "line": 313,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "Affects",
+              "line": 315,
+              "column": 30,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1maffected_by\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Affects",
+              "line": 320,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "Affects",
+              "line": 323,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "Group",
+              "line": 52,
+              "column": 9,
+              "code": "W",
+              "message": "variable \u001b[0m\u001b[1mstatus_msg\u001b[0m is never accessed",
+              "severity": "warning"
+            },
+            {
+              "script": "Group",
+              "line": 84,
+              "column": 3,
+              "code": "W",
+              "message": "setting non-standard global variable \u001b[0m\u001b[1mnum_grouped\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Group",
+              "line": 85,
+              "column": 14,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mnum_grouped\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Group",
+              "line": 106,
+              "column": 7,
+              "code": "W",
+              "message": "setting non-standard global variable \u001b[0m\u001b[1mhp_color\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Group",
+              "line": 108,
+              "column": 9,
+              "code": "W",
+              "message": "setting non-standard global variable \u001b[0m\u001b[1mhp_color\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Group",
+              "line": 110,
+              "column": 9,
+              "code": "W",
+              "message": "setting non-standard global variable \u001b[0m\u001b[1mhp_color\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Group",
+              "line": 114,
+              "column": 4,
+              "code": "W",
+              "message": "value assigned to variable \u001b[0m\u001b[1mformatted_level\u001b[0m is unused",
+              "severity": "warning"
+            },
+            {
+              "script": "Group",
+              "line": 115,
+              "column": 4,
+              "code": "W",
+              "message": "value assigned to variable \u001b[0m\u001b[1mformatted_name\u001b[0m is unused",
+              "severity": "warning"
+            },
+            {
+              "script": "Group",
+              "line": 119,
+              "column": 21,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mhp_color\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Buttons",
+              "line": 42,
+              "column": 27,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mcalcFontSize\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Buttons",
+              "line": 47,
+              "column": 3,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1msetMiniConsoleFontSize\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Buttons",
+              "line": 94,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "Buttons",
+              "line": 96,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "Buttons",
+              "line": 100,
+              "column": 1,
+              "code": "W",
+              "message": "inconsistent indentation (SPACE followed by TAB)",
+              "severity": "warning"
+            },
+            {
+              "script": "Buttons",
+              "line": 101,
+              "column": 1,
+              "code": "W",
+              "message": "inconsistent indentation (SPACE followed by TAB)",
+              "severity": "warning"
+            },
+            {
+              "script": "Buttons",
+              "line": 104,
+              "column": 1,
+              "code": "W",
+              "message": "inconsistent indentation (SPACE followed by TAB)",
+              "severity": "warning"
+            },
+            {
+              "script": "Buttons",
+              "line": 105,
+              "column": 1,
+              "code": "W",
+              "message": "inconsistent indentation (SPACE followed by TAB)",
+              "severity": "warning"
+            },
+            {
+              "script": "Buttons",
+              "line": 158,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "Buttons",
+              "line": 172,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "Room Info/Legend",
+              "line": 5,
+              "column": 40,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mgetFontSize\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Room Info/Legend",
+              "line": 5,
+              "column": 97,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mgetFont\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Room Info/Legend",
+              "line": 17,
+              "column": 40,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mgetFontSize\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Room Info/Legend",
+              "line": 17,
+              "column": 97,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mgetFont\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Room Info/Legend",
+              "line": 38,
+              "column": 18,
+              "code": "W",
+              "message": "line contains trailing whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "Room Info/Legend",
+              "line": 65,
+              "column": 28,
+              "code": "W",
+              "message": "line contains trailing whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "Room Info/Legend",
+              "line": 84,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "Room Info/Legend",
+              "line": 93,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "Room Info/Legend",
+              "line": 97,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "Room Info/Legend",
+              "line": 99,
+              "column": 121,
+              "code": "W",
+              "message": "line is too long (124 > 120)",
+              "severity": "warning"
+            },
+            {
+              "script": "Room Info/Legend",
+              "line": 101,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "Room Info/Legend",
+              "line": 104,
+              "column": 43,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mterrain_types\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Room Info/Legend",
+              "line": 107,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "Room Info/Legend",
+              "line": 110,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "Room Info/Legend",
+              "line": 115,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "Room Info/Legend",
+              "line": 120,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "Room Info/Legend",
+              "line": 124,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "Room Info/Legend",
+              "line": 127,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "Room Info/Legend",
+              "line": 130,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "Room Info/Legend",
+              "line": 138,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "DrawFrames",
+              "line": 2,
+              "column": 3,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mcreateFrame\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "DrawFrames",
+              "line": 3,
+              "column": 2,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mcreateFrame\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "DrawFrames",
+              "line": 4,
+              "column": 3,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mcreateFrame\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "DrawFrames",
+              "line": 5,
+              "column": 3,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mcreateFrame\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "DrawFrames",
+              "line": 7,
+              "column": 2,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mcreateFrame\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "DrawFrames",
+              "line": 8,
+              "column": 3,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mcreateFrame\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "MSDP",
+              "line": 77,
+              "column": 11,
+              "code": "W",
+              "message": "variable \u001b[0m\u001b[1moverfilled\u001b[0m is never accessed",
+              "severity": "warning"
+            },
+            {
+              "script": "Config",
+              "line": 8,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "Config",
+              "line": 22,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "Config",
+              "line": 25,
+              "column": 19,
+              "code": "W",
+              "message": "line contains trailing whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "Config",
+              "line": 30,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "Config",
+              "line": 32,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "Config",
+              "line": 36,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "Config",
+              "line": 38,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "Custom Scrollbar",
+              "line": 4,
+              "column": 3,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1msetAppStyleSheet\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Delete Line and  Prompt",
+              "line": 1,
+              "column": 10,
+              "code": "W",
+              "message": "setting non-standard global variable \u001b[0m\u001b[1mdeleteLineP\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Delete Line and  Prompt",
+              "line": 3,
+              "column": 3,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mtempLineTrigger\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Configuration Options",
+              "line": 96,
+              "column": 33,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mgetFontSize\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Configuration Options",
+              "line": 118,
+              "column": 30,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mgetColumnCount\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Debugging",
+              "line": 7,
+              "column": 13,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mdisplay\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Debugging",
+              "line": 17,
+              "column": 10,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mdisplay\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Debugging",
+              "line": 51,
+              "column": 121,
+              "code": "W",
+              "message": "line is too long (126 > 120)",
+              "severity": "warning"
+            },
+            {
+              "script": "Geyser Additions",
+              "line": 2,
+              "column": 4,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mclearWindow\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Geyser Additions",
+              "line": 5,
+              "column": 3,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mappendBuffer\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Code",
+              "line": 5,
+              "column": 10,
+              "code": "W",
+              "message": "setting non-standard global variable \u001b[0m\u001b[1mdemonnicChatSwitch\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Code",
+              "line": 85,
+              "column": 40,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mgetFont\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Code",
+              "line": 104,
+              "column": 3,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mdemonnicChatSwitch\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Code",
+              "line": 115,
+              "column": 25,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mgetFgColor\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Code",
+              "line": 116,
+              "column": 25,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mgetBgColor\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Code",
+              "line": 122,
+              "column": 23,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mgetTime\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Code",
+              "line": 123,
+              "column": 11,
+              "code": "W",
+              "message": "value assigned to variable \u001b[0m\u001b[1mtsfg\u001b[0m is unused",
+              "severity": "warning"
+            },
+            {
+              "script": "Code",
+              "line": 124,
+              "column": 11,
+              "code": "W",
+              "message": "value assigned to variable \u001b[0m\u001b[1mtsbg\u001b[0m is unused",
+              "severity": "warning"
+            },
+            {
+              "script": "Code",
+              "line": 125,
+              "column": 11,
+              "code": "W",
+              "message": "value assigned to variable \u001b[0m\u001b[1mcolorLeader\u001b[0m is unused",
+              "severity": "warning"
+            },
+            {
+              "script": "Code",
+              "line": 128,
+              "column": 16,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mcolor_table\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Code",
+              "line": 133,
+              "column": 16,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mcolor_table\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Code",
+              "line": 152,
+              "column": 5,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mtempLineTrigger\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "Code",
+              "line": 155,
+              "column": 5,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mappendBuffer\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "demonnicOnStart",
+              "line": 1,
+              "column": 10,
+              "code": "W",
+              "message": "setting non-standard global variable \u001b[0m\u001b[1mdemonnicOnStart\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "demonnicOnStart",
+              "line": 7,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "demonnicOnStart",
+              "line": 10,
+              "column": 121,
+              "code": "W",
+              "message": "line is too long (128 > 120)",
+              "severity": "warning"
+            },
+            {
+              "script": "demonnicOnStart",
+              "line": 14,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "demonnicOnStart",
+              "line": 19,
+              "column": 1,
+              "code": "W",
+              "message": "line contains only whitespace",
+              "severity": "warning"
+            },
+            {
+              "script": "demonnicOnStart",
+              "line": 22,
+              "column": 121,
+              "code": "W",
+              "message": "line is too long (129 > 120)",
+              "severity": "warning"
+            },
+            {
+              "script": "echo functions",
+              "line": 35,
+              "column": 3,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mhecho\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "echo functions",
+              "line": 37,
+              "column": 5,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mhecho\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "demonnicOnInstall",
+              "line": 1,
+              "column": 10,
+              "code": "W",
+              "message": "setting non-standard global variable \u001b[0m\u001b[1mdemonnicOnInstall\u001b[0m",
+              "severity": "warning"
+            },
+            {
+              "script": "demonnicOnInstall",
+              "line": 3,
+              "column": 1,
+              "code": "W",
+              "message": "inconsistent indentation (SPACE followed by TAB)",
+              "severity": "warning"
+            },
+            {
+              "script": "demonnicOnInstall",
+              "line": 3,
+              "column": 4,
+              "code": "W",
+              "message": "accessing undefined variable \u001b[0m\u001b[1mdemonnicOnStart\u001b[0m",
+              "severity": "warning"
+            }
+          ],
+          "style": []
+        },
+        "total_issues": 236,
+        "errors": [],
+        "warnings": []
+      },
+      "errors": [],
+      "warnings": []
+    }
+  },
+  "errors": [],
+  "warnings": [
+    "Warning in 'Capture Wilderness Map': Missing space after 'function' keyword",
+    "Warning in 'Capture Wilderness Map': 'end)' pattern may indicate missing semicolon",
+    "Warning in 'Capture Room Map': Missing space after 'function' keyword",
+    "Warning in 'Capture Room Map': 'end)' pattern may indicate missing semicolon",
+    "Warning in 'MSDPMapper': Missing space after 'function' keyword",
+    "Warning in 'MSDPMapper': 'end)' pattern may indicate missing semicolon",
+    "Warning in 'Affects': Missing space after 'function' keyword",
+    "Warning in 'Affects': 'end)' pattern may indicate missing semicolon",
+    "Warning in 'Room Info/Legend': Missing space after 'function' keyword",
+    "Warning in 'Room Info/Legend': 'end)' pattern may indicate missing semicolon",
+    "Warning in 'Code': Missing space after 'function' keyword",
+    "Warning in 'demonnicOnStart': Missing space after 'function' keyword",
+    "Warning in 'demonnicOnStart': 'end)' pattern may indicate missing semicolon"
+  ]
+}

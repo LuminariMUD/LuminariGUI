@@ -2,7 +2,7 @@
 
 ## Installation Commands
 
-### Automatic Installation (Recommended)
+### Automatic Installation (Currently Disabled)
 ```bash
 # Simply connect to LuminariMUD
 Host: luminarimud.com
@@ -33,18 +33,39 @@ debugc msdp           -- Watch MSDP debug messages
 ```
 
 ## Development Commands
-```bash
-# Validate XML structure
-python3 validate_xml.py
 
+### Validation & Testing
+```bash
+# Validate package (XML structure and Lua syntax)
+python3 validate_package.py
+
+# Run complete test suite
+python3 run_tests.py
+
+# Run specific tests
+python3 run_tests.py --test syntax      # Lua syntax only
+python3 run_tests.py --test quality     # Static analysis
+python3 run_tests.py --test functions   # Unit tests
+python3 run_tests.py --test performance # Benchmarks
+
+# Individual test tools
+python3 test_lua_syntax.py              # Syntax validation
+python3 test_lua_quality.py             # Code quality analysis
+```
+
+### Package Management
+```bash
 # Format XML file (creates backup)
 python3 format_xml.py
 
 # Format without backup
 python3 format_xml.py --no-backup
 
-# Format to new file
-python3 format_xml.py -o formatted.xml
+# Create package with testing
+python3 create_package.py --run-tests
+
+# Full release with testing
+python3 create_package.py --release --run-tests
 ```
 
 ## GUI Components

@@ -1,0 +1,46 @@
+{
+  "AFFECTED_BY": [
+    "fly",
+    "detect_invis",
+    "bless",
+    "sanctuary",
+    "haste"
+  ],
+  "SPELL_LIKE_AFFECTS": [
+    {
+      "NAME": "bless",
+      "DURATION": 150,
+      "LOCATION": "all",
+      "TYPE": "spell",
+      "MODIFIER": "+1"
+    },
+    {
+      "NAME": "sanctuary",
+      "DURATION": 75,
+      "LOCATION": "ac",
+      "TYPE": "spell",
+      "MODIFIER": "-40"
+    },
+    {
+      "NAME": "haste",
+      "DURATION": 200,
+      "LOCATION": "attacks",
+      "TYPE": "spell",
+      "MODIFIER": "+1"
+    },
+    {
+      "NAME": "strength",
+      "DURATION": 300,
+      "LOCATION": "strength",
+      "TYPE": "spell",
+      "MODIFIER": "+3"
+    },
+    {
+      "NAME": "detect_invisible",
+      "DURATION": 500,
+      "LOCATION": "detect",
+      "TYPE": "spell",
+      "MODIFIER": "+1"
+    }
+  ]
+}

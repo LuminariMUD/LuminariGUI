@@ -1,0 +1,52 @@
+{
+  "test_runner": {
+    "default_xml_file": "LuminariGUI.xml",
+    "parallel_execution": true,
+    "timeout_seconds": 30,
+    "max_workers": 4
+  },
+  "syntax_tests": {
+    "enabled": true,
+    "luac_path": "auto",
+    "fail_on_warnings": false
+  },
+  "quality_tests": {
+    "enabled": true,
+    "luacheck_path": "auto",
+    "config_file": "tests/test_configs/luacheck_config.lua",
+    "strict_mode": false
+  },
+  "function_tests": {
+    "enabled": true,
+    "lua_path": "auto",
+    "test_iterations": 10
+  },
+  "event_tests": {
+    "enabled": true,
+    "mock_data_dir": "tests/mock_data",
+    "timeout_per_test": 15
+  },
+  "system_tests": {
+    "enabled": true,
+    "memory_threshold_kb": 1024,
+    "leak_detection": true
+  },
+  "performance_tests": {
+    "enabled": true,
+    "benchmark_iterations": 100,
+    "performance_thresholds": {
+      "string_operations": 10.0,
+      "table_operations": 20.0,
+      "room_creation": 50.0,
+      "affect_processing": 15.0,
+      "group_processing": 10.0
+    }
+  },
+  "reporting": {
+    "format": "text",
+    "include_warnings": true,
+    "detailed_errors": true,
+    "save_results": true,
+    "results_dir": "test_results"
+  }
+}

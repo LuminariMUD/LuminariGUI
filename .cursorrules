@@ -156,6 +156,16 @@ if msdp.AFFECTS and msdp.AFFECTS.SPELL_LIKE_AFFECTS then
     -- Process affects
   end
 end
+
+-- Use pcall for error boundaries
+local success, result = pcall(function()
+  -- Risky operation
+  return processData(msdp.ROOM)
+end)
+if not success then
+  -- Handle error gracefully
+  print("Error processing room data: " .. result)
+end
 ```
 
 #### Resource Management
@@ -167,6 +177,17 @@ end
 
 -- Proper window clearing
 clearUserWindow("GUI.castConsole")
+
+-- Track resources for testing
+-- (Tested automatically by test_system.py)
+```
+
+#### Testing Error Handling
+```lua
+-- All error handling patterns are validated by:
+-- - test_system.py (error boundary testing)
+-- - test_events.py (event handler error testing)
+-- - test_functions.py (function error testing)
 ```
 
 ### Configuration Management
@@ -233,8 +254,15 @@ end</script>
 - Minimize UI updates and redraws
 
 ### Testing & Debugging
-- Use `demonnic.debug` framework for debugging
-- Implement proper logging for troubleshooting
+- **Automated Testing**: Use comprehensive test suite with `python3 run_tests.py`
+- **Syntax Validation**: Run `python3 test_lua_syntax.py` for Lua syntax checking
+- **Code Quality**: Use `python3 test_lua_quality.py` for static analysis
+- **Unit Testing**: Test core functions with `python3 test_functions.py`
+- **Event Testing**: Validate event handlers with `python3 test_events.py`
+- **System Testing**: Check for memory leaks with `python3 test_system.py`
+- **Performance**: Benchmark critical functions with `python3 test_performance.py`
+- **Manual Testing**: Use `demonnic.debug` framework for interactive debugging
+- **Validation**: Always run `python3 validate_package.py` before committing
 - Test all MSDP event handlers thoroughly
 - Validate UI component creation and styling
 
@@ -275,10 +303,13 @@ end
 
 ### Development Workflow
 1. Edit `LuminariGUI.xml` directly
-2. Import into Mudlet for testing
-3. Use Mudlet's error console for debugging
-4. Test functionality manually in-game
-5. Commit working changes to version control
+2. **Run automated tests**: `python3 run_tests.py` to catch issues early
+3. **Validate changes**: `python3 validate_package.py` for XML and Lua syntax
+4. Import into Mudlet for testing
+5. Use Mudlet's error console for debugging
+6. Test functionality manually in-game
+7. **Pre-commit testing**: Run full test suite before committing
+8. Commit working changes to version control when all tests pass
 
 ### Documentation Standards
 - Maintain comprehensive README.md
