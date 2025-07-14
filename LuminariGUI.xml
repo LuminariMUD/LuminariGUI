@@ -1077,7 +1077,6 @@ local function handle_move()
   local roomEnvironment = GUI.validateRoomInfo(&quot;ENVIRONMENT&quot;, &quot;Unknown&quot;)
   local roomTerrain = GUI.validateRoomInfo(&quot;TERRAIN&quot;, nil)
   local roomExits = GUI.validateRoomInfo(&quot;EXITS&quot;, {})
-  
   -- Only process movement for mapped indoor areas
   if map.enabled == true and roomEnvironment ~= &quot;Wilderness&quot; and roomVnum then
     -- Check if we're entering a new room that needs to be created
@@ -1365,17 +1364,56 @@ end
 -- Parameters: event (string), ... (variable arguments based on event type)
 function map.eventHandler(event,...)
   if event == &quot;msdp.ROOM&quot; then
-    map.prev_info = map.room_info
-    map.room_info = table.update({}, GUI.getMSDPRoom())
+    -- Validate current state before processing room data
+    local stateValidation = GUI.validateMapState()
+    if not stateValidation.success then
+      cecho(&quot;&lt;yellow&gt;[State] Map state validation failed, attempting recovery\n&quot;)
+      GUI.recoverCorruptedState()
+    end
+    -- Create backup before updating room info
+    local backup = GUI.createStateBackup()
+    -- Store previous room info safely
+    if map.room_info and type(map.room_info) == &quot;table&quot; then
+      map.prev_info = {}
+      for k, v in pairs(map.room_info) do
+        map.prev_info[k] = v
+      end
+    else
+      map.prev_info = {}
+    end
+    -- Get validated room data
+    local roomData = GUI.getMSDPRoom()
+    if roomData and type(roomData) == &quot;table&quot; then
+      map.room_info = {}
+      for k, v in pairs(roomData) do
+        map.room_info[k] = v
+      end
+    else
+      cecho(&quot;&lt;red&gt;[State] Failed to get valid room data, keeping previous state\n&quot;)
+      return
+    end
     -- Check if we have moved between regular and wilderness areas
-    if map.prev_info.ENVIRONMENT == &quot;Wilderness&quot; and map.room_info.ENVIRONMENT == &quot;Room&quot; then
+    local prevEnv = map.prev_info.ENVIRONMENT or &quot;&quot;
+    local currEnv = map.room_info.ENVIRONMENT or &quot;&quot;
+    if prevEnv == &quot;Wilderness&quot; and currEnv == &quot;Room&quot; then
       -- re-enable the mapper!
-      map.minimapcontainer:hide()
-      map.container:show()
-    elseif map.prev_info.ENVIRONMENT == &quot;Room&quot; and map.room_info.ENVIRONMENT == &quot;Wilderness&quot; then
+      if map.minimapcontainer and map.container then
+        map.minimapcontainer:hide()
+        map.container:show()
+      end
+    elseif prevEnv == &quot;Room&quot; and currEnv == &quot;Wilderness&quot; then
       -- disable the mapper!
-      map.container:hide()
-      map.minimapcontainer:show()
+      if map.container and map.minimapcontainer then
+        map.container:hide()
+        map.minimapcontainer:show()
+      end
+    end
+    -- Validate state after room update
+    local postValidation = GUI.validateMapState()
+    if not postValidation.success then
+      cecho(&quot;&lt;red&gt;[State] Room update caused state corruption, rolling back\n&quot;)
+      GUI.rollbackState(backup)
+      return
     end
     handle_move()
   elseif event == &quot;shiftRoom&quot; then
@@ -1544,7 +1582,6 @@ function GUI.saveToggles()
       includeInGroup = true,
     }
   end
-  
   -- Save with error handling
   local success, error = pcall(table.save, getMudletHomeDir()..&quot;/GUI.toggles.lua&quot;, GUI.toggles)
   if not success then
@@ -2656,7 +2693,6 @@ function GUI.updateGroup()
   local groupData = GUI.getMSDPGroup()
   local characterName = GUI.getMSDPCharacterName()
   local includeInGroup = GUI.getToggle(&quot;includeInGroup&quot;, true)
-  
   -- Remove the player from the group data if toggled off.
   local j = 1
   for i = 1, #groupData do
@@ -3386,10 +3422,375 @@ function GUI.init()
   -- Use the resource cleanup migration function for all event handlers
   GUI.migrateEventHandlers()
 end
--- These handlers stay untracked since they're needed to bootstrap the system
--- But we still add error boundaries for stability
-registerAnonymousEventHandler(&quot;sysLoadEvent&quot;, GUI.createErrorBoundary(&quot;gui_init_load&quot;, &quot;GUI.init&quot;))
-registerAnonymousEventHandler(&quot;sysInstall&quot;, GUI.createErrorBoundary(&quot;gui_init_install&quot;, &quot;GUI.init&quot;))</script>
+-- Dependency-Based Initialization System
+-- ======================================
+-- Addresses &quot;Initialization Race Conditions&quot; from stability audit
+-- Ensures components initialize in correct order with validated dependencies
+-- Initialize dependency manager
+GUI.DependencyManager = GUI.DependencyManager or {
+  initialized = {},
+  initializing = {},
+  dependencies = {},
+  initFunctions = {},
+  initCallbacks = {},
+  maxRetries = 5,
+  retryDelay = 1000, -- 1 second
+  debug = false
+}
+-- Register a component with its dependencies and initialization function
+-- @param name: Component name (string)
+-- @param dependencies: Array of dependency names (table)
+-- @param initFunction: Function to call for initialization
+-- @param callback: Optional callback after successful initialization
+function GUI.DependencyManager:register(name, dependencies, initFunction, callback)
+  if type(name) ~= &quot;string&quot; then
+    cecho(&quot;&lt;red&gt;[Init] Invalid component name for registration\n&quot;)
+    return false
+  end
+  dependencies = dependencies or {}
+  if type(dependencies) ~= &quot;table&quot; then
+    cecho(string.format(&quot;&lt;red&gt;[Init] Invalid dependencies for %s\n&quot;, name))
+    return false
+  end
+  if type(initFunction) ~= &quot;function&quot; then
+    cecho(string.format(&quot;&lt;red&gt;[Init] Invalid init function for %s\n&quot;, name))
+    return false
+  end
+  self.dependencies[name] = dependencies
+  self.initFunctions[name] = initFunction
+  self.initCallbacks[name] = callback
+  if self.debug then
+    cecho(string.format(&quot;&lt;cyan&gt;[Init] Registered %s with dependencies: %s\n&quot;,
+      name, table.concat(dependencies, &quot;, &quot;)))
+  end
+  return true
+end
+-- Check if a component is ready for initialization
+-- @param name: Component name
+-- @return: boolean - true if all dependencies are satisfied
+function GUI.DependencyManager:isReady(name)
+  if not self.dependencies[name] then
+    return false
+  end
+  for _, dep in ipairs(self.dependencies[name]) do
+    if not self.initialized[dep] then
+      if self.debug then
+        cecho(string.format(&quot;&lt;yellow&gt;[Init] %s waiting for dependency: %s\n&quot;, name, dep))
+      end
+      return false
+    end
+  end
+  return true
+end
+-- Initialize a single component if dependencies are met
+-- @param name: Component name
+-- @return: boolean - true if initialization successful or already done
+function GUI.DependencyManager:initializeComponent(name)
+  -- Already initialized
+  if self.initialized[name] then
+    return true
+  end
+  -- Currently initializing (prevent circular dependencies)
+  if self.initializing[name] then
+    cecho(string.format(&quot;&lt;red&gt;[Init] Circular dependency detected for %s\n&quot;, name))
+    return false
+  end
+  -- Check if component is registered
+  if not self.initFunctions[name] then
+    cecho(string.format(&quot;&lt;red&gt;[Init] No init function registered for %s\n&quot;, name))
+    return false
+  end
+  -- Check dependencies
+  if not self:isReady(name) then
+    return false
+  end
+  -- Mark as initializing
+  self.initializing[name] = true
+  if self.debug then
+    cecho(string.format(&quot;&lt;green&gt;[Init] Initializing %s...\n&quot;, name))
+  end
+  -- Attempt initialization with error protection
+  local success, error = pcall(self.initFunctions[name])
+  if success then
+    self.initialized[name] = true
+    self.initializing[name] = nil
+    cecho(string.format(&quot;&lt;green&gt;[Init] ✓ %s initialized successfully\n&quot;, name))
+    -- Call callback if provided
+    if self.initCallbacks[name] and type(self.initCallbacks[name]) == &quot;function&quot; then
+      pcall(self.initCallbacks[name])
+    end
+    return true
+  else
+    self.initializing[name] = nil
+    cecho(string.format(&quot;&lt;red&gt;[Init] ✗ Failed to initialize %s: %s\n&quot;, name, tostring(error)))
+    return false
+  end
+end
+-- Initialize all registered components in dependency order
+-- @param retryCount: Current retry attempt (internal use)
+function GUI.DependencyManager:initializeAll(retryCount)
+  retryCount = retryCount or 0
+  if retryCount &gt; self.maxRetries then
+    cecho(&quot;&lt;red&gt;[Init] Maximum retry attempts reached, some components failed to initialize\n&quot;)
+    self:reportFailures()
+    return false
+  end
+  local totalComponents = 0
+  local initializedCount = 0
+  local progressMade = false
+  -- Count total registered components
+  for name, _ in pairs(self.dependencies) do
+    totalComponents = totalComponents + 1
+  end
+  -- Attempt to initialize each component
+  for name, _ in pairs(self.dependencies) do
+    if self.initialized[name] then
+      initializedCount = initializedCount + 1
+    else
+      if self:initializeComponent(name) then
+        initializedCount = initializedCount + 1
+        progressMade = true
+      end
+    end
+  end
+  cecho(string.format(&quot;&lt;cyan&gt;[Init] Progress: %d/%d components initialized\n&quot;,
+    initializedCount, totalComponents))
+  -- Check if all components are initialized
+  if initializedCount == totalComponents then
+    cecho(&quot;&lt;green&gt;[Init] All components initialized successfully!\n&quot;)
+    return true
+  end
+  -- If no progress was made, we have unresolvable dependencies
+  if not progressMade then
+    cecho(&quot;&lt;red&gt;[Init] No progress made, unresolvable dependencies detected\n&quot;)
+    self:reportFailures()
+    return false
+  end
+  -- Retry after delay
+  if GUI.createTimer then
+    GUI.createTimer(self.retryDelay, function()
+      self:initializeAll(retryCount + 1)
+    end, false, &quot;dependency_retry_&quot; .. tostring(retryCount + 1))
+  else
+    tempTimer(self.retryDelay / 1000, function()
+      self:initializeAll(retryCount + 1)
+    end)
+  end
+  return false
+end
+-- Report initialization failures with dependency analysis
+function GUI.DependencyManager:reportFailures()
+  cecho(&quot;&lt;red&gt;[Init] === INITIALIZATION FAILURE REPORT ===\n&quot;)
+  for name, _ in pairs(self.dependencies) do
+    if not self.initialized[name] then
+      cecho(string.format(&quot;&lt;red&gt;[Init] ✗ %s - FAILED\n&quot;, name))
+      -- Check missing dependencies
+      local missingDeps = {}
+      for _, dep in ipairs(self.dependencies[name]) do
+        if not self.initialized[dep] then
+          table.insert(missingDeps, dep)
+        end
+      end
+      if #missingDeps &gt; 0 then
+        cecho(string.format(&quot;&lt;yellow&gt;[Init]   Missing dependencies: %s\n&quot;,
+          table.concat(missingDeps, &quot;, &quot;)))
+      else
+        cecho(&quot;&lt;yellow&gt;[Init]   Dependencies satisfied but initialization failed\n&quot;)
+      end
+    end
+  end
+  cecho(&quot;&lt;red&gt;[Init] =====================================\n&quot;)
+end
+-- Get initialization status for debugging
+function GUI.DependencyManager:getStatus()
+  local status = {
+    total = 0,
+    initialized = 0,
+    failed = 0,
+    components = {}
+  }
+  for name, _ in pairs(self.dependencies) do
+    status.total = status.total + 1
+    if self.initialized[name] then
+      status.initialized = status.initialized + 1
+      status.components[name] = &quot;initialized&quot;
+    else
+      status.failed = status.failed + 1
+      status.components[name] = &quot;failed&quot;
+    end
+  end
+  return status
+end
+-- Enable/disable debug logging
+function GUI.DependencyManager:setDebug(enabled)
+  self.debug = enabled
+  cecho(string.format(&quot;&lt;cyan&gt;[Init] Debug logging %s\n&quot;, enabled and &quot;enabled&quot; or &quot;disabled&quot;))
+end
+-- Manual component initialization trigger
+function GUI.DependencyManager:forceInit(name)
+  if not name then
+    cecho(&quot;&lt;red&gt;[Init] Component name required for force initialization\n&quot;)
+    return false
+  end
+  cecho(string.format(&quot;&lt;yellow&gt;[Init] Force initializing %s...\n&quot;, name))
+  return self:initializeComponent(name)
+end
+-- Enhanced Initialization System
+-- ==============================
+-- Replaces the old GUI.init() with dependency-aware initialization
+-- Register all GUI components with their dependencies
+function GUI.initializeDependencies()
+  local dm = GUI.DependencyManager
+  cecho(&quot;&lt;cyan&gt;[Init] Registering component dependencies...\n&quot;)
+  -- Core infrastructure (no dependencies)
+  dm:register(&quot;background&quot;, {}, GUI.init_background)
+  dm:register(&quot;borders&quot;, {}, GUI.set_borders)
+  dm:register(&quot;boxes&quot;, {&quot;background&quot;, &quot;borders&quot;}, GUI.init_boxes)
+  -- Foundation components
+  dm:register(&quot;gauges&quot;, {&quot;boxes&quot;}, GUI.init_gauges)
+  dm:register(&quot;action_icons&quot;, {&quot;boxes&quot;}, GUI.init_action_icons)
+  -- UI components that depend on foundation
+  dm:register(&quot;tabbed_info&quot;, {&quot;boxes&quot;, &quot;gauges&quot;}, function()
+    if GUI.tabbedInfoWindow and GUI.tabbedInfoWindow.init then
+      GUI.tabbedInfoWindow.init()
+    else
+      cecho(&quot;&lt;yellow&gt;[Init] tabbedInfoWindow.init not available\n&quot;)
+    end
+  end)
+  dm:register(&quot;group&quot;, {&quot;boxes&quot;}, GUI.init_group)
+  dm:register(&quot;affects&quot;, {&quot;boxes&quot;, &quot;tabbed_info&quot;}, function()
+    if GUI.Affects and GUI.Affects.init then
+      GUI.Affects.init()
+    else
+      cecho(&quot;&lt;yellow&gt;[Init] Affects.init not available\n&quot;)
+    end
+  end)
+  -- Map system (depends on basic UI)
+  dm:register(&quot;map&quot;, {&quot;boxes&quot;}, function()
+    if map and map.init then
+      map.init()
+    else
+      cecho(&quot;&lt;yellow&gt;[Init] map.init not available\n&quot;)
+    end
+  end)
+  -- Advanced components that depend on map and other systems
+  dm:register(&quot;button_window&quot;, {&quot;boxes&quot;, &quot;map&quot;}, function()
+    if GUI.buttonWindow and GUI.buttonWindow.init then
+      GUI.buttonWindow.init()
+    else
+      cecho(&quot;&lt;yellow&gt;[Init] buttonWindow.init not available\n&quot;)
+    end
+  end)
+  dm:register(&quot;cast_console&quot;, {&quot;boxes&quot;}, GUI.init_castConsole)
+  -- Styling and final setup
+  dm:register(&quot;frames&quot;, {&quot;boxes&quot;, &quot;gauges&quot;, &quot;tabbed_info&quot;}, GUI.draw_frames)
+  dm:register(&quot;scrollbar&quot;, {}, GUI.styleScrollbar)
+  -- Resource management (should be last)
+  dm:register(&quot;resource_migration&quot;, {&quot;map&quot;, &quot;tabbed_info&quot;, &quot;affects&quot;}, function()
+    if GUI.migrateEventHandlers then
+      GUI.migrateEventHandlers()
+    else
+      cecho(&quot;&lt;yellow&gt;[Init] migrateEventHandlers not available\n&quot;)
+    end
+  end)
+  cecho(&quot;&lt;green&gt;[Init] Component dependencies registered\n&quot;)
+end
+-- New main initialization function using dependency management
+function GUI.initEnhanced()
+  cecho(&quot;&lt;green&gt;[Init] Starting enhanced GUI initialization...\n&quot;)
+  -- Initialize core namespaces first
+  GUI.AffectIcons = GUI.AffectIcons or {}
+  GUI.Affects = GUI.Affects or {}
+  GUI.Affects.Rows = GUI.Affects.Rows or {}
+  GUI.Affects.Modes = GUI.Affects.Modes or {}
+  -- Set up GUI image location
+  GUI.image_location = getMudletHomeDir():gsub(&quot;\\&quot;, &quot;/&quot;) .. &quot;/LuminariGUI/images/&quot;
+  -- Register all component dependencies
+  GUI.initializeDependencies()
+  -- Start dependency-based initialization
+  GUI.DependencyManager:initializeAll()
+  cecho(&quot;&lt;green&gt;[Init] Enhanced GUI initialization complete!\n&quot;)
+end
+-- Initialization validation function
+-- Checks that critical systems are ready before proceeding
+function GUI.validateInitialization()
+  local validationErrors = {}
+  -- Check critical namespace existence
+  if not GUI then
+    table.insert(validationErrors, &quot;GUI namespace not available&quot;)
+  end
+  -- Check core Mudlet functions
+  if not cecho then
+    table.insert(validationErrors, &quot;cecho function not available&quot;)
+  end
+  if not getMudletHomeDir then
+    table.insert(validationErrors, &quot;getMudletHomeDir function not available&quot;)
+  end
+  -- Check Geyser availability
+  if not Geyser then
+    table.insert(validationErrors, &quot;Geyser framework not available&quot;)
+  end
+  -- Check essential functions exist
+  local requiredFunctions = {
+    &quot;GUI.init_background&quot;, &quot;GUI.set_borders&quot;, &quot;GUI.init_boxes&quot;,
+    &quot;GUI.init_gauges&quot;, &quot;GUI.init_action_icons&quot;, &quot;GUI.init_group&quot;,
+    &quot;GUI.init_castConsole&quot;, &quot;GUI.draw_frames&quot;, &quot;GUI.styleScrollbar&quot;
+  }
+  for _, funcName in ipairs(requiredFunctions) do
+    local func = _G
+    for part in funcName:gmatch(&quot;[^.]+&quot;) do
+      func = func and func[part]
+    end
+    if type(func) ~= &quot;function&quot; then
+      table.insert(validationErrors, funcName .. &quot; function not available&quot;)
+    end
+  end
+  if #validationErrors &gt; 0 then
+    cecho(&quot;&lt;red&gt;[Init] Validation failed:\n&quot;)
+    for _, error in ipairs(validationErrors) do
+      cecho(&quot;&lt;red&gt;[Init]   - &quot; .. error .. &quot;\n&quot;)
+    end
+    return false
+  end
+  cecho(&quot;&lt;green&gt;[Init] Initialization validation passed\n&quot;)
+  return true
+end
+-- Safe initialization wrapper with validation and fallback
+function GUI.safeInit()
+  cecho(&quot;&lt;cyan&gt;[Init] Starting safe initialization process...\n&quot;)
+  -- Validate environment before proceeding
+  if not GUI.validateInitialization() then
+    cecho(&quot;&lt;red&gt;[Init] Environment validation failed, attempting fallback initialization\n&quot;)
+    -- Fallback to old initialization method
+    if GUI.init and type(GUI.init) == &quot;function&quot; then
+      local success, error = pcall(GUI.init)
+      if success then
+        cecho(&quot;&lt;yellow&gt;[Init] Fallback initialization completed\n&quot;)
+      else
+        cecho(&quot;&lt;red&gt;[Init] Fallback initialization failed: &quot; .. tostring(error) .. &quot;\n&quot;)
+      end
+    else
+      cecho(&quot;&lt;red&gt;[Init] No fallback initialization available\n&quot;)
+    end
+    return
+  end
+  -- Proceed with enhanced initialization
+  local success, error = pcall(GUI.initEnhanced)
+  if success then
+    cecho(&quot;&lt;green&gt;[Init] Safe initialization completed successfully\n&quot;)
+  else
+    cecho(&quot;&lt;red&gt;[Init] Enhanced initialization failed: &quot; .. tostring(error) .. &quot;\n&quot;)
+    cecho(&quot;&lt;yellow&gt;[Init] Attempting fallback...\n&quot;)
+    -- Fallback to old method on failure
+    if GUI.init and type(GUI.init) == &quot;function&quot; then
+      pcall(GUI.init)
+    end
+  end
+end
+-- Enhanced initialization event handlers
+-- Use the new dependency-aware initialization system
+registerAnonymousEventHandler(&quot;sysLoadEvent&quot;, GUI.createErrorBoundary(&quot;gui_init_load&quot;, &quot;GUI.safeInit&quot;))
+registerAnonymousEventHandler(&quot;sysInstall&quot;, GUI.createErrorBoundary(&quot;gui_init_install&quot;, &quot;GUI.safeInit&quot;))</script>
 						<eventHandlerList/>
 					</Script>
 					<Script isActive="yes" isFolder="no">
@@ -3510,21 +3911,17 @@ end
 -- Helper function to safely create timers with tracking
 function GUI.createTimer(time, func, recurring, name)
   name = name or (&quot;timer_&quot; .. tostring(os.time()) .. &quot;_&quot; .. tostring(math.random()))
-  
   -- Enhanced validation and error handling
   if not time or type(time) ~= &quot;number&quot; or time &lt; 0 then
     cecho(&quot;&lt;red&gt;[Resource Cleanup] Invalid timer duration: &quot; .. tostring(time) .. &quot;\n&quot;)
     return nil
   end
-  
   if not func then
     cecho(&quot;&lt;red&gt;[Resource Cleanup] No function provided for timer: &quot; .. name .. &quot;\n&quot;)
     return nil
   end
-  
   -- Initialize tracking table if needed
   GUI.timers = GUI.timers or {}
-  
   -- Kill existing timer if it exists with validation
   if GUI.timers[name] then
     local timerData = GUI.timers[name]
@@ -3534,7 +3931,6 @@ function GUI.createTimer(time, func, recurring, name)
       cecho(&quot;&lt;yellow&gt;[Resource Cleanup] Warning: Failed to kill existing timer: &quot; .. name .. &quot;\n&quot;)
     end
   end
-  
   -- Create appropriate timer type with error handling
   local success, timerId = pcall(function()
     if recurring then
@@ -3543,12 +3939,10 @@ function GUI.createTimer(time, func, recurring, name)
       return tempTimer(time, func)
     end
   end)
-  
   if not success then
     cecho(&quot;&lt;red&gt;[Resource Cleanup] Failed to create timer: &quot; .. name .. &quot; - &quot; .. tostring(timerId) .. &quot;\n&quot;)
     return nil
   end
-  
   -- Store timer with metadata for better tracking
   GUI.timers[name] = {
     id = timerId,
@@ -3556,16 +3950,13 @@ function GUI.createTimer(time, func, recurring, name)
     recurring = recurring or false,
     func_type = type(func)
   }
-  
   return timerId
 end
 -- Cleanup all event handlers with enhanced error handling
 function GUI.cleanupHandlers()
   local count = 0
   local failures = 0
-  
   GUI.handlers = GUI.handlers or {}
-  
   for name, handlerId in pairs(GUI.handlers) do
     if handlerId then
       local success = pcall(killAnonymousEventHandler, handlerId)
@@ -3577,29 +3968,23 @@ function GUI.cleanupHandlers()
       end
     end
   end
-  
   GUI.handlers = {}
-  
   if failures &gt; 0 then
     cecho(string.format(&quot;&lt;yellow&gt;[Resource Cleanup] Cleaned up %d event handlers (%d failures)\n&quot;, count, failures))
   else
     cecho(string.format(&quot;&lt;green&gt;[Resource Cleanup] Cleaned up %d event handlers\n&quot;, count))
   end
-  
   return count
 end
 -- Cleanup all timers with enhanced error handling
 function GUI.cleanupTimers()
   local count = 0
   local failures = 0
-  
   GUI.timers = GUI.timers or {}
-  
   for name, timerData in pairs(GUI.timers) do
     if timerData then
       -- Handle both old format (just ID) and new format (metadata table)
       local timerId = type(timerData) == &quot;table&quot; and timerData.id or timerData
-      
       if timerId then
         local success = pcall(killTimer, timerId)
         if success then
@@ -3611,24 +3996,19 @@ function GUI.cleanupTimers()
       end
     end
   end
-  
   GUI.timers = {}
-  
   if failures &gt; 0 then
     cecho(string.format(&quot;&lt;yellow&gt;[Resource Cleanup] Cleaned up %d timers (%d failures)\n&quot;, count, failures))
   else
     cecho(string.format(&quot;&lt;green&gt;[Resource Cleanup] Cleaned up %d timers\n&quot;, count))
   end
-  
   return count
 end
 -- Master cleanup function with enhanced error handling and resource reporting
 function GUI.cleanupResources()
   cecho(&quot;&lt;yellow&gt;[Resource Cleanup] Starting resource cleanup...\n&quot;)
-  
   local legacyCleanups = 0
   local legacyFailures = 0
-  
   -- Clean up specific known legacy resources first with error handling
   -- 1. Cast console timer
   if GUI.castConsoleTimer then
@@ -3641,7 +4021,6 @@ function GUI.cleanupResources()
     end
     GUI.castConsoleTimer = nil
   end
-  
   -- 2. YATCO blink timer
   if demonnic and demonnic.chat and demonnic.chat.blinkID then
     local success = pcall(killTimer, demonnic.chat.blinkID)
@@ -3654,7 +4033,6 @@ function GUI.cleanupResources()
     demonnic.chat.blinkID = nil
     demonnic.chat.blinkTimerOn = false
   end
-  
   -- 3. Speedwalk timer (from mapper)
   if speedwalk_timer then
     local success = pcall(killTimer, speedwalk_timer)
@@ -3666,7 +4044,6 @@ function GUI.cleanupResources()
     end
     speedwalk_timer = nil
   end
-  
   -- 4. Any YATCO initialization timer
   if GUI.yatcoInitTimer then
     local success = pcall(killTimer, GUI.yatcoInitTimer)
@@ -3678,11 +4055,9 @@ function GUI.cleanupResources()
     end
     GUI.yatcoInitTimer = nil
   end
-  
   -- Clean up all tracked resources
   local handlerCount = GUI.cleanupHandlers()
   local timerCount = GUI.cleanupTimers()
-  
   -- Save toggles before exit with error handling
   if GUI.saveToggles then
     local success = pcall(GUI.saveToggles)
@@ -3690,11 +4065,9 @@ function GUI.cleanupResources()
       cecho(&quot;&lt;yellow&gt;[Resource Cleanup] Warning: Failed to save toggles\n&quot;)
     end
   end
-  
   -- Comprehensive cleanup report
   local totalCleaned = handlerCount + timerCount + legacyCleanups
   local totalFailures = legacyFailures
-  
   if totalFailures &gt; 0 then
     cecho(string.format(&quot;&lt;yellow&gt;[Resource Cleanup] Cleanup complete - removed %d handlers, %d timers, %d legacy items (%d failures)\n&quot;,
       handlerCount, timerCount, legacyCleanups, totalFailures))
@@ -3702,7 +4075,6 @@ function GUI.cleanupResources()
     cecho(string.format(&quot;&lt;green&gt;[Resource Cleanup] Cleanup complete - removed %d handlers, %d timers, %d legacy items\n&quot;,
       handlerCount, timerCount, legacyCleanups))
   end
-  
   return {
     handlers = handlerCount,
     timers = timerCount,
@@ -3753,12 +4125,11 @@ function GUI.migrateEventHandlers()
   -- Toggle handlers
   GUI.registerHandler(&quot;sysLoadEvent&quot;, &quot;GUI.loadToggles&quot;, &quot;sys_load_toggles&quot;)
   GUI.registerHandler(&quot;sysExitEvent&quot;, &quot;GUI.saveToggles&quot;, &quot;sys_exit_toggles&quot;)
-  -- Main init handlers
-  GUI.registerHandler(&quot;sysLoadEvent&quot;, &quot;GUI.init&quot;, &quot;sys_load_init&quot;)
-  GUI.registerHandler(&quot;sysInstall&quot;, &quot;GUI.init&quot;, &quot;sys_install_init&quot;)
+  -- Enhanced init handlers
+  GUI.registerHandler(&quot;sysLoadEvent&quot;, &quot;GUI.safeInit&quot;, &quot;sys_load_init&quot;)
+  GUI.registerHandler(&quot;sysInstall&quot;, &quot;GUI.safeInit&quot;, &quot;sys_install_init&quot;)
   cecho(&quot;&lt;green&gt;[Resource Cleanup] Event handler migration complete\n&quot;)
 end
-
 -- Resource status and debugging functions
 function GUI.getResourceStatus()
   local status = {
@@ -3766,13 +4137,11 @@ function GUI.getResourceStatus()
     timers = {},
     legacy = {}
   }
-  
   -- Count tracked handlers
   GUI.handlers = GUI.handlers or {}
   for name, handlerId in pairs(GUI.handlers) do
     table.insert(status.handlers, {name = name, id = handlerId})
   end
-  
   -- Count tracked timers with metadata
   GUI.timers = GUI.timers or {}
   for name, timerData in pairs(GUI.timers) do
@@ -3790,7 +4159,6 @@ function GUI.getResourceStatus()
     end
     table.insert(status.timers, info)
   end
-  
   -- Check legacy resources
   if GUI.castConsoleTimer then
     table.insert(status.legacy, {name = &quot;GUI.castConsoleTimer&quot;, id = GUI.castConsoleTimer})
@@ -3804,34 +4172,28 @@ function GUI.getResourceStatus()
   if GUI.yatcoInitTimer then
     table.insert(status.legacy, {name = &quot;GUI.yatcoInitTimer&quot;, id = GUI.yatcoInitTimer})
   end
-  
   return status
 end
-
 function GUI.showResourceStatus()
   local status = GUI.getResourceStatus()
-  
   cecho(&quot;&lt;cyan&gt;[Resource Status] Current resource usage:\n&quot;)
   cecho(string.format(&quot;  Tracked Handlers: %d\n&quot;, #status.handlers))
   cecho(string.format(&quot;  Tracked Timers: %d\n&quot;, #status.timers))
   cecho(string.format(&quot;  Legacy Resources: %d\n&quot;, #status.legacy))
-  
   if #status.handlers &gt; 0 then
     cecho(&quot;&lt;white&gt;  Active Handlers:\n&quot;)
     for _, handler in ipairs(status.handlers) do
       cecho(string.format(&quot;    - %s (ID: %s)\n&quot;, handler.name, tostring(handler.id)))
     end
   end
-  
   if #status.timers &gt; 0 then
     cecho(&quot;&lt;white&gt;  Active Timers:\n&quot;)
     for _, timer in ipairs(status.timers) do
       local age = timer.created ~= &quot;unknown&quot; and (os.time() - timer.created) or &quot;unknown&quot;
-      cecho(string.format(&quot;    - %s (ID: %s, Age: %ss, Recurring: %s)\n&quot;, 
+      cecho(string.format(&quot;    - %s (ID: %s, Age: %ss, Recurring: %s)\n&quot;,
         timer.name, tostring(timer.id), tostring(age), tostring(timer.recurring)))
     end
   end
-  
   if #status.legacy &gt; 0 then
     cecho(&quot;&lt;yellow&gt;  Legacy Resources (should migrate to tracked system):\n&quot;)
     for _, resource in ipairs(status.legacy) do
@@ -3848,29 +4210,24 @@ end
 						<script>--[[
 State Validation System
 ========================
-Addresses "Shared Global State Corruption" critical issue from stability audit.
+Addresses &quot;Shared Global State Corruption&quot; critical issue from stability audit.
 Provides centralized validation for all shared state access to prevent cascading failures.
-
 Problem Solved:
-- Multiple systems write to shared globals without synchronization 
+- Multiple systems write to shared globals without synchronization
 - No state validation or rollback mechanisms
 - MSDP data can be partially updated, leaving inconsistent state
 - Race conditions between map updates and UI refreshes
-
 Solution Approach:
 - Validate all shared state before use with type checking and structure validation
 - Provide safe accessor functions with fallback defaults
 - Add state corruption detection and logging
 - Implement graceful degradation when state is invalid
 ]]
-
 -- Initialize StateValidator namespace
 GUI.StateValidator = GUI.StateValidator or {}
 GUI.StateValidator.debug = false  -- Set to true for verbose logging
-
 -- MSDP State Validation
 -- =====================
-
 -- Validate basic MSDP values with type checking
 function GUI.validateMSDP(key, defaultValue, expectedType)
   if not msdp then
@@ -3879,9 +4236,7 @@ function GUI.validateMSDP(key, defaultValue, expectedType)
     end
     return defaultValue
   end
-  
   local value = msdp[key]
-  
   -- Check if value exists
   if value == nil then
     if GUI.StateValidator.debug then
@@ -3889,14 +4244,12 @@ function GUI.validateMSDP(key, defaultValue, expectedType)
     end
     return defaultValue
   end
-  
   -- Type validation if specified
   if expectedType and type(value) ~= expectedType then
-    cecho(string.format(&quot;&lt;red&gt;[State] MSDP.%s has invalid type %s, expected %s, using default\n&quot;, 
+    cecho(string.format(&quot;&lt;red&gt;[State] MSDP.%s has invalid type %s, expected %s, using default\n&quot;,
       key, type(value), expectedType))
     return defaultValue
   end
-  
   -- Additional validation for numbers (ensure they're valid)
   if expectedType == &quot;number&quot; then
     local numValue = tonumber(value)
@@ -3906,10 +4259,8 @@ function GUI.validateMSDP(key, defaultValue, expectedType)
     end
     return numValue
   end
-  
   return value
 end
-
 -- Validate complex MSDP structures (like ROOM, AFFECTS, GROUP)
 function GUI.validateMSDPTable(key, defaultValue, requiredFields)
   if not msdp then
@@ -3918,9 +4269,7 @@ function GUI.validateMSDPTable(key, defaultValue, requiredFields)
     end
     return defaultValue
   end
-  
   local value = msdp[key]
-  
   -- Check if value exists and is a table
   if not value or type(value) ~= &quot;table&quot; then
     if GUI.StateValidator.debug then
@@ -3928,7 +4277,6 @@ function GUI.validateMSDPTable(key, defaultValue, requiredFields)
     end
     return defaultValue
   end
-  
   -- Check required fields if specified
   if requiredFields then
     for _, field in ipairs(requiredFields) do
@@ -3938,13 +4286,10 @@ function GUI.validateMSDPTable(key, defaultValue, requiredFields)
       end
     end
   end
-  
   return value
 end
-
 -- GUI State Validation
 -- ====================
-
 -- Validate GUI toggles with automatic recovery
 function GUI.getToggle(key, defaultValue)
   -- Ensure toggles table exists
@@ -3955,9 +4300,7 @@ function GUI.getToggle(key, defaultValue)
       includeInGroup = true
     }
   end
-  
   local value = GUI.toggles[key]
-  
   -- Return default if key doesn't exist or has wrong type
   if value == nil then
     if GUI.StateValidator.debug then
@@ -3966,18 +4309,15 @@ function GUI.getToggle(key, defaultValue)
     GUI.toggles[key] = defaultValue  -- Set the default for future use
     return defaultValue
   end
-  
   -- Type validation for boolean toggles
   if type(defaultValue) == &quot;boolean&quot; and type(value) ~= &quot;boolean&quot; then
-    cecho(string.format(&quot;&lt;red&gt;[State] Toggle '%s' has invalid type %s, expected boolean, using default\n&quot;, 
+    cecho(string.format(&quot;&lt;red&gt;[State] Toggle '%s' has invalid type %s, expected boolean, using default\n&quot;,
       key, type(value)))
     GUI.toggles[key] = defaultValue
     return defaultValue
   end
-  
   return value
 end
-
 -- Set toggle with validation
 function GUI.setToggle(key, value)
   -- Ensure toggles table exists
@@ -3987,9 +4327,7 @@ function GUI.setToggle(key, value)
       includeInGroup = true
     }
   end
-  
   GUI.toggles[key] = value
-  
   -- Auto-save if save function exists
   if GUI.saveToggles then
     local success = pcall(GUI.saveToggles)
@@ -3998,10 +4336,8 @@ function GUI.setToggle(key, value)
     end
   end
 end
-
 -- Map State Validation
 -- ====================
-
 -- Validate map room info with structure checking
 function GUI.validateRoomInfo(key, defaultValue)
   -- Ensure map and room_info exist
@@ -4011,87 +4347,67 @@ function GUI.validateRoomInfo(key, defaultValue)
     end
     return defaultValue
   end
-  
   if not map.room_info or type(map.room_info) ~= &quot;table&quot; then
     if GUI.StateValidator.debug then
       cecho(&quot;&lt;yellow&gt;[State] Map room_info not available\n&quot;)
     end
     return defaultValue
   end
-  
   local value = map.room_info[key]
-  
   if value == nil then
     if GUI.StateValidator.debug then
       cecho(string.format(&quot;&lt;yellow&gt;[State] Room info '%s' not found, using default: %s\n&quot;, key, tostring(defaultValue)))
     end
     return defaultValue
   end
-  
   return value
 end
-
 -- Convenience Functions for Common Patterns
 -- ==========================================
-
 -- Safe MSDP numeric accessors
 function GUI.getMSDPHealth()
   return GUI.validateMSDP(&quot;HEALTH&quot;, 0, &quot;number&quot;)
 end
-
 function GUI.getMSDPMaxHealth()
   return GUI.validateMSDP(&quot;HEALTH_MAX&quot;, 100, &quot;number&quot;)
 end
-
 function GUI.getMSDPMovement()
   return GUI.validateMSDP(&quot;MOVEMENT&quot;, 0, &quot;number&quot;)
 end
-
 function GUI.getMSDPMaxMovement()
   return GUI.validateMSDP(&quot;MOVEMENT_MAX&quot;, 100, &quot;number&quot;)
 end
-
 function GUI.getMSDPExperience()
   return GUI.validateMSDP(&quot;EXPERIENCE&quot;, 0, &quot;number&quot;)
 end
-
 function GUI.getMSDPExperienceTNL()
   return GUI.validateMSDP(&quot;EXPERIENCE_TNL&quot;, 0, &quot;number&quot;)
 end
-
 -- Safe MSDP string accessors
 function GUI.getMSDPCharacterName()
   return GUI.validateMSDP(&quot;CHARACTER_NAME&quot;, &quot;Unknown&quot;, &quot;string&quot;)
 end
-
 function GUI.getMSDPOpponentName()
   return GUI.validateMSDP(&quot;OPPONENT_NAME&quot;, &quot;&quot;, &quot;string&quot;)
 end
-
 function GUI.getMSDPPosition()
   return GUI.validateMSDP(&quot;POSITION&quot;, &quot;Standing&quot;, &quot;string&quot;)
 end
-
 -- Safe MSDP table accessors
 function GUI.getMSDPRoom()
   return GUI.validateMSDPTable(&quot;ROOM&quot;, {}, {&quot;VNUM&quot;, &quot;NAME&quot;})
 end
-
 function GUI.getMSDPAffects()
   return GUI.validateMSDPTable(&quot;AFFECTS&quot;, {}, {&quot;AFFECTED_BY&quot;})
 end
-
 function GUI.getMSDPGroup()
   return GUI.validateMSDPTable(&quot;GROUP&quot;, {}, nil)  -- GROUP structure can be empty
 end
-
 -- State Recovery Functions
 -- ========================
-
 -- Attempt to recover from corrupted state
 function GUI.recoverCorruptedState()
   cecho(&quot;&lt;cyan&gt;[State] Attempting state recovery...\n&quot;)
-  
   -- Recover toggles
   if not GUI.toggles or type(GUI.toggles) ~= &quot;table&quot; then
     cecho(&quot;&lt;yellow&gt;[State] Recovering GUI.toggles\n&quot;)
@@ -4103,7 +4419,6 @@ function GUI.recoverCorruptedState()
       pcall(GUI.saveToggles)
     end
   end
-  
   -- Recover map structure
   if not map or type(map) ~= &quot;table&quot; then
     cecho(&quot;&lt;yellow&gt;[State] Recovering map structure\n&quot;)
@@ -4111,19 +4426,15 @@ function GUI.recoverCorruptedState()
     map.room_info = map.room_info or {}
     map.prev_info = map.prev_info or {}
   end
-  
   cecho(&quot;&lt;green&gt;[State] State recovery complete\n&quot;)
 end
-
 -- Validation Debugging
 -- ====================
-
 -- Enable/disable debug logging
 function GUI.setStateDebug(enabled)
   GUI.StateValidator.debug = enabled
   cecho(string.format(&quot;&lt;cyan&gt;[State] Debug logging %s\n&quot;, enabled and &quot;enabled&quot; or &quot;disabled&quot;))
 end
-
 -- Get current state validation status
 function GUI.getStateStatus()
   local status = {
@@ -4132,25 +4443,2103 @@ function GUI.getStateStatus()
     map_available = (map ~= nil and type(map) == &quot;table&quot;),
     room_info_valid = (map and map.room_info and type(map.room_info) == &quot;table&quot;)
   }
-  
   cecho(&quot;&lt;cyan&gt;[State] Current state status:\n&quot;)
   cecho(string.format(&quot;  MSDP Available: %s\n&quot;, status.msdp_available and &quot;Yes&quot; or &quot;No&quot;))
   cecho(string.format(&quot;  Toggles Valid: %s\n&quot;, status.toggles_valid and &quot;Yes&quot; or &quot;No&quot;))
   cecho(string.format(&quot;  Map Available: %s\n&quot;, status.map_available and &quot;Yes&quot; or &quot;No&quot;))
   cecho(string.format(&quot;  Room Info Valid: %s\n&quot;, status.room_info_valid and &quot;Yes&quot; or &quot;No&quot;))
-  
   return status
 end
-
 -- Initialize state validation on load
 function GUI.initStateValidation()
   cecho(&quot;&lt;green&gt;[State] State validation system initialized\n&quot;)
   -- Perform initial state recovery if needed
   GUI.recoverCorruptedState()
 end
-
+-- Enhanced State Validation Functions
+-- ====================================
+-- Comprehensive state validation with automatic recovery
+function GUI.validateCompleteState()
+  local validationReport = {
+    success = true,
+    errors = {},
+    warnings = {},
+    recoveries = {}
+  }
+  -- Validate GUI.toggles
+  local togglesValid = GUI.validateTogglesState()
+  if not togglesValid.success then
+    validationReport.success = false
+    table.insert(validationReport.errors, &quot;GUI.toggles validation failed&quot;)
+    table.insert(validationReport.recoveries, &quot;Recreated GUI.toggles with defaults&quot;)
+  end
+  -- Validate MSDP state
+  local msdpValid = GUI.validateMSDPState()
+  if not msdpValid.success then
+    table.insert(validationReport.warnings, &quot;MSDP state issues detected&quot;)
+  end
+  -- Validate map state
+  local mapValid = GUI.validateMapState()
+  if not mapValid.success then
+    validationReport.success = false
+    table.insert(validationReport.errors, &quot;Map state validation failed&quot;)
+    table.insert(validationReport.recoveries, &quot;Recovered map structure&quot;)
+  end
+  return validationReport
+end
+-- Validate GUI.toggles with detailed checking
+function GUI.validateTogglesState()
+  local result = {
+    success = true,
+    details = {}
+  }
+  -- Check if toggles table exists and is valid
+  if not GUI.toggles or type(GUI.toggles) ~= &quot;table&quot; then
+    result.success = false
+    result.details.corrupted = true
+    -- Auto-recover
+    GUI.toggles = {
+      gagChat = true,
+      includeInGroup = true
+    }
+    -- Attempt to save recovered state
+    if GUI.saveToggles then
+      pcall(GUI.saveToggles)
+    end
+    return result
+  end
+  -- Validate required toggle fields
+  local requiredToggles = {
+    gagChat = &quot;boolean&quot;,
+    includeInGroup = &quot;boolean&quot;
+  }
+  for key, expectedType in pairs(requiredToggles) do
+    if GUI.toggles[key] == nil then
+      result.success = false
+      result.details[key] = &quot;missing&quot;
+      GUI.toggles[key] = (expectedType == &quot;boolean&quot; and true or false)
+    elseif type(GUI.toggles[key]) ~= expectedType then
+      result.success = false
+      result.details[key] = &quot;wrong_type&quot;
+      GUI.toggles[key] = (expectedType == &quot;boolean&quot; and true or false)
+    end
+  end
+  return result
+end
+-- Validate MSDP state consistency
+function GUI.validateMSDPState()
+  local result = {
+    success = true,
+    details = {}
+  }
+  -- Check if msdp table exists
+  if not msdp then
+    result.success = false
+    result.details.no_msdp = true
+    return result
+  end
+  -- Check critical MSDP fields
+  local criticalFields = {
+    &quot;ROOM&quot;, &quot;AFFECTS&quot;, &quot;GROUP&quot;, &quot;CHARACTER_NAME&quot;, &quot;HEALTH&quot;, &quot;MAXHEALTH&quot;
+  }
+  for _, field in ipairs(criticalFields) do
+    if msdp[field] == nil then
+      result.details[field] = &quot;missing&quot;
+    end
+  end
+  -- Validate ROOM structure if present
+  if msdp.ROOM and type(msdp.ROOM) == &quot;table&quot; then
+    local roomRequiredFields = {&quot;VNUM&quot;, &quot;NAME&quot;}
+    for _, field in ipairs(roomRequiredFields) do
+      if not msdp.ROOM[field] then
+        result.details[&quot;ROOM_&quot; .. field] = &quot;missing&quot;
+      end
+    end
+  end
+  -- Validate AFFECTS structure if present
+  if msdp.AFFECTS and type(msdp.AFFECTS) == &quot;table&quot; then
+    if msdp.AFFECTS.SPELL_LIKE_AFFECTS and type(msdp.AFFECTS.SPELL_LIKE_AFFECTS) ~= &quot;table&quot; then
+      result.details.AFFECTS_SPELL_LIKE = &quot;invalid_type&quot;
+    end
+  end
+  return result
+end
+-- Validate map state and room_info consistency
+function GUI.validateMapState()
+  local result = {
+    success = true,
+    details = {}
+  }
+  -- Check if map table exists
+  if not map or type(map) ~= &quot;table&quot; then
+    result.success = false
+    result.details.no_map = true
+    -- Auto-recover
+    map = map or {}
+    map.room_info = map.room_info or {}
+    map.prev_info = map.prev_info or {}
+    return result
+  end
+  -- Check room_info structure
+  if not map.room_info or type(map.room_info) ~= &quot;table&quot; then
+    result.success = false
+    result.details.room_info_invalid = true
+    map.room_info = {}
+  end
+  -- Check prev_info structure
+  if not map.prev_info or type(map.prev_info) ~= &quot;table&quot; then
+    result.success = false
+    result.details.prev_info_invalid = true
+    map.prev_info = {}
+  end
+  -- Validate room_info consistency with MSDP
+  if map.room_info and msdp and msdp.ROOM then
+    local roomData = GUI.getMSDPRoom()
+    if roomData.VNUM and map.room_info.VNUM then
+      if roomData.VNUM ~= map.room_info.VNUM then
+        result.details.room_vnum_mismatch = true
+      end
+    end
+  end
+  return result
+end
+-- State rollback mechanism
+function GUI.rollbackState(backupData)
+  if not backupData or type(backupData) ~= &quot;table&quot; then
+    cecho(&quot;&lt;red&gt;[State] Cannot rollback: invalid backup data\n&quot;)
+    return false
+  end
+  local rollbackSuccess = true
+  -- Rollback GUI.toggles
+  if backupData.toggles then
+    local success, err = pcall(function()
+      GUI.toggles = backupData.toggles
+    end)
+    if not success then
+      cecho(&quot;&lt;red&gt;[State] Failed to rollback toggles: &quot; .. tostring(err) .. &quot;\n&quot;)
+      rollbackSuccess = false
+    end
+  end
+  -- Rollback map state
+  if backupData.map then
+    local success, err = pcall(function()
+      if backupData.map.room_info then
+        map.room_info = backupData.map.room_info
+      end
+      if backupData.map.prev_info then
+        map.prev_info = backupData.map.prev_info
+      end
+    end)
+    if not success then
+      cecho(&quot;&lt;red&gt;[State] Failed to rollback map: &quot; .. tostring(err) .. &quot;\n&quot;)
+      rollbackSuccess = false
+    end
+  end
+  if rollbackSuccess then
+    cecho(&quot;&lt;green&gt;[State] State rollback completed successfully\n&quot;)
+  else
+    cecho(&quot;&lt;yellow&gt;[State] State rollback completed with some errors\n&quot;)
+  end
+  return rollbackSuccess
+end
+-- Create state backup for rollback
+function GUI.createStateBackup()
+  local backup = {
+    timestamp = os.time(),
+    toggles = nil,
+    map = nil
+  }
+  -- Backup GUI.toggles
+  if GUI.toggles and type(GUI.toggles) == &quot;table&quot; then
+    backup.toggles = {}
+    for k, v in pairs(GUI.toggles) do
+      backup.toggles[k] = v
+    end
+  end
+  -- Backup map state
+  if map and type(map) == &quot;table&quot; then
+    backup.map = {}
+    if map.room_info and type(map.room_info) == &quot;table&quot; then
+      backup.map.room_info = {}
+      for k, v in pairs(map.room_info) do
+        backup.map.room_info[k] = v
+      end
+    end
+    if map.prev_info and type(map.prev_info) == &quot;table&quot; then
+      backup.map.prev_info = {}
+      for k, v in pairs(map.prev_info) do
+        backup.map.prev_info[k] = v
+      end
+    end
+  end
+  return backup
+end
+-- Periodic state validation (run every 30 seconds)
+function GUI.startPeriodicStateValidation()
+  if GUI.stateValidationTimer then
+    killTimer(GUI.stateValidationTimer)
+  end
+  GUI.stateValidationTimer = tempTimer(30, function()
+    local validation = GUI.validateCompleteState()
+    if not validation.success then
+      cecho(&quot;&lt;yellow&gt;[State] Periodic validation found issues, running recovery\n&quot;)
+      GUI.recoverCorruptedState()
+    end
+    -- Schedule next validation
+    GUI.startPeriodicStateValidation()
+  end)
+end
+-- Enhanced state recovery with validation
+function GUI.enhancedStateRecovery()
+  cecho(&quot;&lt;cyan&gt;[State] Starting enhanced state recovery...\n&quot;)
+  -- Create backup before recovery
+  local backup = GUI.createStateBackup()
+  -- Perform comprehensive validation and recovery
+  local validation = GUI.validateCompleteState()
+  if validation.success then
+    cecho(&quot;&lt;green&gt;[State] All state validation passed\n&quot;)
+  else
+    cecho(&quot;&lt;yellow&gt;[State] State issues detected, recovery applied\n&quot;)
+    -- Log errors and recoveries
+    for _, error in ipairs(validation.errors) do
+      cecho(&quot;&lt;red&gt;[State] Error: &quot; .. error .. &quot;\n&quot;)
+    end
+    for _, recovery in ipairs(validation.recoveries) do
+      cecho(&quot;&lt;green&gt;[State] Recovery: &quot; .. recovery .. &quot;\n&quot;)
+    end
+  end
+  -- Log warnings
+  for _, warning in ipairs(validation.warnings) do
+    cecho(&quot;&lt;yellow&gt;[State] Warning: &quot; .. warning .. &quot;\n&quot;)
+  end
+  -- Store backup for potential rollback
+  GUI.lastStateBackup = backup
+  cecho(&quot;&lt;green&gt;[State] Enhanced state recovery complete\n&quot;)
+end
 -- Auto-initialize when script loads
 GUI.initStateValidation()
+-- Start periodic validation
+GUI.startPeriodicStateValidation()
+-- Centralized Event Bus System
+-- ============================
+-- Addresses &quot;Fragile Event System Architecture&quot; from stability audit
+-- Provides centralized event handling with dependency tracking and error isolation
+-- Initialize Event Bus
+GUI.EventBus = GUI.EventBus or {
+  handlers = {},           -- Registered event handlers
+  dependencies = {},       -- Handler dependency relationships
+  eventQueue = {},         -- Queued events for processing
+  processing = false,      -- Flag to prevent recursive processing
+  priorities = {},         -- Handler priority levels
+  statistics = {},         -- Event processing statistics
+  debug = false,          -- Debug logging
+  maxRetries = 3,         -- Maximum retry attempts for failed handlers
+  retryDelay = 100        -- Delay between retries (ms)
+}
+-- Event Bus Priority Levels
+GUI.EventBus.PRIORITY = {
+  CRITICAL = 1,    -- System-critical handlers (initialization, cleanup)
+  HIGH = 2,        -- Important handlers (state management, validation)
+  NORMAL = 3,      -- Standard handlers (UI updates, display)
+  LOW = 4          -- Background handlers (logging, statistics)
+}
+-- Register an event handler with the Event Bus
+-- @param event: Event name to listen for
+-- @param handler: Function to call or function name string
+-- @param config: Configuration table with priority, dependencies, etc.
+function GUI.EventBus:register(event, handler, config)
+  config = config or {}
+  -- Validate inputs
+  if type(event) ~= &quot;string&quot; or event == &quot;&quot; then
+    cecho(&quot;&lt;red&gt;[EventBus] Invalid event name for registration\n&quot;)
+    return false
+  end
+  -- Resolve handler function
+  local handlerFunc
+  if type(handler) == &quot;string&quot; then
+    -- Look up function by name
+    handlerFunc = _G
+    for part in handler:gmatch(&quot;[^.]+&quot;) do
+      handlerFunc = handlerFunc and handlerFunc[part]
+    end
+    if type(handlerFunc) ~= &quot;function&quot; then
+      cecho(string.format(&quot;&lt;red&gt;[EventBus] Handler function not found: %s\n&quot;, handler))
+      return false
+    end
+  elseif type(handler) == &quot;function&quot; then
+    handlerFunc = handler
+  else
+    cecho(&quot;&lt;red&gt;[EventBus] Invalid handler type, must be function or string\n&quot;)
+    return false
+  end
+  -- Generate unique handler ID
+  local handlerId = config.id or (event .. &quot;_&quot; .. tostring(os.time()) .. &quot;_&quot; .. tostring(math.random(1000)))
+  -- Create handler registration
+  local registration = {
+    id = handlerId,
+    event = event,
+    handler = handlerFunc,
+    handlerName = type(handler) == &quot;string&quot; and handler or &quot;anonymous&quot;,
+    priority = config.priority or self.PRIORITY.NORMAL,
+    dependencies = config.dependencies or {},
+    enabled = true,
+    retryCount = 0,
+    lastExecution = nil,
+    executionCount = 0,
+    errorCount = 0,
+    totalExecutionTime = 0
+  }
+  -- Initialize event handler list
+  if not self.handlers[event] then
+    self.handlers[event] = {}
+    self.statistics[event] = {
+      totalExecutions = 0,
+      totalErrors = 0,
+      averageExecutionTime = 0,
+      lastExecution = nil
+    }
+  end
+  -- Remove existing handler with same ID
+  self:unregister(event, handlerId)
+  -- Add handler to event list
+  table.insert(self.handlers[event], registration)
+  -- Sort handlers by priority
+  table.sort(self.handlers[event], function(a, b)
+    return a.priority &lt; b.priority
+  end)
+  -- Store dependency information
+  if #registration.dependencies &gt; 0 then
+    self.dependencies[handlerId] = registration.dependencies
+  end
+  if self.debug then
+    cecho(string.format(&quot;&lt;cyan&gt;[EventBus] Registered handler %s for event %s (priority: %d)\n&quot;,
+      handlerId, event, registration.priority))
+  end
+  return handlerId
+end
+-- Unregister an event handler
+-- @param event: Event name
+-- @param handlerId: Handler ID to remove
+function GUI.EventBus:unregister(event, handlerId)
+  if not self.handlers[event] then
+    return false
+  end
+  for i, handler in ipairs(self.handlers[event]) do
+    if handler.id == handlerId then
+      table.remove(self.handlers[event], i)
+      self.dependencies[handlerId] = nil
+      if self.debug then
+        cecho(string.format(&quot;&lt;yellow&gt;[EventBus] Unregistered handler %s for event %s\n&quot;,
+          handlerId, event))
+      end
+      return true
+    end
+  end
+  return false
+end
+-- Check if handler dependencies are satisfied
+-- @param handlerId: Handler ID to check
+-- @return: boolean - true if dependencies are satisfied
+function GUI.EventBus:checkDependencies(handlerId)
+  local deps = self.dependencies[handlerId]
+  if not deps or #deps == 0 then
+    return true
+  end
+  -- Check if all dependency handlers have executed recently
+  for _, depId in ipairs(deps) do
+    local depFound = false
+    for event, handlers in pairs(self.handlers) do
+      for _, handler in ipairs(handlers) do
+        if handler.id == depId and handler.lastExecution then
+          depFound = true
+          break
+        end
+      end
+      if depFound then break end
+    end
+    if not depFound then
+      if self.debug then
+        cecho(string.format(&quot;&lt;yellow&gt;[EventBus] Handler %s waiting for dependency: %s\n&quot;,
+          handlerId, depId))
+      end
+      return false
+    end
+  end
+  return true
+end
+-- Emit an event through the Event Bus
+-- @param event: Event name to emit
+-- @param ...: Arguments to pass to handlers
+function GUI.EventBus:emit(event, ...)
+  if not self.handlers[event] or #self.handlers[event] == 0 then
+    if self.debug then
+      cecho(string.format(&quot;&lt;gray&gt;[EventBus] No handlers registered for event: %s\n&quot;, event))
+    end
+    return
+  end
+  -- Prevent recursive processing
+  if self.processing then
+    table.insert(self.eventQueue, {event = event, args = {...}})
+    return
+  end
+  self.processing = true
+  local startTime = os.clock()
+  if self.debug then
+    cecho(string.format(&quot;&lt;green&gt;[EventBus] Emitting event: %s\n&quot;, event))
+  end
+  -- Execute handlers in priority order
+  local successCount = 0
+  local errorCount = 0
+  for _, handler in ipairs(self.handlers[event]) do
+    if handler.enabled then
+      -- Check dependencies
+      if self:checkDependencies(handler.id) then
+        local handlerArgs = {...}
+        successCount = successCount + self:executeHandler(handler, event, unpack(handlerArgs))
+      else
+        -- Queue for later execution
+        table.insert(self.eventQueue, {
+          event = event,
+          args = {...},
+          handlerId = handler.id
+        })
+      end
+    end
+  end
+  -- Update statistics
+  local executionTime = (os.clock() - startTime) * 1000
+  self.statistics[event].totalExecutions = self.statistics[event].totalExecutions + 1
+  self.statistics[event].lastExecution = os.time()
+  if self.statistics[event].totalExecutions == 1 then
+    self.statistics[event].averageExecutionTime = executionTime
+  else
+    self.statistics[event].averageExecutionTime =
+      (self.statistics[event].averageExecutionTime + executionTime) / 2
+  end
+  self.processing = false
+  -- Process any queued events
+  self:processQueue()
+  if self.debug then
+    cecho(string.format(&quot;&lt;green&gt;[EventBus] Event %s processed: %d success, %d errors (%.2fms)\n&quot;,
+      event, successCount, errorCount, executionTime))
+  end
+end
+-- Execute a single handler with error protection and retry logic
+-- @param handler: Handler registration object
+-- @param event: Event name
+-- @param ...: Event arguments
+-- @return: number - 1 if successful, 0 if failed
+function GUI.EventBus:executeHandler(handler, event, ...)
+  local startTime = os.clock()
+  -- Create error boundary for handler execution
+  local args = {...}
+  local success, result = pcall(function()
+    return handler.handler(event, unpack(args))
+  end)
+  local executionTime = (os.clock() - startTime) * 1000
+  if success then
+    -- Update handler statistics
+    handler.lastExecution = os.time()
+    handler.executionCount = handler.executionCount + 1
+    handler.totalExecutionTime = handler.totalExecutionTime + executionTime
+    handler.retryCount = 0  -- Reset retry count on success
+    if self.debug then
+      cecho(string.format(&quot;&lt;green&gt;[EventBus] ✓ Handler %s executed successfully (%.2fms)\n&quot;,
+        handler.id, executionTime))
+    end
+    return 1
+  else
+    -- Handle execution error
+    handler.errorCount = handler.errorCount + 1
+    handler.retryCount = handler.retryCount + 1
+    self.statistics[event].totalErrors = self.statistics[event].totalErrors + 1
+    cecho(string.format(&quot;&lt;red&gt;[EventBus] ✗ Handler %s failed: %s\n&quot;,
+      handler.id, tostring(result)))
+    -- Log error for debugging
+    if GUI.errorLog then
+      table.insert(GUI.errorLog, {
+        timestamp = os.time(),
+        handler = handler.id,
+        event = event,
+        error = tostring(result)
+      })
+    end
+    -- Retry logic
+    if handler.retryCount &lt;= self.maxRetries then
+      cecho(string.format(&quot;&lt;yellow&gt;[EventBus] Scheduling retry %d/%d for handler %s\n&quot;,
+        handler.retryCount, self.maxRetries, handler.id))
+      -- Schedule retry
+      if GUI.createTimer then
+        local retryArgs = {...}
+        GUI.createTimer(self.retryDelay, function()
+          self:executeHandler(handler, event, unpack(retryArgs))
+        end, false, &quot;eventbus_retry_&quot; .. handler.id .. &quot;_&quot; .. handler.retryCount)
+      end
+    else
+      cecho(string.format(&quot;&lt;red&gt;[EventBus] Handler %s disabled after %d failed attempts\n&quot;,
+        handler.id, self.maxRetries))
+      handler.enabled = false
+    end
+    return 0
+  end
+end
+-- Process queued events (for dependency resolution)
+function GUI.EventBus:processQueue()
+  if #self.eventQueue == 0 then
+    return
+  end
+  local processed = {}
+  local remainingQueue = {}
+  for _, queuedEvent in ipairs(self.eventQueue) do
+    if queuedEvent.handlerId then
+      -- Find specific handler
+      local handler = self:findHandler(queuedEvent.event, queuedEvent.handlerId)
+      if handler and self:checkDependencies(handler.id) then
+        self:executeHandler(handler, queuedEvent.event, unpack(queuedEvent.args))
+        table.insert(processed, queuedEvent)
+      else
+        table.insert(remainingQueue, queuedEvent)
+      end
+    else
+      -- Re-emit entire event
+      self:emit(queuedEvent.event, unpack(queuedEvent.args))
+      table.insert(processed, queuedEvent)
+    end
+  end
+  self.eventQueue = remainingQueue
+  if self.debug and #processed &gt; 0 then
+    cecho(string.format(&quot;&lt;cyan&gt;[EventBus] Processed %d queued events, %d remaining\n&quot;,
+      #processed, #remainingQueue))
+  end
+end
+-- Find a specific handler by ID
+-- @param event: Event name
+-- @param handlerId: Handler ID to find
+-- @return: handler object or nil
+function GUI.EventBus:findHandler(event, handlerId)
+  if not self.handlers[event] then
+    return nil
+  end
+  for _, handler in ipairs(self.handlers[event]) do
+    if handler.id == handlerId then
+      return handler
+    end
+  end
+  return nil
+end
+-- Get event statistics and handler information
+-- @param event: Optional event name to filter (nil for all events)
+-- @return: statistics object
+function GUI.EventBus:getStatistics(event)
+  if event then
+    return {
+      event = event,
+      handlers = self.handlers[event] and #self.handlers[event] or 0,
+      statistics = self.statistics[event] or {},
+      handlerDetails = self.handlers[event] or {}
+    }
+  else
+    local stats = {
+      totalEvents = 0,
+      totalHandlers = 0,
+      totalExecutions = 0,
+      totalErrors = 0,
+      events = {}
+    }
+    for eventName, handlers in pairs(self.handlers) do
+      stats.totalEvents = stats.totalEvents + 1
+      stats.totalHandlers = stats.totalHandlers + #handlers
+      if self.statistics[eventName] then
+        stats.totalExecutions = stats.totalExecutions + self.statistics[eventName].totalExecutions
+        stats.totalErrors = stats.totalErrors + self.statistics[eventName].totalErrors
+      end
+      stats.events[eventName] = {
+        handlers = #handlers,
+        statistics = self.statistics[eventName] or {}
+      }
+    end
+    return stats
+  end
+end
+-- Display event bus status and statistics
+function GUI.EventBus:showStatus()
+  cecho(&quot;&lt;cyan&gt;[EventBus] === Event Bus Status Report ===\n&quot;)
+  local stats = self:getStatistics()
+  cecho(string.format(&quot;&lt;white&gt;Total Events: %d\n&quot;, stats.totalEvents))
+  cecho(string.format(&quot;&lt;white&gt;Total Handlers: %d\n&quot;, stats.totalHandlers))
+  cecho(string.format(&quot;&lt;white&gt;Total Executions: %d\n&quot;, stats.totalExecutions))
+  cecho(string.format(&quot;&lt;white&gt;Total Errors: %d\n&quot;, stats.totalErrors))
+  cecho(string.format(&quot;&lt;white&gt;Queued Events: %d\n&quot;, #self.eventQueue))
+  cecho(&quot;&lt;cyan&gt;\nEvent Details:\n&quot;)
+  for eventName, eventData in pairs(stats.events) do
+    local avgTime = eventData.statistics.averageExecutionTime or 0
+    cecho(string.format(&quot;&lt;yellow&gt;  %s: &lt;white&gt;%d handlers, %d executions, %.2fms avg\n&quot;,
+      eventName, eventData.handlers, eventData.statistics.totalExecutions or 0, avgTime))
+  end
+  cecho(&quot;&lt;cyan&gt;==============================\n&quot;)
+end
+-- Enable/disable debug mode
+-- @param enabled: Boolean to enable/disable debug logging
+function GUI.EventBus:setDebug(enabled)
+  self.debug = enabled
+  cecho(string.format(&quot;&lt;cyan&gt;[EventBus] Debug logging %s\n&quot;, enabled and &quot;enabled&quot; or &quot;disabled&quot;))
+end
+-- Clear event statistics
+function GUI.EventBus:clearStatistics()
+  self.statistics = {}
+  for eventName, _ in pairs(self.handlers) do
+    self.statistics[eventName] = {
+      totalExecutions = 0,
+      totalErrors = 0,
+      averageExecutionTime = 0,
+      lastExecution = nil
+    }
+  end
+  cecho(&quot;&lt;green&gt;[EventBus] Statistics cleared\n&quot;)
+end
+-- Enhanced version of GUI.registerHandler that uses the Event Bus
+-- @param event: Event name
+-- @param handler: Handler function or name
+-- @param name: Handler ID (optional)
+-- @param config: Event Bus configuration (optional)
+function GUI.registerHandlerEnhanced(event, handler, name, config)
+  config = config or {}
+  config.id = name or config.id
+  -- Register with Event Bus first
+  local busId = GUI.EventBus:register(event, handler, config)
+  if busId then
+    -- Also maintain backward compatibility with old system
+    if name and type(handler) == &quot;string&quot; then
+      -- Store for legacy cleanup
+      GUI.handlers = GUI.handlers or {}
+      GUI.handlers[name] = busId
+    end
+    cecho(string.format(&quot;&lt;green&gt;[EventBus] Enhanced handler registered: %s for %s\n&quot;, busId, event))
+    return busId
+  else
+    cecho(string.format(&quot;&lt;red&gt;[EventBus] Failed to register enhanced handler for %s\n&quot;, event))
+    return nil
+  end
+end
+-- Wrapper to emit events through the Event Bus while maintaining compatibility
+-- @param event: Event name to emit
+-- @param ...: Arguments to pass to handlers
+function GUI.emitEvent(event, ...)
+  -- Emit through Event Bus for centralized handling
+  GUI.EventBus:emit(event, ...)
+end
+-- Initialize the Event Bus system
+function GUI.EventBus:initialize()
+  cecho(&quot;&lt;green&gt;[EventBus] Initializing centralized event system...\n&quot;)
+  -- Register common MSDP event handlers with priorities and dependencies
+  self:register(&quot;msdp.ROOM&quot;, &quot;map.eventHandler&quot;, {
+    id = &quot;msdp_room_primary&quot;,
+    priority = self.PRIORITY.HIGH,
+    dependencies = {}
+  })
+  self:register(&quot;msdp.AFFECTS&quot;, &quot;GUI.updateAffects&quot;, {
+    id = &quot;msdp_affects_primary&quot;,
+    priority = self.PRIORITY.NORMAL,
+    dependencies = {&quot;msdp_room_primary&quot;}
+  })
+  self:register(&quot;msdp.GROUP&quot;, &quot;GUI.updateGroup&quot;, {
+    id = &quot;msdp_group_primary&quot;,
+    priority = self.PRIORITY.NORMAL,
+    dependencies = {}
+  })
+  -- Register system event handlers
+  self:register(&quot;sysLoadEvent&quot;, &quot;GUI.safeInit&quot;, {
+    id = &quot;sys_load_init&quot;,
+    priority = self.PRIORITY.CRITICAL,
+    dependencies = {}
+  })
+  self:register(&quot;sysInstall&quot;, &quot;GUI.safeInit&quot;, {
+    id = &quot;sys_install_init&quot;,
+    priority = self.PRIORITY.CRITICAL,
+    dependencies = {}
+  })
+  self:register(&quot;sysLoadEvent&quot;, &quot;GUI.loadToggles&quot;, {
+    id = &quot;sys_load_toggles&quot;,
+    priority = self.PRIORITY.HIGH,
+    dependencies = {&quot;sys_load_init&quot;}
+  })
+  self:register(&quot;sysExitEvent&quot;, &quot;GUI.saveToggles&quot;, {
+    id = &quot;sys_exit_toggles&quot;,
+    priority = self.PRIORITY.HIGH,
+    dependencies = {}
+  })
+  -- Register cleanup handlers
+  self:register(&quot;sysUninstall&quot;, &quot;GUI.cleanupResources&quot;, {
+    id = &quot;sys_uninstall_cleanup&quot;,
+    priority = self.PRIORITY.CRITICAL,
+    dependencies = {}
+  })
+  self:register(&quot;sysExitEvent&quot;, &quot;GUI.cleanupResources&quot;, {
+    id = &quot;sys_exit_cleanup&quot;,
+    priority = self.PRIORITY.CRITICAL,
+    dependencies = {}
+  })
+  cecho(&quot;&lt;green&gt;[EventBus] Event Bus initialization complete\n&quot;)
+end
+-- Auto-initialize the Event Bus
+GUI.EventBus:initialize()
+-- Immutable State Management System
+-- ==================================
+-- Addresses &quot;Shared Global State Corruption&quot; from stability audit
+-- Provides immutable state transitions with validation and atomic updates
+-- Initialize State Manager
+GUI.StateManager = GUI.StateManager or {
+  state = {},              -- Current immutable state
+  history = {},            -- State change history
+  validators = {},         -- State validation functions
+  subscribers = {},        -- State change subscribers
+  maxHistorySize = 50,     -- Maximum history entries to keep
+  debug = false,          -- Debug logging
+  transactionDepth = 0,   -- Transaction nesting level
+  pendingChanges = {},    -- Changes pending in current transaction
+  stateVersion = 0        -- Version counter for optimistic locking
+}
+-- State field definitions with defaults and validation
+GUI.StateManager.schema = {
+  toggles = {
+    default = {},
+    validator = function(value)
+      return type(value) == &quot;table&quot;
+    end,
+    sanitizer = function(value)
+      if type(value) ~= &quot;table&quot; then return {} end
+      local sanitized = {}
+      for k, v in pairs(value) do
+        if type(k) == &quot;string&quot; and type(v) == &quot;boolean&quot; then
+          sanitized[k] = v
+        end
+      end
+      return sanitized
+    end
+  },
+  msdp = {
+    default = {},
+    validator = function(value)
+      return type(value) == &quot;table&quot;
+    end,
+    sanitizer = function(value)
+      if type(value) ~= &quot;table&quot; then return {} end
+      return value
+    end
+  },
+  map = {
+    default = { room_info = {}, prev_info = {} },
+    validator = function(value)
+      return type(value) == &quot;table&quot; and type(value.room_info) == &quot;table&quot;
+    end,
+    sanitizer = function(value)
+      if type(value) ~= &quot;table&quot; then
+        return { room_info = {}, prev_info = {} }
+      end
+      return {
+        room_info = type(value.room_info) == &quot;table&quot; and value.room_info or {},
+        prev_info = type(value.prev_info) == &quot;table&quot; and value.prev_info or {}
+      }
+    end
+  },
+  ui = {
+    default = { visible = true, layout = &quot;default&quot; },
+    validator = function(value)
+      return type(value) == &quot;table&quot;
+    end,
+    sanitizer = function(value)
+      if type(value) ~= &quot;table&quot; then
+        return { visible = true, layout = &quot;default&quot; }
+      end
+      return value
+    end
+  }
+}
+-- Initialize state with defaults
+function GUI.StateManager:initialize()
+  cecho(&quot;&lt;green&gt;[StateManager] Initializing immutable state system...\n&quot;)
+  -- Initialize with schema defaults
+  for fieldName, schema in pairs(self.schema) do
+    if not self.state[fieldName] then
+      self.state[fieldName] = self:deepCopy(schema.default)
+    end
+  end
+  -- Migrate existing global state
+  self:migrateExistingState()
+  cecho(&quot;&lt;green&gt;[StateManager] State management system initialized\n&quot;)
+end
+-- Migrate existing global state to immutable state
+function GUI.StateManager:migrateExistingState()
+  if self.debug then
+    cecho(&quot;&lt;cyan&gt;[StateManager] Migrating existing global state...\n&quot;)
+  end
+  -- Migrate GUI.toggles
+  if GUI.toggles and type(GUI.toggles) == &quot;table&quot; then
+    self:setState(&quot;toggles&quot;, GUI.toggles)
+    cecho(&quot;&lt;yellow&gt;[StateManager] Migrated GUI.toggles to immutable state\n&quot;)
+  end
+  -- Migrate map state
+  if map and type(map) == &quot;table&quot; then
+    local mapState = {
+      room_info = map.room_info or {},
+      prev_info = map.prev_info or {}
+    }
+    self:setState(&quot;map&quot;, mapState)
+    cecho(&quot;&lt;yellow&gt;[StateManager] Migrated map state to immutable state\n&quot;)
+  end
+  -- Migrate MSDP state if available
+  if msdp and type(msdp) == &quot;table&quot; then
+    self:setState(&quot;msdp&quot;, msdp)
+    cecho(&quot;&lt;yellow&gt;[StateManager] Migrated MSDP state to immutable state\n&quot;)
+  end
+end
+-- Deep copy utility for immutable state
+-- @param obj: Object to deep copy
+-- @return: Deep copy of the object
+function GUI.StateManager:deepCopy(obj)
+  if type(obj) ~= &quot;table&quot; then return obj end
+  local copy = {}
+  for k, v in pairs(obj) do
+    copy[self:deepCopy(k)] = self:deepCopy(v)
+  end
+  return copy
+end
+-- Get current state value (immutable)
+-- @param path: Dot-separated path to state value (e.g., &quot;toggles.gagChat&quot;)
+-- @param defaultValue: Default value if path doesn't exist
+-- @return: Deep copy of the state value
+function GUI.StateManager:getState(path, defaultValue)
+  local keys = {}
+  for key in path:gmatch(&quot;[^.]+&quot;) do
+    table.insert(keys, key)
+  end
+  local current = self.state
+  for _, key in ipairs(keys) do
+    if type(current) ~= &quot;table&quot; or current[key] == nil then
+      return defaultValue
+    end
+    current = current[key]
+  end
+  return self:deepCopy(current)
+end
+-- Set state value with validation and immutability
+-- @param path: Dot-separated path to state value
+-- @param value: New value to set
+-- @param options: Optional configuration { validate = true, notify = true }
+-- @return: boolean - true if successful, false if validation failed
+function GUI.StateManager:setState(path, value, options)
+  options = options or { validate = true, notify = true }
+  local keys = {}
+  for key in path:gmatch(&quot;[^.]+&quot;) do
+    table.insert(keys, key)
+  end
+  if #keys == 0 then
+    cecho(&quot;&lt;red&gt;[StateManager] Invalid state path: &quot; .. path .. &quot;\n&quot;)
+    return false
+  end
+  local rootKey = keys[1]
+  -- Validate against schema
+  if options.validate and self.schema[rootKey] then
+    local sanitizedValue = value
+    if #keys == 1 then
+      -- Setting entire field
+      if not self.schema[rootKey].validator(value) then
+        cecho(&quot;&lt;yellow&gt;[StateManager] Validation failed for &quot; .. path .. &quot;, applying sanitizer\n&quot;)
+        sanitizedValue = self.schema[rootKey].sanitizer(value)
+      end
+    end
+    value = sanitizedValue
+  end
+  -- Start transaction if not already in one
+  local startedTransaction = false
+  if self.transactionDepth == 0 then
+    self:beginTransaction()
+    startedTransaction = true
+  end
+  -- Create immutable update
+  local oldValue = self:getState(path)
+  local newState = self:deepCopy(self.state)
+  -- Navigate to the parent of the target key
+  local current = newState
+  for i = 1, #keys - 1 do
+    local key = keys[i]
+    if type(current[key]) ~= &quot;table&quot; then
+      current[key] = {}
+    end
+    current = current[key]
+  end
+  -- Set the new value
+  local finalKey = keys[#keys]
+  current[finalKey] = self:deepCopy(value)
+  -- Store pending change for transaction
+  table.insert(self.pendingChanges, {
+    path = path,
+    oldValue = oldValue,
+    newValue = self:deepCopy(value),
+    timestamp = os.time()
+  })
+  -- Update state
+  self.state = newState
+  self.stateVersion = self.stateVersion + 1
+  if self.debug then
+    cecho(string.format(&quot;&lt;cyan&gt;[StateManager] State updated: %s (version %d)\n&quot;,
+      path, self.stateVersion))
+  end
+  -- Commit transaction if we started it
+  if startedTransaction then
+    self:commitTransaction()
+  end
+  -- Notify subscribers if enabled
+  if options.notify then
+    self:notifySubscribers(path, value, oldValue)
+  end
+  return true
+end
+-- Update state with multiple changes atomically
+-- @param updates: Table of path -&gt; value mappings
+-- @param options: Optional configuration
+-- @return: boolean - true if all updates successful
+function GUI.StateManager:updateState(updates, options)
+  options = options or { validate = true, notify = true }
+  self:beginTransaction()
+  local success = true
+  for path, value in pairs(updates) do
+    if not self:setState(path, value, { validate = options.validate, notify = false }) then
+      success = false
+      break
+    end
+  end
+  if success then
+    self:commitTransaction()
+    if options.notify then
+      for path, value in pairs(updates) do
+        self:notifySubscribers(path, value, nil)
+      end
+    end
+  else
+    self:rollbackTransaction()
+  end
+  return success
+end
+-- Begin a state transaction
+function GUI.StateManager:beginTransaction()
+  self.transactionDepth = self.transactionDepth + 1
+  if self.transactionDepth == 1 then
+    self.pendingChanges = {}
+    if self.debug then
+      cecho(&quot;&lt;cyan&gt;[StateManager] Transaction started\n&quot;)
+    end
+  end
+end
+-- Commit current transaction
+function GUI.StateManager:commitTransaction()
+  if self.transactionDepth == 0 then
+    cecho(&quot;&lt;red&gt;[StateManager] No transaction to commit\n&quot;)
+    return false
+  end
+  self.transactionDepth = self.transactionDepth - 1
+  if self.transactionDepth == 0 then
+    -- Add to history
+    if #self.pendingChanges &gt; 0 then
+      table.insert(self.history, {
+        changes = self:deepCopy(self.pendingChanges),
+        timestamp = os.time(),
+        version = self.stateVersion
+      })
+      -- Limit history size
+      while #self.history &gt; self.maxHistorySize do
+        table.remove(self.history, 1)
+      end
+    end
+    self.pendingChanges = {}
+    if self.debug then
+      cecho(&quot;&lt;green&gt;[StateManager] Transaction committed\n&quot;)
+    end
+  end
+  return true
+end
+-- Rollback current transaction
+function GUI.StateManager:rollbackTransaction()
+  if self.transactionDepth == 0 then
+    cecho(&quot;&lt;red&gt;[StateManager] No transaction to rollback\n&quot;)
+    return false
+  end
+  if self.transactionDepth == 1 then
+    -- Restore state by undoing pending changes
+    for i = #self.pendingChanges, 1, -1 do
+      local change = self.pendingChanges[i]
+      self:setState(change.path, change.oldValue, { validate = false, notify = false })
+    end
+    if self.debug then
+      cecho(string.format(&quot;&lt;yellow&gt;[StateManager] Transaction rolled back (%d changes undone)\n&quot;,
+        #self.pendingChanges))
+    end
+  end
+  self.transactionDepth = self.transactionDepth - 1
+  self.pendingChanges = {}
+  return true
+end
+-- Subscribe to state changes
+-- @param path: State path to watch (supports wildcards with &quot;*&quot;)
+-- @param callback: Function to call on changes
+-- @param id: Optional subscriber ID
+-- @return: Subscriber ID
+function GUI.StateManager:subscribe(path, callback, id)
+  id = id or (&quot;subscriber_&quot; .. tostring(os.time()) .. &quot;_&quot; .. tostring(math.random(1000)))
+  if not self.subscribers[path] then
+    self.subscribers[path] = {}
+  end
+  self.subscribers[path][id] = {
+    callback = callback,
+    id = id,
+    created = os.time()
+  }
+  if self.debug then
+    cecho(string.format(&quot;&lt;cyan&gt;[StateManager] Subscriber %s registered for path: %s\n&quot;, id, path))
+  end
+  return id
+end
+-- Unsubscribe from state changes
+-- @param path: State path
+-- @param id: Subscriber ID
+-- @return: boolean - true if unsubscribed
+function GUI.StateManager:unsubscribe(path, id)
+  if self.subscribers[path] and self.subscribers[path][id] then
+    self.subscribers[path][id] = nil
+    if self.debug then
+      cecho(string.format(&quot;&lt;yellow&gt;[StateManager] Subscriber %s unsubscribed from path: %s\n&quot;, id, path))
+    end
+    return true
+  end
+  return false
+end
+-- Notify subscribers of state changes
+-- @param path: Changed state path
+-- @param newValue: New value
+-- @param oldValue: Previous value
+function GUI.StateManager:notifySubscribers(path, newValue, oldValue)
+  for subscriberPath, subscribers in pairs(self.subscribers) do
+    local shouldNotify = false
+    -- Exact match
+    if subscriberPath == path then
+      shouldNotify = true
+    -- Wildcard match
+    elseif subscriberPath:find(&quot;*&quot;) then
+      local pattern = subscriberPath:gsub(&quot;%*&quot;, &quot;.*&quot;)
+      if path:match(&quot;^&quot; .. pattern .. &quot;$&quot;) then
+        shouldNotify = true
+      end
+    -- Parent path match
+    elseif path:find(&quot;^&quot; .. subscriberPath .. &quot;%.&quot;) then
+      shouldNotify = true
+    end
+    if shouldNotify then
+      for _, subscriber in pairs(subscribers) do
+        local success, err = pcall(subscriber.callback, path, newValue, oldValue)
+        if not success then
+          cecho(string.format(&quot;&lt;red&gt;[StateManager] Subscriber %s error: %s\n&quot;,
+            subscriber.id, tostring(err)))
+        end
+      end
+    end
+  end
+end
+-- Get state history
+-- @param limit: Maximum number of history entries to return
+-- @return: Array of history entries
+function GUI.StateManager:getHistory(limit)
+  limit = limit or #self.history
+  local result = {}
+  local start = math.max(1, #self.history - limit + 1)
+  for i = start, #self.history do
+    table.insert(result, self:deepCopy(self.history[i]))
+  end
+  return result
+end
+-- Restore state to a previous version
+-- @param version: Version number to restore to
+-- @return: boolean - true if successful
+function GUI.StateManager:restoreVersion(version)
+  for i = #self.history, 1, -1 do
+    local entry = self.history[i]
+    if entry.version == version then
+      self:beginTransaction()
+      local success = true
+      -- Apply inverse of all changes since this version
+      for j = #self.history, i + 1, -1 do
+        local laterEntry = self.history[j]
+        for k = #laterEntry.changes, 1, -1 do
+          local change = laterEntry.changes[k]
+          if not self:setState(change.path, change.oldValue, { validate = false, notify = false }) then
+            success = false
+            break
+          end
+        end
+        if not success then break end
+      end
+      if success then
+        self:commitTransaction()
+        cecho(string.format(&quot;&lt;green&gt;[StateManager] State restored to version %d\n&quot;, version))
+        return true
+      else
+        self:rollbackTransaction()
+        cecho(string.format(&quot;&lt;red&gt;[StateManager] Failed to restore to version %d\n&quot;, version))
+        return false
+      end
+    end
+  end
+  cecho(string.format(&quot;&lt;red&gt;[StateManager] Version %d not found in history\n&quot;, version))
+  return false
+end
+-- Get state status and statistics
+-- @return: Status information table
+function GUI.StateManager:getStatus()
+  local status = {
+    version = self.stateVersion,
+    historySize = #self.history,
+    subscriberCount = 0,
+    transactionDepth = self.transactionDepth,
+    stateSize = 0,
+    fields = {}
+  }
+  -- Count subscribers
+  for _, subscribers in pairs(self.subscribers) do
+    for _ in pairs(subscribers) do
+      status.subscriberCount = status.subscriberCount + 1
+    end
+  end
+  -- Analyze state fields
+  for fieldName, fieldValue in pairs(self.state) do
+    local fieldInfo = {
+      type = type(fieldValue),
+      hasSchema = self.schema[fieldName] ~= nil
+    }
+    if type(fieldValue) == &quot;table&quot; then
+      fieldInfo.size = 0
+      for _ in pairs(fieldValue) do
+        fieldInfo.size = fieldInfo.size + 1
+      end
+    end
+    status.fields[fieldName] = fieldInfo
+    status.stateSize = status.stateSize + 1
+  end
+  return status
+end
+-- Display state status
+function GUI.StateManager:showStatus()
+  cecho(&quot;&lt;cyan&gt;[StateManager] === State Management Status ===\n&quot;)
+  local status = self:getStatus()
+  cecho(string.format(&quot;&lt;white&gt;Current Version: %d\n&quot;, status.version))
+  cecho(string.format(&quot;&lt;white&gt;History Entries: %d\n&quot;, status.historySize))
+  cecho(string.format(&quot;&lt;white&gt;Active Subscribers: %d\n&quot;, status.subscriberCount))
+  cecho(string.format(&quot;&lt;white&gt;Transaction Depth: %d\n&quot;, status.transactionDepth))
+  cecho(string.format(&quot;&lt;white&gt;State Fields: %d\n&quot;, status.stateSize))
+  cecho(&quot;&lt;cyan&gt;\nField Details:\n&quot;)
+  for fieldName, fieldInfo in pairs(status.fields) do
+    local schemaStatus = fieldInfo.hasSchema and &quot;✓&quot; or &quot;✗&quot;
+    local sizeInfo = fieldInfo.size and string.format(&quot; (%d items)&quot;, fieldInfo.size) or &quot;&quot;
+    cecho(string.format(&quot;&lt;yellow&gt;  %s: &lt;white&gt;%s%s &lt;gray&gt;[schema: %s]\n&quot;,
+      fieldName, fieldInfo.type, sizeInfo, schemaStatus))
+  end
+  cecho(&quot;&lt;cyan&gt;====================================\n&quot;)
+end
+-- Enable/disable debug mode
+-- @param enabled: Boolean to enable/disable debug logging
+function GUI.StateManager:setDebug(enabled)
+  self.debug = enabled
+  cecho(string.format(&quot;&lt;cyan&gt;[StateManager] Debug logging %s\n&quot;, enabled and &quot;enabled&quot; or &quot;disabled&quot;))
+end
+-- Safe accessor functions for backward compatibility
+-- These replace direct global state access with immutable state access
+-- Safe toggle access
+-- @param key: Toggle key name
+-- @param defaultValue: Default value if toggle doesn't exist
+-- @return: Toggle value
+function GUI.getSafeToggle(key, defaultValue)
+  return GUI.StateManager:getState(&quot;toggles.&quot; .. key, defaultValue)
+end
+-- Safe toggle setting
+-- @param key: Toggle key name
+-- @param value: New toggle value
+-- @return: boolean - true if successful
+function GUI.setSafeToggle(key, value)
+  if type(value) ~= &quot;boolean&quot; then
+    cecho(string.format(&quot;&lt;red&gt;[StateManager] Invalid toggle value for %s: %s\n&quot;, key, tostring(value)))
+    return false
+  end
+  return GUI.StateManager:setState(&quot;toggles.&quot; .. key, value)
+end
+-- Safe MSDP access
+-- @param key: MSDP key name
+-- @param defaultValue: Default value if key doesn't exist
+-- @return: MSDP value
+function GUI.getSafeMSDP(key, defaultValue)
+  return GUI.StateManager:getState(&quot;msdp.&quot; .. key, defaultValue)
+end
+-- Safe MSDP setting (for internal use)
+-- @param key: MSDP key name
+-- @param value: New MSDP value
+-- @return: boolean - true if successful
+function GUI.setSafeMSDP(key, value)
+  return GUI.StateManager:setState(&quot;msdp.&quot; .. key, value)
+end
+-- Safe map access
+-- @param key: Map key name (e.g., &quot;room_info.VNUM&quot;)
+-- @param defaultValue: Default value if key doesn't exist
+-- @return: Map value
+function GUI.getSafeMap(key, defaultValue)
+  return GUI.StateManager:getState(&quot;map.&quot; .. key, defaultValue)
+end
+-- Safe map setting
+-- @param key: Map key name
+-- @param value: New map value
+-- @return: boolean - true if successful
+function GUI.setSafeMap(key, value)
+  return GUI.StateManager:setState(&quot;map.&quot; .. key, value)
+end
+-- Enhanced state synchronization with global objects
+-- Sync immutable state back to global objects for compatibility
+function GUI.StateManager:syncToGlobals()
+  -- Sync toggles
+  local toggles = self:getState(&quot;toggles&quot;, {})
+  if GUI.toggles then
+    for k, v in pairs(toggles) do
+      GUI.toggles[k] = v
+    end
+  end
+  -- Sync map state
+  local mapState = self:getState(&quot;map&quot;, {})
+  if map and type(map) == &quot;table&quot; then
+    if mapState.room_info then
+      map.room_info = mapState.room_info
+    end
+    if mapState.prev_info then
+      map.prev_info = mapState.prev_info
+    end
+  end
+  -- Sync MSDP state
+  local msdpState = self:getState(&quot;msdp&quot;, {})
+  if msdp and type(msdp) == &quot;table&quot; then
+    for k, v in pairs(msdpState) do
+      msdp[k] = v
+    end
+  end
+  if self.debug then
+    cecho(&quot;&lt;cyan&gt;[StateManager] State synchronized to global objects\n&quot;)
+  end
+end
+-- Setup state change listeners for automatic global sync
+function GUI.StateManager:setupGlobalSync()
+  -- Subscribe to all state changes for global sync
+  self:subscribe(&quot;*&quot;, function(path, newValue, oldValue)
+    -- Don't sync during transactions to avoid partial updates
+    if self.transactionDepth == 0 then
+      self:syncToGlobals()
+    end
+  end, &quot;global_sync&quot;)
+  if self.debug then
+    cecho(&quot;&lt;green&gt;[StateManager] Global state synchronization enabled\n&quot;)
+  end
+end
+-- Auto-initialize the State Manager
+GUI.StateManager:initialize()
+GUI.StateManager:setupGlobalSync()
+-- Component Abstraction Layer System
+-- ==================================
+-- Addresses &quot;Tight Coupling Between Components&quot; from stability audit
+-- Provides interfaces and message passing to decouple system dependencies
+-- Initialize Component Registry
+GUI.ComponentRegistry = GUI.ComponentRegistry or {
+  components = {},         -- Registered components with their interfaces
+  interfaces = {},         -- Interface definitions with contracts
+  dependencies = {},       -- Component dependency mappings
+  mediator = {},          -- Message mediator for loose coupling
+  debug = false           -- Debug logging
+}
+-- Define standard component interfaces to eliminate direct coupling
+GUI.ComponentRegistry.interfaces = {
+  -- UI Component Interface - for all visual elements
+  UIComponent = {
+    name = &quot;UIComponent&quot;,
+    required_methods = {&quot;show&quot;, &quot;hide&quot;, &quot;resize&quot;, &quot;move&quot;},
+    optional_methods = {&quot;refresh&quot;, &quot;destroy&quot;, &quot;getStatus&quot;},
+    events = {&quot;onShow&quot;, &quot;onHide&quot;, &quot;onResize&quot;, &quot;onDestroy&quot;},
+    contract = &quot;Basic UI component lifecycle management&quot;
+  },
+  -- Data Provider Interface - for components that provide data
+  DataProvider = {
+    name = &quot;DataProvider&quot;,
+    required_methods = {&quot;getData&quot;, &quot;setData&quot;, &quot;validateData&quot;},
+    optional_methods = {&quot;subscribe&quot;, &quot;unsubscribe&quot;, &quot;clearData&quot;},
+    events = {&quot;onDataChanged&quot;, &quot;onDataValidationFailed&quot;},
+    contract = &quot;Provides and manages data with validation&quot;
+  },
+  -- Event Handler Interface - for components that handle events
+  EventHandler = {
+    name = &quot;EventHandler&quot;,
+    required_methods = {&quot;handleEvent&quot;, &quot;getHandledEvents&quot;},
+    optional_methods = {&quot;registerEventType&quot;, &quot;unregisterEventType&quot;},
+    events = {&quot;onEventHandled&quot;, &quot;onEventError&quot;},
+    contract = &quot;Processes events with error handling&quot;
+  },
+  -- Layout Manager Interface - for components that manage layout
+  LayoutManager = {
+    name = &quot;LayoutManager&quot;,
+    required_methods = {&quot;addComponent&quot;, &quot;removeComponent&quot;, &quot;updateLayout&quot;},
+    optional_methods = {&quot;getComponentById&quot;, &quot;getAllComponents&quot;, &quot;optimizeLayout&quot;},
+    events = {&quot;onComponentAdded&quot;, &quot;onComponentRemoved&quot;, &quot;onLayoutChanged&quot;},
+    contract = &quot;Manages component positioning and sizing&quot;
+  },
+  -- Resource Manager Interface - for components that manage resources
+  ResourceManager = {
+    name = &quot;ResourceManager&quot;,
+    required_methods = {&quot;allocateResource&quot;, &quot;releaseResource&quot;, &quot;getResourceStatus&quot;},
+    optional_methods = {&quot;optimizeResources&quot;, &quot;cleanupOrphaned&quot;, &quot;getUsageStats&quot;},
+    events = {&quot;onResourceAllocated&quot;, &quot;onResourceReleased&quot;, &quot;onResourceLeak&quot;},
+    contract = &quot;Manages system resources with lifecycle tracking&quot;
+  }
+}
+-- Register a component with its interface implementation
+-- @param componentId: Unique identifier for the component
+-- @param component: Component instance with interface methods
+-- @param interfaceNames: Array of interface names this component implements
+-- @param config: Optional configuration
+-- @return: boolean - true if registration successful
+function GUI.ComponentRegistry:registerComponent(componentId, component, interfaceNames, config)
+  config = config or {}
+  -- Validate component ID
+  if type(componentId) ~= &quot;string&quot; or componentId == &quot;&quot; then
+    cecho(&quot;&lt;red&gt;[ComponentRegistry] Invalid component ID\n&quot;)
+    return false
+  end
+  -- Validate interfaces
+  if type(interfaceNames) ~= &quot;table&quot; then
+    interfaceNames = {interfaceNames}
+  end
+  for _, interfaceName in ipairs(interfaceNames) do
+    if not self.interfaces[interfaceName] then
+      cecho(string.format(&quot;&lt;red&gt;[ComponentRegistry] Unknown interface: %s\n&quot;, interfaceName))
+      return false
+    end
+    -- Validate that component implements required methods
+    local interface = self.interfaces[interfaceName]
+    for _, methodName in ipairs(interface.required_methods) do
+      if type(component[methodName]) ~= &quot;function&quot; then
+        cecho(string.format(&quot;&lt;red&gt;[ComponentRegistry] Component %s missing required method %s for interface %s\n&quot;,
+          componentId, methodName, interfaceName))
+        return false
+      end
+    end
+  end
+  -- Create component registration
+  local registration = {
+    id = componentId,
+    component = component,
+    interfaces = interfaceNames,
+    config = config,
+    registeredAt = os.time(),
+    messageQueue = {},
+    dependencies = config.dependencies or {},
+    status = &quot;active&quot;
+  }
+  -- Store component
+  self.components[componentId] = registration
+  -- Update dependency tracking
+  if #registration.dependencies &gt; 0 then
+    self.dependencies[componentId] = registration.dependencies
+  end
+  if self.debug then
+    cecho(string.format(&quot;&lt;green&gt;[ComponentRegistry] Registered component %s with interfaces: %s\n&quot;,
+      componentId, table.concat(interfaceNames, &quot;, &quot;)))
+  end
+  -- Notify other components
+  self:sendMessage(&quot;component.registered&quot;, {
+    componentId = componentId,
+    interfaces = interfaceNames
+  })
+  return true
+end
+-- Unregister a component
+-- @param componentId: Component ID to unregister
+-- @return: boolean - true if unregistered successfully
+function GUI.ComponentRegistry:unregisterComponent(componentId)
+  if not self.components[componentId] then
+    return false
+  end
+  local component = self.components[componentId]
+  -- Call destroy method if available
+  if type(component.component.destroy) == &quot;function&quot; then
+    local success, err = pcall(component.component.destroy, component.component)
+    if not success then
+      cecho(string.format(&quot;&lt;red&gt;[ComponentRegistry] Error destroying component %s: %s\n&quot;,
+        componentId, tostring(err)))
+    end
+  end
+  -- Remove from registry
+  self.components[componentId] = nil
+  self.dependencies[componentId] = nil
+  if self.debug then
+    cecho(string.format(&quot;&lt;yellow&gt;[ComponentRegistry] Unregistered component: %s\n&quot;, componentId))
+  end
+  -- Notify other components
+  self:sendMessage(&quot;component.unregistered&quot;, {componentId = componentId})
+  return true
+end
+-- Get component by ID with interface validation
+-- @param componentId: Component ID to retrieve
+-- @param requiredInterface: Optional interface name that component must implement
+-- @return: Component instance or nil
+function GUI.ComponentRegistry:getComponent(componentId, requiredInterface)
+  local registration = self.components[componentId]
+  if not registration then
+    return nil
+  end
+  -- Check interface requirement
+  if requiredInterface then
+    local hasInterface = false
+    for _, interfaceName in ipairs(registration.interfaces) do
+      if interfaceName == requiredInterface then
+        hasInterface = true
+        break
+      end
+    end
+    if not hasInterface then
+      if self.debug then
+        cecho(string.format(&quot;&lt;yellow&gt;[ComponentRegistry] Component %s does not implement interface %s\n&quot;,
+          componentId, requiredInterface))
+      end
+      return nil
+    end
+  end
+  return registration.component
+end
+-- Find all components implementing a specific interface
+-- @param interfaceName: Interface name to search for
+-- @return: Array of {id, component} objects
+function GUI.ComponentRegistry:getComponentsByInterface(interfaceName)
+  local results = {}
+  for componentId, registration in pairs(self.components) do
+    for _, componentInterface in ipairs(registration.interfaces) do
+      if componentInterface == interfaceName then
+        table.insert(results, {
+          id = componentId,
+          component = registration.component
+        })
+        break
+      end
+    end
+  end
+  return results
+end
+-- Message Mediator for loose coupling between components
+-- @param messageType: Type of message to send
+-- @param data: Message payload
+-- @param targetComponent: Optional specific target (broadcast if nil)
+function GUI.ComponentRegistry:sendMessage(messageType, data, targetComponent)
+  local message = {
+    type = messageType,
+    data = data or {},
+    timestamp = os.time(),
+    source = &quot;system&quot;
+  }
+  if targetComponent then
+    -- Send to specific component
+    local registration = self.components[targetComponent]
+    if registration and registration.status == &quot;active&quot; then
+      table.insert(registration.messageQueue, message)
+      self:processComponentMessages(targetComponent)
+    end
+  else
+    -- Broadcast to all components
+    for componentId, registration in pairs(self.components) do
+      if registration.status == &quot;active&quot; then
+        table.insert(registration.messageQueue, message)
+      end
+    end
+    -- Process all message queues
+    for componentId in pairs(self.components) do
+      self:processComponentMessages(componentId)
+    end
+  end
+  if self.debug then
+    local target = targetComponent or &quot;all components&quot;
+    cecho(string.format(&quot;&lt;cyan&gt;[ComponentRegistry] Message sent: %s to %s\n&quot;, messageType, target))
+  end
+end
+-- Process queued messages for a component
+-- @param componentId: Component to process messages for
+function GUI.ComponentRegistry:processComponentMessages(componentId)
+  local registration = self.components[componentId]
+  if not registration or registration.status ~= &quot;active&quot; then
+    return
+  end
+  while #registration.messageQueue &gt; 0 do
+    local message = table.remove(registration.messageQueue, 1)
+    -- Try to deliver message to component
+    if type(registration.component.handleMessage) == &quot;function&quot; then
+      local success, err = pcall(registration.component.handleMessage,
+        registration.component, message.type, message.data)
+      if not success then
+        cecho(string.format(&quot;&lt;red&gt;[ComponentRegistry] Message handling error in %s: %s\n&quot;,
+          componentId, tostring(err)))
+      end
+    end
+  end
+end
+-- Dependency Resolution System
+-- @param componentId: Component ID to check dependencies for
+-- @return: boolean - true if all dependencies are satisfied
+function GUI.ComponentRegistry:checkDependencies(componentId)
+  local deps = self.dependencies[componentId]
+  if not deps or #deps == 0 then
+    return true
+  end
+  for _, depId in ipairs(deps) do
+    local depRegistration = self.components[depId]
+    if not depRegistration or depRegistration.status ~= &quot;active&quot; then
+      if self.debug then
+        cecho(string.format(&quot;&lt;yellow&gt;[ComponentRegistry] Component %s waiting for dependency: %s\n&quot;,
+          componentId, depId))
+      end
+      return false
+    end
+  end
+  return true
+end
+-- Safe component method invocation with error boundaries
+-- @param componentId: Component ID
+-- @param methodName: Method name to invoke
+-- @param ...: Arguments to pass to method
+-- @return: success, result - pcall results
+function GUI.ComponentRegistry:invokeMethod(componentId, methodName, ...)
+  local registration = self.components[componentId]
+  if not registration or registration.status ~= &quot;active&quot; then
+    return false, &quot;Component not available&quot;
+  end
+  local component = registration.component
+  if type(component[methodName]) ~= &quot;function&quot; then
+    return false, &quot;Method not found&quot;
+  end
+  -- Create error boundary for method invocation
+  local args = {...}
+  local success, result = pcall(function()
+    return component[methodName](component, unpack(args))
+  end)
+  if not success then
+    cecho(string.format(&quot;&lt;red&gt;[ComponentRegistry] Method %s failed on component %s: %s\n&quot;,
+      methodName, componentId, tostring(result)))
+  end
+  return success, result
+end
+-- Component status and health monitoring
+-- @return: Status information about all components
+function GUI.ComponentRegistry:getStatus()
+  local status = {
+    totalComponents = 0,
+    activeComponents = 0,
+    componentsByInterface = {},
+    dependencyGraph = {},
+    messageQueueSizes = {}
+  }
+  for componentId, registration in pairs(self.components) do
+    status.totalComponents = status.totalComponents + 1
+    if registration.status == &quot;active&quot; then
+      status.activeComponents = status.activeComponents + 1
+    end
+    -- Count by interface
+    for _, interfaceName in ipairs(registration.interfaces) do
+      status.componentsByInterface[interfaceName] = (status.componentsByInterface[interfaceName] or 0) + 1
+    end
+    -- Track message queue size
+    status.messageQueueSizes[componentId] = #registration.messageQueue
+    -- Build dependency graph
+    if #registration.dependencies &gt; 0 then
+      status.dependencyGraph[componentId] = registration.dependencies
+    end
+  end
+  return status
+end
+-- Display component registry status
+function GUI.ComponentRegistry:showStatus()
+  cecho(&quot;&lt;cyan&gt;[ComponentRegistry] === Component Registry Status ===\n&quot;)
+  local status = self:getStatus()
+  cecho(string.format(&quot;&lt;white&gt;Total Components: %d\n&quot;, status.totalComponents))
+  cecho(string.format(&quot;&lt;white&gt;Active Components: %d\n&quot;, status.activeComponents))
+  cecho(&quot;&lt;cyan&gt;\nComponents by Interface:\n&quot;)
+  for interfaceName, count in pairs(status.componentsByInterface) do
+    cecho(string.format(&quot;&lt;yellow&gt;  %s: &lt;white&gt;%d components\n&quot;, interfaceName, count))
+  end
+  if next(status.dependencyGraph) then
+    cecho(&quot;&lt;cyan&gt;\nDependency Graph:\n&quot;)
+    for componentId, deps in pairs(status.dependencyGraph) do
+      cecho(string.format(&quot;&lt;yellow&gt;  %s depends on: &lt;white&gt;%s\n&quot;,
+        componentId, table.concat(deps, &quot;, &quot;)))
+    end
+  end
+  local queuedMessages = 0
+  for _, size in pairs(status.messageQueueSizes) do
+    queuedMessages = queuedMessages + size
+  end
+  if queuedMessages &gt; 0 then
+    cecho(string.format(&quot;&lt;yellow&gt;Queued Messages: %d\n&quot;, queuedMessages))
+  end
+  cecho(&quot;&lt;cyan&gt;===============================================\n&quot;)
+end
+-- Enable/disable debug mode
+-- @param enabled: Boolean to enable/disable debug logging
+function GUI.ComponentRegistry:setDebug(enabled)
+  self.debug = enabled
+  cecho(string.format(&quot;&lt;cyan&gt;[ComponentRegistry] Debug logging %s\n&quot;, enabled and &quot;enabled&quot; or &quot;disabled&quot;))
+end
+-- Abstract Component Base Class
+-- Provides common functionality for all components following the abstraction pattern
+GUI.AbstractComponent = GUI.AbstractComponent or {}
+GUI.AbstractComponent.__index = GUI.AbstractComponent
+-- Create a new abstract component instance
+-- @param config: Component configuration table
+-- @return: New component instance
+function GUI.AbstractComponent:new(config)
+  local component = {
+    id = config.id or (&quot;component_&quot; .. tostring(os.time())),
+    interfaces = config.interfaces or {},
+    dependencies = config.dependencies or {},
+    status = &quot;inactive&quot;,
+    messageHandlers = {},
+    initialized = false
+  }
+  setmetatable(component, self)
+  return component
+end
+-- Initialize the component
+-- @return: boolean - true if initialization successful
+function GUI.AbstractComponent:initialize()
+  if self.initialized then
+    return true
+  end
+  -- Check dependencies
+  if not GUI.ComponentRegistry:checkDependencies(self.id) then
+    return false
+  end
+  -- Perform component-specific initialization
+  local success = self:onInitialize()
+  if success then
+    self.initialized = true
+    self.status = &quot;active&quot;
+    -- Register with component registry
+    GUI.ComponentRegistry:registerComponent(self.id, self, self.interfaces, {
+      dependencies = self.dependencies
+    })
+    if GUI.ComponentRegistry.debug then
+      cecho(string.format(&quot;&lt;green&gt;[AbstractComponent] Component %s initialized\n&quot;, self.id))
+    end
+  end
+  return success
+end
+-- Override in derived classes
+function GUI.AbstractComponent:onInitialize()
+  return true
+end
+-- Handle incoming messages
+-- @param messageType: Type of message received
+-- @param data: Message payload
+function GUI.AbstractComponent:handleMessage(messageType, data)
+  local handler = self.messageHandlers[messageType]
+  if type(handler) == &quot;function&quot; then
+    local success, err = pcall(handler, self, data)
+    if not success then
+      cecho(string.format(&quot;&lt;red&gt;[AbstractComponent] Message handler error in %s: %s\n&quot;,
+        self.id, tostring(err)))
+    end
+  else
+    -- Default message handling
+    self:onMessage(messageType, data)
+  end
+end
+-- Override in derived classes for custom message handling
+function GUI.AbstractComponent:onMessage(messageType, data)
+  -- Default: do nothing
+end
+-- Register a message handler
+-- @param messageType: Type of message to handle
+-- @param handler: Function to handle the message
+function GUI.AbstractComponent:registerMessageHandler(messageType, handler)
+  self.messageHandlers[messageType] = handler
+end
+-- Send a message to other components
+-- @param messageType: Type of message to send
+-- @param data: Message payload
+-- @param targetComponent: Optional specific target
+function GUI.AbstractComponent:sendMessage(messageType, data, targetComponent)
+  GUI.ComponentRegistry:sendMessage(messageType, data, targetComponent)
+end
+-- Destroy the component
+function GUI.AbstractComponent:destroy()
+  self.status = &quot;destroyed&quot;
+  self:onDestroy()
+  GUI.ComponentRegistry:unregisterComponent(self.id)
+end
+-- Override in derived classes
+function GUI.AbstractComponent:onDestroy()
+  -- Default: do nothing
+end
+-- UI Component Adapter
+-- Adapts existing GUI components to the abstraction layer
+GUI.UIComponentAdapter = setmetatable({}, {__index = GUI.AbstractComponent})
+-- Create a UI component adapter
+-- @param existingComponent: Existing GUI component to adapt
+-- @param config: Adapter configuration
+-- @return: Adapted component
+function GUI.UIComponentAdapter:new(existingComponent, config)
+  local adapter = GUI.AbstractComponent.new(self, config)
+  adapter.wrappedComponent = existingComponent
+  adapter.interfaces = {&quot;UIComponent&quot;}
+  return adapter
+end
+-- Implement UIComponent interface methods
+function GUI.UIComponentAdapter:show()
+  if self.wrappedComponent and type(self.wrappedComponent.show) == &quot;function&quot; then
+    return self.wrappedComponent:show()
+  end
+  return false
+end
+function GUI.UIComponentAdapter:hide()
+  if self.wrappedComponent and type(self.wrappedComponent.hide) == &quot;function&quot; then
+    return self.wrappedComponent:hide()
+  end
+  return false
+end
+function GUI.UIComponentAdapter:resize(width, height)
+  if self.wrappedComponent and type(self.wrappedComponent.resize) == &quot;function&quot; then
+    return self.wrappedComponent:resize(width, height)
+  end
+  return false
+end
+function GUI.UIComponentAdapter:move(x, y)
+  if self.wrappedComponent and type(self.wrappedComponent.move) == &quot;function&quot; then
+    return self.wrappedComponent:move(x, y)
+  end
+  return false
+end
+function GUI.UIComponentAdapter:refresh()
+  if self.wrappedComponent and type(self.wrappedComponent.refresh) == &quot;function&quot; then
+    return self.wrappedComponent:refresh()
+  end
+  return true
+end
+function GUI.UIComponentAdapter:getStatus()
+  return {
+    id = self.id,
+    status = self.status,
+    hasWrappedComponent = self.wrappedComponent ~= nil,
+    wrappedType = type(self.wrappedComponent)
+  }
+end
+-- Auto-initialize the Component Registry
+GUI.ComponentRegistry:setDebug(false)
+cecho(&quot;&lt;green&gt;[ComponentRegistry] Component abstraction layer initialized\n&quot;)
+-- Comprehensive Logging System
+-- ============================
+-- Addresses &quot;Inconsistent Error Handling Patterns&quot; from stability audit
+-- Provides centralized, structured logging with context and error tracking
+-- Initialize Logging System
+GUI.Logger = GUI.Logger or {
+  logs = {},              -- Centralized log storage
+  logLevels = {},         -- Log level configurations
+  handlers = {},          -- Log output handlers
+  filters = {},           -- Log filtering rules
+  maxLogSize = 1000,      -- Maximum log entries to keep
+  timestampFormat = &quot;%Y-%m-%d %H:%M:%S&quot;, -- Log timestamp format
+  debug = false,          -- Debug mode
+  sessionId = nil,        -- Unique session identifier
+  logFile = nil,          -- Optional log file path
+  bufferMode = true       -- Buffer logs for performance
+}
+-- Define logging levels with priority ordering
+GUI.Logger.LEVELS = {
+  TRACE = { level = 1, name = &quot;TRACE&quot;, color = &quot;&lt;gray&gt;&quot; },
+  DEBUG = { level = 2, name = &quot;DEBUG&quot;, color = &quot;&lt;cyan&gt;&quot; },
+  INFO =  { level = 3, name = &quot;INFO&quot;,  color = &quot;&lt;white&gt;&quot; },
+  WARN =  { level = 4, name = &quot;WARN&quot;,  color = &quot;&lt;yellow&gt;&quot; },
+  ERROR = { level = 5, name = &quot;ERROR&quot;, color = &quot;&lt;red&gt;&quot; },
+  FATAL = { level = 6, name = &quot;FATAL&quot;, color = &quot;&lt;light_red&gt;&quot; }
+}
+-- Initialize the logging system
+function GUI.Logger:initialize()
+  -- Generate unique session ID
+  self.sessionId = &quot;session_&quot; .. tostring(os.time()) .. &quot;_&quot; .. tostring(math.random(10000))
+  -- Set default log levels for components
+  self.logLevels = {
+    default = self.LEVELS.INFO.level,
+    EventBus = self.LEVELS.DEBUG.level,
+    StateManager = self.LEVELS.INFO.level,
+    ComponentRegistry = self.LEVELS.INFO.level,
+    GUI = self.LEVELS.WARN.level,
+    map = self.LEVELS.INFO.level,
+    MSDP = self.LEVELS.WARN.level
+  }
+  -- Initialize log storage structure
+  self.logs = {
+    entries = {},           -- Individual log entries
+    summary = {             -- Summary statistics
+      totalEntries = 0,
+      errorCount = 0,
+      warningCount = 0,
+      lastError = nil,
+      sessionStart = os.time()
+    },
+    byComponent = {},       -- Logs grouped by component
+    byLevel = {}            -- Logs grouped by level
+  }
+  -- Set up log file if configured
+  local homeDir = getMudletHomeDir and getMudletHomeDir() or &quot;.&quot;
+  self.logFile = homeDir .. &quot;/LuminariGUI.log&quot;
+  -- Create console output handler
+  self:addHandler(&quot;console&quot;, function(entry)
+    local levelInfo = self.LEVELS[entry.level] or self.LEVELS.INFO
+    local prefix = string.format(&quot;[%s] %s:&quot;, entry.component or &quot;SYSTEM&quot;, levelInfo.name)
+    local message = string.format(&quot;%s%s &lt;white&gt;%s&quot;, levelInfo.color, prefix, entry.message)
+    if entry.context and type(entry.context) == &quot;table&quot; and next(entry.context) then
+      message = message .. &quot; &quot; .. self:formatContext(entry.context)
+    end
+    cecho(message .. &quot;\n&quot;)
+  end)
+  if self.debug then
+    cecho(&quot;&lt;green&gt;[Logger] Logging system initialized\n&quot;)
+  end
+end
+-- Core logging function with structured data support
+-- @param level: Log level (TRACE, DEBUG, INFO, WARN, ERROR, FATAL)
+-- @param component: Component name generating the log
+-- @param message: Log message
+-- @param context: Optional context data (table with additional information)
+function GUI.Logger:log(level, component, message, context)
+  -- Validate inputs
+  if type(message) ~= &quot;string&quot; then
+    message = tostring(message)
+  end
+  component = component or &quot;UNKNOWN&quot;
+  context = context or {}
+  -- Check if logging is enabled for this component and level
+  local componentLevel = self.logLevels[component] or self.logLevels.default
+  local messageLevel = (self.LEVELS[level] and self.LEVELS[level].level) or self.LEVELS.INFO.level
+  if messageLevel &lt; componentLevel then
+    return -- Log level too low, skip
+  end
+  -- Create log entry
+  local entry = {
+    timestamp = os.time(),
+    timeString = os.date(self.timestampFormat),
+    sessionId = self.sessionId,
+    level = level,
+    component = component,
+    message = message,
+    context = context,
+    stackTrace = self:captureStackTrace()
+  }
+  -- Store the log entry
+  self:storeLogEntry(entry)
+  -- Process through handlers
+  self:processLogEntry(entry)
+  -- Update statistics
+  self:updateStatistics(entry)
+end
+-- Store log entry in memory with size management
+-- @param entry: Log entry to store
+function GUI.Logger:storeLogEntry(entry)
+  -- Add to main log storage
+  table.insert(self.logs.entries, entry)
+  -- Maintain size limit
+  while #self.logs.entries &gt; self.maxLogSize do
+    table.remove(self.logs.entries, 1)
+  end
+  -- Group by component
+  if not self.logs.byComponent[entry.component] then
+    self.logs.byComponent[entry.component] = {}
+  end
+  table.insert(self.logs.byComponent[entry.component], entry)
+  -- Group by level
+  if not self.logs.byLevel[entry.level] then
+    self.logs.byLevel[entry.level] = {}
+  end
+  table.insert(self.logs.byLevel[entry.level], entry)
+end
+-- Convenience methods for different log levels
+function GUI.Logger:trace(component, message, context)
+  self:log(&quot;TRACE&quot;, component, message, context)
+end
+function GUI.Logger:debug(component, message, context)
+  self:log(&quot;DEBUG&quot;, component, message, context)
+end
+function GUI.Logger:info(component, message, context)
+  self:log(&quot;INFO&quot;, component, message, context)
+end
+function GUI.Logger:warn(component, message, context)
+  self:log(&quot;WARN&quot;, component, message, context)
+end
+function GUI.Logger:error(component, message, context)
+  self:log(&quot;ERROR&quot;, component, message, context)
+end
+function GUI.Logger:fatal(component, message, context)
+  self:log(&quot;FATAL&quot;, component, message, context)
+end
+-- Get recent logs with optional filtering
+-- @param options: Filtering options (component, level, limit, since)
+-- @return: Array of log entries
+function GUI.Logger:getLogs(options)
+  options = options or {}
+  local results = {}
+  local limit = options.limit or 100
+  local since = options.since
+  local component = options.component
+  local level = options.level
+  -- Start from most recent entries
+  for i = #self.logs.entries, 1, -1 do
+    local entry = self.logs.entries[i]
+    -- Apply filters
+    if since and entry.timestamp &lt; since then
+      break -- Entries are chronological, so we can break here
+    end
+    local shouldInclude = true
+    if component and entry.component ~= component then
+      shouldInclude = false
+    end
+    if level and entry.level ~= level then
+      shouldInclude = false
+    end
+    if shouldInclude then
+      table.insert(results, entry)
+      if #results &gt;= limit then
+        break
+      end
+    end
+  end
+  return results
+end
+-- Format context data for display
+-- @param context: Context table to format
+-- @return: Formatted string
+function GUI.Logger:formatContext(context)
+  if not context or type(context) ~= &quot;table&quot; then
+    return &quot;&quot;
+  end
+  local parts = {}
+  for key, value in pairs(context) do
+    if type(value) == &quot;table&quot; then
+      table.insert(parts, key .. &quot;={...}&quot;)
+    else
+      table.insert(parts, key .. &quot;=&quot; .. tostring(value))
+    end
+  end
+  return &quot;{&quot; .. table.concat(parts, &quot;, &quot;) .. &quot;}&quot;
+end
+-- Add a log output handler
+-- @param name: Handler name
+-- @param handler: Function that processes log entries
+function GUI.Logger:addHandler(name, handler)
+  if type(handler) ~= &quot;function&quot; then
+    self:error(&quot;Logger&quot;, &quot;Invalid handler function for: &quot; .. tostring(name))
+    return false
+  end
+  self.handlers[name] = handler
+  return true
+end
+-- Set log level for a component
+-- @param component: Component name
+-- @param level: Log level (TRACE, DEBUG, INFO, WARN, ERROR, FATAL)
+function GUI.Logger:setLogLevel(component, level)
+  local levelInfo = self.LEVELS[level]
+  if not levelInfo then
+    self:error(&quot;Logger&quot;, &quot;Invalid log level: &quot; .. tostring(level))
+    return false
+  end
+  self.logLevels[component] = levelInfo.level
+  return true
+end
+-- Update logging statistics
+-- @param entry: Log entry to process for statistics
+function GUI.Logger:updateStatistics(entry)
+  self.logs.summary.totalEntries = self.logs.summary.totalEntries + 1
+  if entry.level == &quot;ERROR&quot; or entry.level == &quot;FATAL&quot; then
+    self.logs.summary.errorCount = self.logs.summary.errorCount + 1
+    self.logs.summary.lastError = entry
+  elseif entry.level == &quot;WARN&quot; then
+    self.logs.summary.warningCount = self.logs.summary.warningCount + 1
+  end
+end
+-- Process log entry through all handlers
+-- @param entry: Log entry to process
+function GUI.Logger:processLogEntry(entry)
+  for handlerName, handler in pairs(self.handlers) do
+    local success, err = pcall(handler, entry)
+    if not success then
+      -- Fallback error handling to avoid infinite recursion
+      local errorMsg = string.format(&quot;Log handler '%s' failed: %s&quot;, handlerName, tostring(err))
+      cecho(&quot;&lt;red&gt;[Logger] &quot; .. errorMsg .. &quot;\n&quot;)
+    end
+  end
+end
+-- Capture stack trace for debugging
+-- @return: Stack trace string
+function GUI.Logger:captureStackTrace()
+  local trace = {}
+  local level = 3 -- Skip Logger internal calls
+  while true do
+    local info = debug.getinfo(level, &quot;Snl&quot;)
+    if not info then break end
+    if info.what ~= &quot;C&quot; and info.name then
+      table.insert(trace, string.format(&quot;%s:%d in %s&quot;,
+        info.short_src or &quot;?&quot;, info.currentline or 0, info.name or &quot;?&quot;))
+    end
+    level = level + 1
+    if level &gt; 10 then break end -- Limit depth
+  end
+  return table.concat(trace, &quot; -&gt; &quot;)
+end
+-- Global logging convenience functions for easy use throughout the system
+-- These provide a simple interface for components to use structured logging
+function logTrace(component, message, context)
+  GUI.Logger:trace(component, message, context)
+end
+function logDebug(component, message, context)
+  GUI.Logger:debug(component, message, context)
+end
+function logInfo(component, message, context)
+  GUI.Logger:info(component, message, context)
+end
+function logWarn(component, message, context)
+  GUI.Logger:warn(component, message, context)
+end
+function logError(component, message, context)
+  GUI.Logger:error(component, message, context)
+end
+function logFatal(component, message, context)
+  GUI.Logger:fatal(component, message, context)
+end
+-- Enhanced error handling function that integrates with logging
+-- This replaces inconsistent error handling patterns throughout the system
+-- @param component: Component name where error occurred
+-- @param operation: Description of what was being attempted
+-- @param func: Function to execute with error protection
+-- @param context: Additional context for logging
+-- @return: success, result - pcall results
+function GUI.safeCall(component, operation, func, context)
+  context = context or {}
+  context.operation = operation
+  local success, result = pcall(func)
+  if success then
+    logDebug(component, &quot;Operation completed: &quot; .. operation, context)
+  else
+    context.error = tostring(result)
+    logError(component, &quot;Operation failed: &quot; .. operation, context)
+  end
+  return success, result
+end
+-- Auto-initialize the Logging System
+GUI.Logger:initialize()
+logInfo(&quot;Logger&quot;, &quot;Comprehensive logging system initialized&quot;, {
+  sessionId = GUI.Logger.sessionId,
+  maxLogSize = GUI.Logger.maxLogSize
+})
 </script>
 						<eventHandlerList/>
 					</Script>
@@ -4782,15 +7171,12 @@ end
 						else
 							 cecho(&quot;&lt;red&gt;[DEBUG] Cast console missing before YATCO init!\n&quot;)
 						end
-						
 						-- Store cast console reference before YATCO init
 						local castConsoleBackup = GUI.castConsole
-						
 						if GUI.chatContainer then
 							 cecho(&quot;&lt;cyan&gt;[DEBUG] Installing YATCO chat system...\n&quot;)
 							 demonnic.chat:create()
 							 cecho(&quot;&lt;cyan&gt;YATCO chat system initialized.\n&quot;)
-							 
 							 -- Check if cast console was affected and restore if needed
 							 if not GUI.castConsole and castConsoleBackup then
 							   cecho(&quot;&lt;yellow&gt;[DEBUG] Cast console lost during YATCO init, restoring...\n&quot;)
@@ -4803,7 +7189,6 @@ end
 							   cecho(&quot;&lt;yellow&gt;[DEBUG] Cast console was hidden during YATCO init, reshowing...\n&quot;)
 							   GUI.castConsole:show()
 							 end
-							 
 							 -- DEBUG: Check cast console state after YATCO init
 							 if GUI.castConsole then
 							   cecho(&quot;&lt;yellow&gt;[DEBUG] Cast console exists after YATCO init: visible=&quot; .. tostring(not GUI.castConsole.hidden) .. &quot;\n&quot;)
