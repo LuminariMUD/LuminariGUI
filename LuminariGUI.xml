@@ -218,64 +218,57 @@ padding = map.calcMinimapPadding()
 -- Enhanced with comprehensive error handling for robust map processing
 function onMapLine()
   -- Validate that we have a valid line to process
-  if not line or line == "" then
-    print("Warning: Empty or invalid map line received")
+  if not line or line == &quot;&quot; then
+    print(&quot;Warning: Empty or invalid map line received&quot;)
     return
   end
-  
   -- Check for map completion marker
-  local isLastLine = string.findPattern(line, "&lt;/WILDERNESS_MAP&gt;")
+  local isLastLine = string.findPattern(line, &quot;&lt;/WILDERNESS_MAP&gt;&quot;)
   if isLastLine then
     deleteLine()
     -- Safely cleanup trigger with validation
-    if maplineTrig and exists(maplineTrig, "trigger") ~= 0 then
+    if maplineTrig and exists(maplineTrig, &quot;trigger&quot;) ~= 0 then
       killTrigger(maplineTrig)
     end
     maplineTrig = nil
     return
   end
-  
   -- Process map line with error handling
   local success, err = pcall(function ()
     selectCurrentLine()
     copy()
-    
     -- Validate map minimap exists before echoing
     if map.minimap and map.minimap.echo then
       -- Add padding with validation
-      if padding and type(padding) == "number" then
+      if padding and type(padding) == &quot;number&quot; then
         for i = 1, math.max(0, math.min(padding, 50)) do -- Cap padding to prevent infinite loops
-          map.minimap:echo(" ")
+          map.minimap:echo(&quot; &quot;)
         end
       end
-      
       -- Adjust font size with error handling
       if map.adjustMinimapFontSize then
         map.adjustMinimapFontSize()
       end
-      
       -- Append to buffer with validation
-      if exists("map.minimap", "miniconsole") ~= 0 then
-        appendBuffer("map.minimap")
+      if exists(&quot;map.minimap&quot;, &quot;miniconsole&quot;) ~= 0 then
+        appendBuffer(&quot;map.minimap&quot;)
       else
-        print("Warning: map.minimap buffer not available")
+        print(&quot;Warning: map.minimap buffer not available&quot;)
       end
     else
-      print("Warning: map.minimap not available for line processing")
+      print(&quot;Warning: map.minimap not available for line processing&quot;)
     end
-    
     deleteLine()
   end )
-  
   -- Handle processing errors gracefully
   if not success then
-    print("Error processing map line: " .. tostring(err))
+    print(&quot;Error processing map line: &quot; .. tostring(err))
     deleteLine() -- Still remove the problematic line
     -- Emergency cleanup if processing fails repeatedly
-    if maplineTrig and exists(maplineTrig, "trigger") ~= 0 then
+    if maplineTrig and exists(maplineTrig, &quot;trigger&quot;) ~= 0 then
       killTrigger(maplineTrig)
       maplineTrig = nil
-      print("Emergency cleanup: Map line trigger killed due to processing errors")
+      print(&quot;Emergency cleanup: Map line trigger killed due to processing errors&quot;)
     end
   end
 end</script>
@@ -317,59 +310,52 @@ padding = map.calcAsciimapPadding()
 -- Enhanced with comprehensive error handling for robust map processing
 function onRoomMapLine()
   -- Validate that we have a valid line to process
-  if not line or line == "" then
-    print("Warning: Empty or invalid room map line received")
+  if not line or line == &quot;&quot; then
+    print(&quot;Warning: Empty or invalid room map line received&quot;)
     return
   end
-  
   -- Check for room map completion marker
-  local isLastLine = string.findPattern(line, "&lt;/ROOM_MAP&gt;")
+  local isLastLine = string.findPattern(line, &quot;&lt;/ROOM_MAP&gt;&quot;)
   if isLastLine then
     deleteLine()
     -- Safely cleanup trigger with validation
-    if maplineTrig and exists(maplineTrig, "trigger") ~= 0 then
+    if maplineTrig and exists(maplineTrig, &quot;trigger&quot;) ~= 0 then
       killTrigger(maplineTrig)
     end
     maplineTrig = nil
     return
   end
-  
   -- Process room map line with error handling
   local success, err = pcall(function ()
     selectCurrentLine()
     copy()
-    
     -- Validate map minimap exists before echoing
     if map.minimap and map.minimap.echo then
-      map.minimap:echo(" ")
-      
+      map.minimap:echo(&quot; &quot;)
       -- Adjust ASCII map font size with error handling
       if map.adjustAsciimapFontSize then
         map.adjustAsciimapFontSize()
       end
-      
       -- Append to buffer with validation
-      if exists("map.minimap", "miniconsole") ~= 0 then
-        appendBuffer("map.minimap")
+      if exists(&quot;map.minimap&quot;, &quot;miniconsole&quot;) ~= 0 then
+        appendBuffer(&quot;map.minimap&quot;)
       else
-        print("Warning: map.minimap buffer not available for room map")
+        print(&quot;Warning: map.minimap buffer not available for room map&quot;)
       end
     else
-      print("Warning: map.minimap not available for room map line processing")
+      print(&quot;Warning: map.minimap not available for room map line processing&quot;)
     end
-    
     deleteLine()
   end )
-  
   -- Handle processing errors gracefully
   if not success then
-    print("Error processing room map line: " .. tostring(err))
+    print(&quot;Error processing room map line: &quot; .. tostring(err))
     deleteLine() -- Still remove the problematic line
     -- Emergency cleanup if processing fails repeatedly
-    if maplineTrig and exists(maplineTrig, "trigger") ~= 0 then
+    if maplineTrig and exists(maplineTrig, &quot;trigger&quot;) ~= 0 then
       killTrigger(maplineTrig)
       maplineTrig = nil
-      print("Emergency cleanup: Room map line trigger killed due to processing errors")
+      print(&quot;Emergency cleanup: Room map line trigger killed due to processing errors&quot;)
     end
   end
 end</script>
@@ -1254,7 +1240,6 @@ end
   ===================================
   Dynamically calculates and applies optimal font size for minimap display based on container dimensions.
   Ensures proper text readability and visual scaling for minimap elements.
-  
   Algorithm:
   - Starts with base font size of 8
   - Incrementally increases font size until content would exceed container bounds
@@ -1279,7 +1264,6 @@ end
   ====================================
   Dynamically calculates and applies optimal font size for ASCII map display based on container width.
   Ensures proper character readability and visual scaling for text-based map representations.
-  
   ASCII Map Specific Considerations:
   - Text-based room representation requires precise character spacing
   - Font size affects map grid alignment and readability
@@ -1313,23 +1297,19 @@ end
 -- Creates the essential map containers needed for navigation functionality
 function map.init()
   cecho(&quot;&lt;cyan&gt;[DEBUG] Initializing map containers...\n&quot;)
-  
   -- Validate defaults.mapper exists
   if not defaults or not defaults.mapper then
     print(&quot;[ERROR] defaults.mapper not found - cannot initialize map containers&quot;)
     return false
   end
-  
   -- setting terrain colors
   for k,v in pairs(terrain_types) do
     setCustomEnvColor(v.id + 16, v.r, v.g, v.b, 255)
   end
-  
   -- making mapper window
   local info = defaults.mapper
   map.container = Geyser.Container:new({name = &quot;map.container&quot;, x = info.x, y = info.y, width = info.width, height = info.height})
   map.minimapcontainer = Geyser.Container:new({name = &quot;map.minimapcontainer&quot;, x = info.x, y = info.y, width = info.width, height = info.height})
-  
   map.minimap = Geyser.MiniConsole:new({
     name=&quot;map.minimap&quot;,
     x=0, y= 0,
@@ -1337,17 +1317,13 @@ function map.init()
   }, map.minimapcontainer)
   map.minimap:setColor(&quot;black&quot;)
   map.minimapcontainer:hide()
-  
   map.mapwindow = Geyser.Mapper:new({name = &quot;map.mapwindow&quot;, x = 0, y = 0, width = &quot;100%&quot;, height = &quot;100%&quot;}, map.container)
-  
   map.adjustMinimapFontSize()
   make_aliases()
   map.get_default_map()
-  
   cecho(&quot;&lt;green&gt;[DEBUG] Map containers initialized successfully!\n&quot;)
   return true
 end
-
 -- Legacy config function for backwards compatibility
 local function config()
   return map.init()
@@ -1416,7 +1392,6 @@ function map.onProtocolEnabled(_, protocol)
     config()
   end
 end
-
 -- Initialize map event handlers with tracking
 function map.initHandlers()
   -- Use GUI tracking system if available
@@ -1428,16 +1403,15 @@ function map.initHandlers()
     GUI.registerHandler(&quot;sysProtocolEnabled&quot;, &quot;map.onProtocolEnabled&quot;, &quot;map_sys_protocol&quot;)
     GUI.registerHandler(&quot;sysDownloadDone&quot;, &quot;map.eventHandler&quot;, &quot;map_sys_download&quot;)
   else
-    -- Fallback to standard handlers if tracking not available
-    registerAnonymousEventHandler(&quot;msdp.ROOM&quot;,&quot;map.eventHandler&quot;)
-    registerAnonymousEventHandler(&quot;msdp.POSITION&quot;,&quot;map.eventHandler&quot;)
-    registerAnonymousEventHandler(&quot;shiftRoom&quot;,&quot;map.eventHandler&quot;)
-    registerAnonymousEventHandler(&quot;sysConnectionEvent&quot;, &quot;map.eventHandler&quot;)
-    registerAnonymousEventHandler(&quot;sysProtocolEnabled&quot;, &quot;map.onProtocolEnabled&quot;)
-    registerAnonymousEventHandler(&quot;sysDownloadDone&quot;, &quot;map.eventHandler&quot;)
+    -- Fallback to standard handlers with error boundaries if tracking not available
+    registerAnonymousEventHandler(&quot;msdp.ROOM&quot;, GUI.createErrorBoundary(&quot;map_msdp_room_fallback&quot;, &quot;map.eventHandler&quot;))
+    registerAnonymousEventHandler(&quot;msdp.POSITION&quot;, GUI.createErrorBoundary(&quot;map_msdp_position_fallback&quot;, &quot;map.eventHandler&quot;))
+    registerAnonymousEventHandler(&quot;shiftRoom&quot;, GUI.createErrorBoundary(&quot;map_shift_room_fallback&quot;, &quot;map.eventHandler&quot;))
+    registerAnonymousEventHandler(&quot;sysConnectionEvent&quot;, GUI.createErrorBoundary(&quot;map_sys_connection_fallback&quot;, &quot;map.eventHandler&quot;))
+    registerAnonymousEventHandler(&quot;sysProtocolEnabled&quot;, GUI.createErrorBoundary(&quot;map_sys_protocol_fallback&quot;, &quot;map.onProtocolEnabled&quot;))
+    registerAnonymousEventHandler(&quot;sysDownloadDone&quot;, GUI.createErrorBoundary(&quot;map_sys_download_fallback&quot;, &quot;map.eventHandler&quot;))
   end
 end
-
 -- Initialize handlers on load
 map.initHandlers()</script>
 					<eventHandlerList/>
@@ -1901,7 +1875,6 @@ end
 		-- DEBUG: Log cast console initialization
 		cecho(&quot;&lt;yellow&gt;[DEBUG] Initializing cast console...\n&quot;)
 		cecho(&quot;&lt;yellow&gt;[DEBUG] GUI.Box2 dimensions: &quot; .. GUI.Box2:get_width() .. &quot; x &quot; .. GUI.Box2:get_height() .. &quot;\n&quot;)
-		
 		GUI.castConsole =
 		Geyser.MiniConsole:new(
 		{
@@ -1916,7 +1889,6 @@ end
 		)
 		setMiniConsoleFontSize(&quot;GUI.castConsole&quot;, getFontSize(&quot;main&quot;))
 		setFont(&quot;GUI.castConsole&quot;, getFont(&quot;main&quot;))
-		
 		-- DEBUG: Verify cast console creation and visibility
 		if GUI.castConsole then
 				cecho(&quot;&lt;green&gt;[DEBUG] Cast console created successfully\n&quot;)
@@ -2356,7 +2328,6 @@ function GUI.Affects.init()
       )
     for j = 1, GUI.Affects.num_icons_row do
       GUI.Affects.Rows[i].EffectSlots[j] = {}
-      
       -- Create container for this effect slot (VBox for icon + label)
       GUI.Affects.Rows[i].EffectSlots[j].container =
         Geyser.VBox:new(
@@ -2369,7 +2340,6 @@ function GUI.Affects.init()
           },
           GUI.Affects.Rows[i].container
         )
-      
       -- Create icon label for the effect image
       GUI.Affects.Rows[i].EffectSlots[j].icon =
         Geyser.Label:new(
@@ -2382,7 +2352,6 @@ function GUI.Affects.init()
           },
           GUI.Affects.Rows[i].EffectSlots[j].container
         )
-      
       -- Create text label for the effect name
       GUI.Affects.Rows[i].EffectSlots[j].label =
         Geyser.Label:new(
@@ -2395,7 +2364,6 @@ function GUI.Affects.init()
           },
           GUI.Affects.Rows[i].EffectSlots[j].container
         )
-      
       -- Set initial styling and hide the container
       GUI.Affects.Rows[i].EffectSlots[j].icon:setStyleSheet(GUI.Affects.IconCSS:getCSS())
       GUI.Affects.Rows[i].EffectSlots[j].icon:setColor(0, 0, 0, 0)
@@ -2579,7 +2547,6 @@ function GUI.updateAffectIcons()
         then
           -- Get the current effect slot
           local currentSlot = GUI.Affects.Rows[GUI.Affects.current_row].EffectSlots[GUI.Affects.current_column]
-          
           -- Set the icon
           GUI.Affects.IconCSS:set(
             &quot;border-image&quot;,
@@ -2590,17 +2557,14 @@ function GUI.updateAffectIcons()
             [[.png&quot;);]]
           )
           currentSlot.icon:setStyleSheet(GUI.Affects.IconCSS:getCSS())
-          
           -- Set the label text - clean up the effect name for display
           local effectName = affected_by[i].NAME
           -- Replace hyphens and underscores with spaces and title case
           effectName = effectName:gsub(&quot;[-_]&quot;, &quot; &quot;)
           effectName = effectName:gsub(&quot;(%w)(%w*)&quot;, function (a,b) return string.upper(a)..string.lower(b) end)
           currentSlot.label:echo(&quot;&lt;center&gt;&quot; .. effectName .. &quot;&lt;/center&gt;&quot;)
-          
           -- Show the complete slot
           currentSlot.container:show()
-          
           GUI.Affects.current_column = GUI.Affects.current_column + 1
           if GUI.Affects.current_column &gt; GUI.Affects.num_slots_row then
             GUI.Affects.current_column = 1
@@ -2796,19 +2760,18 @@ end</script>
 						<script>GUI.buttonWindow =
   GUI.buttonWindow or
   {
-    button = {"Legend", "Mudlet", "ASCII"},
-    color1 = "rgba(40,40,40,255)",
-    color2 = "rgba(60,60,60,255)",
-    width = "100%",
-    height = "100%",
-    roomOrLegend = "Room",
-    mudletOrAscii = "Mudlet",
+    button = {&quot;Legend&quot;, &quot;Mudlet&quot;, &quot;ASCII&quot;},
+    color1 = &quot;rgba(40,40,40,255)&quot;,
+    color2 = &quot;rgba(60,60,60,255)&quot;,
+    width = &quot;100%&quot;,
+    height = &quot;100%&quot;,
+    roomOrLegend = &quot;Room&quot;,
+    mudletOrAscii = &quot;Mudlet&quot;,
     --# of chars wide text needs to be
     legendWidth = 50,
     --# of lines needed to display text
     legendHeight = 11,
   }
-
 -- Simple map mode management using direct container manipulation
 -- Navigation uses direct show/hide calls on map containers for reliability
 --Determine font size for Legend
@@ -2862,18 +2825,17 @@ end
 function GUI.buttonWindow.mudletClick()
   map.minimapcontainer:hide()
   map.container:show()
-  GUI.buttonWindow.mudletOrAscii = "Mudlet"
-  GUI.buttonWindow.Mudletbutton:echo("Mudlet", "yellow", "c")
-  GUI.buttonWindow.ASCIIbutton:echo("ASCII", "white", "c")
+  GUI.buttonWindow.mudletOrAscii = &quot;Mudlet&quot;
+  GUI.buttonWindow.Mudletbutton:echo(&quot;Mudlet&quot;, &quot;yellow&quot;, &quot;c&quot;)
+  GUI.buttonWindow.ASCIIbutton:echo(&quot;ASCII&quot;, &quot;white&quot;, &quot;c&quot;)
 end
-
--- Button callback for ASCII map - switches to ASCII text-based map display  
+-- Button callback for ASCII map - switches to ASCII text-based map display
 function GUI.buttonWindow.asciiClick()
   map.minimapcontainer:show()
   map.container:hide()
-  GUI.buttonWindow.mudletOrAscii = "ASCII"
-  GUI.buttonWindow.ASCIIbutton:echo("ASCII", "yellow", "c")
-  GUI.buttonWindow.Mudletbutton:echo("Mudlet", "white", "c")
+  GUI.buttonWindow.mudletOrAscii = &quot;ASCII&quot;
+  GUI.buttonWindow.ASCIIbutton:echo(&quot;ASCII&quot;, &quot;yellow&quot;, &quot;c&quot;)
+  GUI.buttonWindow.Mudletbutton:echo(&quot;Mudlet&quot;, &quot;white&quot;, &quot;c&quot;)
 end
 -- Button Window Initialization - sets up styling and layout for map control buttons
 function GUI.buttonWindow.init()
@@ -2886,9 +2848,7 @@ function GUI.buttonWindow.init()
     print(&quot;[ERROR] GUI.Box5 not found - navigation display area cannot be initialized&quot;)
     return false
   end
-  
   cecho(&quot;&lt;cyan&gt;[DEBUG] Initializing buttonWindow...\n&quot;)
-  
   GUI.buttonWindowCSS =
     CSSMan.new(
       [[font-family: Tahoma, Geneva, sans-serif;
@@ -2950,7 +2910,6 @@ function GUI.buttonWindow.init()
     GUI.buttonWindow[v .. &quot;button&quot;]:echo(&quot;&lt;center&gt;&quot; .. v)
     cecho(&quot;&lt;cyan&gt;[DEBUG] Created button: &quot; .. v .. &quot;\n&quot;)
   end
-  
   -- Validate that buttons were created successfully
   if not GUI.buttonWindow.Legendbutton then
     print(&quot;[ERROR] Legend button failed to initialize&quot;)
@@ -2964,7 +2923,6 @@ function GUI.buttonWindow.init()
     print(&quot;[ERROR] ASCII button failed to initialize&quot;)
     return false
   end
-  
 --Legend Call Back
   GUI.buttonWindow.Legendbutton:setClickCallback(&quot;GUI.buttonWindow.legendClick&quot;)
 --Mudlet/ASCII Callback
@@ -2984,7 +2942,6 @@ else
   GUI.buttonWindow.ASCIIbutton:echo(&quot;ASCII&quot;, &quot;yellow&quot;, &quot;c&quot;)
   GUI.buttonWindow.Mudletbutton:echo(&quot;Mudlet&quot;, &quot;white&quot;, &quot;c&quot;)
 end
-
 cecho(&quot;&lt;green&gt;[DEBUG] ButtonWindow initialization complete!\n&quot;)
 return true
 end
@@ -3030,54 +2987,52 @@ end
 -- Maps terrain types to their ASCII symbols for legend display
 local terrain_symbols = {
   -- Indoor/Structural terrains
-  ["Inside"] = ".",
-  ["City"] = "C", 
-  ["Cave"] = "C",
+  [&quot;Inside&quot;] = &quot;.&quot;,
+  [&quot;City&quot;] = &quot;C&quot;,
+  [&quot;Cave&quot;] = &quot;C&quot;,
   -- Natural outdoor terrains
-  ["Field"] = ",",
-  ["Forest"] = "Y",
-  ["Hills"] = "^",
-  ["Low Mountains"] = "m",
-  ["High Mountains"] = "M",
-  ["Desert"] = ".",
-  ["Jungle"] = "Y",
-  ["Tundra"] = ".",
-  ["Taiga"] = "Y",
-  ["Beach"] = ".",
-  ["Marshland"] = ",",
+  [&quot;Field&quot;] = &quot;,&quot;,
+  [&quot;Forest&quot;] = &quot;Y&quot;,
+  [&quot;Hills&quot;] = &quot;^&quot;,
+  [&quot;Low Mountains&quot;] = &quot;m&quot;,
+  [&quot;High Mountains&quot;] = &quot;M&quot;,
+  [&quot;Desert&quot;] = &quot;.&quot;,
+  [&quot;Jungle&quot;] = &quot;Y&quot;,
+  [&quot;Tundra&quot;] = &quot;.&quot;,
+  [&quot;Taiga&quot;] = &quot;Y&quot;,
+  [&quot;Beach&quot;] = &quot;.&quot;,
+  [&quot;Marshland&quot;] = &quot;,&quot;,
   -- Water terrains
-  ["Water (Swim)"] = "~",
-  ["Water (No Swim)"] = "=",
-  ["Ocean"] = "o",
-  ["Underwater"] = "U",
+  [&quot;Water (Swim)&quot;] = &quot;~&quot;,
+  [&quot;Water (No Swim)&quot;] = &quot;=&quot;,
+  [&quot;Ocean&quot;] = &quot;o&quot;,
+  [&quot;Underwater&quot;] = &quot;U&quot;,
   -- Aerial and special movement
-  ["In Flight"] = "^",
-  -- Special/Magical locations  
-  ["Zone Entrance"] = "X",
-  ["Outer Planes"] = ".",
-  ["Lava"] = ".",
+  [&quot;In Flight&quot;] = &quot;^&quot;,
+  -- Special/Magical locations
+  [&quot;Zone Entrance&quot;] = &quot;X&quot;,
+  [&quot;Outer Planes&quot;] = &quot;.&quot;,
+  [&quot;Lava&quot;] = &quot;.&quot;,
   -- Road system
-  ["Road North-South"] = "|",
-  ["Road East-West"] = "-", 
-  ["Road Intersection"] = "+",
-  ["Dirt Road North-South"] = "|",
-  ["Dirt Road East-West"] = "-",
-  ["Dirt Road Intersection"] = "+",
+  [&quot;Road North-South&quot;] = &quot;|&quot;,
+  [&quot;Road East-West&quot;] = &quot;-&quot;,
+  [&quot;Road Intersection&quot;] = &quot;+&quot;,
+  [&quot;Dirt Road North-South&quot;] = &quot;|&quot;,
+  [&quot;Dirt Road East-West&quot;] = &quot;-&quot;,
+  [&quot;Dirt Road Intersection&quot;] = &quot;+&quot;,
   -- Underdark terrain variants
-  ["Underdark - Wild"] = "Y",
-  ["Underdark - City"] = "C",
-  ["Underdark - Inside"] = ".",
-  ["Underdark - Water (Swim)"] = "~",
-  ["Underdark - Water (No Swim)"] = "=",
-  ["Underdark - In Flight"] = "^",
+  [&quot;Underdark - Wild&quot;] = &quot;Y&quot;,
+  [&quot;Underdark - City&quot;] = &quot;C&quot;,
+  [&quot;Underdark - Inside&quot;] = &quot;.&quot;,
+  [&quot;Underdark - Water (Swim)&quot;] = &quot;~&quot;,
+  [&quot;Underdark - Water (No Swim)&quot;] = &quot;=&quot;,
+  [&quot;Underdark - In Flight&quot;] = &quot;^&quot;,
 }
-
 --[[
   Dynamic Legend Generation System
   ===============================
   Generates map legend dynamically based on actual terrain_types configuration.
   Displays terrain colors and symbols that match the actual mapper implementation.
-  
   Benefits:
   - Always accurate representation of actual terrain colors
   - Automatically includes new terrains when added to terrain_types
@@ -3085,57 +3040,46 @@ local terrain_symbols = {
   - Organized display with logical grouping of terrain types
 ]]
 function GUI.updateLegend()
-  clearUserWindow("GUI.buttonWindow.Legend")
-  
+  clearUserWindow(&quot;GUI.buttonWindow.Legend&quot;)
   -- Header information
-  GUI.buttonWindow.Legend:decho("\n &lt;white&gt;Map Legend - Terrain Types")
-  GUI.buttonWindow.Legend:decho("\n &lt;gray&gt;=" .. string.rep("=", 35) .. "=")
-  
+  GUI.buttonWindow.Legend:decho(&quot;\n &lt;white&gt;Map Legend - Terrain Types&quot;)
+  GUI.buttonWindow.Legend:decho(&quot;\n &lt;gray&gt;=&quot; .. string.rep(&quot;=&quot;, 35) .. &quot;=&quot;)
   -- Special navigation symbols (not tied to terrain)
-  GUI.buttonWindow.Legend:decho("\n &lt;red&gt; + &lt;white&gt; Up        &lt;red&gt; - &lt;white&gt; Down      &lt;white&gt;[&lt;cyan&gt;&amp;&lt;white&gt;] &lt;white&gt;You")
-  GUI.buttonWindow.Legend:decho("\n")
-  
+  GUI.buttonWindow.Legend:decho(&quot;\n &lt;red&gt; + &lt;white&gt; Up        &lt;red&gt; - &lt;white&gt; Down      &lt;white&gt;[&lt;cyan&gt;&amp;&lt;white&gt;] &lt;white&gt;You&quot;)
+  GUI.buttonWindow.Legend:decho(&quot;\n&quot;)
   -- Create sorted list of terrain types for organized display
   local terrain_list = {}
   for terrain_name, terrain_data in pairs(terrain_types) do
     table.insert(terrain_list, {name = terrain_name, data = terrain_data})
   end
-  
   -- Sort by terrain ID for consistent display order
   table.sort(terrain_list, function (a, b) return a.data.id &lt; b.data.id end)
-  
   -- Generate legend entries from actual terrain configuration
   local items_per_line = 2
-  local current_line = ""
+  local current_line = &quot;&quot;
   local item_count = 0
-  
   for _, terrain_info in ipairs(terrain_list) do
     local terrain_name = terrain_info.name
     local terrain_data = terrain_info.data
-    local symbol = terrain_symbols[terrain_name] or "?"
-    
+    local symbol = terrain_symbols[terrain_name] or &quot;?&quot;
     -- Format terrain entry with actual color values
-    local color_code = string.format("&lt;%d,%d,%d&gt;", terrain_data.r, terrain_data.g, terrain_data.b)
-    local entry = string.format("[%s%s&lt;white&gt;] %s", color_code, symbol, terrain_name)
-    
+    local color_code = string.format(&quot;&lt;%d,%d,%d&gt;&quot;, terrain_data.r, terrain_data.g, terrain_data.b)
+    local entry = string.format(&quot;[%s%s&lt;white&gt;] %s&quot;, color_code, symbol, terrain_name)
     -- Pad entry to consistent width for alignment
-    entry = string.format("%-22s", entry)
-    
+    entry = string.format(&quot;%-22s&quot;, entry)
     current_line = current_line .. entry
     item_count = item_count + 1
-    
     -- Display line when we have enough items or reached end
-    if item_count >= items_per_line or terrain_info == terrain_list[#terrain_list] then
-      GUI.buttonWindow.Legend:decho("\n " .. current_line)
-      current_line = ""
+    if item_count &gt;= items_per_line or terrain_info == terrain_list[#terrain_list] then
+      GUI.buttonWindow.Legend:decho(&quot;\n &quot; .. current_line)
+      current_line = &quot;&quot;
       item_count = 0
     end
   end
-  
   -- Footer with additional information
-  GUI.buttonWindow.Legend:decho("\n")
-  GUI.buttonWindow.Legend:decho("\n &lt;gray&gt;Total terrain types: " .. #terrain_list)
-  GUI.buttonWindow.Legend:decho("\n &lt;gray&gt;Legend generated dynamically")
+  GUI.buttonWindow.Legend:decho(&quot;\n&quot;)
+  GUI.buttonWindow.Legend:decho(&quot;\n &lt;gray&gt;Total terrain types: &quot; .. #terrain_list)
+  GUI.buttonWindow.Legend:decho(&quot;\n &lt;gray&gt;Legend generated dynamically&quot;)
 end
 </script>
 						<eventHandlerList/>
@@ -3385,7 +3329,6 @@ GUI.set_borders()
 GUI.init_boxes()
 function GUI.init()
   cecho(&quot;&lt;green&gt;[DEBUG] Starting GUI initialization...\n&quot;)
-  
   GUI.AffectIcons = GUI.AffectIcons or {}
   GUI.Affects = GUI.Affects or {}
   GUI.Affects.Rows = GUI.Affects.Rows or {}
@@ -3399,32 +3342,26 @@ function GUI.init()
   GUI.init_group()
   if GUI.Affects.init then GUI.Affects.init() end
   GUI.draw_frames()
-  
   -- Initialize map containers before button window
   cecho(&quot;&lt;cyan&gt;[DEBUG] About to initialize map containers...\n&quot;)
-  if map.init then 
+  if map.init then
     map.init()
   else
     print(&quot;[WARNING] map.init function not found&quot;)
   end
-  
   GUI.buttonWindow.init()
-  
   cecho(&quot;&lt;cyan&gt;[DEBUG] About to initialize cast console...\n&quot;)
   GUI.init_castConsole()
   cecho(&quot;&lt;cyan&gt;[DEBUG] Cast console initialization complete\n&quot;)
-  
   GUI.styleScrollbar()
-  
   cecho(&quot;&lt;green&gt;[DEBUG] GUI initialization complete!\n&quot;)
-  
   -- Use the resource cleanup migration function for all event handlers
   GUI.migrateEventHandlers()
 end
-
 -- These handlers stay untracked since they're needed to bootstrap the system
-registerAnonymousEventHandler(&quot;sysLoadEvent&quot;, &quot;GUI.init&quot;)
-registerAnonymousEventHandler(&quot;sysInstall&quot;, &quot;GUI.init&quot;)</script>
+-- But we still add error boundaries for stability
+registerAnonymousEventHandler(&quot;sysLoadEvent&quot;, GUI.createErrorBoundary(&quot;gui_init_load&quot;, &quot;GUI.init&quot;))
+registerAnonymousEventHandler(&quot;sysInstall&quot;, GUI.createErrorBoundary(&quot;gui_init_install&quot;, &quot;GUI.init&quot;))</script>
 						<eventHandlerList/>
 					</Script>
 					<Script isActive="yes" isFolder="no">
@@ -3435,116 +3372,282 @@ registerAnonymousEventHandler(&quot;sysInstall&quot;, &quot;GUI.init&quot;)</scr
   =======================
   Centralized management system for all event handlers and timers in LuminariGUI.
   Prevents memory leaks by tracking and cleaning up all resources on exit/uninstall.
-  
   Architecture:
   - All event handlers are stored with unique IDs in GUI.handlers table
   - All timers are stored with unique IDs in GUI.timers table
   - Cleanup functions automatically called on sysUninstall and sysExitEvent
   - Helper functions provided for safe resource creation
-  
   Usage:
   - Use GUI.registerHandler() instead of registerAnonymousEventHandler()
   - Use GUI.createTimer() instead of tempTimer()
   - Resources are automatically cleaned up on exit
 --]]
-
 -- Initialize resource tracking tables
 GUI.handlers = GUI.handlers or {}
 GUI.timers = GUI.timers or {}
-
--- Helper function to safely register event handlers with tracking
+-- Error boundary wrapper for event handlers
+-- Provides centralized error handling and logging for all event handlers
+function GUI.createErrorBoundary(handlerName, originalHandler)
+  return function(event, ...)
+    local args = {...}
+    local success, result = pcall(function()
+      -- Resolve handler function if it's a string
+      local handler = originalHandler
+      if type(originalHandler) == &quot;string&quot; then
+        -- Parse dotted function names like &quot;GUI.updateHealthGauge&quot;
+        local parts = {}
+        for part in string.gmatch(originalHandler, &quot;[^.]+&quot;) do
+          table.insert(parts, part)
+        end
+        handler = _G
+        for _, part in ipairs(parts) do
+          if handler and type(handler) == &quot;table&quot; then
+            handler = handler[part]
+          else
+            handler = nil
+            break
+          end
+        end
+      end
+      if handler and type(handler) == &quot;function&quot; then
+        return handler(event, unpack(args))
+      else
+        error(&quot;Handler function not found: &quot; .. tostring(originalHandler))
+      end
+    end)
+    if not success then
+      -- Log error with context information
+      local errorMsg = string.format(
+        &quot;[LuminariGUI Error Boundary] Handler '%s' failed for event '%s': %s&quot;,
+        handlerName or &quot;unknown&quot;,
+        event or &quot;unknown&quot;,
+        result or &quot;unknown error&quot;
+      )
+      cecho(&quot;&lt;red&gt;&quot; .. errorMsg .. &quot;\n&quot;)
+      -- Store error for debugging
+      GUI.errorLog = GUI.errorLog or {}
+      table.insert(GUI.errorLog, {
+        timestamp = os.time(),
+        handler = handlerName,
+        event = event,
+        error = result,
+        args = args
+      })
+      -- Keep only last 50 errors to prevent memory bloat
+      if #GUI.errorLog &gt; 50 then
+        table.remove(GUI.errorLog, 1)
+      end
+      -- Attempt graceful degradation - continue system operation
+      return nil
+    end
+    return result
+  end
+end
+-- Function to display recent error logs for debugging
+function GUI.showErrorLog(count)
+  count = count or 10
+  GUI.errorLog = GUI.errorLog or {}
+  if #GUI.errorLog == 0 then
+    cecho(&quot;&lt;green&gt;[LuminariGUI] No errors recorded.\n&quot;)
+    return
+  end
+  cecho(&quot;&lt;cyan&gt;[LuminariGUI Error Log] Showing last &quot; .. math.min(count, #GUI.errorLog) .. &quot; errors:\n&quot;)
+  local startIndex = math.max(1, #GUI.errorLog - count + 1)
+  for i = startIndex, #GUI.errorLog do
+    local error = GUI.errorLog[i]
+    local timeStr = os.date(&quot;%H:%M:%S&quot;, error.timestamp)
+    cecho(string.format(&quot;&lt;yellow&gt;[%s] &lt;red&gt;%s &lt;white&gt;(%s): &lt;orange&gt;%s\n&quot;,
+      timeStr, error.handler, error.event, error.error))
+  end
+end
+-- Function to clear error log
+function GUI.clearErrorLog()
+  GUI.errorLog = {}
+  cecho(&quot;&lt;green&gt;[LuminariGUI] Error log cleared.\n&quot;)
+end
+-- Helper function to safely register event handlers with tracking and error boundaries
 function GUI.registerHandler(event, func, name)
-  name = name or (event .. "_" .. tostring(func))
-  
+  name = name or (event .. &quot;_&quot; .. tostring(func))
   -- Kill existing handler if it exists
   if GUI.handlers[name] then
     killAnonymousEventHandler(GUI.handlers[name])
   end
-  
+  -- Wrap handler in error boundary
+  local safeHandler = GUI.createErrorBoundary(name, func)
   -- Register new handler and store ID
-  local handlerId = registerAnonymousEventHandler(event, func)
+  local handlerId = registerAnonymousEventHandler(event, safeHandler)
   GUI.handlers[name] = handlerId
-  
   return handlerId
 end
-
 -- Helper function to safely create timers with tracking
 function GUI.createTimer(time, func, recurring, name)
-  name = name or ("timer_" .. tostring(os.time()) .. "_" .. tostring(math.random()))
+  name = name or (&quot;timer_&quot; .. tostring(os.time()) .. &quot;_&quot; .. tostring(math.random()))
   
-  -- Kill existing timer if it exists
+  -- Enhanced validation and error handling
+  if not time or type(time) ~= &quot;number&quot; or time &lt; 0 then
+    cecho(&quot;&lt;red&gt;[Resource Cleanup] Invalid timer duration: &quot; .. tostring(time) .. &quot;\n&quot;)
+    return nil
+  end
+  
+  if not func then
+    cecho(&quot;&lt;red&gt;[Resource Cleanup] No function provided for timer: &quot; .. name .. &quot;\n&quot;)
+    return nil
+  end
+  
+  -- Initialize tracking table if needed
+  GUI.timers = GUI.timers or {}
+  
+  -- Kill existing timer if it exists with validation
   if GUI.timers[name] then
-    killTimer(GUI.timers[name])
+    local timerData = GUI.timers[name]
+    local timerId = type(timerData) == &quot;table&quot; and timerData.id or timerData
+    local success = pcall(killTimer, timerId)
+    if not success then
+      cecho(&quot;&lt;yellow&gt;[Resource Cleanup] Warning: Failed to kill existing timer: &quot; .. name .. &quot;\n&quot;)
+    end
   end
   
-  -- Create appropriate timer type
-  local timerId
-  if recurring then
-    timerId = tempTimer(time, func, true)
-  else
-    timerId = tempTimer(time, func)
+  -- Create appropriate timer type with error handling
+  local success, timerId = pcall(function()
+    if recurring then
+      return tempTimer(time, func, true)
+    else
+      return tempTimer(time, func)
+    end
+  end)
+  
+  if not success then
+    cecho(&quot;&lt;red&gt;[Resource Cleanup] Failed to create timer: &quot; .. name .. &quot; - &quot; .. tostring(timerId) .. &quot;\n&quot;)
+    return nil
   end
   
-  GUI.timers[name] = timerId
+  -- Store timer with metadata for better tracking
+  GUI.timers[name] = {
+    id = timerId,
+    created = os.time(),
+    recurring = recurring or false,
+    func_type = type(func)
+  }
+  
   return timerId
 end
-
--- Cleanup all event handlers
+-- Cleanup all event handlers with enhanced error handling
 function GUI.cleanupHandlers()
   local count = 0
+  local failures = 0
+  
+  GUI.handlers = GUI.handlers or {}
+  
   for name, handlerId in pairs(GUI.handlers) do
     if handlerId then
-      killAnonymousEventHandler(handlerId)
-      count = count + 1
+      local success = pcall(killAnonymousEventHandler, handlerId)
+      if success then
+        count = count + 1
+      else
+        failures = failures + 1
+        cecho(&quot;&lt;yellow&gt;[Resource Cleanup] Failed to kill handler: &quot; .. name .. &quot;\n&quot;)
+      end
     end
   end
+  
   GUI.handlers = {}
-  cecho(string.format("&lt;green&gt;[Resource Cleanup] Cleaned up %d event handlers\n", count))
+  
+  if failures &gt; 0 then
+    cecho(string.format(&quot;&lt;yellow&gt;[Resource Cleanup] Cleaned up %d event handlers (%d failures)\n&quot;, count, failures))
+  else
+    cecho(string.format(&quot;&lt;green&gt;[Resource Cleanup] Cleaned up %d event handlers\n&quot;, count))
+  end
+  
   return count
 end
-
--- Cleanup all timers
+-- Cleanup all timers with enhanced error handling
 function GUI.cleanupTimers()
   local count = 0
-  for name, timerId in pairs(GUI.timers) do
-    if timerId then
-      killTimer(timerId)
-      count = count + 1
+  local failures = 0
+  
+  GUI.timers = GUI.timers or {}
+  
+  for name, timerData in pairs(GUI.timers) do
+    if timerData then
+      -- Handle both old format (just ID) and new format (metadata table)
+      local timerId = type(timerData) == &quot;table&quot; and timerData.id or timerData
+      
+      if timerId then
+        local success = pcall(killTimer, timerId)
+        if success then
+          count = count + 1
+        else
+          failures = failures + 1
+          cecho(&quot;&lt;yellow&gt;[Resource Cleanup] Failed to kill timer: &quot; .. name .. &quot;\n&quot;)
+        end
+      end
     end
   end
+  
   GUI.timers = {}
-  cecho(string.format("&lt;green&gt;[Resource Cleanup] Cleaned up %d timers\n", count))
+  
+  if failures &gt; 0 then
+    cecho(string.format(&quot;&lt;yellow&gt;[Resource Cleanup] Cleaned up %d timers (%d failures)\n&quot;, count, failures))
+  else
+    cecho(string.format(&quot;&lt;green&gt;[Resource Cleanup] Cleaned up %d timers\n&quot;, count))
+  end
+  
   return count
 end
-
--- Master cleanup function
+-- Master cleanup function with enhanced error handling and resource reporting
 function GUI.cleanupResources()
-  cecho("&lt;yellow&gt;[Resource Cleanup] Starting resource cleanup...\n")
+  cecho(&quot;&lt;yellow&gt;[Resource Cleanup] Starting resource cleanup...\n&quot;)
   
-  -- Clean up specific known resources first
+  local legacyCleanups = 0
+  local legacyFailures = 0
   
+  -- Clean up specific known legacy resources first with error handling
   -- 1. Cast console timer
   if GUI.castConsoleTimer then
-    killTimer(GUI.castConsoleTimer)
+    local success = pcall(killTimer, GUI.castConsoleTimer)
+    if success then
+      legacyCleanups = legacyCleanups + 1
+    else
+      legacyFailures = legacyFailures + 1
+      cecho(&quot;&lt;yellow&gt;[Resource Cleanup] Failed to clean cast console timer\n&quot;)
+    end
     GUI.castConsoleTimer = nil
   end
   
   -- 2. YATCO blink timer
   if demonnic and demonnic.chat and demonnic.chat.blinkID then
-    killTimer(demonnic.chat.blinkID)
+    local success = pcall(killTimer, demonnic.chat.blinkID)
+    if success then
+      legacyCleanups = legacyCleanups + 1
+    else
+      legacyFailures = legacyFailures + 1
+      cecho(&quot;&lt;yellow&gt;[Resource Cleanup] Failed to clean YATCO blink timer\n&quot;)
+    end
     demonnic.chat.blinkID = nil
     demonnic.chat.blinkTimerOn = false
   end
   
   -- 3. Speedwalk timer (from mapper)
   if speedwalk_timer then
-    killTimer(speedwalk_timer)
+    local success = pcall(killTimer, speedwalk_timer)
+    if success then
+      legacyCleanups = legacyCleanups + 1
+    else
+      legacyFailures = legacyFailures + 1
+      cecho(&quot;&lt;yellow&gt;[Resource Cleanup] Failed to clean speedwalk timer\n&quot;)
+    end
     speedwalk_timer = nil
   end
   
   -- 4. Any YATCO initialization timer
   if GUI.yatcoInitTimer then
-    killTimer(GUI.yatcoInitTimer)
+    local success = pcall(killTimer, GUI.yatcoInitTimer)
+    if success then
+      legacyCleanups = legacyCleanups + 1
+    else
+      legacyFailures = legacyFailures + 1
+      cecho(&quot;&lt;yellow&gt;[Resource Cleanup] Failed to clean YATCO init timer\n&quot;)
+    end
     GUI.yatcoInitTimer = nil
   end
   
@@ -3552,66 +3655,161 @@ function GUI.cleanupResources()
   local handlerCount = GUI.cleanupHandlers()
   local timerCount = GUI.cleanupTimers()
   
-  -- Save toggles before exit
+  -- Save toggles before exit with error handling
   if GUI.saveToggles then
-    GUI.saveToggles()
+    local success = pcall(GUI.saveToggles)
+    if not success then
+      cecho(&quot;&lt;yellow&gt;[Resource Cleanup] Warning: Failed to save toggles\n&quot;)
+    end
   end
   
-  cecho(string.format("&lt;green&gt;[Resource Cleanup] Cleanup complete - removed %d handlers and %d timers\n", 
-    handlerCount, timerCount))
+  -- Comprehensive cleanup report
+  local totalCleaned = handlerCount + timerCount + legacyCleanups
+  local totalFailures = legacyFailures
+  
+  if totalFailures &gt; 0 then
+    cecho(string.format(&quot;&lt;yellow&gt;[Resource Cleanup] Cleanup complete - removed %d handlers, %d timers, %d legacy items (%d failures)\n&quot;,
+      handlerCount, timerCount, legacyCleanups, totalFailures))
+  else
+    cecho(string.format(&quot;&lt;green&gt;[Resource Cleanup] Cleanup complete - removed %d handlers, %d timers, %d legacy items\n&quot;,
+      handlerCount, timerCount, legacyCleanups))
+  end
+  
+  return {
+    handlers = handlerCount,
+    timers = timerCount,
+    legacy = legacyCleanups,
+    failures = totalFailures,
+    total = totalCleaned
+  }
 end
-
 -- Register cleanup handlers - these use the standard function to avoid recursion
-registerAnonymousEventHandler("sysUninstall", "GUI.cleanupResources")
-registerAnonymousEventHandler("sysExitEvent", "GUI.cleanupResources")
-
+-- But we still add error boundaries for stability
+registerAnonymousEventHandler(&quot;sysUninstall&quot;, GUI.createErrorBoundary(&quot;gui_cleanup_uninstall&quot;, &quot;GUI.cleanupResources&quot;))
+registerAnonymousEventHandler(&quot;sysExitEvent&quot;, GUI.createErrorBoundary(&quot;gui_cleanup_exit&quot;, &quot;GUI.cleanupResources&quot;))
 -- Migration function to update existing handlers to use tracking
 function GUI.migrateEventHandlers()
   -- This function will be called from the modified Config script
   -- to re-register all handlers with tracking
-  
-  cecho("&lt;cyan&gt;[Resource Cleanup] Migrating event handlers to tracked system...\n")
-  
+  cecho(&quot;&lt;cyan&gt;[Resource Cleanup] Migrating event handlers to tracked system...\n&quot;)
   -- GUI event handlers
-  GUI.registerHandler("msdp.GROUP", "GUI.updateGroup", "msdp_group")
-  GUI.registerHandler("msdp.AFFECTS", "GUI.updateAffectIcons", "msdp_affects")
-  GUI.registerHandler("sysProtocolEnabled", "GUI.onProtocolEnabled", "sys_protocol")
-  GUI.registerHandler("msdp.HEALTH", "GUI.updateHealthGauge", "msdp_health")
-  GUI.registerHandler("msdp.HEALTH_MAX", "GUI.updateHealthGauge", "msdp_health_max")
-  GUI.registerHandler("msdp.OPPONENT_HEALTH", "GUI.updateEnemyGauge", "msdp_opp_health")
-  GUI.registerHandler("msdp.OPPONENT_HEALTH_MAX", "GUI.updateEnemyGauge", "msdp_opp_health_max")
-  GUI.registerHandler("msdp.OPPONENT_NAME", "GUI.updateEnemyGauge", "msdp_opp_name")
-  GUI.registerHandler("msdp.MOVEMENT", "GUI.updateMovesGauge", "msdp_movement")
-  GUI.registerHandler("msdp.MOVEMENT_MAX", "GUI.updateMovesGauge", "msdp_movement_max")
-  GUI.registerHandler("msdp.EXPERIENCE", "GUI.updateExperienceGauge", "msdp_exp")
-  GUI.registerHandler("msdp.EXPERIENCE_TNL", "GUI.updateExperienceGauge", "msdp_exp_tnl")
-  GUI.registerHandler("msdp.EXPERIENCE_MAX", "GUI.updateExperienceGauge", "msdp_exp_max")
-  GUI.registerHandler("msdp.ACTIONS", "GUI.updateActionIcons", "msdp_actions")
-  GUI.registerHandler("msdp.CHARACTER_NAME", "GUI.updatePlayer", "msdp_char_name")
-  GUI.registerHandler("msdp.POSITION", "GUI.updatePlayer", "msdp_position")
-  GUI.registerHandler("msdp.RACE", "GUI.updatePlayer", "msdp_race")
-  GUI.registerHandler("msdp.CLASS", "GUI.updatePlayer", "msdp_class")
-  GUI.registerHandler("msdp.ALIGNMENT", "GUI.updatePlayer", "msdp_alignment")
-  GUI.registerHandler("msdp.LEVEL", "GUI.updatePlayer", "msdp_level")
-  GUI.registerHandler("msdp.STR", "GUI.updatePlayer", "msdp_str")
-  GUI.registerHandler("msdp.DEX", "GUI.updatePlayer", "msdp_dex")
-  GUI.registerHandler("msdp.CON", "GUI.updatePlayer", "msdp_con")
-  GUI.registerHandler("msdp.INT", "GUI.updatePlayer", "msdp_int")
-  GUI.registerHandler("msdp.WIS", "GUI.updatePlayer", "msdp_wis")
-  GUI.registerHandler("msdp.CHA", "GUI.updatePlayer", "msdp_cha")
-  GUI.registerHandler("msdp.AC", "GUI.updatePlayer", "msdp_ac")
-  GUI.registerHandler("msdp.MONEY", "GUI.updatePlayer", "msdp_money")
-  GUI.registerHandler("msdp.ROOM", "GUI.updateRoom", "msdp_room")
-  
+  GUI.registerHandler(&quot;msdp.GROUP&quot;, &quot;GUI.updateGroup&quot;, &quot;msdp_group&quot;)
+  GUI.registerHandler(&quot;msdp.AFFECTS&quot;, &quot;GUI.updateAffectIcons&quot;, &quot;msdp_affects&quot;)
+  GUI.registerHandler(&quot;sysProtocolEnabled&quot;, &quot;GUI.onProtocolEnabled&quot;, &quot;sys_protocol&quot;)
+  GUI.registerHandler(&quot;msdp.HEALTH&quot;, &quot;GUI.updateHealthGauge&quot;, &quot;msdp_health&quot;)
+  GUI.registerHandler(&quot;msdp.HEALTH_MAX&quot;, &quot;GUI.updateHealthGauge&quot;, &quot;msdp_health_max&quot;)
+  GUI.registerHandler(&quot;msdp.OPPONENT_HEALTH&quot;, &quot;GUI.updateEnemyGauge&quot;, &quot;msdp_opp_health&quot;)
+  GUI.registerHandler(&quot;msdp.OPPONENT_HEALTH_MAX&quot;, &quot;GUI.updateEnemyGauge&quot;, &quot;msdp_opp_health_max&quot;)
+  GUI.registerHandler(&quot;msdp.OPPONENT_NAME&quot;, &quot;GUI.updateEnemyGauge&quot;, &quot;msdp_opp_name&quot;)
+  GUI.registerHandler(&quot;msdp.MOVEMENT&quot;, &quot;GUI.updateMovesGauge&quot;, &quot;msdp_movement&quot;)
+  GUI.registerHandler(&quot;msdp.MOVEMENT_MAX&quot;, &quot;GUI.updateMovesGauge&quot;, &quot;msdp_movement_max&quot;)
+  GUI.registerHandler(&quot;msdp.EXPERIENCE&quot;, &quot;GUI.updateExperienceGauge&quot;, &quot;msdp_exp&quot;)
+  GUI.registerHandler(&quot;msdp.EXPERIENCE_TNL&quot;, &quot;GUI.updateExperienceGauge&quot;, &quot;msdp_exp_tnl&quot;)
+  GUI.registerHandler(&quot;msdp.EXPERIENCE_MAX&quot;, &quot;GUI.updateExperienceGauge&quot;, &quot;msdp_exp_max&quot;)
+  GUI.registerHandler(&quot;msdp.ACTIONS&quot;, &quot;GUI.updateActionIcons&quot;, &quot;msdp_actions&quot;)
+  GUI.registerHandler(&quot;msdp.CHARACTER_NAME&quot;, &quot;GUI.updatePlayer&quot;, &quot;msdp_char_name&quot;)
+  GUI.registerHandler(&quot;msdp.POSITION&quot;, &quot;GUI.updatePlayer&quot;, &quot;msdp_position&quot;)
+  GUI.registerHandler(&quot;msdp.RACE&quot;, &quot;GUI.updatePlayer&quot;, &quot;msdp_race&quot;)
+  GUI.registerHandler(&quot;msdp.CLASS&quot;, &quot;GUI.updatePlayer&quot;, &quot;msdp_class&quot;)
+  GUI.registerHandler(&quot;msdp.ALIGNMENT&quot;, &quot;GUI.updatePlayer&quot;, &quot;msdp_alignment&quot;)
+  GUI.registerHandler(&quot;msdp.LEVEL&quot;, &quot;GUI.updatePlayer&quot;, &quot;msdp_level&quot;)
+  GUI.registerHandler(&quot;msdp.STR&quot;, &quot;GUI.updatePlayer&quot;, &quot;msdp_str&quot;)
+  GUI.registerHandler(&quot;msdp.DEX&quot;, &quot;GUI.updatePlayer&quot;, &quot;msdp_dex&quot;)
+  GUI.registerHandler(&quot;msdp.CON&quot;, &quot;GUI.updatePlayer&quot;, &quot;msdp_con&quot;)
+  GUI.registerHandler(&quot;msdp.INT&quot;, &quot;GUI.updatePlayer&quot;, &quot;msdp_int&quot;)
+  GUI.registerHandler(&quot;msdp.WIS&quot;, &quot;GUI.updatePlayer&quot;, &quot;msdp_wis&quot;)
+  GUI.registerHandler(&quot;msdp.CHA&quot;, &quot;GUI.updatePlayer&quot;, &quot;msdp_cha&quot;)
+  GUI.registerHandler(&quot;msdp.AC&quot;, &quot;GUI.updatePlayer&quot;, &quot;msdp_ac&quot;)
+  GUI.registerHandler(&quot;msdp.MONEY&quot;, &quot;GUI.updatePlayer&quot;, &quot;msdp_money&quot;)
+  GUI.registerHandler(&quot;msdp.ROOM&quot;, &quot;GUI.updateRoom&quot;, &quot;msdp_room&quot;)
   -- Toggle handlers
-  GUI.registerHandler("sysLoadEvent", "GUI.loadToggles", "sys_load_toggles")
-  GUI.registerHandler("sysExitEvent", "GUI.saveToggles", "sys_exit_toggles")
-  
+  GUI.registerHandler(&quot;sysLoadEvent&quot;, &quot;GUI.loadToggles&quot;, &quot;sys_load_toggles&quot;)
+  GUI.registerHandler(&quot;sysExitEvent&quot;, &quot;GUI.saveToggles&quot;, &quot;sys_exit_toggles&quot;)
   -- Main init handlers
-  GUI.registerHandler("sysLoadEvent", "GUI.init", "sys_load_init")
-  GUI.registerHandler("sysInstall", "GUI.init", "sys_install_init")
+  GUI.registerHandler(&quot;sysLoadEvent&quot;, &quot;GUI.init&quot;, &quot;sys_load_init&quot;)
+  GUI.registerHandler(&quot;sysInstall&quot;, &quot;GUI.init&quot;, &quot;sys_install_init&quot;)
+  cecho(&quot;&lt;green&gt;[Resource Cleanup] Event handler migration complete\n&quot;)
+end
+
+-- Resource status and debugging functions
+function GUI.getResourceStatus()
+  local status = {
+    handlers = {},
+    timers = {},
+    legacy = {}
+  }
   
-  cecho("&lt;green&gt;[Resource Cleanup] Event handler migration complete\n")
+  -- Count tracked handlers
+  GUI.handlers = GUI.handlers or {}
+  for name, handlerId in pairs(GUI.handlers) do
+    table.insert(status.handlers, {name = name, id = handlerId})
+  end
+  
+  -- Count tracked timers with metadata
+  GUI.timers = GUI.timers or {}
+  for name, timerData in pairs(GUI.timers) do
+    local info = {name = name}
+    if type(timerData) == &quot;table&quot; then
+      info.id = timerData.id
+      info.created = timerData.created
+      info.recurring = timerData.recurring
+      info.func_type = timerData.func_type
+    else
+      info.id = timerData
+      info.created = &quot;unknown&quot;
+      info.recurring = &quot;unknown&quot;
+      info.func_type = &quot;unknown&quot;
+    end
+    table.insert(status.timers, info)
+  end
+  
+  -- Check legacy resources
+  if GUI.castConsoleTimer then
+    table.insert(status.legacy, {name = &quot;GUI.castConsoleTimer&quot;, id = GUI.castConsoleTimer})
+  end
+  if demonnic and demonnic.chat and demonnic.chat.blinkID then
+    table.insert(status.legacy, {name = &quot;demonnic.chat.blinkID&quot;, id = demonnic.chat.blinkID})
+  end
+  if speedwalk_timer then
+    table.insert(status.legacy, {name = &quot;speedwalk_timer&quot;, id = speedwalk_timer})
+  end
+  if GUI.yatcoInitTimer then
+    table.insert(status.legacy, {name = &quot;GUI.yatcoInitTimer&quot;, id = GUI.yatcoInitTimer})
+  end
+  
+  return status
+end
+
+function GUI.showResourceStatus()
+  local status = GUI.getResourceStatus()
+  
+  cecho(&quot;&lt;cyan&gt;[Resource Status] Current resource usage:\n&quot;)
+  cecho(string.format(&quot;  Tracked Handlers: %d\n&quot;, #status.handlers))
+  cecho(string.format(&quot;  Tracked Timers: %d\n&quot;, #status.timers))
+  cecho(string.format(&quot;  Legacy Resources: %d\n&quot;, #status.legacy))
+  
+  if #status.handlers &gt; 0 then
+    cecho(&quot;&lt;white&gt;  Active Handlers:\n&quot;)
+    for _, handler in ipairs(status.handlers) do
+      cecho(string.format(&quot;    - %s (ID: %s)\n&quot;, handler.name, tostring(handler.id)))
+    end
+  end
+  
+  if #status.timers &gt; 0 then
+    cecho(&quot;&lt;white&gt;  Active Timers:\n&quot;)
+    for _, timer in ipairs(status.timers) do
+      local age = timer.created ~= &quot;unknown&quot; and (os.time() - timer.created) or &quot;unknown&quot;
+      cecho(string.format(&quot;    - %s (ID: %s, Age: %ss, Recurring: %s)\n&quot;, 
+        timer.name, tostring(timer.id), tostring(age), tostring(timer.recurring)))
+    end
+  end
+  
+  if #status.legacy &gt; 0 then
+    cecho(&quot;&lt;yellow&gt;  Legacy Resources (should migrate to tracked system):\n&quot;)
+    for _, resource in ipairs(status.legacy) do
+      cecho(string.format(&quot;    - %s (ID: %s)\n&quot;, resource.name, tostring(resource.id)))
+    end
+  end
 end
 </script>
 						<eventHandlerList/>
@@ -4238,19 +4436,16 @@ end
 				-- Delay chat creation to ensure GUI containers are ready
 				local timerFunc = function ()
 						cecho(&quot;&lt;cyan&gt;[DEBUG] YATCO timer fired - checking for conflicts...\n&quot;)
-						
 						-- DEBUG: Check cast console state before YATCO init
 						if GUI.castConsole then
 							 cecho(&quot;&lt;yellow&gt;[DEBUG] Cast console exists before YATCO init: visible=&quot; .. tostring(not GUI.castConsole.hidden) .. &quot;\n&quot;)
 						else
 							 cecho(&quot;&lt;red&gt;[DEBUG] Cast console missing before YATCO init!\n&quot;)
 						end
-						
 						if GUI.chatContainer then
 							 cecho(&quot;&lt;cyan&gt;[DEBUG] Installing YATCO chat system...\n&quot;)
 							 demonnic.chat:create()
 							 cecho(&quot;&lt;cyan&gt;YATCO chat system initialized.\n&quot;)
-							 
 							 -- DEBUG: Check cast console state after YATCO init
 							 if GUI.castConsole then
 							   cecho(&quot;&lt;yellow&gt;[DEBUG] Cast console exists after YATCO init: visible=&quot; .. tostring(not GUI.castConsole.hidden) .. &quot;\n&quot;)
@@ -4261,7 +4456,6 @@ end
 							 cecho(&quot;&lt;red&gt;Error: GUI.chatContainer not found. Chat system not initialized.\n&quot;)
 						end
 				end
-				
 				-- Use tracked timer if available
 				if GUI and GUI.createTimer then
 					GUI.yatcoInitTimer = GUI.createTimer(0.5, timerFunc, false, &quot;yatco_init&quot;)
@@ -4274,7 +4468,7 @@ end
 if GUI and GUI.registerHandler then
   GUI.registerHandler(&quot;sysLoadEvent&quot;, &quot;demonnicOnStart&quot;, &quot;yatco_startup&quot;)
 else
-  registerAnonymousEventHandler(&quot;sysLoadEvent&quot;, &quot;demonnicOnStart&quot;)
+  registerAnonymousEventHandler(&quot;sysLoadEvent&quot;, GUI.createErrorBoundary(&quot;yatco_startup_fallback&quot;, &quot;demonnicOnStart&quot;))
 end</script>
 							<eventHandlerList>
 								<string>sysLoadEvent</string>

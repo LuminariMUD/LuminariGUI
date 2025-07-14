@@ -7,13 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-- **Resource Cleanup System**: Comprehensive resource management to prevent memory leaks
-  - New `Resource Cleanup` script for centralized tracking of event handlers and timers
-  - Helper functions `GUI.registerHandler()` and `GUI.createTimer()` for automatic resource tracking
-  - Automatic cleanup on `sysUninstall` and `sysExitEvent` to prevent memory leaks
-  - Migration function for existing handlers to use new tracking system
-  - Modified scripts to use tracked resources: Config (33 handlers), MSDPMapper (6 handlers), Cast Console (3 timers), Toggles (2 handlers), demonnicOnStart (1 timer, 1 handler)
+### Enhanced
+- **Enhanced Resource Cleanup System**: Significantly improved resource management to prevent memory leaks
+  - **Enhanced Timer Creation**: `GUI.createTimer()` now includes comprehensive validation and error handling
+    - Input validation for timer duration and function parameters
+    - Safe cleanup of existing timers before creating new ones
+    - Metadata tracking for better debugging (creation time, recurring status, function type)
+    - Backward compatibility with both old ID-only and new metadata timer formats
+  - **Improved Cleanup Functions**: Enhanced error handling in `GUI.cleanupHandlers()` and `GUI.cleanupTimers()`
+    - Protected cleanup operations with pcall() to prevent cleanup failures from crashing the system
+    - Detailed failure reporting showing successful vs failed cleanup attempts
+    - Handles both legacy timer IDs and new metadata structures
+  - **Enhanced Master Cleanup**: `GUI.cleanupResources()` now provides comprehensive resource reporting
+    - Safe cleanup of legacy resources (cast console, YATCO blink, speedwalk, init timers)
+    - Protected toggle saving with error handling
+    - Detailed cleanup statistics showing handlers, timers, legacy items, and any failures
+    - Returns structured cleanup report for programmatic access
+  - **Resource Status Debugging**: New debugging functions for resource leak analysis
+    - `GUI.getResourceStatus()` provides detailed resource inventory
+    - `GUI.showResourceStatus()` displays user-friendly resource usage report
+    - Tracks timer age, recurring status, and legacy resource identification
+    - Helps identify resource leaks and migration opportunities
+  - **Addresses Critical Issues**: Improves "Resource Lifecycle Management Failure" from stability audit
+    - Better tracking prevents orphaned timers and handlers
+    - Enhanced error handling prevents cleanup failures from cascading
+    - Comprehensive reporting aids in debugging resource issues
+
+### Fixed
+- **XML Escaping Issues**: Corrected all cecho statements to use proper XML entity escaping
+- **Vararg Scope Errors**: Fixed incorrect usage of `...` parameters inside pcall functions
+- **Timer Creation Race Conditions**: Enhanced validation prevents double-creation of timers
 
 ### Added
 - **Testing Infrastructure**: Comprehensive testing framework to prevent "fix one, break another" issues
