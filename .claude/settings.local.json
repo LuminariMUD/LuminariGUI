@@ -17,7 +17,10 @@
       "Bash(mkdir:*)",
       "Bash(mv:*)",
       "Bash(lua:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git config:*)",
+      "Bash(git reset:*)"
     ],
     "deny": []
   }
