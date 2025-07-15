@@ -166,6 +166,12 @@ Within the XML, code is structured as:
 - **Modifying chat channels**: Edit triggers in the YATCOConfig group
 - **Updating mapper logic**: Modify the MSDPMapper script
 
+### Troubleshooting Commands
+
+- **Fix GUI refresh issues**: `fix gui` - Re-registers event handlers if Group tab or other elements stop auto-updating
+- **Toggle group display**: `show self` - Shows/hides yourself in the Group tab
+- **Toggle chat gagging**: `gag chat` - Enables/disables chat message gagging
+
 ### Testing Approach
 
 #### Automated Testing (Limited)

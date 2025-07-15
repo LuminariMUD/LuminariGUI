@@ -526,6 +526,15 @@ GUI.showSelfToggle()</script>
 							<regex>^chaseres$</regex>
 						</Alias>
 						<Alias isActive="yes" isFolder="no">
+							<name>Fix GUI Events</name>
+							<script>-- Re-register all GUI event handlers in case they failed during initialization
+GUI.registerEventHandlers()
+cecho("\n&lt;green&gt;GUI event handlers re-registered. Group tab should now auto-refresh.")</script>
+							<command></command>
+							<packageName></packageName>
+							<regex>^fix gui$</regex>
+						</Alias>
+						<Alias isActive="yes" isFolder="no">
 							<name>Debug</name>
 							<script>if matches[2] then
   demonnic:listCategories()
@@ -2635,37 +2644,64 @@ function GUI.init()
   GUI.init_castConsole()
   GUI.styleScrollbar()
 	
-	
-  --
-  registerAnonymousEventHandler("msdp.GROUP", "GUI.updateGroup")
-  registerAnonymousEventHandler("msdp.AFFECTS", "GUI.updateAffectIcons")
-	--registerAnonymousEventHandler("msdp.AFFECTS", "GUI.updateSLAffects")
-  --registerAnonymousEventHandler("sysConnectionEvent", "GUI.eventHandler")
-  registerAnonymousEventHandler("sysProtocolEnabled", "GUI.onProtocolEnabled")
-  registerAnonymousEventHandler("msdp.HEALTH", "GUI.updateHealthGauge")
-  registerAnonymousEventHandler("msdp.HEALTH_MAX", "GUI.updateHealthGauge")
-  registerAnonymousEventHandler("msdp.OPPONENT_HEALTH", "GUI.updateEnemyGauge")
-  registerAnonymousEventHandler("msdp.OPPONENT_HEALTH_MAX", "GUI.updateEnemyGauge")
-  registerAnonymousEventHandler("msdp.OPPONENT_NAME", "GUI.updateEnemyGauge")
-  registerAnonymousEventHandler("msdp.MOVEMENT", "GUI.updateMovesGauge")
-  registerAnonymousEventHandler("msdp.MOVEMENT_MAX", "GUI.updateMovesGauge")
-  registerAnonymousEventHandler("msdp.EXPERIENCE", "GUI.updateExperienceGauge")
-  registerAnonymousEventHandler("msdp.EXPERIENCE_TNL", "GUI.updateExperienceGauge")
-  registerAnonymousEventHandler("msdp.ACTIONS", "GUI.updateActionIcons")
-  registerAnonymousEventHandler("msdp.CHARACTER_NAME", "GUI.updatePlayer")
-  registerAnonymousEventHandler("msdp.RACE", "GUI.updatePlayer")
-  registerAnonymousEventHandler("msdp.CLASS", "GUI.updatePlayer")
-  registerAnonymousEventHandler("msdp.ALIGNMENT", "GUI.updatePlayer")
-  registerAnonymousEventHandler("msdp.LEVEL", "GUI.updatePlayer")
-  registerAnonymousEventHandler("msdp.STR", "GUI.updatePlayer")
-  registerAnonymousEventHandler("msdp.DEX", "GUI.updatePlayer")
-  registerAnonymousEventHandler("msdp.CON", "GUI.updatePlayer")
-  registerAnonymousEventHandler("msdp.INT", "GUI.updatePlayer")
-  registerAnonymousEventHandler("msdp.WIS", "GUI.updatePlayer")
-  registerAnonymousEventHandler("msdp.CHA", "GUI.updatePlayer")
-  registerAnonymousEventHandler("msdp.AC", "GUI.updatePlayer")
-  registerAnonymousEventHandler("msdp.MONEY", "GUI.updatePlayer")
-  registerAnonymousEventHandler("msdp.ROOM", "GUI.updateRoom")
+  -- Register all event handlers with error handling
+  GUI.registerEventHandlers()
+end
+
+-- Robust event handler registration with error handling and verification
+function GUI.registerEventHandlers()
+  -- Define all event handlers in a table for easy management
+  local eventHandlers = {
+    ["msdp.GROUP"] = "GUI.updateGroup",
+    ["msdp.AFFECTS"] = "GUI.updateAffectIcons",
+    ["sysProtocolEnabled"] = "GUI.onProtocolEnabled",
+    ["msdp.HEALTH"] = "GUI.updateHealthGauge",
+    ["msdp.HEALTH_MAX"] = "GUI.updateHealthGauge",
+    ["msdp.OPPONENT_HEALTH"] = "GUI.updateEnemyGauge",
+    ["msdp.OPPONENT_HEALTH_MAX"] = "GUI.updateEnemyGauge",
+    ["msdp.OPPONENT_NAME"] = "GUI.updateEnemyGauge",
+    ["msdp.MOVEMENT"] = "GUI.updateMovesGauge",
+    ["msdp.MOVEMENT_MAX"] = "GUI.updateMovesGauge",
+    ["msdp.EXPERIENCE"] = "GUI.updateExperienceGauge",
+    ["msdp.EXPERIENCE_TNL"] = "GUI.updateExperienceGauge",
+    ["msdp.ACTIONS"] = "GUI.updateActionIcons",
+    ["msdp.CHARACTER_NAME"] = "GUI.updatePlayer",
+    ["msdp.RACE"] = "GUI.updatePlayer",
+    ["msdp.CLASS"] = "GUI.updatePlayer",
+    ["msdp.ALIGNMENT"] = "GUI.updatePlayer",
+    ["msdp.LEVEL"] = "GUI.updatePlayer",
+    ["msdp.STR"] = "GUI.updatePlayer",
+    ["msdp.DEX"] = "GUI.updatePlayer",
+    ["msdp.CON"] = "GUI.updatePlayer",
+    ["msdp.INT"] = "GUI.updatePlayer",
+    ["msdp.WIS"] = "GUI.updatePlayer",
+    ["msdp.CHA"] = "GUI.updatePlayer",
+    ["msdp.AC"] = "GUI.updatePlayer",
+    ["msdp.MONEY"] = "GUI.updatePlayer",
+    ["msdp.ROOM"] = "GUI.updateRoom"
+  }
+  
+  -- Store handler IDs for potential cleanup
+  GUI.eventHandlerIds = GUI.eventHandlerIds or {}
+  
+  -- Register each handler with error handling
+  for event, handler in pairs(eventHandlers) do
+    local success, handlerId = pcall(registerAnonymousEventHandler, event, handler)
+    if success then
+      GUI.eventHandlerIds[event] = handlerId
+      -- Optional: uncomment for debugging
+      -- print(string.format("✓ Registered handler for %s", event))
+    else
+      print(string.format("✗ Failed to register handler for %s: %s", event, handlerId))
+    end
+  end
+  
+  -- Verify critical handlers are working (like GROUP)
+  tempTimer(2, function()
+    if msdp.GROUP and #msdp.GROUP > 0 then
+      GUI.updateGroup()
+    end
+  end)
 end
 
 registerAnonymousEventHandler("sysLoadEvent", "GUI.init")

@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Fixed file extension mismatch in both `GUI.BoxCSS` and tabbed window CSS generation
   - This resolves the fundamental container rendering problem where neither texture nor dark purple fallback was visible
   - Expected result: Dark gray concrete texture background should now render properly in GUI sections
+- **CRITICAL**: Fixed Group tab and other GUI elements not auto-refreshing after package reload
+  - Root cause: Event handlers sometimes fail to register properly during package initialization
+  - Added robust `GUI.registerEventHandlers()` function with error handling and verification
+  - Added automatic verification that critical handlers (like GROUP) are working after 2-second delay
+  - Added `fix gui` command for users to manually re-register event handlers if needed
+  - This resolves the issue where Group tab, health gauges, and other MSDP-driven elements stop updating automatically
 - Fixed auction channel capture by updating regex patterns to match actual game verbs
   - Changed `auctions` to `auctalks` for incoming auction messages
   - Changed `auction` to `auctalk` for outgoing auction messages
