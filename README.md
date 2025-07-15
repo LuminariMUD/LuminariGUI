@@ -59,14 +59,14 @@ See [`CLAUDE.md`](CLAUDE.md) for detailed information about the XML formatting r
 
 1. **Download the Package**
    ```bash
-   # Download LuminariGUI.xml from the repository
-   wget https://github.com/LuminariMUD/LuminariGUI/releases/latest/LuminariGUI.xml
+   # Download the latest .mpackage file from releases (v2.0.2 or newer)
+   wget https://github.com/LuminariMUD/LuminariGUI/releases/latest/download/LuminariGUI-v2.0.2.mpackage
    ```
 
 2. **Install in Mudlet**
    - Open Mudlet
    - Go to `Package Manager` → `Install Package`
-   - Select the downloaded `LuminariGUI.xml` file
+   - Select the downloaded `LuminariGUI-v2.0.2.mpackage` file
    - Restart Mudlet when prompted
 
 3. **Connect to LuminariMUD**
@@ -101,11 +101,17 @@ Once connected and the GUI has initialized:
 ### Essential Commands
 
 ```lua
+-- Fix all GUI components if they stop updating
+fix gui
+
 -- Toggle chat gagging from main window
 gag chat
 
 -- Toggle self-display in group window  
 show self
+
+-- Fix chat positioning issues
+fixchat
 
 -- Manual mapping controls
 start mapping
@@ -150,23 +156,36 @@ The GUI automatically requests these MSDP variables:
 
 ### Common Issues
 
+**GUI components not updating after package reload:**
+- Use `fix gui` command to refresh all GUI elements
+- This fixes Group tab, health gauges, Player tab, and ASCII map
+- The command re-registers all event handlers and refreshes displays
+
 **GUI not appearing after installation:**
 - Ensure MSDP is enabled on your character: `msdp`
 - Restart Mudlet and reconnect
 - Check that you're connected to LuminariMUD (not a test server)
+- Try `fix gui` command to initialize all components
 
 **Chat tabs not working:**
 - Use `fixchat` command to reset chat window position
+- For mid-session imports, use `fix gui` to reinitialize chat system
 - Check YATCO configuration in the scripts panel
+
+**Enemy gauge showing when not in combat:**
+- This has been fixed in v2.0.2 - the gauge now properly hides when not in combat
+- Use `fix gui` to refresh if the issue persists
 
 **Mapping not updating:**
 - Verify MSDP room data is being received: `debug`
 - Use `start mapping` command
 - Ensure you're in a mapped area (not wilderness)
+- Use `fix gui` to refresh the ASCII map display
 
 **Missing health/movement data:**
 - Check MSDP variable reporting is active
 - Reconnect to refresh MSDP subscription
+- Use `fix gui` to refresh all status displays
 
 ### Debug Commands
 
@@ -246,7 +265,7 @@ python create_package.py --skip-validation
 python create_package.py --dev --skip-validation
 
 # Create release (skip validation due to Mudlet XML)
-python create_package.py --release --skip-validation
+python create_package.py --release --version 2.0.2 --skip-validation
 
 # Create with custom version
 python create_package.py --version 2.1.0 --skip-validation
