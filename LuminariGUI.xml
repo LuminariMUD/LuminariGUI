@@ -529,7 +529,80 @@ GUI.showSelfToggle()</script>
 							<name>Fix GUI Events</name>
 							<script>-- Re-register all GUI event handlers in case they failed during initialization
 GUI.registerEventHandlers()
-cecho("\n&lt;green&gt;GUI event handlers re-registered. Group tab should now auto-refresh.")</script>
+
+-- Re-initialize chat system if needed
+if demonnic.chat.use and not demonnic.chat.container then
+  demonnicOnStart()
+  cecho("\n&lt;yellow&gt;Chat system re-initialized.")
+end
+
+-- Manual refresh of all GUI components
+local refreshed = {}
+
+-- Group tab refresh
+if msdp.GROUP and #msdp.GROUP > 0 then
+  GUI.updateGroup()
+  table.insert(refreshed, "Group tab")
+end
+
+-- Gauge refreshes
+if msdp.HEALTH and msdp.HEALTH_MAX then
+  GUI.updateHealthGauge()
+  table.insert(refreshed, "Health gauge")
+end
+if msdp.MOVEMENT and msdp.MOVEMENT_MAX then
+  GUI.updateMovesGauge()
+  table.insert(refreshed, "Movement gauge")
+end
+if msdp.EXPERIENCE and msdp.EXPERIENCE_TNL then
+  GUI.updateExperienceGauge()
+  table.insert(refreshed, "Experience gauge")
+end
+
+-- Enemy gauge refresh (only if in combat)
+if msdp.OPPONENT_NAME and msdp.OPPONENT_NAME ~= "" then
+  GUI.updateEnemyGauge()
+  table.insert(refreshed, "Enemy gauge")
+else
+  -- Hide enemy gauge if not in combat
+  if GUI.Enemy then
+    GUI.Enemy:hide()
+  end
+end
+
+-- Player tab refresh
+if msdp.CHARACTER_NAME then
+  GUI.updatePlayer()
+  table.insert(refreshed, "Player tab")
+end
+
+-- Room info refresh
+if msdp.ROOM then
+  GUI.updateRoom()
+  table.insert(refreshed, "Room info")
+end
+
+-- ASCII map refresh (trigger map event handler and re-register map handlers)
+if msdp.ROOM then
+  -- Re-register map event handlers in case they failed
+  pcall(registerAnonymousEventHandler, "msdp.ROOM", "map.eventHandler")
+  pcall(registerAnonymousEventHandler, "shiftRoom", "map.eventHandler")
+  pcall(registerAnonymousEventHandler, "sysConnectionEvent", "map.eventHandler")
+  pcall(registerAnonymousEventHandler, "sysProtocolEnabled", "map.onProtocolEnabled")
+  pcall(registerAnonymousEventHandler, "sysDownloadDone", "map.eventHandler")
+  
+  -- Trigger map update
+  map.eventHandler("msdp.ROOM")
+  table.insert(refreshed, "ASCII map")
+end
+
+-- Report what was refreshed
+cecho("\n&lt;green&gt;GUI event handlers re-registered.")
+if #refreshed > 0 then
+  cecho("\n&lt;cyan&gt;Refreshed: " .. table.concat(refreshed, ", ") .. ".")
+else
+  cecho("\n&lt;yellow&gt;No MSDP data available to refresh displays.")
+end</script>
 							<command></command>
 							<packageName></packageName>
 							<regex>^fix gui$</regex>
@@ -2652,6 +2725,7 @@ end
 function GUI.registerEventHandlers()
   -- Define all event handlers in a table for easy management
   local eventHandlers = {
+    -- GUI event handlers
     ["msdp.GROUP"] = "GUI.updateGroup",
     ["msdp.AFFECTS"] = "GUI.updateAffectIcons",
     ["sysProtocolEnabled"] = "GUI.onProtocolEnabled",
@@ -2678,28 +2752,89 @@ function GUI.registerEventHandlers()
     ["msdp.CHA"] = "GUI.updatePlayer",
     ["msdp.AC"] = "GUI.updatePlayer",
     ["msdp.MONEY"] = "GUI.updatePlayer",
-    ["msdp.ROOM"] = "GUI.updateRoom"
+    ["msdp.ROOM"] = "GUI.updateRoom",
+    -- Map event handlers
+    ["shiftRoom"] = "map.eventHandler",
+    ["sysConnectionEvent"] = "map.eventHandler",
+    ["sysDownloadDone"] = "map.eventHandler"
+  }
+  
+  -- Register MSDP.ROOM for map separately to avoid conflict
+  local mapEventHandlers = {
+    ["msdp.ROOM"] = "map.eventHandler",
+    ["sysProtocolEnabled"] = "map.onProtocolEnabled"
   }
   
   -- Store handler IDs for potential cleanup
   GUI.eventHandlerIds = GUI.eventHandlerIds or {}
   
-  -- Register each handler with error handling
+  -- Register GUI event handlers
   for event, handler in pairs(eventHandlers) do
     local success, handlerId = pcall(registerAnonymousEventHandler, event, handler)
     if success then
       GUI.eventHandlerIds[event] = handlerId
       -- Optional: uncomment for debugging
-      -- print(string.format("✓ Registered handler for %s", event))
+      -- print(string.format("✓ Registered GUI handler for %s", event))
     else
-      print(string.format("✗ Failed to register handler for %s: %s", event, handlerId))
+      print(string.format("✗ Failed to register GUI handler for %s: %s", event, handlerId))
     end
   end
   
-  -- Verify critical handlers are working (like GROUP)
+  -- Register map event handlers separately
+  for event, handler in pairs(mapEventHandlers) do
+    local success, handlerId = pcall(registerAnonymousEventHandler, event, handler)
+    if success then
+      GUI.eventHandlerIds[event .. "_map"] = handlerId
+      -- Optional: uncomment for debugging
+      -- print(string.format("✓ Registered map handler for %s", event))
+    else
+      print(string.format("✗ Failed to register map handler for %s: %s", event, handlerId))
+    end
+  end
+  
+  -- Verify critical handlers are working and refresh displays
   tempTimer(2, function()
+    -- Group tab refresh
     if msdp.GROUP and #msdp.GROUP > 0 then
       GUI.updateGroup()
+    end
+    
+    -- Gauge refreshes
+    if msdp.HEALTH and msdp.HEALTH_MAX then
+      GUI.updateHealthGauge()
+    end
+    if msdp.MOVEMENT and msdp.MOVEMENT_MAX then
+      GUI.updateMovesGauge()
+    end
+    if msdp.EXPERIENCE and msdp.EXPERIENCE_TNL then
+      GUI.updateExperienceGauge()
+    end
+    
+    -- Enemy gauge refresh (only if opponent data exists)
+    if msdp.OPPONENT_NAME and msdp.OPPONENT_NAME ~= "" then
+      GUI.updateEnemyGauge()
+    else
+      -- Hide enemy gauge if not in combat
+      if GUI.Enemy then
+        GUI.Enemy:hide()
+      end
+    end
+    
+    -- Player tab refresh
+    if msdp.CHARACTER_NAME then
+      GUI.updatePlayer()
+    end
+    
+    -- Room info refresh
+    if msdp.ROOM then
+      GUI.updateRoom()
+    end
+  end)
+  
+  -- Initialize chat system if it's enabled but not created
+  tempTimer(1, function()
+    if demonnic.chat.use and not demonnic.chat.container then
+      demonnicOnStart()
     end
   end)
 end
@@ -3357,7 +3492,15 @@ end</script>
 							<packageName></packageName>
 							<script>function demonnicOnStart()
   if demonnic.chat.use then
-    demonnic.chat:create()
+    -- Verify container exists before creating chat
+    if not GUI.chatContainer then
+      print("Warning: GUI.chatContainer not found. Chat system may not display properly.")
+    end
+    
+    local success, err = pcall(demonnic.chat.create, demonnic.chat)
+    if not success then
+      print(string.format("Error initializing chat system: %s", err))
+    end
   end
 end</script>
 							<eventHandlerList>
@@ -3437,8 +3580,9 @@ end</script>
 							<name>demonnicOnInstall</name>
 							<packageName></packageName>
 							<script>function demonnicOnInstall(_, package)
-  if package:find("YATCO") then
-  	demonnicOnStart()
+  -- Check for both LuminariGUI and YATCO package names to handle mid-session imports
+  if package:find("YATCO") or package:find("LuminariGUI") then
+    demonnicOnStart()
   end
 end</script>
 							<eventHandlerList>

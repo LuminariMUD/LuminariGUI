@@ -16,9 +16,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **CRITICAL**: Fixed Group tab and other GUI elements not auto-refreshing after package reload
   - Root cause: Event handlers sometimes fail to register properly during package initialization
   - Added robust `GUI.registerEventHandlers()` function with error handling and verification
-  - Added automatic verification that critical handlers (like GROUP) are working after 2-second delay
-  - Added `fix gui` command for users to manually re-register event handlers if needed
+  - Added automatic verification and refresh of all GUI components after 2-second delay
+  - Enhanced `fix gui` command to comprehensively refresh all GUI elements
+  - Now automatically refreshes: Group tab, health/movement/experience gauges, Player tab, room info, and ASCII map
+  - Added proper enemy gauge handling: only shows during combat, hides when not in combat
   - This resolves the issue where Group tab, health gauges, and other MSDP-driven elements stop updating automatically
+- **CRITICAL**: Fixed chat system not initializing when package imported mid-session
+  - Root cause: `demonnicOnInstall` only checked for "YATCO" package name, not "LuminariGUI"
+  - Fixed package detection to check for both "YATCO" and "LuminariGUI" package names
+  - Added chat system verification and auto-initialization to `GUI.registerEventHandlers()`
+  - Added chat system re-initialization to `fix gui` command with error handling
+  - This resolves the issue where chat tabs don't work when importing package during active session
 - Fixed auction channel capture by updating regex patterns to match actual game verbs
   - Changed `auctions` to `auctalks` for incoming auction messages
   - Changed `auction` to `auctalk` for outgoing auction messages

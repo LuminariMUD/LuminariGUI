@@ -168,7 +168,12 @@ Within the XML, code is structured as:
 
 ### Troubleshooting Commands
 
-- **Fix GUI refresh issues**: `fix gui` - Re-registers event handlers if Group tab or other elements stop auto-updating
+- **Fix GUI refresh issues**: `fix gui` - Comprehensive fix for all GUI elements
+  - Re-registers all event handlers (Group tab, gauges, Player tab, ASCII map)
+  - Re-initializes chat system if needed
+  - Manually refreshes all displays with current MSDP data
+  - Reports exactly which components were refreshed
+- **Fix chat positioning**: `fixchat` - Repositions chat window if it appears in wrong location
 - **Toggle group display**: `show self` - Shows/hides yourself in the Group tab
 - **Toggle chat gagging**: `gag chat` - Enables/disables chat message gagging
 
