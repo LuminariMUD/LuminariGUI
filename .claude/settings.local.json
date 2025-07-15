@@ -24,7 +24,8 @@
       "Bash(dos2unix:*)",
       "mcp__Ref__ref_search_documentation",
       "mcp__Ref__ref_read_url",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "Bash(git push:*)"
     ],
     "deny": []
   }
