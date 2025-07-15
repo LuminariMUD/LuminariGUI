@@ -21,7 +21,10 @@
       "Bash(git commit:*)",
       "Bash(git config:*)",
       "Bash(git reset:*)",
-      "Bash(dos2unix:*)"
+      "Bash(dos2unix:*)",
+      "mcp__Ref__ref_search_documentation",
+      "mcp__Ref__ref_read_url",
+      "WebFetch(domain:github.com)"
     ],
     "deny": []
   }

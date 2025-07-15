@@ -1208,7 +1208,7 @@ end</script>
       [[    
 	background-image: url(]] ..
       getMudletHomeDir():gsub("\\", "/") ..
-      [[/LuminariGUI/images/ui_texture.png);
+      [[/LuminariGUI/images/ui_texture.jpg);
 			font-family: Tahoma, Geneva, sans-serif;
 ]]
     )
@@ -1772,7 +1772,7 @@ function GUI.tabbedInfoWindow.init()
       [[;
 		border-image: url(]] ..
       getMudletHomeDir():gsub("\\", "/") ..
-      [[/LuminariGUI/images/ui_texture.png) 0 0 0 0 stretch stretch;
+      [[/LuminariGUI/images/ui_texture.jpg) 0 0 0 0 stretch stretch;
 		font-family: Tahoma, Geneva, sans-serif;
   ]]
     )
