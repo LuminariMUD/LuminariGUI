@@ -173,7 +173,7 @@ Within the XML, code is structured as:
   - Re-initializes chat system if needed
   - Manually refreshes all displays with current MSDP data
   - Reports exactly which components were refreshed
-- **Fix chat positioning**: `fixchat` - Repositions chat window if it appears in wrong location
+- **Fix chat positioning**: `fix chat` - Repositions chat window if it appears in wrong location
 - **Toggle group display**: `show self` - Shows/hides yourself in the Group tab
 - **Toggle chat gagging**: `gag chat` - Enables/disables chat message gagging
 

@@ -214,7 +214,7 @@ end</script>
 clearUserWindow("map.minimap")
 
 map.container:hide()
-map.minimapcontainer:show()
+GUI.asciiMapContainer:show()
 
 maplineTrig = tempLineTrigger(1,23,[[onMapLine()]])  -- Edit the max lines to how many your MAP display shows.
 padding = map.calcMinimapPadding()
@@ -279,10 +279,10 @@ clearUserWindow("map.minimap")
 
 if GUI.buttonWindow.mudletOrAscii == "ASCII" then
   map.container:hide()
-  map.minimapcontainer:show()
+  GUI.asciiMapContainer:show()
 elseif GUI.buttonWindow.mudletOrAscii == "Mudlet" then
   map.container:show()
-  map.minimapcontainer:hide()
+  GUI.asciiMapContainer:hide()
 end
 map.minimap:echo("\n")
 maplineTrig = tempLineTrigger(1,11,[[onRoomMapLine()]])  -- Edit the max lines to how many your MAP display shows.
@@ -527,82 +527,12 @@ GUI.showSelfToggle()</script>
 						</Alias>
 						<Alias isActive="yes" isFolder="no">
 							<name>Fix GUI Events</name>
-							<script>-- Re-register all GUI event handlers in case they failed during initialization
-GUI.registerEventHandlers()
-
--- Re-initialize chat system if needed
-if demonnic.chat.use and not demonnic.chat.container then
-  demonnicOnStart()
-  cecho("\n&lt;yellow&gt;Chat system re-initialized.")
-end
-
--- Manual refresh of all GUI components
-local refreshed = {}
-
--- Group tab refresh
-if msdp.GROUP and #msdp.GROUP > 0 then
-  GUI.updateGroup()
-  table.insert(refreshed, "Group tab")
-end
-
--- Gauge refreshes
-if msdp.HEALTH and msdp.HEALTH_MAX then
-  GUI.updateHealthGauge()
-  table.insert(refreshed, "Health gauge")
-end
-if msdp.MOVEMENT and msdp.MOVEMENT_MAX then
-  GUI.updateMovesGauge()
-  table.insert(refreshed, "Movement gauge")
-end
-if msdp.EXPERIENCE and msdp.EXPERIENCE_TNL then
-  GUI.updateExperienceGauge()
-  table.insert(refreshed, "Experience gauge")
-end
-
--- Enemy gauge refresh (only if in combat)
-if msdp.OPPONENT_NAME and msdp.OPPONENT_NAME ~= "" then
-  GUI.updateEnemyGauge()
-  table.insert(refreshed, "Enemy gauge")
-else
-  -- Hide enemy gauge if not in combat
-  if GUI.Enemy then
-    GUI.Enemy:hide()
-  end
-end
-
--- Player tab refresh
-if msdp.CHARACTER_NAME then
-  GUI.updatePlayer()
-  table.insert(refreshed, "Player tab")
-end
-
--- Room info refresh
-if msdp.ROOM then
-  GUI.updateRoom()
-  table.insert(refreshed, "Room info")
-end
-
--- ASCII map refresh (trigger map event handler and re-register map handlers)
-if msdp.ROOM then
-  -- Re-register map event handlers in case they failed
-  pcall(registerAnonymousEventHandler, "msdp.ROOM", "map.eventHandler")
-  pcall(registerAnonymousEventHandler, "shiftRoom", "map.eventHandler")
-  pcall(registerAnonymousEventHandler, "sysConnectionEvent", "map.eventHandler")
-  pcall(registerAnonymousEventHandler, "sysProtocolEnabled", "map.onProtocolEnabled")
-  pcall(registerAnonymousEventHandler, "sysDownloadDone", "map.eventHandler")
-  
-  -- Trigger map update
-  map.eventHandler("msdp.ROOM")
-  table.insert(refreshed, "ASCII map")
-end
-
--- Report what was refreshed
-cecho("\n&lt;green&gt;GUI event handlers re-registered.")
-if #refreshed > 0 then
-  cecho("\n&lt;cyan&gt;Refreshed: " .. table.concat(refreshed, ", ") .. ".")
-else
-  cecho("\n&lt;yellow&gt;No MSDP data available to refresh displays.")
-end</script>
+							<script>-- =============================================================================
+-- FIX GUI COMMAND
+-- This command uses the centralized initialization system to refresh all
+-- GUI components. It's the user-facing command for manual refresh.
+-- =============================================================================
+GUI.initializeOrRefresh("fix gui command")</script>
 							<command></command>
 							<packageName></packageName>
 							<regex>^fix gui$</regex>
@@ -653,25 +583,23 @@ end</script>
 						</Alias>
 						<Alias isActive="yes" isFolder="no">
 							<name>fixChat</name>
-							<script>local currentsetting = demonnic.chat.config.location
-local newsetting = ""
-if currentsetting == "topright" then 
-  newsetting = "bottomleft" 
-elseif currentsetting == "topleft" then
-  newsetting = "bottomright"
-elseif currentsetting == "bottomleft" then
-  newsetting = "topright"
-elseif currentsetting == "bottomright" then
-  newsetting = "topleft"
-end
+							<script>-- =============================================================================
+-- FIX CHAT COMMAND
+-- This command uses the centralized initialization system with focus on chat.
+-- It ensures the chat system is properly initialized and visible.
+-- =============================================================================
+GUI.initializeOrRefresh("fix chat command")
 
-demonnic.chat.config.location = newsetting
-demonnic.chat:create()
-demonnic.chat.config.location = currentsetting
-demonnic.chat:create()</script>
+-- Additional chat-specific actions
+if GUI.chatContainer then
+  GUI.chatContainer:raise()
+  if demonnic.chat and demonnic.chat.container then
+    demonnic.chat:showAllTabs()
+  end
+end</script>
 							<command></command>
 							<packageName></packageName>
-							<regex>^fixchat$</regex>
+							<regex>^fix chat$</regex>
 						</Alias>
 					</AliasGroup>
 				</AliasGroup>
@@ -706,7 +634,7 @@ map.minimap_height = 21
 
 local defaults = {
     -- using Geyser to handle the mapper in this, since this is a totally new script
-    mapper = {x = "-25%", y = "0%", width = "25%", height = "50%"}
+    mapper = {x = "75%", y = "0%", width = "25%", height = "50%"}
 }
 
 local terrain_types = {
@@ -1000,25 +928,97 @@ local function config()
     end
     -- making mapper window
     local info = defaults.mapper
-		map.container = Geyser.Container:new({name = "map.container", x = info.x, y = info.y, width = info.width, height = info.height})
-		map.minimapcontainer = Geyser.Container:new({name = "map.minimapcontainer", x = info.x, y = info.y, width = info.width, height = info.height})
-		--map.minimapbackground = Geyser.Label:new({
---			name="map.minimapbackground",
---			x=0, y=0,
---			width="100%", height="100%",
---	  }, map.minimapcontainer)
---		map.minimapbackground:setColor(0,0,0)
-		
+    
+    -- Create map as Adjustable Container
+    map.container = GUI.AdjustableContainers.create("Map", "map", {
+      x = info.x,
+      y = info.y,
+      width = info.width,
+      height = info.height,
+      name = "LuminariGUI_Map",
+      titleText = "Map",
+      adjLabelstyle = GUI.AdjustableContainers.defaultStyle.adjLabelstyle,
+      buttonstyle = GUI.AdjustableContainers.defaultStyle.buttonstyle,
+      tabstyle = GUI.AdjustableContainers.defaultStyle.tabstyle,
+      titleTxtColor = "white",
+      padding = 9,
+      lockStyle = "border",
+      autoSave = true,
+      autoLoad = true,
+      attached = "tr",  -- Top-right attachment
+      defaultDir = GUI.AdjustableContainers.saveDir
+    })
+    
+    -- Create separate Adjustable Container for ASCII map
+    GUI.asciiMapContainer = GUI.AdjustableContainers.create("ASCIIMap", "ascii_map", {
+      x = info.x,
+      y = info.y,
+      width = info.width,
+      height = info.height,
+      name = "LuminariGUI_ASCIIMap",
+      titleText = "ASCII Map",
+      adjLabelstyle = info.adjLabelstyle or "background-color: rgba(0,0,0,0%); border: 4px solid #444444;",
+      raiseOnClick = false,
+      savePosition = true,
+      titleTxtColor = "white",
+      padding = 9,
+      lockStyle = "border",
+      autoSave = true,
+      autoLoad = true,
+      attached = "tr",  -- Top-right attachment
+      defaultDir = GUI.AdjustableContainers.saveDir
+    })
+    
+    -- Create ASCII minimap MiniConsole inside the new container
 		map.minimap = Geyser.MiniConsole:new({
   		name="map.minimap",
   		x=0, y= 0,
   		width="100%", height="100%",
-		}, map.minimapcontainer)
+		}, GUI.asciiMapContainer)
 		
 		map.minimap:setColor("black")
-		map.minimapcontainer:hide()
+		
+		-- Keep reference for backward compatibility
+		map.minimapcontainer = GUI.asciiMapContainer
+		
+		-- Hide ASCII map by default (Mudlet map shows first)
+		GUI.asciiMapContainer:hide()
+		
+		-- Add to default profile
+		GUI.AdjustableContainers.addToProfile("default", "ASCIIMap")
     
+    -- Create mapper window within the adjustable container
 		map.mapwindow = Geyser.Mapper:new({name = "map.mapwindow", x = 0, y = 0, width = "100%", height = "100%"}, map.container)
+    
+    -- Ensure mapper is properly initialized with delayed refresh
+    tempTimer(0.1, function()
+      if map.mapwindow then
+        map.mapwindow:show()
+        map.mapwindow:resize()
+        -- Force raise to ensure it's on top within the container
+        if map.mapwindow.raise then
+          map.mapwindow:raise()
+        end
+        -- Additional resize after a short delay to ensure proper rendering
+        tempTimer(0.1, function()
+          if map.mapwindow then
+            map.mapwindow:resize()
+          end
+        end)
+      end
+    end)
+    
+    -- Show the map container
+    if map.container then
+      map.container:show()
+      -- Lower the container to ensure mapper is visible on top
+      map.container:lower()
+      tempTimer(0.2, function()
+        if map.container then
+          map.container:raise()
+        end
+      end)
+    end
 		
 		map.adjustMinimapFontSize()
 		make_aliases()		
@@ -1058,12 +1058,16 @@ function map.eventHandler(event,...)
 
 				if map.prev_info.ENVIRONMENT == "Wilderness" and map.room_info.ENVIRONMENT == "Room" then
 					 -- re-enable the mapper!
-					 map.minimapcontainer:hide()
-					 map.container:show()					 
+					 GUI.asciiMapContainer:hide()
+					 map.container:show()
+					 if map.mapwindow then
+					   map.mapwindow:show()
+					   map.mapwindow:resize()
+					 end					 
 				elseif map.prev_info.ENVIRONMENT == "Room" and map.room_info.ENVIRONMENT == "Wilderness" then
 					 -- disable the mapper!
 					 map.container:hide()		
-					 map.minimapcontainer:show()
+					 GUI.asciiMapContainer:show()
 				end
         handle_move()
     elseif event == "shiftRoom" then
@@ -1164,7 +1168,46 @@ end</script>
 				<ScriptGroup isActive="yes" isFolder="yes">
 					<name>GUI</name>
 					<packageName></packageName>
-					<script>GUI = GUI or {}
+					<script>-- =============================================================================
+-- LUMINARIGUI INITIALIZATION DOCUMENTATION
+-- =============================================================================
+-- The LuminariGUI uses a CENTRALIZED INITIALIZATION SYSTEM to ensure all
+-- components are properly initialized and refreshed at the right times.
+--
+-- MAIN INITIALIZATION FUNCTION: GUI.initializeOrRefresh(context)
+-- Located at line ~3079 in this file
+--
+-- This function handles ALL initialization and refresh operations for:
+-- - Initial package load
+-- - Connection/reconnection
+-- - MSDP protocol activation
+-- - Manual refresh commands (fix gui, fix chat)
+-- - Runtime component refresh
+--
+-- ENTRY POINTS (all use GUI.initializeOrRefresh):
+-- 1. sysLoadEvent - Package loaded
+-- 2. sysInstall - Package installed  
+-- 3. sysConnectionEvent - Connected to game
+-- 4. sysProtocolEnabled - MSDP activated
+-- 5. "fix gui" command - Manual refresh
+-- 6. "fix chat" command - Chat-focused refresh
+--
+-- TO ADD NEW INITIALIZATION:
+-- 1. Add your initialization code to GUI.init() function
+-- 2. Add your refresh code to GUI.initializeOrRefresh() function
+-- 3. DO NOT create separate initialization handlers
+-- 4. DO NOT duplicate refresh code in commands
+--
+-- COMPONENTS MANAGED:
+-- - Event handler registration (GUI.registerEventHandlers)
+-- - All Adjustable Containers (chat, gauges, map, etc.)
+-- - MSDP data refresh (health, movement, room, etc.)
+-- - Mapper initialization and refresh
+-- - Chat system initialization
+-- - Container z-order management
+-- =============================================================================
+
+GUI = GUI or {}
 </script>
 					<eventHandlerList />
 					<Script isActive="yes" isFolder="no">
@@ -1253,10 +1296,12 @@ registerAnonymousEventHandler("sysExitEvent", "GUI.cleanup")</script>
   -- Left
   GUI.Left = Geyser.Label:new({name = "GUI.Left", x = 0, y = 0, width = "25%", height = "100%"})
   GUI.Left:setStyleSheet(GUI.BackgroundCSS:getCSS())
+  GUI.Left:hide() -- Hidden: No longer needed with Adjustable Containers
   --Right
 	GUI.Right =
     Geyser.Label:new({name = "GUI.Right", x = "-25%", y = "-50%", width = "25%", height = "50%"})
   GUI.Right:setStyleSheet(GUI.BackgroundCSS:getCSS())
+  GUI.Right:hide() -- Hidden: No longer needed with Adjustable Containers
 	--Top
 	--[[
 	GUI.Top = Geyser.Label:new({name = "GUI.Top", x = "25%", y = 0, width = "50%", height = "25%"})
@@ -1265,6 +1310,7 @@ registerAnonymousEventHandler("sysExitEvent", "GUI.cleanup")</script>
 	--Bottom
 	GUI.Bottom = Geyser.Label:new({name = "GUI.Bottom", x = "25%", y = "-25%", width = "50%", height = "25%"})
   GUI.Bottom:setStyleSheet(GUI.BackgroundCSS:getCSS())
+  GUI.Bottom:hide() -- Hidden: No longer needed with Adjustable Containers
 end</script>
 						<eventHandlerList />
 					</Script>
@@ -1273,10 +1319,10 @@ end</script>
 						<packageName></packageName>
 						<script>function GUI.set_borders()
   local w, h = getMainWindowSize()
-  setBorderLeft(w / 4)
+  setBorderLeft(0)  -- Changed from w/4 to 0 - main window now starts at left edge
   setBorderTop(0)
   setBorderBottom(h / 4)
-  setBorderRight(w / 4)
+  setBorderRight(w / 2)  -- Changed from w/4 to w/2 - main window ends at 50%
 end</script>
 						<eventHandlerList />
 					</Script>
@@ -1307,49 +1353,90 @@ end</script>
   GUI.Box2 =
     Geyser.Label:new({name = "GUI.Box2", x = 0, y = 0, width = "100%", height = "100%", color = "black"}, GUI.Bottom)
   GUI.Box2:setStyleSheet(GUI.BoxCSS:getCSS())
-  GUI.Box2:echo("&lt;center&gt;GUI.Box2")
-  GUI.chatContainer =
-    Geyser.Label:new(
-      {
-        name = "GUI.chatContainer",
-        x = 8,
-        y = "15%",
-        width = GUI.Box2:get_width() - 14,
-				--Height subtraction is found by adding y to button height.
-        height = "70%",
-      },
-      GUI.Box2
-    )
+  GUI.Box2:hide() -- Hidden: No longer needed with Adjustable Containers
+  -- GUI.Box2:echo("&lt;center&gt;GUI.Box2") -- Removed: No longer needed with Adjustable Containers
+  -- Create chat container using Adjustable.Container
+  GUI.chatContainer = GUI.AdjustableContainers.create("Chat", "chat", {
+    x = "0%",
+    y = "75%", 
+    width = "50%",
+    height = "25%",
+    name = "LuminariGUI_Chat",
+    titleText = "Chat",
+    adjLabelstyle = GUI.AdjustableContainers.defaultStyle.adjLabelstyle,
+    buttonstyle = GUI.AdjustableContainers.defaultStyle.buttonstyle,
+    tabstyle = GUI.AdjustableContainers.defaultStyle.tabstyle,
+    titleTxtColor = "white",
+    padding = 9,
+    lockStyle = "border",
+    autoSave = true,
+    autoLoad = true,
+    attached = "b",  -- Bottom attachment
+    defaultDir = GUI.AdjustableContainers.saveDir
+  })
+  
+  -- Show the chat container
+  if GUI.chatContainer then
+    GUI.chatContainer:show()
+    print("✓ Chat container created successfully")
+  else
+    print("✗ Failed to create chat container")
+  end
 
-  --Box3
-  GUI.Box3 =
-    Geyser.Label:new(
-      {name = "GUI.Box3", x = "0%", y = "0%", width = "100%", height = "15%"}, GUI.Right
-    )
+  --Box3 - Now created as Adjustable Container
+  -- Create as Adjustable Container for button panel
+  GUI.buttonPanelContainer = GUI.AdjustableContainers.create("ButtonPanel", "button_panel", {
+    x = "50%",
+    y = "0%",
+    width = "25%",
+    height = "15%",
+    name = "LuminariGUI_ButtonPanel",
+    adjLabelstyle = GUI.AdjustableContainers.defaultStyle.adjLabelstyle,
+    buttonstyle = GUI.AdjustableContainers.defaultStyle.buttonstyle,
+    tabstyle = GUI.AdjustableContainers.defaultStyle.tabstyle,
+    titleText = "Controls",
+    titleTxtColor = "green",
+    padding = 9,
+    lockStyle = "border",
+    autoSave = true,
+    autoLoad = true,
+    attached = "tr",  -- Top-right attachment
+    defaultDir = GUI.AdjustableContainers.saveDir
+  })
+  
+  -- Store reference to old Box3 for compatibility
+  GUI.Box3 = GUI.buttonPanelContainer
   GUI.Box3CSS = CSSMan.new(GUI.BoxCSS:getCSS())
   GUI.Box3CSS:set("border-width", "0px")
-  GUI.Box3:setStyleSheet(GUI.Box3CSS:getCSS())
-  GUI.Box3:echo("&lt;center&gt;GUI.Box3")
 
-  --Box4
-  GUI.Box4 =
-    Geyser.Label:new(
-      {name = "GUI.Box4", x = "0%", y = "0%", width = "100%", height = "75%"}, GUI.Left
-    )
-  GUI.Box4CSS = CSSMan.new(GUI.BoxCSS:getCSS())
-  GUI.Box4CSS:set("border-width", "0px")
-  GUI.Box4:setStyleSheet(GUI.Box4CSS:getCSS())
-  GUI.Box4:echo("&lt;center&gt;GUI.Box4")
+  --Box4 - Now created as Adjustable Container in GUI.tabbedInfoWindow.init()
+  -- Placeholder will be set when tabbedInfoWindow initializes
 
-  --Box5
-  GUI.Box5 =
-    Geyser.Label:new(
-      {name = "GUI.Box5", x = "0%", y = "15%", width = "100%", height = "50%"}, GUI.Right
-    )
+  --Box5 - Now created as Adjustable Container in GUI.init_boxes()
+  -- Create as Adjustable Container for room info and map legend
+  GUI.roomInfoContainer = GUI.AdjustableContainers.create("RoomInfo", "room_info", {
+    x = "75%",
+    y = "50%",
+    width = "25%",
+    height = "42%",
+    name = "LuminariGUI_RoomInfo",
+    adjLabelstyle = GUI.AdjustableContainers.defaultStyle.adjLabelstyle,
+    buttonstyle = GUI.AdjustableContainers.defaultStyle.buttonstyle,
+    tabstyle = GUI.AdjustableContainers.defaultStyle.tabstyle,
+    titleText = "Room Info",
+    titleTxtColor = "green",
+    padding = 9,
+    lockStyle = "border",
+    autoSave = true,
+    autoLoad = true,
+    attached = "tr",  -- Top-right attachment
+    defaultDir = GUI.AdjustableContainers.saveDir
+  })
+  
+  -- Store reference to old Box5 for compatibility
+  GUI.Box5 = GUI.roomInfoContainer
   GUI.Box5CSS = CSSMan.new(GUI.BoxCSS:getCSS())
   GUI.Box5CSS:set("border-width", "0px")
-  GUI.Box5:setStyleSheet(GUI.Box5CSS:getCSS())
-  GUI.Box5:echo("&lt;center&gt;Legend When Toggled/Room Info")
  
  --Commenting out Box 6 echo until skill Icons are finished. 
 	GUI.Box6 =
@@ -1359,14 +1446,25 @@ end</script>
   GUI.Box6CSS = CSSMan.new(GUI.BoxCSS:getCSS())
   GUI.Box6CSS:set("border-width", "0px")
   GUI.Box6:setStyleSheet(GUI.Box6CSS:getCSS())
+  GUI.Box6:hide() -- Hidden: No longer needed with Adjustable Containers
   --GUI.Box6:echo("&lt;center&gt;Skill Icons")
 
-  --Box7
-  GUI.Box7 =
-    Geyser.Label:new(
-      {name = "GUI.Box7", x = "0%", y = "75%", width = "100%", height = "25%"}, GUI.Left
-    )
-  GUI.Box7:setStyleSheet(GUI.BoxCSS:getCSS())
+  -- Create status gauges container using Adjustable.Container
+  GUI.Box7 = GUI.AdjustableContainers.create("StatusGauges", "gauges", {
+    titleText = "Status",
+    x = "50%",
+    y = "75%",
+    width = "25%",
+    height = "25%"
+  })
+  
+  -- Show the status gauges container
+  if GUI.Box7 then
+    GUI.Box7:show()
+    print("✓ Status gauges container created successfully")
+  else
+    print("✗ Failed to create status gauges container")
+  end
 end</script>
 						<eventHandlerList />
 					</Script>
@@ -1382,19 +1480,7 @@ end</script>
     Geyser.HBox:new(
       {name = "GUI.Status", x = 12, y = 12, width = "100%", height = "100%", margin = 11}, GUI.Box7
     )
-  GUI.ActionIconsBox =
-    Geyser.VBox:new(
-      {
-        name = "GUI.ActionIconsBox",
-        x = 0,
-        y = 0,
-        height = "100%",
-        width = 32,
-        h_policy = Geyser.Fixed,
-        v_policy = Geyser.Fixed,
-      },
-      GUI.Status
-    )
+  -- Action icons moved to separate Adjustable Container
   GUI.GaugeBar =
     Geyser.VBox:new(
       {
@@ -1402,7 +1488,7 @@ end</script>
         x = 0,
         y = 0,
         height = "100%",
-        width = GUI.Status.get_width() - 20 - 32,
+        width = "100%", -- Full width now that action icons are separate
         h_policy = Geyser.Fixed,
         v_policy = Geyser.Fixed,
       },
@@ -1488,20 +1574,48 @@ end</script>
 end
 
 function GUI.init_action_icons()
+  -- Create Adjustable Container for action icons
+  GUI.actionIconsContainer = GUI.AdjustableContainers.create("ActionIcons", "action_icons", {
+    x = "75%",
+    y = "92%",
+    width = "8%",
+    height = "8%",
+    name = "LuminariGUI_ActionIcons",
+    titleText = "Actions",
+    attached = "tr",  -- Top-right attachment
+    autoSave = true,
+    autoLoad = true,
+    lockStyle = "border",
+    padding = 9,
+    adjLabelstyle = GUI.AdjustableContainers.defaultStyle.adjLabelstyle,
+    buttonstyle = GUI.AdjustableContainers.defaultStyle.buttonstyle,
+    titleTxtColor = "white",
+    defaultDir = GUI.AdjustableContainers.saveDir
+  })
+  GUI.ActionIconsBox = GUI.actionIconsContainer  -- Backward compatibility
+  
+  -- Create the HBox inside the container
+  GUI.actionIconsHBox = Geyser.HBox:new({
+    name = "GUI.actionIconsHBox",
+    x = 0,
+    y = 0,
+    height = "100%",
+    width = "100%"
+  }, GUI.actionIconsContainer)
+  
+  -- Initialize action icon CSS
   GUI.ActionIconCSS = CSSMan.new([[
 	margin: 0px;
 ]])
-  GUI.StandardActionIcon =
-    Geyser.Label:new(
-      {
-        name = "GUI.StandardActionIcon",
-        width = 32,
-        height = 32,
-        h_policy = Geyser.Fixed,
-        v_policy = Geyser.Fixed,
-      },
-      GUI.ActionIconsBox
-    )
+  
+  -- Create standard action icon
+  GUI.StandardActionIcon = Geyser.Label:new({
+    name = "GUI.StandardActionIcon",
+    width = 32,
+    height = 32,
+    h_policy = Geyser.Fixed,
+    v_policy = Geyser.Fixed,
+  }, GUI.actionIconsHBox)
   GUI.ActionIconCSS:set(
     "border-image",
     [[url("]] ..
@@ -1509,38 +1623,37 @@ function GUI.init_action_icons()
     [[/LuminariGUI/images/action-standard.png");]]
   )
   GUI.StandardActionIcon:setStyleSheet(GUI.ActionIconCSS:getCSS())
-  GUI.MoveActionIcon =
-    Geyser.Label:new(
-      {
-        name = "GUI.MoveActionIcon",
-        width = 32,
-        height = 32,
-        h_policy = Geyser.Fixed,
-        v_policy = Geyser.Fixed,
-      },
-      GUI.ActionIconsBox
-    )
+  
+  -- Create move action icon
+  GUI.MoveActionIcon = Geyser.Label:new({
+    name = "GUI.MoveActionIcon",
+    width = 32,
+    height = 32,
+    h_policy = Geyser.Fixed,
+    v_policy = Geyser.Fixed,
+  }, GUI.actionIconsHBox)
   GUI.ActionIconCSS:set(
     "border-image",
     [[url("]] .. getMudletHomeDir():gsub("\\", "/") .. [[/LuminariGUI/images/action-move.png");]]
   )
   GUI.MoveActionIcon:setStyleSheet(GUI.ActionIconCSS:getCSS())
-  GUI.SwiftActionIcon =
-    Geyser.Label:new(
-      {
-        name = "GUI.SwiftActionIcon",
-        width = 32,
-        height = 32,
-        h_policy = Geyser.Fixed,
-        v_policy = Geyser.Fixed,
-      },
-      GUI.ActionIconsBox
-    )
+  
+  -- Create swift action icon
+  GUI.SwiftActionIcon = Geyser.Label:new({
+    name = "GUI.SwiftActionIcon",
+    width = 32,
+    height = 32,
+    h_policy = Geyser.Fixed,
+    v_policy = Geyser.Fixed,
+  }, GUI.actionIconsHBox)
   GUI.ActionIconCSS:set(
     "border-image",
     [[url("]] .. getMudletHomeDir():gsub("\\", "/") .. [[/LuminariGUI/images/action-swift.png");]]
   )
   GUI.SwiftActionIcon:setStyleSheet(GUI.ActionIconCSS:getCSS())
+  
+  -- Show the container
+  GUI.actionIconsContainer:show()
 end
 
 --GUI.Endurance = Geyser.Gauge:new({
@@ -1566,20 +1679,38 @@ end
 						<name>Cast Console</name>
 						<packageName></packageName>
 						<script>function GUI.init_castConsole()
-  GUI.castConsole =
-    Geyser.MiniConsole:new(
-      {
-        name = "GUI.castConsole",
-        x = 8,
-        y = "5%",
-        width = GUI.Box2:get_width() - 15,
-				--Height subtraction is found by adding y to button height.
-        height = "10%",
-				color = "black"
-      },
-      GUI.Box2
-    )
-	setMiniConsoleFontSize("GUI.castConsole", getFontSize("main"))
+  -- Convert Cast Console to Adjustable Container
+  GUI.castConsoleContainer = GUI.AdjustableContainers.create("CastConsole", "cast_console", {
+    x = "50%",
+    y = "60%",
+    width = "25%",
+    height = "15%",
+    name = "LuminariGUI_CastConsole",
+    titleText = "Cast Console",
+    attached = "br",  -- Bottom-right attachment
+    adjLabelstyle = "background-color: rgba(0,0,0,0%); border: 3px groove #444444;",
+    locked = false,
+    lockStyle = "standard"
+  })
+  
+  -- Create internal MiniConsole for spell casting display
+  GUI.castConsole = Geyser.MiniConsole:new({
+    name = "GUI.castConsole",
+    x = 0,
+    y = 0,
+    width = "100%",
+    height = "100%",
+    color = "black"
+  }, GUI.castConsoleContainer)
+  
+  -- Set font size to match main window
+  setMiniConsoleFontSize("GUI.castConsole", getFontSize("main"))
+  
+  -- Add to default profile
+  GUI.AdjustableContainers.addToProfile("default", "CastConsole")
+  
+  -- Ensure proper z-order
+  GUI.castConsoleContainer:raise()
 end
 
 
@@ -1658,110 +1789,7 @@ end</script>
     current = "Player",
   }
 
-function createFrame(fl)
-  -- Set the frame around the inside of box4, then create a container inside to hold the tabbed window.
-  ft = {}
-  ft.upper_left = Geyser.Label:new({x = 0, y = 0, height = 133, width = 9}, fl)
-  ft.upper_left:setStyleSheet(
-    [[
-  border-image: url(]] ..
-    getMudletHomeDir():gsub("\\", "/") ..
-    [[/LuminariGUI/images/frame/frame_upperleft_9x133.png) 0 0 0 0 stretch stretch;
-  ]]
-  )
-  ft.middle_left =
-    Geyser.Label:new({x = 0, y = 133, height = fl:get_height() - 266, width = 9}, fl)
-  ft.middle_left:setStyleSheet(
-    [[
-  border-image: url(]] ..
-    getMudletHomeDir():gsub("\\", "/") ..
-    [[/LuminariGUI/images/frame/straight_repeater_left_9x133.png) 0 0 0 0 stretch repeat;
-  ]]
-  )
-  ft.lower_left = Geyser.Label:new({x = 0, y = -133, height = 133, width = 9}, fl)
-  ft.lower_left:setStyleSheet(
-    [[
-  border-image: url(]] ..
-    getMudletHomeDir():gsub("\\", "/") ..
-    [[/LuminariGUI/images/frame/frame_lowerleft_9x133.png) 0 0 0 0 stretch stretch;
-  ]]
-  )
-  ft.upper_right = Geyser.Label:new({x = -9, y = 0, height = 133, width = 9}, fl)
-  ft.upper_right:setStyleSheet(
-    [[
-  border-image: url(]] ..
-    getMudletHomeDir():gsub("\\", "/") ..
-    [[/LuminariGUI/images/frame/frame_upperright_9x133.png) 0 0 0 0 stretch stretch;
-  ]]
-  )
-  ft.middle_right =
-    Geyser.Label:new({x = -9, y = 133, height = fl:get_height() - 266, width = 9}, fl)
-  ft.middle_right:setStyleSheet(
-    [[
-  border-image: url(]] ..
-    getMudletHomeDir():gsub("\\", "/") ..
-    [[/LuminariGUI/images/frame/straight_repeater_right_9x133.png) 0 0 0 0 stretch repeat;
-  ]]
-  )
-  ft.lower_right = Geyser.Label:new({x = -9, y = -133, height = 133, width = 9}, fl)
-  ft.lower_right:setStyleSheet(
-    [[
-  border-image: url(]] ..
-    getMudletHomeDir():gsub("\\", "/") ..
-    [[/LuminariGUI/images/frame/frame_lowerright_9x133.png) 0 0 0 0 stretch stretch;
-  ]]
-  )
-  ft.left_top = Geyser.Label:new({x = 0, y = 0, height = 9, width = 133}, fl)
-  ft.left_top:setStyleSheet(
-    [[
-  border-image: url(]] ..
-    getMudletHomeDir():gsub("\\", "/") ..
-    [[/LuminariGUI/images/frame/frame_lefttop_133x9.png) 0 0 0 0 stretch stretch;
-  ]]
-  )
-  ft.middle_top =
-    Geyser.Label:new({x = 133, y = 0, height = 9, width = fl:get_width() - 266}, fl)
-  ft.middle_top:setStyleSheet(
-    [[
-  border-image: url(]] ..
-    getMudletHomeDir():gsub("\\", "/") ..
-    [[/LuminariGUI/images/frame/straight_repeater_top_133x9.png) 0 0 0 0 stretch repeat;
-  ]]
-  )
-  ft.right_top = Geyser.Label:new({x = -133, y = 0, height = 9, width = 133}, fl)
-  ft.right_top:setStyleSheet(
-    [[
-  border-image: url(]] ..
-    getMudletHomeDir():gsub("\\", "/") ..
-    [[/LuminariGUI/images/frame/frame_righttop_133x9.png) 0 0 0 0 stretch stretch;
-  ]]
-  )
-  ft.left_bottom = Geyser.Label:new({x = 0, y = -9, height = 9, width = 133}, fl)
-  ft.left_bottom:setStyleSheet(
-    [[
-  border-image: url(]] ..
-    getMudletHomeDir():gsub("\\", "/") ..
-    [[/LuminariGUI/images/frame/frame_leftbottom_133x9.png) 0 0 0 0 stretch stretch;
-  ]]
-  )
-  ft.middle_bottom =
-    Geyser.Label:new({x = 133, y = -9, height = 9, width = fl:get_width() - 266}, fl)
-  ft.middle_bottom:setStyleSheet(
-    [[
-  border-image: url(]] ..
-    getMudletHomeDir():gsub("\\", "/") ..
-    [[/LuminariGUI/images/frame/straight_repeater_bottom_133x9.png) 0 0 0 0 stretch repeat;
-  ]]
-  )
-  ft.right_bottom = Geyser.Label:new({x = -133, y = -9, height = 9, width = 133}, fl)
-  ft.right_bottom:setStyleSheet(
-    [[
-  border-image: url(]] ..
-    getMudletHomeDir():gsub("\\", "/") ..
-    [[/LuminariGUI/images/frame/frame_rightbottom_133x9.png) 0 0 0 0 stretch stretch;
-  ]]
-  )
-end
+-- createFrame function removed - frame images are incompatible with adjustable containers
 
 function GUI.tabbedInfoWindow.click(tab)
   GUI.tabbedInfoWindow[GUI.tabbedInfoWindow.current]:hide()
@@ -1781,16 +1809,42 @@ function GUI.tabbedInfoWindow.init()
       getMudletHomeDir():gsub("\\", "/") ..
       [[/LuminariGUI/images/buttons/button.png) 0 0 0 0 stretch stretch;]]
     )
+  
+  -- Create Adjustable Container for tabbed info window
+  local containerConfig = {
+    x = "50%",  -- Column 2 position
+    y = "15%",  -- Below Controls
+    width = "25%",
+    height = "45%",  -- Adjusted to fit: 15% to 60%
+    name = "LuminariGUI_TabbedInfo",
+    adjLabelstyle = GUI.AdjustableContainers.defaultStyle.adjLabelstyle,
+    buttonstyle = GUI.AdjustableContainers.defaultStyle.buttonstyle,
+    tabstyle = GUI.AdjustableContainers.defaultStyle.tabstyle,
+    padding = 9,
+    lockStyle = "border",
+    autoSave = true,
+    autoLoad = true,
+    attached = "tr",  -- Changed from "tl" to "tr" - now attaches to top-right since it's on right side
+    defaultDir = GUI.AdjustableContainers.saveDir
+  }
+  
+  -- Create adjustable container
+  GUI.tabbedInfoWindowContainer = GUI.AdjustableContainers.create("TabbedInfo", "tabbed_info", containerConfig)
+  
+  -- Store reference to old Box4 for compatibility
+  GUI.Box4 = GUI.tabbedInfoWindowContainer
+  
+  -- Create inner container for backwards compatibility
   GUI.tabbedInfoWindow.container =
     Geyser.Container:new(
       {
         name = "GUI.tabbedInfoWindow.back",
-        x = 9,
-        y = 9,
-        width = GUI.Box4:get_width() - 18,
-        height = GUI.Box4:get_height() - 18,
+        x = 0,
+        y = 0,
+        width = "100%",
+        height = "100%",
       },
-      GUI.Box4
+      GUI.tabbedInfoWindowContainer
     )
   GUI.tabbedInfoWindow.header =
     Geyser.HBox:new(
@@ -2329,20 +2383,27 @@ end
 
 --Button callback for Mudlet map.
 function GUI.buttonWindow.mudletClick()
-    map.minimapcontainer:hide()
+    GUI.asciiMapContainer:hide()
     map.container:show()
 	  GUI.buttonWindow.mudletOrAscii = "Mudlet"
 		GUI.buttonWindow.Mudletbutton:echo("Mudlet", "yellow", "c")
 		GUI.buttonWindow.ASCIIbutton:echo("ASCII", "white", "c")
+		-- Ensure mapper is visible and refreshed
+		if map.mapwindow then
+		  map.mapwindow:show()
+		  map.mapwindow:resize()
+		end
 end
 
 --Button callback for ASCII map.
 function GUI.buttonWindow.asciiClick()
-    map.minimapcontainer:show()
     map.container:hide()
+    GUI.asciiMapContainer:show()
 		GUI.buttonWindow.mudletOrAscii = "ASCII"
 		GUI.buttonWindow.ASCIIbutton:echo("ASCII", "yellow", "c")
 		GUI.buttonWindow.Mudletbutton:echo("Mudlet", "white", "c")
+		-- Ensure ASCII map is on top
+		GUI.asciiMapContainer:raise()
 end
 
 --Button Init
@@ -2360,12 +2421,12 @@ function GUI.buttonWindow.init()
     Geyser.Container:new(
       {
         name = "GUI.buttonWindow.container",
-        x = 9,
-        y = 9,
-        width = GUI.Box3:get_width() - 18,
-        height = GUI.Box3:get_height() - 18,
+        x = 0,
+        y = 0,
+        width = "100%",
+        height = "100%",
       },
-      GUI.Box3
+      GUI.buttonPanelContainer
     )
 
 --Room Info
@@ -2373,12 +2434,12 @@ function GUI.buttonWindow.init()
 	Geyser.Label:new(
 		{
 		  name = "GUI.buttonWindow.roomInfo",
-			x = 9,
-			y = 9,
-			width = GUI.Box5:get_width()- 18,
-			height = GUI.Box5:get_height() - 18,
+			x = 0,
+			y = 0,
+			width = "100%",
+			height = "100%",
 			},
-			GUI.Box5
+			GUI.roomInfoContainer
 		)
 
 --Map Legend
@@ -2386,13 +2447,13 @@ function GUI.buttonWindow.init()
 	Geyser.MiniConsole:new(
 		{
 		  name = "GUI.buttonWindow.Legend",
-			x = 9,
-			y = 9,
-			width = GUI.Box5:get_width()- 18,
-			height = GUI.Box5:get_height() - 18,
+			x = 0,
+			y = 0,
+			width = "100%",
+			height = "100%",
 			color = "black",
 			},
-			GUI.Box5
+			GUI.roomInfoContainer
 		)
 		GUI.buttonWindow.adjustLegendFont()
 		
@@ -2492,13 +2553,8 @@ end</script>
 						<name>DrawFrames</name>
 						<packageName></packageName>
 						<script>function GUI.draw_frames()
-  createFrame(GUI.Box2)
-	createFrame(GUI.Box3)
-  createFrame(GUI.Box4)
-  createFrame(GUI.Box5)
-  --Commenting out box 6 frames until skill icons are finished.
-	--createFrame(GUI.Box6)
-  createFrame(GUI.Box7)
+  -- Frame drawing removed - frame images are incompatible with adjustable containers
+  -- Adjustable containers have their own border styling through the adjLabelstyle property
 end</script>
 						<eventHandlerList />
 					</Script>
@@ -2719,6 +2775,33 @@ function GUI.init()
 	
   -- Register all event handlers with error handling
   GUI.registerEventHandlers()
+  
+  -- Ensure proper z-order of adjustable containers
+  tempTimer(0.5, function()
+    -- Bring containers to front in correct order
+    -- Map should be at the back
+    if map and map.container then
+      map.container:show()
+    end
+    if GUI.chatContainer then
+      GUI.chatContainer:show()
+    end
+    if GUI.roomInfoContainer then
+      GUI.roomInfoContainer:show()
+      GUI.roomInfoContainer:raise()  -- Bring above map
+    end
+    if GUI.buttonPanelContainer then
+      GUI.buttonPanelContainer:show()
+      GUI.buttonPanelContainer:raise()  -- Bring to front
+    end
+    if GUI.actionIconsContainer then
+      GUI.actionIconsContainer:show()
+      GUI.actionIconsContainer:raise()  -- Bring to front
+    end
+  end)
+  
+  -- Mark GUI as initialized for the refresh system
+  GUI.initialized = true
 end
 
 -- Robust event handler registration with error handling and verification
@@ -2839,8 +2922,479 @@ function GUI.registerEventHandlers()
   end)
 end
 
+-- =============================================================================
+-- CENTRALIZED GUI INITIALIZATION SYSTEM
+-- =============================================================================
+-- This function provides a single point of control for all GUI initialization
+-- and refresh operations. It should be called from ALL relevant entry points.
+--
+-- WHEN TO CALL THIS FUNCTION:
+-- 1. Package load/install (sysLoadEvent, sysInstall) 
+-- 2. Connection established (sysConnectionEvent)
+-- 3. MSDP protocol enabled (sysProtocolEnabled)
+-- 4. Manual refresh commands (fix gui, fix chat)
+-- 5. After login/reconnect (when MSDP data starts flowing)
+--
+-- WHAT IT DOES:
+-- - Initializes or refreshes all GUI components
+-- - Re-registers event handlers that may have failed
+-- - Refreshes all displays with current MSDP data
+-- - Ensures proper container visibility and z-order
+-- - Handles both initial setup and runtime refresh
+-- =============================================================================
+function GUI.initializeOrRefresh(context)
+  context = context or "unknown"
+  
+  -- Track if this is initial setup or refresh
+  local isRefresh = (GUI.initialized == true)
+  
+  if not isRefresh then
+    -- For initial setup, just return - let the normal init handle it
+    -- This function is for REFRESH operations after initialization
+    return
+  else
+    -- Refresh existing GUI
+    cecho(string.format("\n&lt;yellow&gt;Refreshing GUI components (%s)...", context))
+  end
+  
+  -- Always ensure event handlers are registered
+  GUI.registerEventHandlers()
+  
+  -- Refresh all adjustable containers
+  local refreshed = {}
+  
+  -- Status Gauges
+  if GUI.Box7 then
+    GUI.Box7:show()
+    if msdp.HEALTH then GUI.updateHealthGauge() end
+    if msdp.MOVEMENT then GUI.updateMovesGauge() end
+    if msdp.EXPERIENCE then GUI.updateExperienceGauge() end
+    table.insert(refreshed, "status gauges")
+  end
+  
+  -- Enemy gauge (combat only)
+  if msdp.OPPONENT_NAME and msdp.OPPONENT_NAME ~= "" then
+    GUI.updateEnemyGauge()
+  elseif GUI.Enemy then
+    GUI.Enemy:hide()
+  end
+  
+  -- Group tab
+  if GUI.groupWindow and msdp.GROUP then
+    GUI.updateGroup()
+    table.insert(refreshed, "Group tab")
+  end
+  
+  -- Player tab
+  if GUI.playerWindow and msdp.CHARACTER_NAME then
+    GUI.updatePlayer()
+    table.insert(refreshed, "Player tab")
+  end
+  
+  -- Room info
+  if GUI.Box5 and msdp.ROOM then
+    GUI.updateRoom()
+    table.insert(refreshed, "room info")
+  end
+  
+  -- ASCII map
+  if map.minimap and msdp.ROOM then
+    map.eventHandler("msdp.ROOM")
+    table.insert(refreshed, "ASCII map")
+  end
+  
+  -- Mudlet mapper
+  if map.mapwindow then
+    map.mapwindow:show()
+    map.mapwindow:resize()
+    -- Force refresh with delayed operations
+    tempTimer(0.1, function()
+      if map.mapwindow then
+        map.mapwindow:resize()
+        if map.mapwindow.raise then
+          map.mapwindow:raise()
+        end
+        -- Try to center on current room
+        if map.currentRoom and map.currentRoom > 0 then
+          centerview(map.currentRoom)
+        end
+      end
+    end)
+    table.insert(refreshed, "Mudlet mapper")
+  end
+  
+  -- Chat system
+  if GUI.chatContainer then
+    GUI.chatContainer:show()
+    -- Initialize chat if needed
+    if demonnic.chat.use and not demonnic.chat.container then
+      demonnicOnStart()
+      table.insert(refreshed, "chat system (initialized)")
+    else
+      table.insert(refreshed, "chat container")
+    end
+  end
+  
+  -- Handle map container visibility based on mode
+  if GUI.buttonWindow and GUI.buttonWindow.mudletOrAscii then
+    if GUI.buttonWindow.mudletOrAscii == "ASCII" then
+      if map.container then map.container:hide() end
+      if GUI.asciiMapContainer then
+        GUI.asciiMapContainer:show()
+        GUI.asciiMapContainer:raise()
+      end
+    else
+      if GUI.asciiMapContainer then GUI.asciiMapContainer:hide() end
+      if map.container then
+        map.container:show()
+        map.container:raise()
+      end
+    end
+  end
+  
+  -- Ensure proper z-order (delayed to allow all components to initialize)
+  tempTimer(0.5, function()
+    if map.container then map.container:lower() end
+    if GUI.chatContainer then GUI.chatContainer:raise() end
+    if GUI.roomInfoContainer then GUI.roomInfoContainer:raise() end
+    if GUI.buttonPanelContainer then GUI.buttonPanelContainer:raise() end
+    if GUI.actionIconsContainer then GUI.actionIconsContainer:raise() end
+    if GUI.tabbedInfoWindowContainer then GUI.tabbedInfoWindowContainer:raise() end
+    if GUI.Box7 then GUI.Box7:raise() end
+  end)
+  
+  -- Report results
+  if #refreshed > 0 then
+    cecho(string.format("\n&lt;green&gt;%s complete: %s", 
+      isRefresh and "Refresh" or "Initialization",
+      table.concat(refreshed, ", ")))
+  end
+end
+
+-- =============================================================================
+-- ENTRY POINT HANDLERS
+-- These ensure GUI.initializeOrRefresh is called at the right times
+-- while preserving other initialization functions
+-- =============================================================================
+
+-- Enhanced onProtocolEnabled handler
+GUI.onProtocolEnabled = function(_, protocol)
+  if protocol == "MSDP" then
+    tempTimer(0.5, function()
+      GUI.initializeOrRefresh("MSDP protocol enabled")
+    end)
+  end
+end
+
+-- The main initialization handlers are registered at the bottom of this script
+-- along with the original GUI.init() registration to ensure proper order
+
+-- Register the proper initialization sequence
 registerAnonymousEventHandler("sysLoadEvent", "GUI.init")
-registerAnonymousEventHandler("sysInstall", "GUI.init")</script>
+registerAnonymousEventHandler("sysInstall", "GUI.init")
+
+-- Add connection-based refresh
+registerAnonymousEventHandler("sysConnectionEvent", function()
+  tempTimer(1, function()
+    GUI.initializeOrRefresh("connection established")
+  end)
+end)</script>
+						<eventHandlerList />
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>AdjustableContainers</name>
+						<packageName></packageName>
+						<script>-- GUI.AdjustableContainers - Foundation for Adjustable Container System
+-- This namespace manages all adjustable containers in the LuminariGUI
+
+GUI.AdjustableContainers = GUI.AdjustableContainers or {}
+
+-- Container registry for lifecycle management
+GUI.AdjustableContainers.containers = GUI.AdjustableContainers.containers or {}
+
+-- Current active layout profile
+GUI.AdjustableContainers.currentProfile = GUI.AdjustableContainers.currentProfile or "default"
+
+-- Save/Load directory configuration
+GUI.AdjustableContainers.saveDir = string.format("%s/LuminariGUI/layouts/", getMudletHomeDir())
+
+-- Default container styles matching current theme
+GUI.AdjustableContainers.defaultStyle = {
+  adjLabelstyle = [[
+    background-image: url(]] .. getMudletHomeDir():gsub("\\", "/") .. [[/LuminariGUI/images/ui_texture.jpg);
+    background-color: rgb(20,0,20);
+    border: 2px solid #666;
+    border-radius: 4px;
+    font-family: Tahoma, Geneva, sans-serif;
+  ]],
+  buttonstyle = [[
+    QLabel { border-radius: 7px; background-color: rgba(100,100,100,100%); }
+    QLabel::hover { background-color: rgba(120,120,120,100%); }
+  ]],
+  titleTxtColor = "white",
+  buttonFontSize = 10,
+  buttonsize = 20,
+  padding = 5,
+  autoSave = true,
+  autoLoad = true,
+  defaultDir = GUI.AdjustableContainers.saveDir
+}
+
+-- Container naming convention
+function GUI.AdjustableContainers.generateName(baseName)
+  return "LuminariGUI_" .. baseName
+end
+
+-- Container registration system
+function GUI.AdjustableContainers.register(container, name, componentType)
+  if not container then
+    print("ERROR: Cannot register nil container: " .. (name or "unknown"))
+    return false
+  end
+  
+  local containerInfo = {
+    container = container,
+    name = name,
+    componentType = componentType,
+    created = os.time(),
+    profile = GUI.AdjustableContainers.currentProfile
+  }
+  
+  GUI.AdjustableContainers.containers[name] = containerInfo
+  print("✓ Registered container: " .. name .. " (" .. componentType .. ")")
+  return true
+end
+
+-- Container lifecycle management
+function GUI.AdjustableContainers.create(name, componentType, config)
+  local fullName = GUI.AdjustableContainers.generateName(name)
+  
+  -- Merge default style with custom config
+  local containerConfig = {}
+  for k, v in pairs(GUI.AdjustableContainers.defaultStyle) do
+    containerConfig[k] = v
+  end
+  if config then
+    for k, v in pairs(config) do
+      containerConfig[k] = v
+    end
+  end
+  
+  -- Set the container name
+  containerConfig.name = fullName
+  
+  -- Create the adjustable container
+  local container = Adjustable.Container:new(containerConfig)
+  
+  if container then
+    GUI.AdjustableContainers.register(container, fullName, componentType)
+    return container
+  else
+    print("ERROR: Failed to create container: " .. fullName)
+    return nil
+  end
+end
+
+function GUI.AdjustableContainers.show(name)
+  local containerInfo = GUI.AdjustableContainers.containers[name]
+  if containerInfo and containerInfo.container then
+    containerInfo.container:show()
+    return true
+  end
+  return false
+end
+
+function GUI.AdjustableContainers.hide(name)
+  local containerInfo = GUI.AdjustableContainers.containers[name]
+  if containerInfo and containerInfo.container then
+    containerInfo.container:hide()
+    return true
+  end
+  return false
+end
+
+function GUI.AdjustableContainers.destroy(name)
+  local containerInfo = GUI.AdjustableContainers.containers[name]
+  if containerInfo and containerInfo.container then
+    containerInfo.container:hide()
+    -- Note: Adjustable containers handle their own cleanup
+    GUI.AdjustableContainers.containers[name] = nil
+    print("✓ Destroyed container: " .. name)
+    return true
+  end
+  return false
+end
+
+-- Layout Profile System
+GUI.AdjustableContainers.profiles = {
+  default = {
+    name = "Default Layout",
+    description = "Standard layout for general gameplay",
+    containers = {
+      chat = { x = "25%", y = "-25%", width = "50%", height = "25%" },
+      gauges = { x = "0%", y = "75%", width = "25%", height = "25%" },
+      tabinfo = { x = "0%", y = "0%", width = "25%", height = "75%" },
+      room = { x = "-25%", y = "15%", width = "25%", height = "35%" },
+      buttons = { x = "-25%", y = "0%", width = "25%", height = "15%" },
+      actions = { x = "-25%", y = "50%", width = "25%", height = "35%" },
+      cast = { x = "30%", y = "10%", width = "40%", height = "20%" }
+    }
+  },
+  combat = {
+    name = "Combat Layout",
+    description = "Optimized for combat situations",
+    containers = {
+      chat = { x = "25%", y = "-25%", width = "50%", height = "25%" },
+      gauges = { x = "0%", y = "75%", width = "25%", height = "25%" },
+      tabinfo = { x = "0%", y = "0%", width = "25%", height = "75%" },
+      room = { x = "-25%", y = "15%", width = "25%", height = "35%" },
+      buttons = { x = "-25%", y = "0%", width = "25%", height = "15%" },
+      actions = { x = "-25%", y = "50%", width = "25%", height = "35%" },
+      cast = { x = "30%", y = "10%", width = "40%", height = "20%" }
+    }
+  },
+  social = {
+    name = "Social Layout", 
+    description = "Emphasizes chat and communication",
+    containers = {
+      chat = { x = "25%", y = "-40%", width = "50%", height = "40%" },
+      gauges = { x = "0%", y = "85%", width = "25%", height = "15%" },
+      tabinfo = { x = "0%", y = "0%", width = "25%", height = "85%" },
+      room = { x = "-25%", y = "15%", width = "25%", height = "35%" },
+      buttons = { x = "-25%", y = "0%", width = "25%", height = "15%" },
+      actions = { x = "-25%", y = "50%", width = "25%", height = "35%" },
+      cast = { x = "30%", y = "10%", width = "40%", height = "20%" }
+    }
+  },
+  minimal = {
+    name = "Minimal Layout",
+    description = "Minimalist layout for maximum game text visibility",
+    containers = {
+      chat = { x = "20%", y = "-20%", width = "60%", height = "20%" },
+      gauges = { x = "0%", y = "80%", width = "20%", height = "20%" },
+      tabinfo = { x = "0%", y = "0%", width = "20%", height = "80%" },
+      room = { x = "-20%", y = "10%", width = "20%", height = "30%" },
+      buttons = { x = "-20%", y = "0%", width = "20%", height = "10%" },
+      actions = { x = "-20%", y = "40%", width = "20%", height = "30%" },
+      cast = { x = "30%", y = "10%", width = "40%", height = "20%" }
+    }
+  }
+}
+
+-- Profile management functions
+function GUI.AdjustableContainers.switchProfile(profileName)
+  if not GUI.AdjustableContainers.profiles[profileName] then
+    print("ERROR: Profile '" .. profileName .. "' does not exist")
+    return false
+  end
+  
+  print("Switching to profile: " .. GUI.AdjustableContainers.profiles[profileName].name)
+  GUI.AdjustableContainers.currentProfile = profileName
+  
+  -- Apply profile to all containers
+  local profile = GUI.AdjustableContainers.profiles[profileName]
+  for containerName, containerInfo in pairs(GUI.AdjustableContainers.containers) do
+    local componentType = containerInfo.componentType
+    local profileConfig = profile.containers[componentType]
+    
+    if profileConfig and containerInfo.container then
+      containerInfo.container:move(profileConfig.x, profileConfig.y)
+      containerInfo.container:resize(profileConfig.width, profileConfig.height)
+    end
+  end
+  
+  print("✓ Applied profile: " .. profileName)
+  return true
+end
+
+function GUI.AdjustableContainers.saveProfile(profileName)
+  if not profileName then
+    profileName = GUI.AdjustableContainers.currentProfile
+  end
+  
+  print("Saving profile: " .. profileName)
+  Adjustable.Container:saveAll(profileName)
+  print("✓ Profile saved: " .. profileName)
+end
+
+function GUI.AdjustableContainers.loadProfile(profileName)
+  if not profileName then
+    profileName = GUI.AdjustableContainers.currentProfile
+  end
+  
+  print("Loading profile: " .. profileName)
+  Adjustable.Container:loadAll(profileName)
+  GUI.AdjustableContainers.currentProfile = profileName
+  print("✓ Profile loaded: " .. profileName)
+end
+
+function GUI.AdjustableContainers.resetProfile(profileName)
+  if not profileName then
+    profileName = GUI.AdjustableContainers.currentProfile
+  end
+  
+  print("Resetting profile: " .. profileName)
+  GUI.AdjustableContainers.switchProfile(profileName)
+  GUI.AdjustableContainers.saveProfile(profileName)
+  print("✓ Profile reset: " .. profileName)
+end
+
+-- Container utility functions
+function GUI.AdjustableContainers.showAll()
+  for name, containerInfo in pairs(GUI.AdjustableContainers.containers) do
+    if containerInfo.container then
+      containerInfo.container:show()
+    end
+  end
+  print("✓ All containers shown")
+end
+
+function GUI.AdjustableContainers.hideAll()
+  for name, containerInfo in pairs(GUI.AdjustableContainers.containers) do
+    if containerInfo.container then
+      containerInfo.container:hide()
+    end
+  end
+  print("✓ All containers hidden")
+end
+
+function GUI.AdjustableContainers.listContainers()
+  print("=== LuminariGUI Container Registry ===")
+  print("Current Profile: " .. GUI.AdjustableContainers.currentProfile)
+  print("Save Directory: " .. GUI.AdjustableContainers.saveDir)
+  print("")
+  
+  for name, containerInfo in pairs(GUI.AdjustableContainers.containers) do
+    local status = containerInfo.container and "✓" or "✗"
+    print(string.format("%s %s (%s)", status, name, containerInfo.componentType))
+  end
+  
+  print("")
+  print("Available Profiles:")
+  for profileName, profile in pairs(GUI.AdjustableContainers.profiles) do
+    local marker = (profileName == GUI.AdjustableContainers.currentProfile) and "* " or "  "
+    print(string.format("%s%s - %s", marker, profile.name, profile.description))
+  end
+end
+
+-- Initialize the directory structure
+function GUI.AdjustableContainers.init()
+  -- Create save directory if it doesn't exist
+  lfs.mkdir(GUI.AdjustableContainers.saveDir)
+  
+  -- Save default profile on first run
+  if not io.exists(GUI.AdjustableContainers.saveDir .. "default.json") then
+    GUI.AdjustableContainers.saveProfile("default")
+  end
+  
+  print("✓ AdjustableContainers initialized")
+  print("  Save Directory: " .. GUI.AdjustableContainers.saveDir)
+  print("  Current Profile: " .. GUI.AdjustableContainers.currentProfile)
+end
+
+-- Register initialization
+registerAnonymousEventHandler("sysLoadEvent", "GUI.AdjustableContainers.init")
+registerAnonymousEventHandler("sysInstall", "GUI.AdjustableContainers.init")</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
@@ -2963,7 +3517,8 @@ and if you don't want it in a container you would put
 demonnic.chat.useContainer = false
 ]]
 
-demonnic.chat.useContainer = GUI.chatContainer
+-- Chat container will be set after GUI initialization
+demonnic.chat.useContainer = false
 
 --[[
 The timestamp option is set here.
@@ -3492,8 +4047,10 @@ end</script>
 							<packageName></packageName>
 							<script>function demonnicOnStart()
   if demonnic.chat.use then
-    -- Verify container exists before creating chat
-    if not GUI.chatContainer then
+    -- Set the container now that GUI is initialized
+    if GUI.chatContainer then
+      demonnic.chat.useContainer = GUI.chatContainer
+    else
       print("Warning: GUI.chatContainer not found. Chat system may not display properly.")
     end
     

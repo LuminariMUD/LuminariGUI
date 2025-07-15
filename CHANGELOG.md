@@ -7,6 +7,116 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Adjustable Container Foundation**: Complete infrastructure for user-customizable GUI
+  - Created GUI.AdjustableContainers namespace with full container management
+  - Implemented container registration and lifecycle management
+  - Added profile system (default, combat, social, minimal)
+  - Configured auto-save/load with custom directory structure
+  - Established consistent naming conventions (LuminariGUI_[ComponentName])
+
+### Changed
+- **Tabbed Info Window**: Converted to Adjustable.Container for user customization
+  - Migrated GUI.tabbedInfoWindow from static Geyser container to Adjustable.Container
+  - Created new container "LuminariGUI_TabbedInfo" with full adjustable capabilities
+  - Maintains backward compatibility with existing code through GUI.Box4 reference
+  - Preserves all tab functionality (Player, Affects, Group tabs)
+  - Maintains MSDP event handling for automatic updates
+  - Container can now be resized, repositioned, minimized, and settings persist across sessions
+  - Added to default layout profile with top-left screen attachment
+
+- **Room Information**: Converted to Adjustable.Container for user customization
+  - Migrated GUI.Box5 from static Geyser label to Adjustable.Container
+  - Created new container "LuminariGUI_RoomInfo" with full adjustable capabilities
+  - Maintains backward compatibility with existing code through GUI.Box5 reference
+  - Preserves room info display and map legend functionality
+  - Maintains MSDP event handling for room updates (msdp.ROOM)
+  - Container can now be resized, repositioned, minimized, and settings persist across sessions
+  - Added to default layout profile with top-right screen attachment
+  - Phase 2 of Adjustable Container migration now complete (4 of 4 core components)
+
+- **Button Panel**: Converted to Adjustable.Container for user customization
+  - Migrated GUI.Box3 from static Geyser label to Adjustable.Container
+  - Created new container "LuminariGUI_ButtonPanel" with full adjustable capabilities
+  - Maintains backward compatibility with existing code through GUI.Box3 reference
+  - Preserves all button functionality (Legend toggle, Mudlet/ASCII map switching)
+  - Button styling and responsiveness maintained
+  - Container can now be resized, repositioned, minimized, and settings persist across sessions
+  - Added to default layout profile with top-right screen attachment
+  - First component of Phase 3 (Secondary Migration) completed
+
+- **Action Icons**: Converted to Adjustable.Container for user customization
+  - Migrated GUI.ActionIconsBox from embedded VBox in Status to standalone Adjustable.Container
+  - Created new container "LuminariGUI_ActionIcons" with full adjustable capabilities
+  - Maintains backward compatibility with existing code through GUI.ActionIconsBox reference
+  - Preserves all action icon functionality (Standard, Move, Swift actions)
+  - Maintains MSDP event handling for action state updates (msdp.ACTIONS)
+  - Icons correctly display active/inactive states with appropriate images
+  - Container can now be resized, repositioned, minimized, and settings persist across sessions
+  - Added to default layout profile with top-right screen attachment
+  - Second component of Phase 3 (Secondary Migration) completed
+
+- **Map**: Converted to Adjustable.Container to resolve z-order issues
+  - Migrated map.container from static Geyser.Container to Adjustable.Container
+  - Created new container "LuminariGUI_Map" with full adjustable capabilities
+  - Preserves all map functionality (Geyser.Mapper, minimap switching)
+  - Fixes z-order issues where Controls container was trapped behind map
+  - Container can now be resized, repositioned, minimized like other components
+  - Added proper z-order management to ensure containers layer correctly
+  - Map is kept at back layer with other containers raised above it
+
+- **Cast Console**: Converted to Adjustable.Container for user customization
+  - Migrated GUI.castConsole from embedded MiniConsole in GUI.Box2 to Adjustable.Container
+  - Created new container "LuminariGUI_CastConsole" with full adjustable capabilities
+  - Maintains backward compatibility with existing code through GUI.castConsole reference
+  - Preserves all spell casting functionality (start, complete, abort, cancel)
+  - Maintains spell name display and casting status messages
+  - Console auto-clears after 10 seconds following cast completion/failure
+  - Container can now be resized, repositioned, minimized, and settings persist across sessions
+  - Added to default layout profile with bottom-left screen attachment
+  - Phase 3 of Adjustable Container migration now complete (3 of 3 secondary components)
+  - **IMPORTANT**: This separation also fixed the Chat container which was previously conflicting!
+
+- **Chat System**: Now working as Adjustable.Container (Fixed by Cast Console separation)
+  - GUI.chatContainer was already created but wasn't functioning due to conflicts
+  - Separating Cast Console into its own container resolved the initialization issue
+  - Chat system now has full adjustable capabilities (resize, reposition, minimize)
+  - All chat channels working (Tell, Congrats, Chat, Auction, Group, Wiz)
+  - Tab blinking and gagging functionality preserved
+  - Chat history and timestamps maintained
+  - ALL 8 MAIN COMPONENTS NOW MIGRATED - 100% Complete!
+
+### Fixed
+- **ASCII Map Display**: Fixed critical bug where ASCII map wasn't visible
+  - Created separate `GUI.asciiMapContainer` as Adjustable Container
+  - Moved `map.minimap` from nested static container to independent Adjustable Container
+  - Updated button callbacks (`asciiClick`/`mudletClick`) to properly show/hide containers
+  - Fixed all references in triggers (Capture Wilderness Map, Capture Room Map)
+  - Updated environment switching logic for Wilderness/Room transitions
+  - Added proper z-order management with `raise()` to ensure visibility
+  - ASCII map now properly toggles with Mudlet map via Controls buttons
+  - Added to default profile for layout persistence
+
+- **UI Layout Reorganization**: Complete 3-column layout implementation
+  - Column 1 (50%): Main window (0%, 0%, 50%, 60%) and Chat (0%, 60%, 50%, 30%)
+  - Column 2 (25%): Controls (50%, 0%), Tabbed Info (50%, 20%), Cast Console (50%, 60%), Status (50%, 75%)
+  - Column 3 (25%): Map/ASCII Map (75%, 0%, 25%, 50%), Room Info (75%, 50%, 25%, 34%), Action Icons (75%, 84%, 8%, 8%)
+  - Fixed all container positioning to exact specifications
+  - Removed old static UI remnants (GUI.Box2 background sections)
+
+- **Initialization System**: Updated for Adjustable Container system
+  - Fixed `fix gui` command to properly handle all adjustable containers
+  - Fixed `fix chat` command (changed from `fixchat`) to prevent full-screen issue
+  - Removed problematic resize("100%", "100%") calls that caused chat to take entire screen
+  - Added mode checking for map container to show correct map type (ASCII vs Mudlet)
+  - Ensures all containers display correctly after reconnection or package reload
+
+### Removed
+- **Frame Images**: Removed all incompatible frame image references
+  - Removed 14 frame image files from images/frame/ directory
+  - Frame images were incompatible with Adjustable Container system
+  - Cleaned up all code references to frame images
+
 ## [2.0.2] - 2025-07-15
 
 ### Fixed

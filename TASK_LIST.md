@@ -1,14 +1,12 @@
-# TASK_LIST.md
+# LuminariGUI Adjustable Container Conversion Plan
 
-## Status: All Issues Resolved ✅
+## Overview
+Convert the current static GUI layout system to use Mudlet's Adjustable.Container framework, enabling user customization, resizing, repositioning, and layout persistence.
 
-All previously tracked issues have been successfully resolved and tested:
+## Issues to Address
+1. **Map that corresponds to 'Control' Mudlet button**: Not working at all
+2. **Tabbed Info**: Not working at all
+3. **Status Gauges**: Not working at all
+4. **Actions**: Not working at all
 
-- ✅ **Auction Channel Capture**: Fixed regex patterns (`auctions`→`auctalks`, `auction`→`auctalk`)
-- ✅ **Critical Background Rendering**: Fixed file extension mismatch (`ui_texture.png`→`ui_texture.jpg`)
-- ✅ **GUI Structure Analysis**: Complete documentation provided
-- ✅ **User Testing**: Both fixes confirmed working in Mudlet
 
-## Ready for Production
-
-The system is now stable and ready for master branch deployment.

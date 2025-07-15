@@ -111,7 +111,7 @@ gag chat
 show self
 
 -- Fix chat positioning issues
-fixchat
+fix chat
 
 -- Manual mapping controls
 start mapping
@@ -168,7 +168,7 @@ The GUI automatically requests these MSDP variables:
 - Try `fix gui` command to initialize all components
 
 **Chat tabs not working:**
-- Use `fixchat` command to reset chat window position
+- Use `fix chat` command to reset chat window position
 - For mid-session imports, use `fix gui` to reinitialize chat system
 - Check YATCO configuration in the scripts panel
 
