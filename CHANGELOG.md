@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.2] - 2025-07-15
+
 ### Fixed
 - **CRITICAL**: Fixed background texture rendering issue that caused light/white appearance instead of dark concrete texture
   - Root cause: Code referenced `ui_texture.png` but actual file was `ui_texture.jpg`
