@@ -7,6 +7,64 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.4.001] - 2025-07-16
+
+### Fixed
+- **MSDP System Restoration**: Complete fix for MSDP event handling and GUI initialization
+  - Fixed critical GUI initialization crash by removing non-existent `addToProfile()` function calls
+  - Fixed sysProtocolEnabled event handler registration timing with early registration
+  - Added missing MSDP variable REPORT requests (PSP, PSP_MAX, ROOM data)
+  - Added GUI refresh trigger when MSDP protocol is enabled
+  - All MSDP-driven UI elements now properly update: health/PSP/movement gauges, group tab, player stats
+  - Fixed event handlers being registered as function references instead of strings
+  - GUI.init() now completes successfully, allowing all systems to function
+
+- **UI Visual Fixes**: Restored proper appearance to GUI components
+  - Fixed Player tab missing background texture (stylesheet overwrite issue)
+  - Fixed Cast Console MiniConsole overlapping the container title bar
+  - All tabbed info panels now display consistent styling and backgrounds
+
+### Summary
+This release stabilizes the entire MSDP and GUI system after the Adjustable Container migration. All major GUI components now function correctly with proper event handling, visual styling, and user interaction.
+
+## [2.0.3.005] - 2025-07-16
+
+### Fixed
+- **Player Tab Background**: Fixed missing background texture in Player tab
+  - The init_player() function was overwriting the entire stylesheet, removing background and texture
+  - Now properly preserves background color, texture image, and font while adding alignment
+  - Player tab now matches the appearance of Affects and Group tabs
+
+- **Cast Console Title Bar**: Fixed MiniConsole overlapping the container title
+  - MiniConsole was positioned at (0,0) covering the "Cast Console" title text
+  - Now positioned at y=25 to start below title bar, with proper padding offsets
+  - Title bar is now fully visible and console content properly contained
+
+## [2.0.3.004] - 2025-07-16
+
+### Fixed
+- **MSDP Protocol Initialization**: Fixed sysProtocolEnabled event handler registration timing
+  - Added early registration of protocol handler to catch MSDP enablement
+  - Added missing MSDP variable REPORT requests (PSP, PSP_MAX, ROOM data)  
+  - Added GUI refresh trigger when MSDP protocol is enabled
+  - This ensures all GUI components properly initialize when connecting to the MUD
+
+- **Critical GUI Initialization Crash**: Removed non-existent `addToProfile()` function calls
+  - Removed calls from Cast Console and ASCII Map initialization
+  - These calls were causing GUI.init() to crash, preventing event handler registration
+  - This was the root cause of MSDP updates not working after the initial fix
+
+## [2.0.3.001] - 2025-07-16
+
+### Fixed
+- **CRITICAL**: Fixed MSDP event handler registration
+  - Root cause: Event handlers were being registered as function references instead of strings
+  - Fixed `GUI.registerEventHandlers()` to use string handler names (e.g., "GUI.updateGroup" instead of GUI.updateGroup)
+  - This is the MINIMAL fix that resolves all MSDP issues without breaking anything else
+  - All MSDP-driven UI elements now properly update: health/PSP/movement gauges, group tab, player stats, etc.
+
+## [2.0.2] - 2025-07-15
+
 ### Added
 - **Adjustable Container Foundation**: Complete infrastructure for user-customizable GUI
   - Created GUI.AdjustableContainers namespace with full container management

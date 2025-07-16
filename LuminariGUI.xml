@@ -940,7 +940,7 @@ local function config()
       adjLabelstyle = GUI.AdjustableContainers.defaultStyle.adjLabelstyle,
       buttonstyle = GUI.AdjustableContainers.defaultStyle.buttonstyle,
       tabstyle = GUI.AdjustableContainers.defaultStyle.tabstyle,
-      titleTxtColor = "white",
+      titleTxtColor = "green",
       padding = 9,
       lockStyle = "border",
       autoSave = true,
@@ -960,7 +960,7 @@ local function config()
       adjLabelstyle = info.adjLabelstyle or "background-color: rgba(0,0,0,0%); border: 4px solid #444444;",
       raiseOnClick = false,
       savePosition = true,
-      titleTxtColor = "white",
+      titleTxtColor = "green",
       padding = 9,
       lockStyle = "border",
       autoSave = true,
@@ -983,41 +983,42 @@ local function config()
 		
 		-- Hide ASCII map by default (Mudlet map shows first)
 		GUI.asciiMapContainer:hide()
-		
-		-- Add to default profile
-		GUI.AdjustableContainers.addToProfile("default", "ASCIIMap")
     
     -- Create mapper window within the adjustable container
-		map.mapwindow = Geyser.Mapper:new({name = "map.mapwindow", x = 0, y = 0, width = "100%", height = "100%"}, map.container)
+    if not map.container then
+      print("ERROR: Map container not created - cannot initialize mapper")
+      return
+    end
     
-    -- Ensure mapper is properly initialized with delayed refresh
-    tempTimer(0.1, function()
+		map.mapwindow = Geyser.Mapper:new({
+      name = "map.mapwindow", 
+      x = 0, 
+      y = 0, 
+      width = "100%", 
+      height = "100%"
+    }, map.container)
+    
+    if not map.mapwindow then
+      print("ERROR: Failed to create Geyser.Mapper instance")
+      return
+    end
+    
+    -- Single initialization timer to ensure proper rendering
+    tempTimer(0.2, function()
       if map.mapwindow then
         map.mapwindow:show()
         map.mapwindow:resize()
-        -- Force raise to ensure it's on top within the container
-        if map.mapwindow.raise then
-          map.mapwindow:raise()
-        end
-        -- Additional resize after a short delay to ensure proper rendering
-        tempTimer(0.1, function()
-          if map.mapwindow then
-            map.mapwindow:resize()
-          end
-        end)
+        -- Force a second resize to handle any rendering issues
+        map.mapwindow:resize()
+      else
+        print("ERROR: Failed to initialize map window")
       end
     end)
     
     -- Show the map container
     if map.container then
       map.container:show()
-      -- Lower the container to ensure mapper is visible on top
-      map.container:lower()
-      tempTimer(0.2, function()
-        if map.container then
-          map.container:raise()
-        end
-      end)
+      -- No need to manipulate z-order here - let Adjustable Container handle it
     end
 		
 		map.adjustMinimapFontSize()
@@ -1058,16 +1059,21 @@ function map.eventHandler(event,...)
 
 				if map.prev_info.ENVIRONMENT == "Wilderness" and map.room_info.ENVIRONMENT == "Room" then
 					 -- re-enable the mapper!
-					 GUI.asciiMapContainer:hide()
-					 map.container:show()
-					 if map.mapwindow then
-					   map.mapwindow:show()
-					   map.mapwindow:resize()
-					 end					 
+					 if GUI.asciiMapContainer then GUI.asciiMapContainer:hide() end
+					 if map.container then 
+					   map.container:show()
+					   -- Delay mapper refresh to ensure container is visible
+					   tempTimer(0.1, function()
+					     if map.mapwindow then
+					       map.mapwindow:show()
+					       map.mapwindow:resize()
+					     end
+					   end)
+					 end
 				elseif map.prev_info.ENVIRONMENT == "Room" and map.room_info.ENVIRONMENT == "Wilderness" then
 					 -- disable the mapper!
-					 map.container:hide()		
-					 GUI.asciiMapContainer:show()
+					 if map.container then map.container:hide() end
+					 if GUI.asciiMapContainer then GUI.asciiMapContainer:show() end
 				end
         handle_move()
     elseif event == "shiftRoom" then
@@ -1366,7 +1372,7 @@ end</script>
     adjLabelstyle = GUI.AdjustableContainers.defaultStyle.adjLabelstyle,
     buttonstyle = GUI.AdjustableContainers.defaultStyle.buttonstyle,
     tabstyle = GUI.AdjustableContainers.defaultStyle.tabstyle,
-    titleTxtColor = "white",
+    titleTxtColor = "green",
     padding = 9,
     lockStyle = "border",
     autoSave = true,
@@ -1452,6 +1458,7 @@ end</script>
   -- Create status gauges container using Adjustable.Container
   GUI.Box7 = GUI.AdjustableContainers.create("StatusGauges", "gauges", {
     titleText = "Status",
+    titleTxtColor = "green",
     x = "50%",
     y = "75%",
     width = "25%",
@@ -1589,7 +1596,7 @@ function GUI.init_action_icons()
     padding = 9,
     adjLabelstyle = GUI.AdjustableContainers.defaultStyle.adjLabelstyle,
     buttonstyle = GUI.AdjustableContainers.defaultStyle.buttonstyle,
-    titleTxtColor = "white",
+    titleTxtColor = "green",
     defaultDir = GUI.AdjustableContainers.saveDir
   })
   GUI.ActionIconsBox = GUI.actionIconsContainer  -- Backward compatibility
@@ -1685,29 +1692,29 @@ end
     y = "60%",
     width = "25%",
     height = "15%",
+    padding = 9,
     name = "LuminariGUI_CastConsole",
     titleText = "Cast Console",
+    titleTxtColor = "green",
     attached = "br",  -- Bottom-right attachment
-    adjLabelstyle = "background-color: rgba(0,0,0,0%); border: 3px groove #444444;",
+    adjLabelstyle = "background-color: rgba(0,0,0,0%); border: 9px groove #444444;",
     locked = false,
     lockStyle = "standard"
   })
   
   -- Create internal MiniConsole for spell casting display
+  -- Position below title bar (approximately 20-25 pixels) and respect padding
   GUI.castConsole = Geyser.MiniConsole:new({
     name = "GUI.castConsole",
-    x = 0,
-    y = 0,
-    width = "100%",
-    height = "100%",
+    x = 10,  -- Slight offset from left to respect container padding
+    y = 25,  -- Position below title bar
+    width = -20,  -- Use negative value to respect padding on both sides
+    height = -35,  -- Use negative value to account for title bar and bottom padding
     color = "black"
   }, GUI.castConsoleContainer)
   
   -- Set font size to match main window
   setMiniConsoleFontSize("GUI.castConsole", getFontSize("main"))
-  
-  -- Add to default profile
-  GUI.AdjustableContainers.addToProfile("default", "CastConsole")
   
   -- Ensure proper z-order
   GUI.castConsoleContainer:raise()
@@ -1816,7 +1823,9 @@ function GUI.tabbedInfoWindow.init()
     y = "15%",  -- Below Controls
     width = "25%",
     height = "45%",  -- Adjusted to fit: 15% to 60%
-    name = "LuminariGUI_TabbedInfo",
+    name = "character_stats",
+    titleText = "Character Stats",
+    titleTxtColor = "green",
     adjLabelstyle = GUI.AdjustableContainers.defaultStyle.adjLabelstyle,
     buttonstyle = GUI.AdjustableContainers.defaultStyle.buttonstyle,
     tabstyle = GUI.AdjustableContainers.defaultStyle.tabstyle,
@@ -1947,7 +1956,7 @@ GUI.Affects.Modes = GUI.Affects.Modes or {}
 
 function GUI.Affects.init()
   -- Initialize all the labels and such	
-  GUI.Affects = {}
+  -- Don't overwrite GUI.Affects itself - preserve the init function!
   GUI.Affects.Labels = {}
   GUI.Affects.Modes = {}
   GUI.Affects.Modes.Labels = {}
@@ -2286,46 +2295,52 @@ function GUI.updateGroup()
 						<name>Player</name>
 						<packageName></packageName>
 						<script>function GUI.init_player()
-  -- Set stylesheet with : qproperty-alignment: 'AlignLeft | AlignTop';
-	GUI.tabbedInfoWindow["Playercenter"]:setStyleSheet([[
-		qproperty-alignment: 'AlignLeft | AlignTop';
-	]]);
-
+  -- Check if tabbedInfoWindow is initialized
+  if not GUI.tabbedInfoWindow or not GUI.tabbedInfoWindow["Playercenter"] then
+    print("[GUI] Player tab not initialized yet")
+    return
+  end
+  
+  -- Add alignment to existing stylesheet without overwriting background and other styles
+  local existingStyle = [[
+    background-color: ]] .. GUI.tabbedInfoWindow.color2 .. [[;
+    border-image: url(]] .. getMudletHomeDir():gsub("\\", "/") .. [[/LuminariGUI/images/ui_texture.jpg) 0 0 0 0 stretch stretch;
+    font-family: Tahoma, Geneva, sans-serif;
+    qproperty-alignment: 'AlignLeft | AlignTop';
+  ]]
+  
+  GUI.tabbedInfoWindow["Playercenter"]:setStyleSheet(existingStyle)
 end
 
 function GUI.updatePlayer()
-    GUI.tabbedInfoWindow["Playercenter"]:echo(
-		[[&lt;p style="font-size:16px;font-style:normal;font-family: 'Bitstream Vera Sans Mono'"&gt;]] .. 
-    (msdp.CHARACTER_NAME or "Unknown") ..		
-    [[&lt;br/&gt;Level ]] ..
-    (msdp.LEVEL or "Unknown") ..
-    [[ ]] ..
-    (msdp.CLASS or "Unknown") ..
-    [[&lt;br/&gt;]] ..
-    (msdp.RACE or "Unknown") ..
-    [[&lt;br/&gt;]] ..    
-    [[&lt;br/&gt;Str: ]] ..
-    (msdp.STR or "Unknown") ..
-    [[&lt;br/&gt;Dex: ]] ..
-    (msdp.DEX or "Unknown") ..
-    [[&lt;br/&gt;Con: ]] ..
-    (msdp.CON or "Unknown") ..
-    [[&lt;br/&gt;Int: ]] ..
-    (msdp.INT or "Unknown") ..
-    [[&lt;br/&gt;Wis: ]] ..
-    (msdp.WIS or "Unknown") ..
-    [[&lt;br/&gt;Cha: ]] ..
-    (msdp.CHA or "Unknown") ..
-    [[&lt;br/&gt;]] ..
-    [[&lt;br/&gt;AC: ]] ..
-    (msdp.AC or "Unknown") ..
-    [[&lt;br/&gt;]] ..
-    [[&lt;br/&gt;Gold: ]] ..
-    (msdp.MONEY or "Unknown") ..
-    [[&lt;br/&gt;]] ..
-		[[&lt;/font&gt;&lt;/p&gt;]]
-  )
-
+  -- Check if tabbedInfoWindow is initialized
+  if not GUI.tabbedInfoWindow or not GUI.tabbedInfoWindow["Playercenter"] then
+    print("[GUI] Player tab not ready for update")
+    return
+  end
+  
+  -- Build the player info display with proper null checks
+  local playerInfo = [[&lt;p style="font-size:16px;font-style:normal;font-family: 'Bitstream Vera Sans Mono'"&gt;]]
+  
+  -- Character name and level
+  playerInfo = playerInfo .. (msdp.CHARACTER_NAME or "Unknown") .. [[&lt;br/&gt;Level ]]
+  playerInfo = playerInfo .. (msdp.LEVEL or "?") .. [[ ]]
+  playerInfo = playerInfo .. (msdp.CLASS or "Unknown") .. [[&lt;br/&gt;]]
+  playerInfo = playerInfo .. (msdp.RACE or "Unknown") .. [[&lt;br/&gt;&lt;br/&gt;]]
+  
+  -- Stats
+  playerInfo = playerInfo .. [[Str: ]] .. (msdp.STR or "?")
+  playerInfo = playerInfo .. [[&lt;br/&gt;Dex: ]] .. (msdp.DEX or "?")
+  playerInfo = playerInfo .. [[&lt;br/&gt;Con: ]] .. (msdp.CON or "?")
+  playerInfo = playerInfo .. [[&lt;br/&gt;Int: ]] .. (msdp.INT or "?")
+  playerInfo = playerInfo .. [[&lt;br/&gt;Wis: ]] .. (msdp.WIS or "?")
+  playerInfo = playerInfo .. [[&lt;br/&gt;Cha: ]] .. (msdp.CHA or "?")
+  playerInfo = playerInfo .. [[&lt;br/&gt;&lt;br/&gt;AC: ]] .. (msdp.AC or "?")
+  playerInfo = playerInfo .. [[&lt;br/&gt;&lt;br/&gt;Gold: ]] .. (msdp.MONEY or "0")
+  playerInfo = playerInfo .. [[&lt;br/&gt;&lt;/font&gt;&lt;/p&gt;]]
+  
+  -- Update the display
+  GUI.tabbedInfoWindow["Playercenter"]:echo(playerInfo)
 end</script>
 						<eventHandlerList />
 					</Script>
@@ -2383,26 +2398,40 @@ end
 
 --Button callback for Mudlet map.
 function GUI.buttonWindow.mudletClick()
+    -- Ensure containers exist before toggling
+    if not map.container or not GUI.asciiMapContainer then
+      print("ERROR: Map containers not initialized")
+      return
+    end
+    
     GUI.asciiMapContainer:hide()
     map.container:show()
 	  GUI.buttonWindow.mudletOrAscii = "Mudlet"
 		GUI.buttonWindow.Mudletbutton:echo("Mudlet", "yellow", "c")
 		GUI.buttonWindow.ASCIIbutton:echo("ASCII", "white", "c")
-		-- Ensure mapper is visible and refreshed
-		if map.mapwindow then
-		  map.mapwindow:show()
-		  map.mapwindow:resize()
-		end
+		
+		-- Ensure mapper is visible and properly refreshed with a small delay
+		tempTimer(0.1, function()
+		  if map.mapwindow then
+		    map.mapwindow:show()
+		    map.mapwindow:resize()
+		  end
+		end)
 end
 
 --Button callback for ASCII map.
 function GUI.buttonWindow.asciiClick()
+    -- Ensure containers exist before toggling
+    if not map.container or not GUI.asciiMapContainer then
+      print("ERROR: Map containers not initialized")
+      return
+    end
+    
     map.container:hide()
     GUI.asciiMapContainer:show()
 		GUI.buttonWindow.mudletOrAscii = "ASCII"
 		GUI.buttonWindow.ASCIIbutton:echo("ASCII", "yellow", "c")
 		GUI.buttonWindow.Mudletbutton:echo("Mudlet", "white", "c")
-		-- Ensure ASCII map is on top
 		GUI.asciiMapContainer:raise()
 end
 
@@ -2563,7 +2592,9 @@ end</script>
 						<packageName></packageName>
 						<script>function GUI.onProtocolEnabled(_, protocol)
   if protocol == "MSDP" then
-    print("[GUI] Initializing MSDP variables")
+    print("[GUI] MSDP Protocol enabled - initializing variables")
+    
+    -- Send REPORT requests for all MSDP variables
     sendMSDP("REPORT", "CHARACTER_NAME")
 		sendMSDP("REPORT", "RACE")
 		sendMSDP("REPORT", "CLASS")
@@ -2584,12 +2615,49 @@ end</script>
     sendMSDP("REPORT", "OPPONENT_NAME")
     sendMSDP("REPORT", "MOVEMENT")
     sendMSDP("REPORT", "MOVEMENT_MAX")
+    sendMSDP("REPORT", "PSP")
+    sendMSDP("REPORT", "PSP_MAX")
     sendMSDP("REPORT", "EXPERIENCE")
     sendMSDP("REPORT", "EXPERIENCE_TNL")
     sendMSDP("REPORT", "ACTIONS")
 		sendMSDP("REPORT", "GROUP")
 		--sendMSDP("REPORT", "INVENTORY")
 		sendMSDP("REPORT", "AFFECTS")
+		sendMSDP("REPORT", "ROOM")
+		sendMSDP("REPORT", "AREA_NAME")
+		sendMSDP("REPORT", "ROOM_EXITS")
+		sendMSDP("REPORT", "ROOM_NAME")
+		sendMSDP("REPORT", "ROOM_VNUM")
+		sendMSDP("REPORT", "WORLD_TIME")
+    
+    -- Debug: Show what variables are available after a short delay
+    tempTimer(2, function()
+      print("[GUI] MSDP variables received:")
+      local count = 0
+      for k, v in pairs(msdp) do
+        if type(v) ~= "function" then
+          count = count + 1
+          if k == "ACTIONS" then
+            -- Special handling for ACTIONS to show its structure
+            print(string.format("  %s = %s (type: %s)", k, tostring(v), type(v)))
+            if type(v) == "table" then
+              print("    ACTIONS table contents:")
+              for action_k, action_v in pairs(v) do
+                print(string.format("      %s = %s", action_k, tostring(action_v)))
+              end
+            end
+          else
+            print(string.format("  %s = %s", k, tostring(v)))
+          end
+        end
+      end
+      print(string.format("[GUI] Total MSDP variables: %d", count))
+    end)
+    
+    -- Initialize or refresh GUI after a short delay to ensure MSDP data arrives
+    tempTimer(0.5, function()
+      GUI.initializeOrRefresh("MSDP protocol enabled")
+    end)
   end
 end
 
@@ -2597,103 +2665,170 @@ function GUI.updateHealthGauge()
   -- This function handles the following events:
   --   msdp.HEALTH
   --   msdp.HEALTH_MAX
-  -- Calculate a percentage	
+  
+  -- Check if gauge exists
+  if not GUI.Health then
+    return
+  end
+  
+  -- Get values with defaults
+  local health = tonumber(msdp.HEALTH) or 0
+  local max_health = tonumber(msdp.HEALTH_MAX) or 1
+  
+  -- Calculate percentage
   local pct_health
-  local health = tonumber(msdp.HEALTH)
-  local max_health = tonumber(msdp.HEALTH_MAX)
-	local overfilled = false
-	
-	if health &gt; max_health then
-	  health = max_health
-		overfilled = true
-	end
-  if health &gt; 0 then
+  if health &gt; max_health then
+    health = max_health
+  end
+  
+  if max_health &gt; 0 then
     pct_health = (health / max_health) * 100
   else
     pct_health = 0
   end
-  GUI.Health.front:echo("H: " .. msdp.HEALTH .. "/" .. msdp.HEALTH_MAX)
-  GUI.Health.back:echo("H: " .. msdp.HEALTH .. "/" .. msdp.HEALTH_MAX)
-	if pct_health &gt; 100 then
+  
+  -- Update display
+  local displayText = "H: " .. health .. "/" .. max_health
+  GUI.Health.front:echo(displayText)
+  GUI.Health.back:echo(displayText)
+  
+  -- Set gauge value
+  if pct_health &gt; 100 then
     GUI.Health:setValue(100, 100)
-	else
+  else
     GUI.Health:setValue(pct_health, 100)
-	end
+  end
 end
 
 function GUI.updateMovesGauge()
   -- This function handles the following events:
   --   msdp.MOVEMENT
   --   msdp.MOVEMENT_MAX
-  -- Calculate a percentage	
+  
+  -- Check if gauge exists
+  if not GUI.Moves then
+    return
+  end
+  
+  -- Get values with defaults
+  local moves = tonumber(msdp.MOVEMENT) or 0
+  local max_moves = tonumber(msdp.MOVEMENT_MAX) or 1
+  
+  -- Calculate percentage
   local pct_moves
-  local moves = tonumber(msdp.MOVEMENT)
-  local max_moves = tonumber(msdp.MOVEMENT_MAX)
-  if moves &gt; 0 then
+  if max_moves &gt; 0 then
     pct_moves = (moves / max_moves) * 100
   else
     pct_moves = 0
   end
-  GUI.Moves.front:echo("Mv: " .. msdp.MOVEMENT .. "/" .. msdp.MOVEMENT_MAX)
-  GUI.Moves.back:echo("Mv: " .. msdp.MOVEMENT .. "/" .. msdp.MOVEMENT_MAX)
+  
+  -- Update display
+  local displayText = "Mv: " .. moves .. "/" .. max_moves
+  GUI.Moves.front:echo(displayText)
+  GUI.Moves.back:echo(displayText)
+  
+  -- Set gauge value
   GUI.Moves:setValue(pct_moves, 100)
 end
 
 function GUI.updateExperienceGauge()
   -- This function handles the following events:
   --   msdp.EXPERIENCE
-  --   msdp.EXPERIENCE_MAX
-  -- Calculate a percentage	
+  --   msdp.EXPERIENCE_TNL
+  
+  -- Check if gauge exists
+  if not GUI.Experience then
+    return
+  end
+  
+  -- Get values with defaults
+  local xp = tonumber(msdp.EXPERIENCE) or 0
+  local xp_tnl = tonumber(msdp.EXPERIENCE_TNL) or 0
+  
+  -- Calculate percentage
   local pct_xp
-  local xp = tonumber(msdp.EXPERIENCE)
-  local xp_tnl = tonumber(msdp.EXPERIENCE_TNL)
-  if xp &gt; 0 then
-    pct_xp = (xp / (xp + xp_tnl)) * 100
+  local total_xp = xp + xp_tnl
+  if total_xp &gt; 0 then
+    pct_xp = (xp / total_xp) * 100
   else
     pct_xp = 0
   end
-  GUI.Experience.front:echo(
-    [[&lt;span style = "color: black"&gt;XP: ]] .. xp .. "/" .. (xp + xp_tnl) .. [[&lt;/span&gt;]]
-  )
-  GUI.Experience.back:echo([[&lt;span&gt;XP: ]] .. xp .. "/" .. (xp + xp_tnl) .. [[&lt;/span&gt;]])
-	if pct_xp &gt; 100 then
-	  GUI.Experience:setValue(100, 100)
-	else
+  
+  -- Update display
+  local displayText = "XP: " .. xp .. "/" .. total_xp
+  GUI.Experience.front:echo([[&lt;span style = "color: black"&gt;]] .. displayText .. [[&lt;/span&gt;]])
+  GUI.Experience.back:echo([[&lt;span&gt;]] .. displayText .. [[&lt;/span&gt;]])
+  
+  -- Set gauge value
+  if pct_xp &gt; 100 then
+    GUI.Experience:setValue(100, 100)
+  else
     GUI.Experience:setValue(pct_xp, 100)
-	end
+  end
 end
 
 function GUI.updateEnemyGauge()
   -- This function handles the following events:
   --   msdp.OPPONENT_HEALTH
-  --   msdp.OPPONENT_HEALTH_MAX	
+  --   msdp.OPPONENT_HEALTH_MAX
   --   msdp.OPPONENT_NAME
-  -- Show/Hide the gauge.
-  if msdp.OPPONENT_NAME == "" then
+  
+  -- Check if gauge exists
+  if not GUI.Enemy then
+    return
+  end
+  
+  -- Get opponent name
+  local opponent_name = msdp.OPPONENT_NAME or ""
+  
+  -- Show/Hide the gauge based on opponent presence
+  if opponent_name == "" then
     GUI.Enemy:hide()
+    return
   else
     GUI.Enemy:show()
   end
-  -- Calculate a percentage	
+  
+  -- Get values with defaults
+  local health = tonumber(msdp.OPPONENT_HEALTH) or 0
+  local max_health = tonumber(msdp.OPPONENT_HEALTH_MAX) or 1
+  
+  -- Calculate percentage
   local pct_health
-  local health = tonumber(msdp.OPPONENT_HEALTH)
-  local max_health = tonumber(msdp.OPPONENT_HEALTH_MAX)
-  if health &gt; 0 then
+  if max_health &gt; 0 then
     pct_health = (health / max_health) * 100
   else
     pct_health = 0
   end
-  GUI.Enemy.front:echo(msdp.OPPONENT_NAME .. ": " .. health .. "/" .. max_health)
-  GUI.Enemy.back:echo(msdp.OPPONENT_NAME .. ": " .. health .. "/" .. max_health)
-	if pct_health &gt; 100 then
-	  GUI.Enemy:setValue(100, 100)
-	else
+  
+  -- Update display
+  local displayText = opponent_name .. ": " .. health .. "/" .. max_health
+  GUI.Enemy.front:echo(displayText)
+  GUI.Enemy.back:echo(displayText)
+  
+  -- Set gauge value
+  if pct_health &gt; 100 then
+    GUI.Enemy:setValue(100, 100)
+  else
     GUI.Enemy:setValue(pct_health, 100)
-	end
+  end
 end
 
 function GUI.updateActionIcons()
-  if (msdp.ACTIONS.STANDARD_ACTION == "1") then
+  -- Check if ACTIONS data exists
+  if not msdp.ACTIONS then
+    -- No ACTIONS data yet, skip update
+    return
+  end
+  
+  -- Ensure action icons exist before updating
+  if not GUI.StandardActionIcon or not GUI.MoveActionIcon or not GUI.SwiftActionIcon then
+    print("[GUI] Action icons not initialized yet")
+    return
+  end
+  
+  -- Update Standard Action icon
+  if msdp.ACTIONS.STANDARD_ACTION == "1" then
     GUI.ActionIconCSS:set(
       "border-image",
       [[url("]] ..
@@ -2701,22 +2836,7 @@ function GUI.updateActionIcons()
       [[/LuminariGUI/images/action-standard.png");]]
     )
     GUI.StandardActionIcon:setStyleSheet(GUI.ActionIconCSS:getCSS())
-  end
-  if (msdp.ACTIONS.MOVE_ACTION == "1") then
-    GUI.ActionIconCSS:set(
-      "border-image",
-      [[url("]] .. getMudletHomeDir():gsub("\\", "/") .. [[/LuminariGUI/images/action-move.png");]]
-    )
-    GUI.MoveActionIcon:setStyleSheet(GUI.ActionIconCSS:getCSS())
-  end
-  if (msdp.ACTIONS.SWIFT_ACTION == "1") then
-    GUI.ActionIconCSS:set(
-      "border-image",
-      [[url("]] .. getMudletHomeDir():gsub("\\", "/") .. [[/LuminariGUI/images/action-swift.png");]]
-    )
-    GUI.SwiftActionIcon:setStyleSheet(GUI.ActionIconCSS:getCSS())
-  end
-  if (msdp.ACTIONS.STANDARD_ACTION == "0") then
+  elseif msdp.ACTIONS.STANDARD_ACTION == "0" then
     GUI.ActionIconCSS:set(
       "border-image",
       [[url("]] ..
@@ -2725,7 +2845,15 @@ function GUI.updateActionIcons()
     )
     GUI.StandardActionIcon:setStyleSheet(GUI.ActionIconCSS:getCSS())
   end
-  if (msdp.ACTIONS.MOVE_ACTION == "0") then
+  
+  -- Update Move Action icon
+  if msdp.ACTIONS.MOVE_ACTION == "1" then
+    GUI.ActionIconCSS:set(
+      "border-image",
+      [[url("]] .. getMudletHomeDir():gsub("\\", "/") .. [[/LuminariGUI/images/action-move.png");]]
+    )
+    GUI.MoveActionIcon:setStyleSheet(GUI.ActionIconCSS:getCSS())
+  elseif msdp.ACTIONS.MOVE_ACTION == "0" then
     GUI.ActionIconCSS:set(
       "border-image",
       [[url("]] ..
@@ -2734,7 +2862,15 @@ function GUI.updateActionIcons()
     )
     GUI.MoveActionIcon:setStyleSheet(GUI.ActionIconCSS:getCSS())
   end
-  if (msdp.ACTIONS.SWIFT_ACTION == "0") then
+  
+  -- Update Swift Action icon
+  if msdp.ACTIONS.SWIFT_ACTION == "1" then
+    GUI.ActionIconCSS:set(
+      "border-image",
+      [[url("]] .. getMudletHomeDir():gsub("\\", "/") .. [[/LuminariGUI/images/action-swift.png");]]
+    )
+    GUI.SwiftActionIcon:setStyleSheet(GUI.ActionIconCSS:getCSS())
+  elseif msdp.ACTIONS.SWIFT_ACTION == "0" then
     GUI.ActionIconCSS:set(
       "border-image",
       [[url("]] ..
@@ -2750,7 +2886,11 @@ end
 					<Script isActive="yes" isFolder="no">
 						<name>Config</name>
 						<packageName></packageName>
-						<script>  -- This needs to be outside the config, since YATCO needs to have the boxes set.
+						<script>  -- CRITICAL: These initialization calls MUST remain outside any function!
+  -- Mudlet requires GUI elements to be created immediately when the script loads.
+  -- Moving these inside GUI.init() or any other function will cause complete failure.
+  -- The GUI background, borders, and boxes must exist before any other initialization.
+  -- This needs to be outside the config, since YATCO needs to have the boxes set.
 	GUI.image_location = getMudletHomeDir():gsub("\\", "/") .. "/LuminariGUI/images/"
 	GUI.init_background()
   GUI.set_borders()
@@ -2766,6 +2906,7 @@ function GUI.init()
   GUI.init_action_icons()
   --GUI.init_header_icons()
   GUI.tabbedInfoWindow.init()
+  GUI.init_player()
   GUI.init_group()
   GUI.Affects.init()
   GUI.draw_frames()
@@ -2835,14 +2976,19 @@ function GUI.registerEventHandlers()
     ["msdp.CHA"] = "GUI.updatePlayer",
     ["msdp.AC"] = "GUI.updatePlayer",
     ["msdp.MONEY"] = "GUI.updatePlayer",
+    -- Room update for GUI display
     ["msdp.ROOM"] = "GUI.updateRoom",
-    -- Map event handlers
+    -- Map event handlers (non-MSDP)
     ["shiftRoom"] = "map.eventHandler",
     ["sysConnectionEvent"] = "map.eventHandler",
     ["sysDownloadDone"] = "map.eventHandler"
   }
   
-  -- Register MSDP.ROOM for map separately to avoid conflict
+  -- Register MSDP.ROOM for map separately
+  -- NOTE: Both GUI.updateRoom and map.eventHandler need to handle msdp.ROOM events:
+  -- - GUI.updateRoom: Updates the room info display in the GUI
+  -- - map.eventHandler: Updates mapper position and handles environment transitions
+  -- Mudlet allows multiple handlers for the same event, so both will fire
   local mapEventHandlers = {
     ["msdp.ROOM"] = "map.eventHandler",
     ["sysProtocolEnabled"] = "map.onProtocolEnabled"
@@ -2949,8 +3095,9 @@ function GUI.initializeOrRefresh(context)
   local isRefresh = (GUI.initialized == true)
   
   if not isRefresh then
-    -- For initial setup, just return - let the normal init handle it
-    -- This function is for REFRESH operations after initialization
+    -- GUI not initialized yet - initialize it now
+    cecho(string.format("\n&lt;yellow&gt;Initializing GUI components (%s)...", context))
+    GUI.init()
     return
   else
     -- Refresh existing GUI
@@ -2966,10 +3113,31 @@ function GUI.initializeOrRefresh(context)
   -- Status Gauges
   if GUI.Box7 then
     GUI.Box7:show()
+    GUI.Box7:raise()
     if msdp.HEALTH then GUI.updateHealthGauge() end
     if msdp.MOVEMENT then GUI.updateMovesGauge() end
     if msdp.EXPERIENCE then GUI.updateExperienceGauge() end
     table.insert(refreshed, "status gauges")
+  end
+  
+  -- TabbedInfo Window
+  if GUI.tabbedInfoWindowContainer then
+    GUI.tabbedInfoWindowContainer:show()
+    GUI.tabbedInfoWindowContainer:raise()
+    -- Ensure Player tab is visible and updated
+    if GUI.tabbedInfoWindow and GUI.tabbedInfoWindow.Player then
+      GUI.tabbedInfoWindow.click("Player")
+      if msdp.CHARACTER_NAME then GUI.updatePlayer() end
+    end
+    table.insert(refreshed, "tabbed info window")
+  end
+  
+  -- Action Icons
+  if GUI.actionIconsContainer then
+    GUI.actionIconsContainer:show()
+    GUI.actionIconsContainer:raise()
+    if msdp.ACTIONS then GUI.updateActionIcons() end
+    table.insert(refreshed, "action icons")
   end
   
   -- Enemy gauge (combat only)
@@ -3054,13 +3222,10 @@ function GUI.initializeOrRefresh(context)
   
   -- Ensure proper z-order (delayed to allow all components to initialize)
   tempTimer(0.5, function()
-    if map.container then map.container:lower() end
+    -- Let Adjustable Containers manage their own z-order
+    -- Only raise containers that need to be on top of others
     if GUI.chatContainer then GUI.chatContainer:raise() end
-    if GUI.roomInfoContainer then GUI.roomInfoContainer:raise() end
-    if GUI.buttonPanelContainer then GUI.buttonPanelContainer:raise() end
     if GUI.actionIconsContainer then GUI.actionIconsContainer:raise() end
-    if GUI.tabbedInfoWindowContainer then GUI.tabbedInfoWindowContainer:raise() end
-    if GUI.Box7 then GUI.Box7:raise() end
   end)
   
   -- Report results
@@ -3077,14 +3242,8 @@ end
 -- while preserving other initialization functions
 -- =============================================================================
 
--- Enhanced onProtocolEnabled handler
-GUI.onProtocolEnabled = function(_, protocol)
-  if protocol == "MSDP" then
-    tempTimer(0.5, function()
-      GUI.initializeOrRefresh("MSDP protocol enabled")
-    end)
-  end
-end
+-- The onProtocolEnabled handler is defined in the MSDP script section
+-- It handles MSDP variable registration and GUI initialization
 
 -- The main initialization handlers are registered at the bottom of this script
 -- along with the original GUI.init() registration to ensure proper order
@@ -3092,6 +3251,10 @@ end
 -- Register the proper initialization sequence
 registerAnonymousEventHandler("sysLoadEvent", "GUI.init")
 registerAnonymousEventHandler("sysInstall", "GUI.init")
+
+-- Register protocol handler early to ensure it catches MSDP enablement
+-- This is critical because MSDP can be enabled before GUI.init() completes
+registerAnonymousEventHandler("sysProtocolEnabled", "GUI.onProtocolEnabled")
 
 -- Add connection-based refresh
 registerAnonymousEventHandler("sysConnectionEvent", function()

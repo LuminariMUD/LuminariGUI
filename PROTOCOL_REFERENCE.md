@@ -2,7 +2,113 @@
 
 ## Overview
 
-This document provides a comprehensive reference for the MSDP (Mud Server Data Protocol) implementation used by LuminariMUD. The protocol enables real-time communication between the MUD server and clients, providing structured data for character stats, world information, and GUI elements.
+This document provides a reference for the MSDP (Mud Server Data Protocol) implementation used by LuminariMUD. The protocol enables real-time communication between the MUD server and clients, providing structured data for character stats, world information, and GUI elements.
+
+---
+
+
+## MSDP Implementation Guide for LuminariGUI
+
+### How MSDP Works in LuminariGUI
+
+#### 1. Initialization Process
+When connecting to LuminariMUD, the MSDP protocol is automatically negotiated and initialized:
+
+1. **Protocol Negotiation**: Mudlet negotiates MSDP support with the server during connection
+2. **Event Trigger**: When MSDP is enabled, Mudlet fires a `sysProtocolEnabled` event with "MSDP" as the protocol
+3. **Variable Registration**: The GUI registers for specific MSDP variables by sending `REPORT` commands:
+   ```lua
+   sendMSDP("REPORT", "CHARACTER_NAME")
+   sendMSDP("REPORT", "HEALTH")
+   sendMSDP("REPORT", "HEALTH_MAX")
+   -- etc. for all needed variables
+   ```
+
+#### 2. State Management
+MSDP data is stored in a global `msdp` table that Mudlet automatically maintains:
+
+- **Automatic Updates**: When the server sends MSDP data, Mudlet populates `msdp.VARIABLE_NAME`
+- **Event Generation**: Mudlet raises events like `msdp.HEALTH` whenever that variable updates
+- **Direct Access**: Scripts can read current values directly: `local hp = msdp.HEALTH`
+
+#### 3. Event-Driven Architecture
+The GUI uses anonymous event handlers to react to MSDP updates:
+
+```lua
+-- Register handler for health updates
+registerAnonymousEventHandler("msdp.HEALTH", "GUI.updateHealthGauge")
+registerAnonymousEventHandler("msdp.HEALTH_MAX", "GUI.updateHealthGauge")
+   -- etc. for all needed handlers
+
+-- The update function reads from msdp table
+function GUI.updateHealthGauge()
+  local health = tonumber(msdp.HEALTH) or 0
+  local max_health = tonumber(msdp.HEALTH_MAX) or 1
+  local pct_health = (health / max_health) * 100
+  GUI.Health:setValue(pct_health, 100)
+   -- etc. for all needed tables values
+end
+```
+
+#### 4. Refresh Mechanism
+Updates happen automatically when MSDP data changes, but manual refresh is possible:
+
+1. **Automatic**: Server sends update → Mudlet updates `msdp` table → Events fire → UI refreshes
+2. **Manual Fix**: The `fix gui` command (when implemented) would:
+   - Re-register all event handlers
+   - Call all update functions with current MSDP data
+   - Useful after errors or UI glitches
+
+#### 5. Example MSDP Variables for GUI
+
+**Core Player Stats:**
+- `CHARACTER_NAME`, `LEVEL`, `CLASS`, `RACE`
+- `HEALTH` / `HEALTH_MAX`
+- `PSP` / `PSP_MAX` (spell points)
+- `MOVEMENT` / `MOVEMENT_MAX`
+
+**UI Updates:**
+- `GROUP` - JSON array of party members
+- `AFFECTS` - JSON array of status effects
+- `ACTIONS` - Available action types
+- `ROOM` - Current room data (for mapper)
+
+**Combat:**
+- `OPPONENT_NAME` / `OPPONENT_HEALTH` / `OPPONENT_HEALTH_MAX`
+- `TANK_NAME` / `TANK_HEALTH` / `TANK_HEALTH_MAX`
+
+#### 6. Data Flow Example
+```
+1. Player takes damage
+2. Server sends: MSDP HEALTH 85
+3. Mudlet updates: msdp.HEALTH = 85
+4. Mudlet raises: "msdp.HEALTH" event
+5. GUI.updateHealthGauge() executes
+6. Health bar visually updates to 85%
+```
+
+#### 7. Troubleshooting MSDP Issues
+
+**No Updates:**
+- Check if MSDP is enabled: `display(msdp)`
+- Re-send REPORT commands: `sendMSDP("REPORT", "HEALTH")`
+
+**UI Not Refreshing:**
+- Event handlers may be disconnected
+- Use `fix gui` to re-register handlers
+- Check Mudlet error console
+
+**Missing Data:**
+- Some variables may not be reported by default
+- Send explicit REPORT command for missing variables
+- Check server supports the variable (see variable list below)
+
+---
+
+
+
+
+## Protocol Details
 
 **Protocol Version:** 8  
 **Source:** KaVir's Protocol Snippet (Public Domain, February 2011)
