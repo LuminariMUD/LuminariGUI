@@ -26,7 +26,8 @@
       "mcp__Ref__ref_read_url",
       "WebFetch(domain:github.com)",
       "Bash(git push:*)",
-      "Bash(diff:*)"
+      "Bash(diff:*)",
+      "Bash(git checkout:*)"
     ],
     "deny": []
   }
