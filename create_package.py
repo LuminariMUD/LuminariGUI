@@ -5,6 +5,7 @@ Creates versioned .mpackage files with full release workflow automation
 
 Features:
 1. Complete release workflow automation (--release)
+  - Note: Make sure to update version in CHANGELOG.md and LuminariGUI.xml !
 2. Git integration (branching, tagging, committing, pushing)
 3. Version management across XML and CHANGELOG.md
 4. XML validation integration
@@ -18,6 +19,7 @@ Usage Examples:
     python3 create_package.py                    # Auto-version release build
     python3 create_package.py --dev             # Development build
     python3 create_package.py --version 2.1.0   # Specific version
+       - Note: Make sure to update version in CHANGELOG.md and LuminariGUI.xml !
     
     # Full release workflow
     python3 create_package.py --release          # Complete release process
@@ -28,6 +30,7 @@ Usage Examples:
     python3 create_package.py --git-branch       # Create release branch
     python3 create_package.py --git-commit       # Commit version updates
     python3 create_package.py --git-tag          # Create release tag
+           - Note: Make sure to update version in CHANGELOG.md and LuminariGUI.xml !
     
     # Maintenance operations
     python3 create_package.py --list             # List all packages

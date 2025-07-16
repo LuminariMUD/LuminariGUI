@@ -19,9 +19,10 @@ See [`CLAUDE.md`](CLAUDE.md) for detailed information about the XML formatting r
 
 ### 🎮 Core Gameplay Enhancement
 - **Real-time MSDP Integration**: Live character stats, room data, and game state updates
-- **Advanced Status Monitoring**: Health, movement, experience, and enemy health gauges
+- **Advanced Status Monitoring**: Health, PSP, movement, experience, and enemy health gauges
 - **Action Economy Tracking**: Visual indicators for standard, move, and swift actions
 - **Spell Casting Console**: Real-time spell casting progress and status updates
+- **Adjustable Containers**: All GUI components can be resized, repositioned, and minimized (v2.0.4.001+)
 
 ### 💬 Communication System
 - **Tabbed Chat (YATCO)**: Organized chat channels with customizable tabs
@@ -59,14 +60,14 @@ See [`CLAUDE.md`](CLAUDE.md) for detailed information about the XML formatting r
 
 1. **Download the Package**
    ```bash
-   # Download the latest .mpackage file from releases (v2.0.2 or newer)
-   wget https://github.com/LuminariMUD/LuminariGUI/releases/latest/download/LuminariGUI-v2.0.2.mpackage
+   # Download the latest .mpackage file from releases (v2.0.4.001 or newer)
+   wget https://github.com/LuminariMUD/LuminariGUI/releases/latest/download/LuminariGUI-v2.0.4.001.mpackage
    ```
 
 2. **Install in Mudlet**
    - Open Mudlet
    - Go to `Package Manager` → `Install Package`
-   - Select the downloaded `LuminariGUI-v2.0.2.mpackage` file
+   - Select the downloaded `LuminariGUI-v2.0.4.001.mpackage` file
    - Restart Mudlet when prompted
 
 3. **Connect to LuminariMUD**
@@ -119,16 +120,21 @@ stop mapping
 
 -- Debug YATCO chat system
 debug
+
+-- Toggle blink notifications for chat tabs
+dblink
 ```
 
 ### GUI Components
 
-The interface consists of several key areas:
+The interface consists of several key areas (all adjustable in v2.0.4.001+):
 
 - **Left Panel**: Character information, affects, and group status (tabbed interface)
 - **Right Panel**: Map display (Mudlet/ASCII toggle) and legend/room info
-- **Bottom Panel**: Chat system and spell casting console
-- **Status Bar**: Health, movement, experience gauges with action indicators
+- **Bottom Panel**: Chat system (separate from cast console in v2.0.4.001+)
+- **Cast Console**: Spell casting display (now independent container)
+- **Status Bar**: Health, PSP, movement, experience gauges
+- **Action Icons**: Standard, Move, Swift action indicators (separate container)
 
 ## Configuration
 
@@ -148,9 +154,9 @@ GUI.GaugeFrontCSS:set("background-color", "your_color")
 
 The GUI automatically requests these MSDP variables:
 - Character data: `CHARACTER_NAME`, `LEVEL`, `CLASS`, `RACE`, stats
-- Status data: `HEALTH`, `MOVEMENT`, `EXPERIENCE`, `POSITION`
-- Combat data: `OPPONENT_HEALTH`, `ACTIONS`
-- Environment data: `ROOM`, `GROUP`, `AFFECTS`
+- Status data: `HEALTH`, `HEALTH_MAX`, `PSP`, `PSP_MAX`, `MOVEMENT`, `MOVEMENT_MAX`, `EXPERIENCE`, `POSITION`
+- Combat data: `OPPONENT_HEALTH`, `ACTIONS` (Standard, Move, Swift)
+- Environment data: `ROOM`, `GROUP`, `AFFECTS`, `WORLD_TIME`
 
 ## Troubleshooting
 
@@ -175,6 +181,12 @@ The GUI automatically requests these MSDP variables:
 **Enemy gauge showing when not in combat:**
 - This has been fixed in v2.0.2 - the gauge now properly hides when not in combat
 - Use `fix gui` to refresh if the issue persists
+
+**Adjustable containers not working:**
+- Ensure you have v2.0.4.001 or newer
+- Container settings are saved in `getMudletHomeDir() .. "/LuminariGUI_AdjustableContainers/"`
+- Use `fix gui` to refresh all containers
+- Container settings persist across sessions
 
 **Mapping not updating:**
 - Verify MSDP room data is being received: `debug`
@@ -206,40 +218,41 @@ debugc msdp
 
 This project includes comprehensive documentation for all aspects of development, usage, and maintenance:
 
-#### **🏗️ Architecture & Development**
-- **[`ARCHITECTURE.md`](ARCHITECTURE.md)**: Detailed system architecture, component relationships, and design patterns
-- **[`API.md`](API.md)**: Complete developer API reference with functions, events, and integration patterns
-- **[`CONTRIBUTING.md`](CONTRIBUTING.md)**: Development guidelines, coding standards, and contribution workflow
-
-#### **⚙️ Configuration & Setup**
-- **[`CONFIGURATION.md`](CONFIGURATION.md)**: Advanced configuration options, customization, and optimization
-- **[`DEPLOYMENT.md`](DEPLOYMENT.md)**: Installation procedures, environment setup, and deployment strategies
-- **[`TROUBLESHOOTING.md`](TROUBLESHOOTING.md)**: Common issues, solutions, and debugging procedures
-
-#### **📋 Project Management**
+#### **🏗️ Core Documentation**
+- **[`README.md`](README.md)**: Main project documentation with features, installation, and usage
 - **[`CHANGELOG.md`](CHANGELOG.md)**: Version history, feature additions, and breaking changes
-- **[`CLAUDE.md`](CLAUDE.md)**: AI development assistance documentation and Claude-specific notes
+- **[`CLAUDE.md`](CLAUDE.md)**: AI development assistance documentation and Mudlet XML specifics
 - **[`LICENSE`](LICENSE)**: MIT License terms and conditions
 
-#### **🔧 Development Tools**
+#### **🔧 Development & Tools**
+- **[`MUDLET_DEVELOPMENT.md`](MUDLET_DEVELOPMENT.md)**: Comprehensive Mudlet package development guide
+- **[`PYTHON_TOOLS.md`](PYTHON_TOOLS.md)**: Python toolchain documentation (validation, formatting, packaging)
+- **[`PROTOCOL_REFERENCE.md`](PROTOCOL_REFERENCE.md)**: MSDP protocol implementation reference
+- **[`TASK_LIST.md`](TASK_LIST.md)**: Development task tracking and TODO lists
+
+#### **🧪 Testing & Quality**
+- **[`tests/README.md`](tests/README.md)**: Testing infrastructure documentation
 - **[`create_package.py`](create_package.py)**: Automated .mpackage creation with optional testing integration
 - **[`format_xml.py`](format_xml.py)**: XML formatting utility for maintaining code standards
 - **[`validate_package.py`](validate_package.py)**: Package validation tool with integrated Lua syntax checking
 - **[`run_tests.py`](run_tests.py)**: Comprehensive test suite runner with parallel execution
-- **Testing Infrastructure**: Complete testing framework for code quality, syntax, functions, events, system, and performance
-- **[`.cursorrules`](.cursorrules)**: Cursor IDE configuration and development rules
+
+#### **🎨 Resources**
+- **[`images/README`](images/README)**: Image assets documentation
+- **[`images/affected_by/README`](images/affected_by/README)**: Status effect icons documentation
+- **[`images/affected_by/STATUS_EFFECTS.md`](images/affected_by/STATUS_EFFECTS.md)**: Detailed status effects reference
 
 ### Quick Reference
 
 | Need to... | See Documentation |
 |------------|------------------|
-| **Understand the system** | [`ARCHITECTURE.md`](ARCHITECTURE.md) |
-| **Develop/extend functionality** | [`API.md`](API.md) |
-| **Configure advanced options** | [`CONFIGURATION.md`](CONFIGURATION.md) |
-| **Contribute to the project** | [`CONTRIBUTING.md`](CONTRIBUTING.md) |
-| **Deploy/install** | [`DEPLOYMENT.md`](DEPLOYMENT.md) |
-| **Fix issues** | [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md) |
-| **Prepare package for release** | [`PACKAGING.md`](PACKAGING.md) |
+| **Get started with the GUI** | [`README.md`](README.md) |
+| **Understand Mudlet development** | [`MUDLET_DEVELOPMENT.md`](MUDLET_DEVELOPMENT.md) |
+| **Work with Python tools** | [`PYTHON_TOOLS.md`](PYTHON_TOOLS.md) |
+| **Understand MSDP protocol** | [`PROTOCOL_REFERENCE.md`](PROTOCOL_REFERENCE.md) |
+| **Handle Mudlet XML specifics** | [`CLAUDE.md`](CLAUDE.md) |
+| **Check development tasks** | [`TASK_LIST.md`](TASK_LIST.md) |
+| **Run tests** | [`tests/README.md`](tests/README.md) |
 | **Create .mpackage files** | [`create_package.py`](create_package.py) |
 | **Check version changes** | [`CHANGELOG.md`](CHANGELOG.md) |
 
@@ -249,6 +262,7 @@ This project includes comprehensive documentation for all aspects of development
 
 LuminariGUI uses an event-driven architecture built on:
 - **Geyser Framework**: UI component system
+- **Adjustable Containers**: User-customizable GUI layout (v2.0.4.001+)
 - **MSDP Protocol**: Real-time game data
 - **Event System**: Mudlet's event handling for data flow
 - **YATCO Integration**: Tabbed chat functionality
@@ -265,7 +279,7 @@ python create_package.py --skip-validation
 python create_package.py --dev --skip-validation
 
 # Create release (skip validation due to Mudlet XML)
-python create_package.py --release --version 2.0.2 --skip-validation
+python create_package.py --release --version 2.0.4.001 --skip-validation
 
 # Create with custom version
 python create_package.py --version 2.1.0 --skip-validation
@@ -307,7 +321,7 @@ python format_xml.py          # ❌ Cannot parse Mudlet XML
 - **Metadata generation** with proper config.lua
 - **Cross-platform compatibility** (Windows, Linux, macOS)
 
-See [`PACKAGING.md`](PACKAGING.md) for detailed usage instructions and release procedures.
+See [`PYTHON_TOOLS.md`](PYTHON_TOOLS.md) for detailed usage instructions and release procedures.
 
 ### Extension Points
 

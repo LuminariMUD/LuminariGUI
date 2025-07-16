@@ -2,10 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+**IMPORTANT**: When releasing a new version, update the version number in:
+1. This CHANGELOG.md file (add new version entry)
+2. LuminariGUI.xml (line 3: `<MudletPackage version="X.X.X">`)
+3. README.md (update download links and version references)
+
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-## [Unreleased]
 
 ## [2.0.4.001] - 2025-07-16
 

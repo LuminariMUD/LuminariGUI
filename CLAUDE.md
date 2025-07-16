@@ -98,7 +98,7 @@ The release workflow automatically:
 
 ### Main Components
 
-1. **LuminariGUI.xml** (3532 lines) - Single package file containing:
+1. **LuminariGUI.xml** - Single package file containing:
    - **Triggers**: Pattern matchers for game text (chat channels, combat, status updates)
    - **Scripts**: Core functionality modules
    - **Aliases**: User command shortcuts
@@ -107,8 +107,12 @@ The release workflow automatically:
 
 - **MSDPMapper**: Handles MSDP protocol communication for automatic room mapping
 - **GUI Framework**: Uses Geyser (Mudlet's UI framework) for layout management
-- **Chat System**: Implements tabbed chat using demonnic's framework
+- **AdjustableContainers**: User-customizable GUI system (v2.0.4.001+)
+- **Chat System**: Implements tabbed chat using demonnic's YATCO framework
 - **CSSMan**: CSS styling manager for UI components
+- **MSDP**: Complete protocol handling for all game data
+- **Cast Console**: Spell casting progress display
+- **Header Icons**: Status effect icon display system
 
 ### Code Organization Pattern
 
@@ -137,15 +141,43 @@ Within the XML, code is structured as:
 3. **Event System**: The package uses Mudlet events extensively:
    - Custom events are raised with `raiseEvent()`
    - Event handlers are registered with `registerAnonymousEventHandler()`
+   - Key events: `sysProtocolEnabled`, `msdp.*` variable updates, GUI refresh events
 
 4. **MSDP Protocol**: Server communication uses MSDP for data exchange:
-   - Room information for mapping
-   - Character stats and status
-   - Game state updates
+   - Room information for mapping (ROOM_NAME, ROOM_EXITS, ROOM_VNUM)
+   - Character stats (HEALTH/MAX, PSP/MAX, MOVEMENT/MAX, EXPERIENCE)
+   - Combat data (OPPONENT_HEALTH, ACTIONS)
+   - Group information (GROUP array with member data)
+   - Status effects (AFFECTS, various affected_by flags)
+   - Game state updates (POSITION, WORLD_TIME)
 
 5. **Image Assets**: Status effect icons and UI elements are in `images/` directory:
    - `affected_by/` - Status effect icons (60+ PNG files)
-   - `buttons/`, `frame/` - UI graphics
+   - `buttons/` - UI button graphics
+   - `frame/` - Border frame graphics (9-piece system)
+   - `ui_texture.jpg` - Background texture for containers
+   - Various PNG files for UI elements
+
+### Adjustable Container System (v2.0.4.001+)
+
+The GUI uses the Adjustable Container framework for user customization:
+
+#### Key Features:
+- All major GUI components are now adjustable containers
+- Users can resize, reposition, and minimize components
+- Settings persist across sessions in `getMudletHomeDir() .. "/LuminariGUI_AdjustableContainers/"`
+- Profile system supports multiple layouts (currently uses "default")
+
+#### Implemented Containers:
+1. **LuminariGUI_TabbedInfoWindow** - Player/Affects/Group tabs
+2. **LuminariGUI_RoomInfo** - Room information and legend
+3. **LuminariGUI_ButtonPanel** - Control buttons
+4. **LuminariGUI_ChatContainer** - YATCO chat system
+5. **LuminariGUI_GaugeContainer** - Health/PSP/Movement/Enemy gauges
+6. **LuminariGUI_Map** - Mudlet mapper display
+7. **LuminariGUI_ASCIIMap** - ASCII map display
+8. **LuminariGUI_CastConsole** - Spell casting console
+9. **LuminariGUI_ActionIcons** - Action economy indicators
 
 ### Development Workflow
 
@@ -172,10 +204,13 @@ Within the XML, code is structured as:
   - Re-registers all event handlers (Group tab, gauges, Player tab, ASCII map)
   - Re-initializes chat system if needed
   - Manually refreshes all displays with current MSDP data
+  - Refreshes all Adjustable Containers
   - Reports exactly which components were refreshed
 - **Fix chat positioning**: `fix chat` - Repositions chat window if it appears in wrong location
 - **Toggle group display**: `show self` - Shows/hides yourself in the Group tab
 - **Toggle chat gagging**: `gag chat` - Enables/disables chat message gagging
+- **Debug commands**: `debug`, `debug list`, `debugc <category>` - Debug system control
+- **Toggle chat blink**: `dblink` - Enable/disable tab blinking for new messages
 
 ### Testing Approach
 
