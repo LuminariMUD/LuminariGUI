@@ -235,6 +235,34 @@ def get_current_branch():
     
     return stdout
 
+def get_highest_release_branch():
+    """Get the highest version release branch, or master if none exist"""
+    stdout, stderr, returncode = run_git_command(['branch', '-a'])
+    if returncode != 0:
+        return "master"
+    
+    branches = stdout.strip().split('\n')
+    release_branches = []
+    
+    for branch in branches:
+        branch = branch.strip().replace('* ', '').strip()
+        if branch.startswith('release/v'):
+            try:
+                # Extract version from branch name
+                version_str = branch.replace('release/v', '')
+                version_parts = version_str.split('.')
+                if len(version_parts) >= 3:
+                    release_branches.append((branch, version_parts))
+            except:
+                continue
+    
+    if not release_branches:
+        return "master"
+    
+    # Sort by version (major, minor, patch)
+    release_branches.sort(key=lambda x: (int(x[1][0]), int(x[1][1]), int(x[1][2])), reverse=True)
+    return release_branches[0][0]
+
 def create_release_branch(version):
     """Create and checkout a release branch"""
     branch_name = f"release/v{version}"
@@ -647,6 +675,23 @@ def execute_release_workflow(xml_file, version, dry_run=False, push=False, force
         if not commit_release_changes(version):
             print("⚠️  Warning: Could not commit changes")
     
+    # ALSO update master with the changes
+    print("\n   Also updating master branch...")
+    if dry_run:
+        print("   [DRY RUN] Would merge changes to master")
+    else:
+        stdout, stderr, returncode = run_git_command(['checkout', 'master'])
+        if returncode != 0:
+            print(f"⚠️  Warning: Could not switch to master: {stderr}")
+        else:
+            stdout, stderr, returncode = run_git_command(['merge', release_branch, '--no-ff', '-m', f'Merge release v{version} to master'])
+            if returncode != 0:
+                print(f"⚠️  Warning: Could not merge to master: {stderr}")
+            else:
+                print("   ✅ Master branch updated with release changes")
+            # Switch back to release branch
+            run_git_command(['checkout', release_branch])
+    
     # Step 4: Package creation
     print("\n📦 Step 4: Package creation")
     
@@ -674,12 +719,16 @@ def execute_release_workflow(xml_file, version, dry_run=False, push=False, force
     if push:
         print("\n📤 Step 6: Push to remote")
         
-        print(f"   Pushing branch: {release_branch}")
+        print(f"   Pushing both master and {release_branch}...")
         if dry_run:
-            print(f"   [DRY RUN] Would push branch {release_branch}")
+            print(f"   [DRY RUN] Would push both branches and tags")
         else:
+            # Push release branch
             if not push_git_changes(release_branch, push_tags=True):
-                print("⚠️  Warning: Could not push to remote")
+                print("⚠️  Warning: Could not push release branch to remote")
+            # Also push master
+            if not push_git_changes("master", push_tags=False):
+                print("⚠️  Warning: Could not push master to remote")
     
     # Summary
     print(f"\n✅ Release workflow completed for version {version}")
@@ -691,8 +740,8 @@ def execute_release_workflow(xml_file, version, dry_run=False, push=False, force
         if not push:
             print("   3. Push changes to remote when ready:")
             print(f"      git push origin {release_branch}")
+            print("      git push origin master")
             print("      git push origin --tags")
-        print(f"   4. Merge {release_branch} to main branch when ready")
     
     return True
 
@@ -1027,6 +1076,21 @@ Output Structure:
     if not git_operations_performed or args.dev or not (args.git_branch or args.git_commit or args.git_tag):
         print(f"📦 Creating package for version {version}")
         
+        # For dev packages, commit to highest release branch
+        if args.dev:
+            highest_branch = get_highest_release_branch()
+            current_branch = get_current_branch()
+            
+            if current_branch != highest_branch:
+                print(f"\n🌿 Switching to highest branch: {highest_branch}")
+                stdout, stderr, returncode = run_git_command(['checkout', highest_branch])
+                if returncode != 0:
+                    print(f"⚠️  Warning: Could not switch to {highest_branch}: {stderr}")
+            
+            # Add and commit the dev package
+            dev_package_name = f"LuminariGUI-v{version}-dev-{datetime.now().strftime('%Y%m%d-%H%M%S')}.mpackage"
+            print(f"   Will commit dev package to: {highest_branch}")
+        
         # Run XML validation unless skipped
         if not args.skip_validation:
             if not validate_package_file(args.xml, args.run_tests):
@@ -1038,6 +1102,28 @@ Output Structure:
         if success:
             print("\n✅ Package creation completed successfully!")
             print("📁 Package saved to Releases/ directory")
+            
+            # Commit dev packages to the highest branch
+            if args.dev:
+                print(f"\n📝 Committing dev package to {highest_branch}")
+                # Find the actual dev package file that was created
+                import glob
+                dev_packages = glob.glob(f"Releases/LuminariGUI-v{version}-dev-*.mpackage")
+                if dev_packages:
+                    latest_package = max(dev_packages, key=os.path.getctime)
+                    package_name = os.path.basename(latest_package)
+                    
+                    # Add and commit the package
+                    stdout, stderr, returncode = run_git_command(['add', latest_package])
+                    if returncode == 0:
+                        commit_msg = f"Add dev package {package_name}"
+                        stdout, stderr, returncode = run_git_command(['commit', '-m', commit_msg])
+                        if returncode == 0:
+                            print(f"   ✅ Committed {package_name} to {highest_branch}")
+                        else:
+                            print(f"   ⚠️  Could not commit: {stderr}")
+                    else:
+                        print(f"   ⚠️  Could not add package: {stderr}")
             
             if not args.dev:
                 print("\n💡 Next steps:")
