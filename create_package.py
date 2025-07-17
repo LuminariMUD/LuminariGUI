@@ -64,17 +64,31 @@ def get_version_from_changelog():
         with open('CHANGELOG.md', 'r', encoding='utf-8') as f:
             content = f.read()
             
-        # Look for version patterns like [2.0.0] - must be numeric versions
-        versions = re.findall(r'\[([0-9]+\.[0-9]+\.[0-9]+)\]', content)
+        # Look for version patterns like [2.0.0] or [2.0.4.007] - must be numeric versions
+        versions = re.findall(r'\[([0-9]+\.[0-9]+\.[0-9]+(?:\.[0-9]+)?)\]', content)
         
         # Return first semantic version found
         if versions:
             return versions[0]
         
-        return "2.0.0"  # Default fallback
+        return None  # No default - force explicit version
     except Exception as e:
         print(f"⚠️  Warning: Could not read CHANGELOG.md: {e}")
-        return "2.0.0"
+        return None
+
+def get_version_from_xml(xml_file="LuminariGUI.xml"):
+    """Extract version from XML file's MudletPackage element"""
+    try:
+        with open(xml_file, 'r', encoding='utf-8') as f:
+            # Read first few lines to find version
+            for line in f:
+                match = re.search(r'<MudletPackage version="([^"]+)"', line)
+                if match:
+                    return match.group(1)
+        return None
+    except Exception as e:
+        print(f"⚠️  Warning: Could not read version from {xml_file}: {e}")
+        return None
 
 def create_config_lua(version):
     """Create config.lua with proper metadata"""
@@ -689,9 +703,11 @@ def create_mpackage(xml_file="LuminariGUI.xml", version=None, is_dev=False):
     if not validate_xml_exists(xml_file):
         return False
     
-    # Get version from changelog if not provided
+    # Version is required
     if version is None:
-        version = get_version_from_changelog()
+        print("❌ ERROR: Version is required for package creation")
+        print("💡 Use --version to specify the version explicitly")
+        return False
     
     # Setup releases directory
     releases_dir = setup_releases_directory()
@@ -934,7 +950,18 @@ Output Structure:
         return
     
     # Get version for operations that need it
-    version = args.version or get_version_from_changelog()
+    if args.version:
+        version = args.version
+    else:
+        # Try CHANGELOG first (most likely to have latest version)
+        version = get_version_from_changelog()
+        if not version:
+            # Fall back to XML
+            version = get_version_from_xml(args.xml)
+        if not version:
+            print("❌ ERROR: No version specified and could not detect version from XML or CHANGELOG")
+            print("💡 Use --version to specify the version explicitly")
+            sys.exit(1)
     
     if args.verbose:
         print(f"📂 Source XML: {args.xml}")

@@ -25,10 +25,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Fixed button text persistence - "Legend/Room" now shows correctly in both toggle states
   - All control buttons (Legend/Room, Mudlet, ASCII) now function properly again
 
+- **Package Creation Script**: Fixed critical version detection bug in create_package.py
+  - Script was defaulting to ancient version 2.0.0 when auto-detection failed
+  - Version regex only supported 3-part versions (X.Y.Z), not 4-part (X.Y.Z.NNN)
+  - Now supports both version formats and reads from XML file as fallback
+  - Removed all hardcoded default versions - script now requires explicit version
+  - Prevents silent creation of incorrectly versioned packages
+
 ### Technical Details
 - Button system requires exact naming match between array values and callback references
 - Forward slashes in button names create invalid Lua variable names
 - Scrollbar styling uses Qt stylesheets applied at profile level
+- Package script checks CHANGELOG.md first, then XML file for version detection
 
 ## [2.0.4.007] - 2025-07-17
 
