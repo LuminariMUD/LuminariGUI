@@ -18,6 +18,7 @@ Usage Examples:
     # Simple package creation
     python3 create_package.py                    # Auto-version release build
     python3 create_package.py --dev             # Development build
+    python3 create_package.py --test            # Same as --dev (development build)
     python3 create_package.py --version 2.1.0   # Specific version
        - Note: Make sure to update version in CHANGELOG.md and LuminariGUI.xml !
     
@@ -252,15 +253,22 @@ def get_highest_release_branch():
                 version_str = branch.replace('release/v', '')
                 version_parts = version_str.split('.')
                 if len(version_parts) >= 3:
-                    release_branches.append((branch, version_parts))
+                    # Convert all parts to integers, handling 4-part versions
+                    version_tuple = []
+                    for i, part in enumerate(version_parts):
+                        version_tuple.append(int(part))
+                    # Pad with zeros if less than 4 parts for consistent sorting
+                    while len(version_tuple) < 4:
+                        version_tuple.append(0)
+                    release_branches.append((branch, version_tuple))
             except:
                 continue
     
     if not release_branches:
         return "master"
     
-    # Sort by version (major, minor, patch)
-    release_branches.sort(key=lambda x: (int(x[1][0]), int(x[1][1]), int(x[1][2])), reverse=True)
+    # Sort by version (major, minor, patch, build) - all 4 parts
+    release_branches.sort(key=lambda x: x[1], reverse=True)
     return release_branches[0][0]
 
 def create_release_branch(version):
@@ -913,6 +921,7 @@ Examples:
   python3 create_package.py                         # Release build with auto-version
   python3 create_package.py --version 2.1.0        # Release build with specific version
   python3 create_package.py --dev                  # Development build with timestamp
+  python3 create_package.py --test                 # Same as --dev (development build)
   python3 create_package.py --release              # Full release workflow
   python3 create_package.py --list                 # List existing releases
   python3 create_package.py --migrate-metadata     # Generate missing metadata files
@@ -942,6 +951,8 @@ Output Structure:
                        help='Override version (default: auto-detect from CHANGELOG.md)')
     parser.add_argument('--dev', action='store_true',
                        help='Create development build with timestamp')
+    parser.add_argument('--test', action='store_true',
+                       help='Same as --dev (create development build with timestamp)')
     parser.add_argument('--verbose', '-v', action='store_true',
                        help='Enable verbose output')
     
@@ -981,6 +992,10 @@ Output Structure:
                        help='Skip git status check (use with caution)')
     
     args = parser.parse_args()
+    
+    # Handle --test as an alias for --dev
+    if args.test:
+        args.dev = True
     
     print("🚀 LuminariGUI Package Creator - Enhanced Release System")
     print("=" * 60)
