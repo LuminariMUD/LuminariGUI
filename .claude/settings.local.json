@@ -28,7 +28,9 @@
       "Bash(git push:*)",
       "Bash(diff:*)",
       "Bash(git checkout:*)",
-      "WebFetch(domain:wiki.mudlet.org)"
+      "WebFetch(domain:wiki.mudlet.org)",
+      "Bash(git merge:*)",
+      "Bash(git rm:*)"
     ],
     "deny": []
   }
