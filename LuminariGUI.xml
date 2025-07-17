@@ -2484,13 +2484,13 @@ function GUI.buttonWindow.legendClick()
     GUI.buttonWindow.Legend:show()
 		GUI.buttonWindow.roomOrLegend = "Legend"
 		GUI.updateRoom()
-		GUI.buttonWindow.Legendbutton:echo("Legend", "yellow", "c")
+		GUI.buttonWindow.Legendbutton:echo("Legend/Room", "yellow", "c")
 	elseif GUI.buttonWindow.roomOrLegend == "Legend" then
 		GUI.updateLegend()
 		GUI.buttonWindow.roomInfo:show()
     GUI.buttonWindow.Legend:hide()
 		GUI.buttonWindow.roomOrLegend = "Room"
-		GUI.buttonWindow.Legendbutton:echo("Legend", "white", "c")
+		GUI.buttonWindow.Legendbutton:echo("Legend/Room", "white", "c")
 	end
 end
 
@@ -2596,7 +2596,7 @@ function GUI.buttonWindow.init()
     GUI.buttonWindow[v .. "button"] =
       Geyser.Label:new({name = "GUI.buttonWindow." .. v .. "button"}, GUI.buttonWindow.buttonContainer)
     GUI.buttonWindow[v .. "button"]:setStyleSheet(GUI.buttonWindowCSS:getCSS())
-    GUI.buttonWindow[v .. "button"]:echo("&lt;center&gt;" .. v)
+    GUI.buttonWindow[v .. "button"]:echo("&lt;center&gt;" .. (v == "Legend" and "Legend/Room" or v))
   end
 
 --Legend Call Back
