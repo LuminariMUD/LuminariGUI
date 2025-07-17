@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE MudletPackage>
-<MudletPackage version="2.0.4.010">
+<MudletPackage version="2.0.4.011">
 	<TriggerPackage>
 		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 			<name>LuminariGUI</name>
@@ -1717,13 +1717,16 @@ function GUI.init_action_icons()
     h_policy = Geyser.Fixed,
     v_policy = Geyser.Fixed,
   }, GUI.actionIconsHBox)
-  GUI.ActionIconCSS:set(
-    "border-image",
-    [[url("]] ..
-    getMudletHomeDir():gsub("\\", "/") ..
-    [[/LuminariGUI/images/action-standard.png");]]
-  )
-  GUI.StandardActionIcon:setStyleSheet(GUI.ActionIconCSS:getCSS())
+  GUI.StandardActionIcon:setStyleSheet([[
+    QLabel { 
+      border-image: url("]] ..
+      getMudletHomeDir():gsub("\\", "/") ..
+      [[/LuminariGUI/images/action-standard.png"); 
+      margin: 0px; 
+      vertical-align: top; 
+    }
+  ]])
+  GUI.StandardActionIcon:setToolTip("Standard Action", "10")
   
   -- Create move action icon
   GUI.MoveActionIcon = Geyser.Label:new({
@@ -1733,11 +1736,14 @@ function GUI.init_action_icons()
     h_policy = Geyser.Fixed,
     v_policy = Geyser.Fixed,
   }, GUI.actionIconsHBox)
-  GUI.ActionIconCSS:set(
-    "border-image",
-    [[url("]] .. getMudletHomeDir():gsub("\\", "/") .. [[/LuminariGUI/images/action-move.png");]]
-  )
-  GUI.MoveActionIcon:setStyleSheet(GUI.ActionIconCSS:getCSS())
+  GUI.MoveActionIcon:setStyleSheet([[
+    QLabel { 
+      border-image: url("]] .. getMudletHomeDir():gsub("\\", "/") .. [[/LuminariGUI/images/action-move.png"); 
+      margin: 0px; 
+      vertical-align: top; 
+    }
+  ]])
+  GUI.MoveActionIcon:setToolTip("Move Action", "10")
   
   -- Create swift action icon
   GUI.SwiftActionIcon = Geyser.Label:new({
@@ -1747,11 +1753,14 @@ function GUI.init_action_icons()
     h_policy = Geyser.Fixed,
     v_policy = Geyser.Fixed,
   }, GUI.actionIconsHBox)
-  GUI.ActionIconCSS:set(
-    "border-image",
-    [[url("]] .. getMudletHomeDir():gsub("\\", "/") .. [[/LuminariGUI/images/action-swift.png");]]
-  )
-  GUI.SwiftActionIcon:setStyleSheet(GUI.ActionIconCSS:getCSS())
+  GUI.SwiftActionIcon:setStyleSheet([[
+    QLabel { 
+      border-image: url("]] .. getMudletHomeDir():gsub("\\", "/") .. [[/LuminariGUI/images/action-swift.png"); 
+      margin: 0px; 
+      vertical-align: top; 
+    }
+  ]])
+  GUI.SwiftActionIcon:setToolTip("Swift Action", "10")
   
   -- Show the container
   GUI.actionIconsContainer:show()
@@ -2220,6 +2229,9 @@ function GUI.updateSLAffects()
 end
 
 function GUI.updateAffectIcons()
+  -- Also update spell-like affects display
+  GUI.updateSLAffects()
+  
   if msdp.AFFECTS and msdp.AFFECTS.AFFECTED_BY and #msdp.AFFECTS.AFFECTED_BY &gt; 0 then
     -- We have a status to process!  Do MODES first.
     affected_by = msdp.AFFECTS.AFFECTED_BY
@@ -2243,17 +2255,18 @@ function GUI.updateAffectIcons()
         )
       then
         -- Create the Icon!				
-        GUI.Affects.Modes.IconCSS:set(
-          "border-image",
-          [[url("]] ..
-          getMudletHomeDir():gsub("\\", "/") ..
-          [[/LuminariGUI/images/affected_by/]] ..
-          affected_by[i].NAME ..
-          [[.png");]]
-        )
-        GUI.Affects.Modes.Labels[GUI.Affects.Modes.current_icon]:setStyleSheet(
-          GUI.Affects.Modes.IconCSS:getCSS()
-        )
+        GUI.Affects.Modes.Labels[GUI.Affects.Modes.current_icon]:setStyleSheet([[
+          QLabel { 
+            border-image: url("]] ..
+            getMudletHomeDir():gsub("\\", "/") ..
+            [[/LuminariGUI/images/affected_by/]] ..
+            affected_by[i].NAME ..
+            [[.png"); 
+            margin: 0px; 
+          }
+        ]])
+        -- Add tooltip for mode icons
+        GUI.Affects.Modes.Labels[GUI.Affects.Modes.current_icon]:setToolTip(affected_by[i].NAME:gsub("_", " "), "10")
         GUI.Affects.Modes.Labels[GUI.Affects.Modes.current_icon]:show()
         GUI.Affects.Modes.current_icon = GUI.Affects.Modes.current_icon + 1
       else
@@ -2265,17 +2278,18 @@ function GUI.updateAffectIcons()
           )
         then
           -- Create the Icon!				
-          GUI.Affects.IconCSS:set(
-            "border-image",
-            [[url("]] ..
-            getMudletHomeDir():gsub("\\", "/") ..
-            [[/LuminariGUI/images/affected_by/]] ..
-            affected_by[i].NAME ..
-            [[.png");]]
-          )
-          GUI.Affects.Rows[GUI.Affects.current_row].Labels[GUI.Affects.current_column]:setStyleSheet(
-            GUI.Affects.IconCSS:getCSS()
-          )
+          GUI.Affects.Rows[GUI.Affects.current_row].Labels[GUI.Affects.current_column]:setStyleSheet([[
+            QLabel { 
+              border-image: url("]] ..
+              getMudletHomeDir():gsub("\\", "/") ..
+              [[/LuminariGUI/images/affected_by/]] ..
+              affected_by[i].NAME ..
+              [[.png"); 
+              margin: 0px; 
+            }
+          ]])
+          -- Add tooltip for status effect icons
+          GUI.Affects.Rows[GUI.Affects.current_row].Labels[GUI.Affects.current_column]:setToolTip(affected_by[i].NAME:gsub("_", " "), "10")
           GUI.Affects.Rows[GUI.Affects.current_row].Labels[GUI.Affects.current_column]:show()
           GUI.Affects.current_column = GUI.Affects.current_column + 1
           if GUI.Affects.current_column &gt; GUI.Affects.num_icons_row then

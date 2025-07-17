@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.4.011] - 2025-07-17
+
+### Added
+- **Icon Tooltips**: Added hover tooltips to all icon displays
+  - Status effect icons in the header now show effect names
+  - Status effect icons in the gauge container show effect names
+  - Action economy icons show "Standard Action", "Move Action", and "Swift Action"
+  - All tooltips display for 10 seconds on hover
+
+### Fixed
+- **Spell-Like Affects Display**: Fixed bug where spell-like affects weren't being displayed in the Affects tab
+  - Added missing call to `GUI.updateSLAffects()` in the update cycle
+  - Now properly shows spell durations, modifiers, and types
+- **Tooltip Readability**: Implemented proper CSS technique to ensure all tooltips have clean white backgrounds
+  - Used QLabel selector to prevent border-image inheritance to tooltips
+  - Ensures tooltip text is always readable against white background
+
+### Technical Changes
+- Modified icon CSS implementation to use direct `setStyleSheet()` with QLabel selectors
+- Removed incorrect CSSMan usage that was incompatible with selector syntax
+
 ## [2.0.4.010] - 2025-07-17
 
 ### Complete Recovery and Fix Implementation
