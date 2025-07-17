@@ -5,10 +5,105 @@ All notable changes to this project will be documented in this file.
 **IMPORTANT**: When releasing a new version, update the version number in:
 1. This CHANGELOG.md file (add new version entry)
 2. LuminariGUI.xml (line 3: `<MudletPackage version="X.X.X">`)
-3. README.md (update download links and version references)
+3. *Only on release versions: README.md (update download links and version references)
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [2.0.4.007] - 2025-07-17
+
+### Released
+- Production release after testing and verification
+- All features from 2.0.4.006 confirmed working as expected
+
+## [2.0.4.006] - 2025-07-17
+
+### Added
+- **Horizontal Scroll Toggle**: New `hscroll` command for main window
+  - Toggles between word wrap (default) and horizontal scrolling modes
+  - When enabled: Disables word wrap, shows horizontal scrollbar for long lines
+  - When disabled: Returns to normal word wrapping at ~100 characters
+  - Setting persists across sessions via `GUI.toggles.lua`
+  - Requires Mudlet 4.10+ for full functionality
+
+### Changed
+- **Container Layout Adjustments**: Optimized right-side container proportions
+  - Action Icons container: Increased height from 8% to 11% (37.5% more space)
+  - Action Icons container: Moved up from y=92% to y=89%
+  - Room Info container: Reduced height from 42% to 39%
+  - Better visual balance for action economy display
+
+### Technical Details
+- Added version checking for `enableHorizontalScrollBar` compatibility
+- Horizontal scrollbar uses existing dark theme styling from v2.0.4.005
+- Main window scrolling behavior independent of GUI components
+
+## [2.0.4.005] - 2025-07-17
+
+### Fixed
+- **Container Content Sizing**: Fixed content appearing too large in adjustable containers
+  - All content now properly accounts for title bar (~25px) and container padding (9px)
+  - Updated positioning for: Status Gauges, Button Panel, Room Info, Tabbed Info Window, Action Icons, ASCII Map
+  - Standardized positioning pattern: `x=9, y=25, width="-18", height="-34"`
+
+- **Chat Container**: Fixed YATCO chat content overflow using wrapper container approach
+  - Created inner container (`GUI.chatContainerInner`) with proper offsets
+  - YATCO now builds inside the wrapper, respecting title bar and padding
+  - Maintains full YATCO functionality without modifying library code
+
+- **Action Icons Alignment**: Fixed icons appearing too low in container
+  - Added `vertical-align: top` CSS property to align icons to top of HBox
+  - Icons now properly positioned without excessive gap below title bar
+
+- **Horizontal Scrollbar**: Added missing horizontal scrollbar styling
+  - Previously invisible due to lack of custom styling
+  - Now matches vertical scrollbar appearance (dark theme)
+  - Same background (#202020) and border (#515151) colors
+
+- **Fix GUI Command**: Added defensive check to prevent error on first install
+  - Shows helpful message instead of Lua error if GUI not fully loaded
+  - Instructs users to reload profile if needed
+
+### Technical Details
+- Container content positioning now consistently accounts for Adjustable Container structure
+- Wrapper container pattern used for third-party components (YATCO)
+- CSS vertical alignment used for icon positioning without structural changes
+- Complete scrollbar styling for both orientations
+
+## [2.0.4.004] - 2025-07-17
+
+### Fixed
+- **Container Content Sizing**: Initial attempt to fix content sizing in adjustable containers
+  - Note: This version had incomplete fixes, see 2.0.4.005 for complete solution
+
+## [2.0.4.003] - 2025-07-17
+
+### Fixed
+- **Enhanced `fix gui` Command**: Now restores ALL adjustable containers when used
+  - Previously only restored 5 containers (Status Gauges, Character Stats, Action Icons, Chat, Mudlet Map)
+  - Now also restores: Button Panel, Room Info Container, Cast Console, and ASCII Map Container
+  - All 9 containers can be recovered after accidentally closing them
+  - Room info data is refreshed when the container is restored
+  - ASCII Map container visibility is properly handled based on current map mode
+
+### Technical Details
+- Added explicit `:show()` and `:raise()` calls for missing containers in `GUI.initializeOrRefresh()`
+- Maintains proper z-order and visibility states for all containers
+- ASCII Map container is always created but visibility controlled by ASCII/Mudlet toggle
+
+## [2.0.4.002] - 2025-07-17
+
+### Changed
+- **Adjustable Containers**: Added `noClose = true` parameter to prevent accidental container closure
+  - Added to default container style configuration
+  - Applied to all 9 container creation calls
+  - Note: This parameter may not actually remove close buttons in current Mudlet version
+  - Users can still minimize and lock containers
+
+### Technical Details
+- Modified `GUI.AdjustableContainers.defaultStyle` to include `noClose = true`
+- Updated all container creation calls to explicitly include the parameter
+- No functional changes to container behavior aside from close button attempt
 
 ## [2.0.4.001] - 2025-07-16
 

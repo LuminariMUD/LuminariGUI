@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE MudletPackage>
-<MudletPackage version="2.0.4.001">
+<MudletPackage version="2.0.4.007">
 	<TriggerPackage>
 		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 			<name>LuminariGUI</name>
@@ -499,6 +499,14 @@ GUI.showSelfToggle()</script>
 					<packageName></packageName>
 					<regex>^show self$</regex>
 				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>Horizontal Scroll</name>
+					<script>--Toggles horizontal scroll bar on main window
+GUI.horizontalScrollToggle()</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^hscroll$</regex>
+				</Alias>
 			</AliasGroup>
 			<AliasGroup isActive="yes" isFolder="yes">
 				<name>YATCO</name>
@@ -532,7 +540,11 @@ GUI.showSelfToggle()</script>
 -- This command uses the centralized initialization system to refresh all
 -- GUI components. It's the user-facing command for manual refresh.
 -- =============================================================================
-GUI.initializeOrRefresh("fix gui command")</script>
+if GUI and GUI.initializeOrRefresh then
+    GUI.initializeOrRefresh("fix gui command")
+else
+    cecho("\n&lt;yellow&gt;GUI system not fully loaded. Please close and reopen your profile, then try again.")
+end</script>
 							<command></command>
 							<packageName></packageName>
 							<regex>^fix gui$</regex>
@@ -946,7 +958,8 @@ local function config()
       autoSave = true,
       autoLoad = true,
       attached = "tr",  -- Top-right attachment
-      defaultDir = GUI.AdjustableContainers.saveDir
+      defaultDir = GUI.AdjustableContainers.saveDir,
+      noClose = true
     })
     
     -- Create separate Adjustable Container for ASCII map
@@ -966,14 +979,15 @@ local function config()
       autoSave = true,
       autoLoad = true,
       attached = "tr",  -- Top-right attachment
-      defaultDir = GUI.AdjustableContainers.saveDir
+      defaultDir = GUI.AdjustableContainers.saveDir,
+      noClose = true
     })
     
     -- Create ASCII minimap MiniConsole inside the new container
 		map.minimap = Geyser.MiniConsole:new({
   		name="map.minimap",
-  		x=0, y= 0,
-  		width="100%", height="100%",
+  		x=9, y= 25,
+  		width="-18", height="-34",
 		}, GUI.asciiMapContainer)
 		
 		map.minimap:setColor("black")
@@ -1231,6 +1245,7 @@ function GUI.gagChatToggle()
 	  GUI.toggles = {
 		       gagChat = true,
 	  includeInGroup = true,
+	  horizontalScroll = false,
 		}
 		table.save(getMudletHomeDir().."/GUI.toggles.lua", GUI.toggles)
 	end
@@ -1250,12 +1265,49 @@ function GUI.showSelfToggle()
 	  GUI.toggles = {
 		       gagChat = true,
 	  includeInGroup = true,
+	  horizontalScroll = false,
 		}
 		table.save(getMudletHomeDir().."/GUI.toggles.lua", GUI.toggles)
 		cecho("\n&lt;white&gt;Now showing self in group.")
 	end
 end
 
+--Toggle horizontal scroll bar on main window
+function GUI.horizontalScrollToggle()
+  if GUI.toggles.horizontalScroll == false then
+    GUI.toggles.horizontalScroll = true
+    -- Disable word wrap and enable horizontal scrollbar
+    setWindowWrap("main", 999)
+    if enableHorizontalScrollBar then
+      enableHorizontalScrollBar("main")
+    end
+    cecho("\n&lt;white&gt;Horizontal scrolling enabled on main window.")
+  elseif GUI.toggles.horizontalScroll == true then
+    GUI.toggles.horizontalScroll = false
+    -- Re-enable word wrap and disable horizontal scrollbar
+    setWindowWrap("main", 100)
+    if disableHorizontalScrollBar then
+      disableHorizontalScrollBar("main")
+    end
+    cecho("\n&lt;white&gt;Horizontal scrolling disabled on main window (word wrap enabled).")
+  else
+    GUI.toggles = {
+           gagChat = true,
+      includeInGroup = true,
+      horizontalScroll = false,
+    }
+    table.save(getMudletHomeDir().."/GUI.toggles.lua", GUI.toggles)
+    -- Re-enable word wrap and disable horizontal scrollbar
+    setWindowWrap("main", 100)
+    if disableHorizontalScrollBar then
+      disableHorizontalScrollBar("main")
+    end
+    cecho("\n&lt;white&gt;Horizontal scrolling disabled on main window (word wrap enabled).")
+  end
+  
+  -- Save the toggle state
+  GUI.saveToggles()
+end
 
 function GUI.loadToggles()
 --Check for saved .lua. Create if not.
@@ -1264,6 +1316,7 @@ function GUI.loadToggles()
 	  GUI.toggles = {
 		       gagChat = true,
 	  includeInGroup = true,
+	  horizontalScroll = false,
 		}
 		table.save(getMudletHomeDir().."/GUI.toggles.lua", GUI.toggles)
 	else
@@ -1274,6 +1327,25 @@ end
 --Save Toggle Preferences
 function GUI.saveToggles()
   table.save(getMudletHomeDir().."/GUI.toggles.lua", GUI.toggles)
+end
+
+--Apply horizontal scroll setting to main window
+function GUI.applyHorizontalScrollSetting()
+  local enabled = GUI.toggles.horizontalScroll or false
+  
+  if enabled then
+    -- Disable word wrap and enable horizontal scrollbar
+    setWindowWrap("main", 999)
+    if enableHorizontalScrollBar then
+      enableHorizontalScrollBar("main")
+    end
+  else
+    -- Re-enable word wrap and disable horizontal scrollbar
+    setWindowWrap("main", 100)
+    if disableHorizontalScrollBar then
+      disableHorizontalScrollBar("main")
+    end
+  end
 end
 
 -- Basic resource cleanup function
@@ -1289,7 +1361,14 @@ end
 
 registerAnonymousEventHandler("sysLoadEvent", "GUI.loadToggles")
 registerAnonymousEventHandler("sysExitEvent", "GUI.saveToggles")
-registerAnonymousEventHandler("sysExitEvent", "GUI.cleanup")</script>
+registerAnonymousEventHandler("sysExitEvent", "GUI.cleanup")
+
+-- Apply horizontal scroll settings after chat system loads
+registerAnonymousEventHandler("sysLoadEvent", function()
+  tempTimer(2, function()
+    GUI.applyHorizontalScrollSetting()
+  end)
+end)</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
@@ -1378,8 +1457,18 @@ end</script>
     autoSave = true,
     autoLoad = true,
     attached = "b",  -- Bottom attachment
-    defaultDir = GUI.AdjustableContainers.saveDir
+    defaultDir = GUI.AdjustableContainers.saveDir,
+    noClose = true
   })
+  
+  -- Create inner wrapper for YATCO to account for title bar and padding
+  GUI.chatContainerInner = Geyser.Container:new({
+    name = "GUI.chatContainerInner",
+    x = 9,        -- Respect padding
+    y = 25,       -- Below title bar  
+    width = "-18", -- Account for padding on both sides
+    height = "-34" -- Account for title bar + bottom padding
+  }, GUI.chatContainer)
   
   -- Show the chat container
   if GUI.chatContainer then
@@ -1407,7 +1496,8 @@ end</script>
     autoSave = true,
     autoLoad = true,
     attached = "tr",  -- Top-right attachment
-    defaultDir = GUI.AdjustableContainers.saveDir
+    defaultDir = GUI.AdjustableContainers.saveDir,
+    noClose = true
   })
   
   -- Store reference to old Box3 for compatibility
@@ -1424,19 +1514,20 @@ end</script>
     x = "75%",
     y = "50%",
     width = "25%",
-    height = "42%",
+    height = "39%",
     name = "LuminariGUI_RoomInfo",
     adjLabelstyle = GUI.AdjustableContainers.defaultStyle.adjLabelstyle,
     buttonstyle = GUI.AdjustableContainers.defaultStyle.buttonstyle,
     tabstyle = GUI.AdjustableContainers.defaultStyle.tabstyle,
-    titleText = "Room Info",
+    titleText = "Room Info / Legend",
     titleTxtColor = "green",
     padding = 9,
     lockStyle = "border",
     autoSave = true,
     autoLoad = true,
     attached = "tr",  -- Top-right attachment
-    defaultDir = GUI.AdjustableContainers.saveDir
+    defaultDir = GUI.AdjustableContainers.saveDir,
+    noClose = true
   })
   
   -- Store reference to old Box5 for compatibility
@@ -1462,7 +1553,8 @@ end</script>
     x = "50%",
     y = "75%",
     width = "25%",
-    height = "25%"
+    height = "25%",
+    noClose = true
   })
   
   -- Show the status gauges container
@@ -1485,7 +1577,7 @@ end</script>
     )
   GUI.Status =
     Geyser.HBox:new(
-      {name = "GUI.Status", x = 12, y = 12, width = "100%", height = "100%", margin = 11}, GUI.Box7
+      {name = "GUI.Status", x = 9, y = 25, width = "-18", height = "-34", margin = 5}, GUI.Box7
     )
   -- Action icons moved to separate Adjustable Container
   GUI.GaugeBar =
@@ -1584,9 +1676,9 @@ function GUI.init_action_icons()
   -- Create Adjustable Container for action icons
   GUI.actionIconsContainer = GUI.AdjustableContainers.create("ActionIcons", "action_icons", {
     x = "75%",
-    y = "92%",
+    y = "89%",
     width = "8%",
-    height = "8%",
+    height = "11%",
     name = "LuminariGUI_ActionIcons",
     titleText = "Actions",
     attached = "tr",  -- Top-right attachment
@@ -1597,22 +1689,24 @@ function GUI.init_action_icons()
     adjLabelstyle = GUI.AdjustableContainers.defaultStyle.adjLabelstyle,
     buttonstyle = GUI.AdjustableContainers.defaultStyle.buttonstyle,
     titleTxtColor = "green",
-    defaultDir = GUI.AdjustableContainers.saveDir
+    defaultDir = GUI.AdjustableContainers.saveDir,
+    noClose = true
   })
   GUI.ActionIconsBox = GUI.actionIconsContainer  -- Backward compatibility
   
   -- Create the HBox inside the container
   GUI.actionIconsHBox = Geyser.HBox:new({
     name = "GUI.actionIconsHBox",
-    x = 0,
-    y = 0,
-    height = "100%",
-    width = "100%"
+    x = 9,
+    y = 25,
+    height = "-34",
+    width = "-18"
   }, GUI.actionIconsContainer)
   
   -- Initialize action icon CSS
   GUI.ActionIconCSS = CSSMan.new([[
 	margin: 0px;
+	vertical-align: top;
 ]])
   
   -- Create standard action icon
@@ -1699,7 +1793,8 @@ end
     attached = "br",  -- Bottom-right attachment
     adjLabelstyle = "background-color: rgba(0,0,0,0%); border: 9px groove #444444;",
     locked = false,
-    lockStyle = "standard"
+    lockStyle = "standard",
+    noClose = true
   })
   
   -- Create internal MiniConsole for spell casting display
@@ -1837,6 +1932,9 @@ function GUI.tabbedInfoWindow.init()
     defaultDir = GUI.AdjustableContainers.saveDir
   }
   
+  -- Add noClose to containerConfig
+  containerConfig.noClose = true
+  
   -- Create adjustable container
   GUI.tabbedInfoWindowContainer = GUI.AdjustableContainers.create("TabbedInfo", "tabbed_info", containerConfig)
   
@@ -1848,10 +1946,10 @@ function GUI.tabbedInfoWindow.init()
     Geyser.Container:new(
       {
         name = "GUI.tabbedInfoWindow.back",
-        x = 0,
-        y = 0,
-        width = "100%",
-        height = "100%",
+        x = 9,
+        y = 25,
+        width = "-18",
+        height = "-34",
       },
       GUI.tabbedInfoWindowContainer
     )
@@ -2350,7 +2448,7 @@ end</script>
 						<script>GUI.buttonWindow =
   GUI.buttonWindow or
   {
-    button = {"Legend", "Mudlet", "ASCII"},
+    button = {"Legend/Room", "Mudlet", "ASCII"},
     color1 = "rgba(0,0,0,0)",
     color2 = "rgba(0,0,0,0)",
     width = "100%",
@@ -2450,10 +2548,10 @@ function GUI.buttonWindow.init()
     Geyser.Container:new(
       {
         name = "GUI.buttonWindow.container",
-        x = 0,
-        y = 0,
-        width = "100%",
-        height = "100%",
+        x = 9,
+        y = 25,
+        width = "-18",
+        height = "-34",
       },
       GUI.buttonPanelContainer
     )
@@ -2463,10 +2561,10 @@ function GUI.buttonWindow.init()
 	Geyser.Label:new(
 		{
 		  name = "GUI.buttonWindow.roomInfo",
-			x = 0,
-			y = 0,
-			width = "100%",
-			height = "100%",
+			x = 9,
+			y = 25,
+			width = "-18",
+			height = "-34",
 			},
 			GUI.roomInfoContainer
 		)
@@ -2476,10 +2574,10 @@ function GUI.buttonWindow.init()
 	Geyser.MiniConsole:new(
 		{
 		  name = "GUI.buttonWindow.Legend",
-			x = 0,
-			y = 0,
-			width = "100%",
-			height = "100%",
+			x = 9,
+			y = 25,
+			width = "-18",
+			height = "-34",
 			color = "black",
 			},
 			GUI.roomInfoContainer
@@ -3203,12 +3301,42 @@ function GUI.initializeOrRefresh(context)
     end
   end
   
+  -- Button Panel (Controls)
+  if GUI.buttonPanelContainer then
+    GUI.buttonPanelContainer:show()
+    GUI.buttonPanelContainer:raise()
+    table.insert(refreshed, "button panel")
+  end
+  
+  -- Room Info Container
+  if GUI.roomInfoContainer then
+    GUI.roomInfoContainer:show()
+    GUI.roomInfoContainer:raise()
+    -- Update room data if available
+    if msdp.ROOM then
+      GUI.updateRoom()
+    end
+    table.insert(refreshed, "room info container")
+  end
+  
+  -- Cast Console
+  if GUI.castConsoleContainer then
+    GUI.castConsoleContainer:show()
+    GUI.castConsoleContainer:raise()
+    table.insert(refreshed, "cast console")
+  end
+  
+  -- ASCII Map Container (ensure it exists before mode check)
+  if GUI.asciiMapContainer then
+    GUI.asciiMapContainer:show()
+    table.insert(refreshed, "ASCII map container")
+  end
+  
   -- Handle map container visibility based on mode
   if GUI.buttonWindow and GUI.buttonWindow.mudletOrAscii then
     if GUI.buttonWindow.mudletOrAscii == "ASCII" then
       if map.container then map.container:hide() end
       if GUI.asciiMapContainer then
-        GUI.asciiMapContainer:show()
         GUI.asciiMapContainer:raise()
       end
     else
@@ -3300,6 +3428,7 @@ GUI.AdjustableContainers.defaultStyle = {
   padding = 5,
   autoSave = true,
   autoLoad = true,
+  noClose = true,
   defaultDir = GUI.AdjustableContainers.saveDir
 }
 
@@ -3575,11 +3704,30 @@ registerAnonymousEventHandler("sysInstall", "GUI.AdjustableContainers.init")</sc
      width: 15px;
      margin: 22px 0 22px 0;
   }
+  QScrollBar:horizontal {
+     background: ]] ..
+    background_color ..
+    [[;
+     height: 15px;
+     margin: 0 22px 0 22px;
+  }
   QScrollBar::handle:vertical {
      background-color: ]] ..
     background_color ..
     [[;
      min-height: 20px;
+     border-width: 2px;
+     border-style: solid;
+     border-color: ]] ..
+    border_color ..
+    [[;
+     border-radius: 7px;
+  }
+  QScrollBar::handle:horizontal {
+     background-color: ]] ..
+    background_color ..
+    [[;
+     min-width: 20px;
      border-width: 2px;
      border-style: solid;
      border-color: ]] ..
@@ -3602,6 +3750,21 @@ registerAnonymousEventHandler("sysInstall", "GUI.AdjustableContainers.init")</sc
         subcontrol-position: bottom;
         subcontrol-origin: margin;
   }
+  QScrollBar::add-line:horizontal {
+   background-color: ]] ..
+    background_color ..
+    [[;
+   border-width: 2px;
+   border-style: solid;
+   border-color: ]] ..
+    border_color ..
+    [[;
+   border-bottom-right-radius: 7px;
+   border-top-right-radius: 7px;
+        width: 15px;
+        subcontrol-position: right;
+        subcontrol-origin: margin;
+  }
   QScrollBar::sub-line:vertical {
    background-color: ]] ..
     background_color ..
@@ -3617,12 +3780,35 @@ registerAnonymousEventHandler("sysInstall", "GUI.AdjustableContainers.init")</sc
         subcontrol-position: top;
         subcontrol-origin: margin;
   }
+  QScrollBar::sub-line:horizontal {
+   background-color: ]] ..
+    background_color ..
+    [[;
+   border-width: 2px;
+   border-style: solid;
+   border-color: ]] ..
+    border_color ..
+    [[;
+   border-bottom-left-radius: 7px;
+   border-top-left-radius: 7px;
+        width: 15px;
+        subcontrol-position: left;
+        subcontrol-origin: margin;
+  }
   QScrollBar::up-arrow:vertical, QScrollBar::down-arrow:vertical {
      background: white;
      width: 4px;
      height: 3px;
   }
+  QScrollBar::left-arrow:horizontal, QScrollBar::right-arrow:horizontal {
+     background: white;
+     width: 3px;
+     height: 4px;
+  }
   QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+     background: none;
+  }
+  QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {
      background: none;
   }
 ]]
@@ -4211,7 +4397,11 @@ end</script>
 							<script>function demonnicOnStart()
   if demonnic.chat.use then
     -- Set the container now that GUI is initialized
-    if GUI.chatContainer then
+    -- Use the inner container to account for title bar and padding
+    if GUI.chatContainerInner then
+      demonnic.chat.useContainer = GUI.chatContainerInner
+    elseif GUI.chatContainer then
+      -- Fallback to main container if inner doesn't exist
       demonnic.chat.useContainer = GUI.chatContainer
     else
       print("Warning: GUI.chatContainer not found. Chat system may not display properly.")
