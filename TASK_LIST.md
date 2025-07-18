@@ -169,13 +169,13 @@ healthBar:setValue(current, max, "<b>Health: <span style='color:#FF6B6B;'>"..cur
 - DO NOT create global variables
 - DO NOT add initialization code
 - DO NOT try to be clever
-- JUST CHANGE THE FUCKING COLORS WHERE THEY ALREADY EXIST
+- JUST CHANGE THE COLORS WHERE THEY ALREADY EXIST
 
 ---
 
 ## 📝 NOTES
 
-Remember: The goal is to make the GUI look awesome by improving what's already there, not by creating new systems. Find where colors and styles are currently defined and just make them better. Simple changes, big impact, zero fucking broken initialization.
+Remember: The goal is to make the GUI look awesome by improving what's already there, not by creating new systems. Find where colors and styles are currently defined and just make them better. Simple changes, big impact, zero broken initialization.
 
 Example locations to look for:
 - Gauge creation/updates
@@ -189,4 +189,4 @@ Just grep for "color", "setStyleSheet", "echo", "cecho", "setValue" and improve 
 
 ---
 
-*This document represents a SIMPLE, SAFE approach to making LuminariGUI look fucking awesome without breaking anything.*
+*This document represents a SIMPLE, SAFE approach to making LuminariGUI look awesome without breaking anything.*
