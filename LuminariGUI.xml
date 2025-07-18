@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE MudletPackage>
-<MudletPackage version="2.0.4.011">
+<MudletPackage version="2.0.4.012">
 	<TriggerPackage>
 		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 			<name>LuminariGUI</name>
@@ -1602,14 +1602,18 @@ end</script>
   GUI.GaugeBackCSS =
     CSSMan.new(
       [[
-  background-color: rgba(0,0,0,0);
+  background-color: rgba(0,0,0,0.3);
   border-style: solid;
-  border-color: white;
-  border-width: 1px;
-  border-radius: 5px;
+  border-color: rgba(184, 115, 27, 0.8);
+  border-width: 2px;
+  border-radius: 10px;
   margin: 5px;
-	width: 100%;
-	font-family: BitstreamVeraSans;
+  width: 100%;
+  font-family: BitstreamVeraSans;
+  font-weight: bold;
+  font-size: 14px;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.5), 0 1px 2px rgba(184, 115, 27, 0.3);
+  padding: 2px;
 ]]
     )
   GUI.GaugeFrontCSS =
@@ -1617,46 +1621,50 @@ end</script>
       [[
   background-color: rgba(0,0,0,0);
   border-style: solid;
-  border-color: white;
+  border-color: rgba(255,255,255,0.4);
   border-width: 1px;
-  border-radius: 7px;
+  border-radius: 8px;
   margin: 5px;
-	width: 100%;
-	font-family: BitstreamVeraSans;
+  width: 100%;
+  font-family: BitstreamVeraSans;
+  font-weight: bold;
+  font-size: 14px;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+  box-shadow: 0 0 5px rgba(255,255,255,0.3), inset 0 1px 3px rgba(255,255,255,0.2);
 ]]
     )
   GUI.Health =
     Geyser.Gauge:new({name = "GUI.Health", height = 32, v_policy = Geyser.Fixed}, GUI.GaugeBar)
-  GUI.GaugeFrontCSS:set("background-color", "green")
-  GUI.GaugeBackCSS:set("background-color", "dark_green")
+  GUI.GaugeFrontCSS:set("background-color", "#FF6B6B")
+  GUI.GaugeBackCSS:set("background-color", "#8B0000")
   GUI.Health.front:setStyleSheet(GUI.GaugeFrontCSS:getCSS())
   GUI.Health.back:setStyleSheet(GUI.GaugeBackCSS:getCSS())
   GUI.Health:setValue(math.random(100), 100)
-  GUI.Health.front:echo("GUI.Health")
+  GUI.Health.front:echo([[&lt;span style = "color: black; text-shadow: 1px 1px 1px rgba(255,255,255,0.5);"&gt;&lt;b&gt;HEALTH&lt;/b&gt;&lt;/span&gt;]])
   GUI.Moves =
     Geyser.Gauge:new({name = "GUI.Moves", height = 32, v_policy = Geyser.Fixed}, GUI.GaugeBar)
-  GUI.GaugeFrontCSS:set("background-color", "purple")
-  GUI.GaugeBackCSS:set("background-color", "dark_purple")
+  GUI.GaugeFrontCSS:set("background-color", "#FFD700")
+  GUI.GaugeBackCSS:set("background-color", "#B8860B")
   GUI.Moves.front:setStyleSheet(GUI.GaugeFrontCSS:getCSS())
   GUI.Moves.back:setStyleSheet(GUI.GaugeBackCSS:getCSS())
   GUI.Moves:setValue(math.random(100), 100)
-  GUI.Moves.front:echo("GUI.Moves")
+  GUI.Moves.front:echo([[&lt;span style = "color: black; text-shadow: 1px 1px 1px rgba(255,255,255,0.5);"&gt;&lt;b&gt;MOVEMENT&lt;/b&gt;&lt;/span&gt;]])
   GUI.Experience =
     Geyser.Gauge:new({name = "GUI.Experience", height = 32, v_policy = Geyser.Fixed}, GUI.GaugeBar)
-  GUI.GaugeFrontCSS:set("background-color", "yellow")
-  GUI.GaugeBackCSS:set("background-color", "dark_yellow")
+  GUI.GaugeFrontCSS:set("background-color", "#9370DB")
+  GUI.GaugeBackCSS:set("background-color", "#4B0082")
   GUI.Experience.front:setStyleSheet(GUI.GaugeFrontCSS:getCSS())
   GUI.Experience.back:setStyleSheet(GUI.GaugeBackCSS:getCSS())
   GUI.Experience:setValue(math.random(100), 100)
-  GUI.Experience.front:echo([[&lt;span style = "color: black"&gt;GUI.Experience&lt;/span&gt;]])
+  GUI.Experience.front:echo([[&lt;span style = "color: black; text-shadow: 1px 1px 1px rgba(255,255,255,0.5);"&gt;&lt;b&gt;EXPERIENCE&lt;/b&gt;&lt;/span&gt;]])
   GUI.Enemy =
     Geyser.Gauge:new({name = "GUI.Enemy", height = 32, v_policy = Geyser.Fixed}, GUI.GaugeBar)
-  GUI.GaugeFrontCSS:set("background-color", "brown")
-  GUI.GaugeBackCSS:set("background-color", "dark_brown")
+  GUI.GaugeFrontCSS:set("background-color", "#9370DB")
+  GUI.GaugeBackCSS:set("background-color", "#4B0082")
   GUI.Enemy.front:setStyleSheet(GUI.GaugeFrontCSS:getCSS())
   GUI.Enemy.back:setStyleSheet(GUI.GaugeBackCSS:getCSS())
   GUI.Enemy:setValue(math.random(100), 100)
-  GUI.Enemy.front:echo([[GUI.Enemy]])
+  GUI.Enemy.front:echo([[&lt;b&gt;ENEMY&lt;/b&gt;]])
   GUI.AffectedByIconsBox =
     Geyser.HBox:new(
       {
@@ -2800,9 +2808,9 @@ function GUI.updateHealthGauge()
   end
   
   -- Update display
-  local displayText = "H: " .. health .. "/" .. max_health
-  GUI.Health.front:echo(displayText)
-  GUI.Health.back:echo(displayText)
+  local displayText = "&lt;b&gt;HEALTH: &lt;span style='font-size:16px;'&gt;" .. health .. "&lt;/span&gt;&lt;span style='color:#4B0082;'&gt;/&lt;/span&gt;&lt;span style='font-size:14px;'&gt;" .. max_health .. "&lt;/span&gt;&lt;/b&gt;"
+  GUI.Health.front:echo([[&lt;span style = "color: black; text-shadow: 1px 1px 1px rgba(255,255,255,0.5);"&gt;]] .. displayText .. [[&lt;/span&gt;]])
+  GUI.Health.back:echo([[&lt;span&gt;]] .. displayText .. [[&lt;/span&gt;]])
   
   -- Set gauge value
   if pct_health &gt; 100 then
@@ -2835,9 +2843,9 @@ function GUI.updateMovesGauge()
   end
   
   -- Update display
-  local displayText = "Mv: " .. moves .. "/" .. max_moves
-  GUI.Moves.front:echo(displayText)
-  GUI.Moves.back:echo(displayText)
+  local displayText = "&lt;b&gt;MOVES: &lt;span style='font-size:16px;'&gt;" .. moves .. "&lt;/span&gt;&lt;span style='color:#4B0082;'&gt;/&lt;/span&gt;&lt;span style='font-size:14px;'&gt;" .. max_moves .. "&lt;/span&gt;&lt;/b&gt;"
+  GUI.Moves.front:echo([[&lt;span style = "color: black; text-shadow: 1px 1px 1px rgba(255,255,255,0.5);"&gt;]] .. displayText .. [[&lt;/span&gt;]])
+  GUI.Moves.back:echo([[&lt;span&gt;]] .. displayText .. [[&lt;/span&gt;]])
   
   -- Set gauge value
   GUI.Moves:setValue(pct_moves, 100)
@@ -2867,8 +2875,8 @@ function GUI.updateExperienceGauge()
   end
   
   -- Update display
-  local displayText = "XP: " .. xp .. "/" .. total_xp
-  GUI.Experience.front:echo([[&lt;span style = "color: black"&gt;]] .. displayText .. [[&lt;/span&gt;]])
+  local displayText = "&lt;b&gt;EXP: &lt;span style='font-size:16px;'&gt;" .. xp .. "&lt;/span&gt;&lt;span style='color:#4B0082;'&gt;/&lt;/span&gt;&lt;span style='font-size:14px;'&gt;" .. total_xp .. "&lt;/span&gt;&lt;/b&gt;"
+  GUI.Experience.front:echo([[&lt;span style = "color: black; text-shadow: 1px 1px 1px rgba(255,255,255,0.5);"&gt;]] .. displayText .. [[&lt;/span&gt;]])
   GUI.Experience.back:echo([[&lt;span&gt;]] .. displayText .. [[&lt;/span&gt;]])
   
   -- Set gauge value
@@ -2914,7 +2922,7 @@ function GUI.updateEnemyGauge()
   end
   
   -- Update display
-  local displayText = opponent_name .. ": " .. health .. "/" .. max_health
+  local displayText = "&lt;b&gt;" .. opponent_name:upper() .. ": &lt;span style='color:#FF0000;font-size:16px;'&gt;" .. health .. "&lt;/span&gt;&lt;span style='color:#9370DB;'&gt;/&lt;/span&gt;&lt;span style='color:#FFFFFF;font-size:14px;'&gt;" .. max_health .. "&lt;/span&gt;&lt;/b&gt;"
   GUI.Enemy.front:echo(displayText)
   GUI.Enemy.back:echo(displayText)
   

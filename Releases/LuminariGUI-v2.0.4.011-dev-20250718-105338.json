@@ -1,0 +1,10 @@
+{
+  "version": "2.0.4.011",
+  "type": "development",
+  "created": "2025-07-18T10:53:39.334030",
+  "package_file": "LuminariGUI-v2.0.4.011-dev-20250718-105338.mpackage",
+  "file_size": 6991643,
+  "sha256": "53dd6c70dc1e78cb35ef9fcc25fa2886d56f939565c0fcf4b028bdff79f829af",
+  "mudlet_version": "4.0+",
+  "description": "LuminariGUI package for LuminariMUD"
+}

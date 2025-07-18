@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.4.012] - 2025-07-18
+
+### Enhanced
+- **Gauge Visual Overhaul**: Dramatically improved the appearance of all status gauges
+  - Updated color schemes:
+    - Health gauge: Gradient red (#8B0000 background to #FF6B6B foreground)
+    - Movement gauge: Gradient gold (#B8860B background to #FFD700 foreground)
+    - Experience gauge: Gradient purple (#4B0082 background to #9370DB foreground)
+    - Enemy gauge: Gradient purple (#4B0082 background to #9370DB foreground)
+  - Enhanced gauge styling:
+    - Golden borders (#B8731B) with 2px width for premium appearance
+    - Box shadows with inset depth and outer glow effects
+    - Increased border radius to 10px for smoother corners
+    - Semi-transparent backgrounds (rgba(0,0,0,0.3)) on empty gauge areas
+  - Improved text display:
+    - Bold fonts with larger sizes (14-16px base, current values emphasized)
+    - Professional labels: "HEALTH", "MOVES", "EXP" instead of generic names
+    - Dynamic text sizing: current values (16px) larger than max values (14px)
+    - Black text with white shadow on gold/purple gauges for maximum visibility
+    - Text shadows (1px 1px 2px) for better readability
+  - Overall achieved a premium gaming UI appearance with depth and polish
+
+### Fixed
+- **Text Visibility**: Fixed text color issues on Movement and Health gauges
+  - All gauge text now consistently uses black color with white shadow for visibility
+  - Ensures readability across all gauge color schemes
+
+### Technical Notes
+- Modified `GUI.GaugeBackCSS` and `GUI.GaugeFrontCSS` with enhanced styling properties
+- Updated all gauge echo functions to use consistent text formatting
+- Maintained compatibility with existing gauge update mechanisms
+
 ## [2.0.4.011] - 2025-07-17
 
 ### Added
