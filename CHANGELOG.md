@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.4.013] - 2025-07-20
+
+### Added
+- **New "Say" Chat Tab**: Created a dedicated tab for local room communication
+  - Captures all say, shout, and holler messages
+  - Includes whisper messages (both to and from player)
+  - Includes ask messages (both to and from player)
+  - Messages are automatically routed to both the Say tab and the All tab
+  - Respects chat gagging settings when enabled
+
+### Fixed
+- **Mudlet Mapper Room Names**: Room names are now properly displayed in the mapper
+  - Added `setRoomName()` call in the `make_room()` function
+  - Mapper now shows actual room names instead of just room numbers (VNUMs)
+  - Room names are pulled from MSDP data (`msdp.ROOM.NAME`)
+
 ## [2.0.4.012] - 2025-07-18
 
 ### Enhanced
