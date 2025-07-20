@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE MudletPackage>
-<MudletPackage version="2.0.4.013">
+<MudletPackage version="2.0.4.014">
 	<TriggerPackage>
 		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 			<name>LuminariGUI</name>
@@ -634,6 +634,126 @@ end</script>
 							<command></command>
 							<packageName></packageName>
 							<regex>^dblink$</regex>
+						</Alias>
+						<Alias isActive="yes" isFolder="no">
+							<name>dsound</name>
+							<script>-- Toggle chat sound notifications
+if demonnic and demonnic.chat and demonnic.chat.config then
+    demonnic.chat.config.soundEnabled = not demonnic.chat.config.soundEnabled
+    
+    if demonnic.chat.config.soundEnabled then
+        cecho("\n&lt;green&gt;Chat sound notifications ENABLED&lt;reset&gt;\n")
+        -- Play a test sound
+        local soundPath = getMudletHomeDir() .. "/LuminariGUI/" .. demonnic.chat.config.soundFile
+        local file = io.open(soundPath, "r")
+        if file then
+            file:close()
+            playSoundFile(soundPath, demonnic.chat.config.soundVolume)
+        else
+            -- Try user's home directory as fallback
+            soundPath = getMudletHomeDir() .. "/" .. demonnic.chat.config.soundFile
+            file = io.open(soundPath, "r")
+            if file then
+                file:close()
+                playSoundFile(soundPath, demonnic.chat.config.soundVolume)
+            else
+                -- Try system beep as final fallback
+                playSoundFile("")  -- Empty string triggers system beep in Mudlet
+            end
+        end
+    else
+        cecho("\n&lt;red&gt;Chat sound notifications DISABLED&lt;reset&gt;\n")
+    end
+    
+    -- Save to GUI.toggles for persistence
+    if GUI and GUI.toggles then
+        GUI.toggles.chatSound = demonnic.chat.config.soundEnabled
+        table.save(getMudletHomeDir() .. "/GUI.toggles.lua", GUI.toggles)
+    end
+else
+    cecho("\n&lt;red&gt;Chat system not initialized. Type 'fix chat' to reinitialize.&lt;reset&gt;\n")
+end</script>
+							<command></command>
+							<packageName></packageName>
+							<regex>^dsound$</regex>
+						</Alias>
+						<Alias isActive="yes" isFolder="no">
+							<name>set chat sound</name>
+							<script>local args = matches[2]:split(" ")
+local command = args[1]
+local value = args[2]
+
+if command == "on" or command == "off" then
+    -- Enable/disable sounds
+    demonnic.chat.config.soundEnabled = (command == "on")
+    GUI.toggles.chatSound = demonnic.chat.config.soundEnabled
+    table.save(getMudletHomeDir() .. "/GUI.toggles.lua", GUI.toggles)
+    cecho(string.format("\n&lt;yellow&gt;Chat sounds %s&lt;reset&gt;\n", command:upper()))
+    
+elseif command == "volume" and value then
+    -- Set volume (0-100)
+    local vol = tonumber(value)
+    if vol and vol >= 0 and vol &lt;= 100 then
+        demonnic.chat.config.soundVolume = vol
+        cecho(string.format("\n&lt;yellow&gt;Chat sound volume set to %d&lt;reset&gt;\n", vol))
+    else
+        cecho("\n&lt;red&gt;Volume must be between 0 and 100&lt;reset&gt;\n")
+    end
+    
+elseif command == "file" and value then
+    -- Set sound file
+    demonnic.chat.config.soundFile = value
+    cecho(string.format("\n&lt;yellow&gt;Chat sound file set to: %s&lt;reset&gt;\n", value))
+    
+elseif command == "cooldown" and value then
+    -- Set cooldown between sounds
+    local cd = tonumber(value)
+    if cd and cd >= 0 then
+        demonnic.chat.config.soundCooldown = cd
+        cecho(string.format("\n&lt;yellow&gt;Chat sound cooldown set to %d seconds&lt;reset&gt;\n", cd))
+    else
+        cecho("\n&lt;red&gt;Cooldown must be 0 or positive number&lt;reset&gt;\n")
+    end
+    
+elseif command == "test" then
+    -- Test the sound
+    local soundPath = getMudletHomeDir() .. "/LuminariGUI/" .. demonnic.chat.config.soundFile
+    local file = io.open(soundPath, "r")
+    if file then
+        file:close()
+        playSoundFile(soundPath, demonnic.chat.config.soundVolume)
+        cecho("\n&lt;green&gt;Playing test sound...&lt;reset&gt;\n")
+    else
+        -- Try user's home directory as fallback
+        soundPath = getMudletHomeDir() .. "/" .. demonnic.chat.config.soundFile
+        file = io.open(soundPath, "r")
+        if file then
+            file:close()
+            playSoundFile(soundPath, demonnic.chat.config.soundVolume)
+            cecho("\n&lt;green&gt;Playing test sound from user directory...&lt;reset&gt;\n")
+        else
+            playSoundFile("")  -- Empty string triggers system beep in Mudlet
+            cecho("\n&lt;yellow&gt;Sound file not found, playing default beep&lt;reset&gt;\n")
+        end
+    end
+    
+else
+    -- Show help
+    cecho("\n&lt;cyan&gt;Chat Sound Commands:&lt;reset&gt;\n")
+    cecho("  &lt;white&gt;set chat sound on/off&lt;reset&gt; - Enable or disable sounds for ALL channels\n")
+    cecho("  &lt;white&gt;set chat sound volume &lt;0-100&gt;&lt;reset&gt; - Set volume level\n")
+    cecho("  &lt;white&gt;set chat sound file &lt;filename&gt;&lt;reset&gt; - Set sound file\n")
+    cecho("  &lt;white&gt;set chat sound cooldown &lt;seconds&gt;&lt;reset&gt; - Set cooldown between sounds\n")
+    cecho("  &lt;white&gt;set chat sound test&lt;reset&gt; - Test the current sound\n")
+    cecho("\n&lt;yellow&gt;Current settings:&lt;reset&gt;\n")
+    cecho(string.format("  Enabled: %s (plays for ALL channels)\n", demonnic.chat.config.soundEnabled and "YES" or "NO"))
+    cecho(string.format("  Volume: %d\n", demonnic.chat.config.soundVolume))
+    cecho(string.format("  File: %s\n", demonnic.chat.config.soundFile))
+    cecho(string.format("  Cooldown: %d seconds\n", demonnic.chat.config.soundCooldown))
+end</script>
+							<command></command>
+							<packageName></packageName>
+							<regex>^set chat sound(?:\s+(.*))?$</regex>
 						</Alias>
 						<Alias isActive="yes" isFolder="no">
 							<name>fixChat</name>
@@ -1292,6 +1412,7 @@ function GUI.gagChatToggle()
 		       gagChat = true,
 	  includeInGroup = true,
 	  horizontalScroll = false,
+	  chatSound = false,
 		}
 		table.save(getMudletHomeDir().."/GUI.toggles.lua", GUI.toggles)
 	end
@@ -1312,6 +1433,7 @@ function GUI.showSelfToggle()
 		       gagChat = true,
 	  includeInGroup = true,
 	  horizontalScroll = false,
+	  chatSound = false,
 		}
 		table.save(getMudletHomeDir().."/GUI.toggles.lua", GUI.toggles)
 		cecho("\n&lt;white&gt;Now showing self in group.")
@@ -1363,10 +1485,16 @@ function GUI.loadToggles()
 		       gagChat = true,
 	  includeInGroup = true,
 	  horizontalScroll = false,
+	  chatSound = false,
 		}
 		table.save(getMudletHomeDir().."/GUI.toggles.lua", GUI.toggles)
 	else
 		table.load(getMudletHomeDir().."/GUI.toggles.lua", GUI.toggles)
+  end
+  
+  -- Sync chat sound setting with demonnic.chat.config
+  if GUI.toggles.chatSound and demonnic and demonnic.chat and demonnic.chat.config then
+    demonnic.chat.config.soundEnabled = true
   end
 end
 
@@ -1413,6 +1541,10 @@ registerAnonymousEventHandler("sysExitEvent", "GUI.cleanup")
 registerAnonymousEventHandler("sysLoadEvent", function()
   tempTimer(2, function()
     GUI.applyHorizontalScrollSetting()
+    -- Also sync chat sound setting after chat system loads
+    if GUI.toggles.chatSound and demonnic and demonnic.chat and demonnic.chat.config then
+      demonnic.chat.config.soundEnabled = true
+    end
   end)
 end)</script>
 						<eventHandlerList />
@@ -2894,7 +3026,11 @@ function GUI.updateMovesGauge()
   GUI.Moves.back:echo([[&lt;span&gt;]] .. displayText .. [[&lt;/span&gt;]])
   
   -- Set gauge value
-  GUI.Moves:setValue(pct_moves, 100)
+  if pct_moves > 100 then
+    GUI.Moves:setValue(100, 100)
+  else
+    GUI.Moves:setValue(pct_moves, 100)
+  end
 end
 
 function GUI.updateExperienceGauge()
@@ -4031,6 +4167,13 @@ demonnic.chat.config.blinkTime = 3
 --Blink if the bucket tab ("All" by default, but configured above) is in focus?
 demonnic.chat.config.blinkFromAll = false
 
+-- Sound notification settings
+demonnic.chat.config.soundEnabled = demonnic.chat.config.soundEnabled or false  -- Default OFF
+demonnic.chat.config.soundFile = demonnic.chat.config.soundFile or "audio/chat_sound.mp3"   -- Default sound file
+demonnic.chat.config.soundVolume = demonnic.chat.config.soundVolume or 100      -- Volume 0-100
+demonnic.chat.config.soundCooldown = demonnic.chat.config.soundCooldown or 0      -- Cooldown in seconds (0 = no cooldown)
+demonnic.chat.lastSoundTime = demonnic.chat.lastSoundTime or 0                   -- Track last sound timestamp
+
 
 
 
@@ -4396,10 +4539,49 @@ function demonnic.chat:append(chat)
   end
   if demonnic.chat.config.Alltab then appendBuffer(string.format("win%s", demonnic.chat.config.Alltab)) end
   if demonnic.chat.config.blink and chat ~= demonnic.chat.currentTab then 
-    if (demonnic.chat.config.Alltab == demonnic.chat.currentTab) and not demonnic.chat.config.blinkOnAll then
-      return
-    else
+    if not ((demonnic.chat.config.Alltab == demonnic.chat.currentTab) and not demonnic.chat.config.blinkOnAll) then
       demonnic.chat.tabsToBlink[chat] = true
+    end
+  end
+  
+  -- Sound notification logic - play for ALL channels when enabled
+  if demonnic.chat.config.soundEnabled then
+    -- Check if we should play sound
+    local shouldPlaySound = true
+    
+    -- Don't play sound if we're viewing the specific channel tab (not "All")
+    if demonnic.chat.currentTab ~= demonnic.chat.config.Alltab and chat == demonnic.chat.currentTab then
+      shouldPlaySound = false
+    end
+    
+    if shouldPlaySound then
+      -- Check cooldown
+      local currentTime = os.time()
+      if currentTime - demonnic.chat.lastSoundTime >= demonnic.chat.config.soundCooldown then
+        -- Construct sound file path - try package directory first
+        local soundPath = getMudletHomeDir() .. "/LuminariGUI/" .. demonnic.chat.config.soundFile
+        
+        -- Check if file exists before playing
+        local file = io.open(soundPath, "r")
+        if file then
+          file:close()
+          playSoundFile(soundPath, demonnic.chat.config.soundVolume)
+          demonnic.chat.lastSoundTime = currentTime
+        else
+          -- Try user's home directory as fallback
+          soundPath = getMudletHomeDir() .. "/" .. demonnic.chat.config.soundFile
+          file = io.open(soundPath, "r")
+          if file then
+            file:close()
+            playSoundFile(soundPath, demonnic.chat.config.soundVolume)
+            demonnic.chat.lastSoundTime = currentTime
+          else
+            -- Use system beep as final fallback
+            playSoundFile("")  -- Empty string triggers system beep in Mudlet
+            demonnic.chat.lastSoundTime = currentTime
+          end
+        end
+      end
     end
   end
 end
@@ -4649,7 +4831,120 @@ end</script>
 			</Script>
 		</ScriptGroup>
 	</ScriptPackage>
-	<KeyPackage />
+	<KeyPackage>
+		<KeyGroup isActive="yes" isFolder="yes">
+			<name>Movement</name>
+			<packageName></packageName>
+			<script></script>
+			<command></command>
+			<keyCode>-1</keyCode>
+			<keyModifier>-1</keyModifier>
+			<Key isActive="yes" isFolder="no">
+				<name>Southwest</name>
+				<packageName></packageName>
+				<script></script>
+				<command>southwest</command>
+				<keyCode>49</keyCode>
+				<keyModifier>536870912</keyModifier>
+			</Key>
+			<Key isActive="yes" isFolder="no">
+				<name>South</name>
+				<packageName></packageName>
+				<script></script>
+				<command>south</command>
+				<keyCode>50</keyCode>
+				<keyModifier>536870912</keyModifier>
+			</Key>
+			<Key isActive="yes" isFolder="no">
+				<name>Southeast</name>
+				<packageName></packageName>
+				<script></script>
+				<command>southeast</command>
+				<keyCode>51</keyCode>
+				<keyModifier>536870912</keyModifier>
+			</Key>
+			<Key isActive="yes" isFolder="no">
+				<name>West</name>
+				<packageName></packageName>
+				<script></script>
+				<command>west</command>
+				<keyCode>52</keyCode>
+				<keyModifier>536870912</keyModifier>
+			</Key>
+			<Key isActive="yes" isFolder="no">
+				<name>Look</name>
+				<packageName></packageName>
+				<script></script>
+				<command>look</command>
+				<keyCode>53</keyCode>
+				<keyModifier>536870912</keyModifier>
+			</Key>
+			<Key isActive="yes" isFolder="no">
+				<name>East</name>
+				<packageName></packageName>
+				<script></script>
+				<command>east</command>
+				<keyCode>54</keyCode>
+				<keyModifier>536870912</keyModifier>
+			</Key>
+			<Key isActive="yes" isFolder="no">
+				<name>Northwest</name>
+				<packageName></packageName>
+				<script></script>
+				<command>northwest</command>
+				<keyCode>55</keyCode>
+				<keyModifier>536870912</keyModifier>
+			</Key>
+			<Key isActive="yes" isFolder="no">
+				<name>North</name>
+				<packageName></packageName>
+				<script></script>
+				<command>north</command>
+				<keyCode>56</keyCode>
+				<keyModifier>536870912</keyModifier>
+			</Key>
+			<Key isActive="yes" isFolder="no">
+				<name>Northeast</name>
+				<packageName></packageName>
+				<script></script>
+				<command>northeast</command>
+				<keyCode>57</keyCode>
+				<keyModifier>536870912</keyModifier>
+			</Key>
+			<Key isActive="yes" isFolder="no">
+				<name>Inventory</name>
+				<packageName></packageName>
+				<script></script>
+				<command>inv</command>
+				<keyCode>47</keyCode>
+				<keyModifier>536870912</keyModifier>
+			</Key>
+			<Key isActive="yes" isFolder="no">
+				<name>Scan</name>
+				<packageName></packageName>
+				<script></script>
+				<command>scan</command>
+				<keyCode>42</keyCode>
+				<keyModifier>536870912</keyModifier>
+			</Key>
+			<Key isActive="yes" isFolder="no">
+				<name>Up</name>
+				<packageName></packageName>
+				<script></script>
+				<command>up</command>
+				<keyCode>45</keyCode>
+				<keyModifier>536870912</keyModifier>
+			</Key>
+			<Key isActive="yes" isFolder="no">
+				<name>Down</name>
+				<packageName></packageName>
+				<script></script>
+				<command>down</command>
+				<keyCode>43</keyCode>
+				<keyModifier>536870912</keyModifier>
+			</Key>
+		</KeyGroup>
+	</KeyPackage>
 	<VariablePackage>
 		<HiddenVariables />
 	</VariablePackage>

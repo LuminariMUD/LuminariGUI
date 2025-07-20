@@ -804,6 +804,17 @@ def create_mpackage(xml_file="LuminariGUI.xml", version=None, is_dev=False):
         else:
             print(f"⚠️  Warning: {images_dir}/ directory not found, skipping")
         
+        # Copy audio directory if it exists
+        audio_dir = "audio"
+        if os.path.exists(audio_dir) and os.path.isdir(audio_dir):
+            try:
+                shutil.copytree(audio_dir, os.path.join(temp_dir, "audio"))
+                print(f"✅ Copied {audio_dir}/ directory")
+            except Exception as e:
+                print(f"⚠️  Warning: Could not copy audio directory: {e}")
+        else:
+            print(f"⚠️  Warning: {audio_dir}/ directory not found, skipping")
+        
         # Create config.lua
         config_content = create_config_lua(version)
         config_path = os.path.join(temp_dir, "config.lua")
