@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE MudletPackage>
-<MudletPackage version="2.0.4.014">
+<MudletPackage version="2.0.4.015">
 	<TriggerPackage>
 		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 			<name>LuminariGUI</name>
@@ -1403,10 +1403,10 @@ GUI = GUI or {}
 function GUI.gagChatToggle()
   if GUI.toggles.gagChat == false then
 	  GUI.toggles.gagChat = true
-		cecho("\n&lt;white&gt;Now gagging chat from main buffer.")
+		cecho("\n&lt;b&gt;&lt;white&gt;[CHAT]&lt;/b&gt; &lt;green&gt;Now gagging chat from main buffer.&lt;reset&gt;")
 	elseif GUI.toggles.gagChat == true then
 	  GUI.toggles.gagChat = false
-		cecho("\n&lt;white&gt;No longer gagging chat from main buffer.")
+		cecho("\n&lt;b&gt;&lt;white&gt;[CHAT]&lt;/b&gt; &lt;red&gt;No longer gagging chat from main buffer.&lt;reset&gt;")
 	else
 	  GUI.toggles = {
 		       gagChat = true,
@@ -1423,11 +1423,11 @@ function GUI.showSelfToggle()
   if GUI.toggles.includeInGroup == false then
 	  GUI.toggles.includeInGroup = true
 		GUI.updateGroup()
-		cecho("\n&lt;white&gt;Now showing self in group.")
+		cecho("\n&lt;b&gt;&lt;cyan&gt;[GROUP]&lt;/b&gt; &lt;green&gt;Now showing self in group display.&lt;reset&gt;")
 	elseif GUI.toggles.includeInGroup == true then
 	  GUI.toggles.includeInGroup = false
 		GUI.updateGroup()
-		cecho("\n&lt;white&gt;No longer showing self in group.")
+		cecho("\n&lt;b&gt;&lt;cyan&gt;[GROUP]&lt;/b&gt; &lt;red&gt;No longer showing self in group display.&lt;reset&gt;")
 	else
 	  GUI.toggles = {
 		       gagChat = true,
@@ -1436,7 +1436,7 @@ function GUI.showSelfToggle()
 	  chatSound = false,
 		}
 		table.save(getMudletHomeDir().."/GUI.toggles.lua", GUI.toggles)
-		cecho("\n&lt;white&gt;Now showing self in group.")
+		cecho("\n&lt;b&gt;&lt;cyan&gt;[GROUP]&lt;/b&gt; &lt;green&gt;Now showing self in group display.&lt;reset&gt;")
 	end
 end
 
@@ -1554,7 +1554,11 @@ end)</script>
 						<packageName></packageName>
 						<script>function GUI.init_background()
   GUI.BackgroundCSS = CSSMan.new([[
-  background-color: rgb(20,0,20);
+  background-color: rgba(38, 25, 47, 0.9);
+  border: 1px solid rgba(184, 115, 27, 0.5);
+  border-radius: 5px;
+  padding: 5px;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
 ]])
   -- Left
   GUI.Left = Geyser.Label:new({name = "GUI.Left", x = 0, y = 0, width = "25%", height = "100%"})
@@ -1600,7 +1604,12 @@ end</script>
 	background-image: url(]] ..
       getMudletHomeDir():gsub("\\", "/") ..
       [[/LuminariGUI/images/ui_texture.jpg);
-			font-family: Tahoma, Geneva, sans-serif;
+	background-color: rgba(38, 25, 47, 0.8);
+	border: 1px solid rgba(184, 115, 27, 0.5);
+	border-radius: 5px;
+	padding: 5px;
+	box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+	font-family: Tahoma, Geneva, sans-serif;
 ]]
     )
   --GUI.Box1 = Geyser.Label:new({
@@ -1893,6 +1902,9 @@ function GUI.init_action_icons()
   GUI.ActionIconCSS = CSSMan.new([[
 	margin: 0px;
 	vertical-align: top;
+	border: 1px solid rgba(184, 115, 27, 0.5);
+	border-radius: 3px;
+	box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 ]])
   
   -- Create standard action icon
@@ -2015,26 +2027,26 @@ function GUI.castConsole_startCast(spellName, spellLength)
   GUI.currentlyCasting = spellName
 	GUI.castingNow = true
   clearUserWindow("GUI.castConsole")
-  GUI.castConsole:cecho("\n&lt;white&gt;Spell: &lt;yellow&gt;"..spellName:title().." &lt;white&gt;- &lt;cyan&gt;"..spellLength)
+  GUI.castConsole:cecho("\n&lt;b&gt;&lt;white&gt;Spell:&lt;/b&gt; &lt;b&gt;&lt;yellow&gt;"..spellName:title().."&lt;/b&gt; &lt;white&gt;- &lt;cyan&gt;&lt;b&gt;"..spellLength.."&lt;/b&gt;")
 	if GUI.castConsoleTimer then
 	  killTimer(GUI.castConsoleTimer)
 	end
 end
 
 function GUI.castConsole_completeCast()
-  GUI.castConsole:cecho("\n&lt;white&gt;Spell: &lt;yellow&gt;"..GUI.currentlyCasting:title().." &lt;white&gt;- &lt;green&gt;Cast")
+  GUI.castConsole:cecho("\n&lt;b&gt;&lt;white&gt;Spell:&lt;/b&gt; &lt;b&gt;&lt;yellow&gt;"..GUI.currentlyCasting:title().."&lt;/b&gt; &lt;white&gt;- &lt;b&gt;&lt;green&gt;✓ CAST COMPLETE&lt;/b&gt;")
 	GUI.castConsoleTimer = tempTimer(10, [[clearUserWindow("GUI.castConsole")]])
 end
 
 function GUI.castConsole_abortedCast()
-  GUI.castConsole:cecho("\n&lt;white&gt;Spell: &lt;yellow&gt;"..GUI.currentlyCasting:title().." &lt;white&gt;- &lt;red&gt;Aborted")
+  GUI.castConsole:cecho("\n&lt;b&gt;&lt;white&gt;Spell:&lt;/b&gt; &lt;b&gt;&lt;yellow&gt;"..GUI.currentlyCasting:title().."&lt;/b&gt; &lt;white&gt;- &lt;b&gt;&lt;red&gt;✗ ABORTED&lt;/b&gt;")
 	GUI.castingNow = false
 	GUI.castConsoleTimer = tempTimer(10, [[clearUserWindow("GUI.castConsole")]])
 end
 
 
 function GUI.castConsole_canceledCast()
-  GUI.castConsole:cecho("\n&lt;white&gt;Spell: &lt;yellow&gt;"..GUI.currentlyCasting:title().." &lt;white&gt;- &lt;red&gt;Canceled")
+  GUI.castConsole:cecho("\n&lt;b&gt;&lt;white&gt;Spell:&lt;/b&gt; &lt;b&gt;&lt;yellow&gt;"..GUI.currentlyCasting:title().."&lt;/b&gt; &lt;white&gt;- &lt;b&gt;&lt;red&gt;✗ CANCELED&lt;/b&gt;")
 	GUI.castingNow = false
 	GUI.castConsoleTimer = tempTimer(10, [[clearUserWindow("GUI.castConsole")]])
 end
@@ -2104,7 +2116,11 @@ function GUI.tabbedInfoWindow.init()
       [[font-family: Tahoma, Geneva, sans-serif; 
 			border-image: url(]] ..
       getMudletHomeDir():gsub("\\", "/") ..
-      [[/LuminariGUI/images/buttons/button.png) 0 0 0 0 stretch stretch;]]
+      [[/LuminariGUI/images/buttons/button.png) 0 0 0 0 stretch stretch;
+			border: 1px solid rgba(184, 115, 27, 0.8);
+			border-radius: 3px;
+			padding: 3px;
+		]]
     )
   
   -- Create Adjustable Container for tabbed info window
@@ -2150,12 +2166,12 @@ function GUI.tabbedInfoWindow.init()
     )
   GUI.tabbedInfoWindow.header =
     Geyser.HBox:new(
-      {name = "GUI.tabbedInfoWindow.header", x = 0, y = 0, width = "100%", height = "5%"},
+      {name = "GUI.tabbedInfoWindow.header", x = 0, y = 0, width = "100%", height = "8%"},
       GUI.tabbedInfoWindow.container
     )
   GUI.tabbedInfoWindow.footer =
     Geyser.Label:new(
-      {name = "GUI.tabbedInfoWindow.footer", x = 0, y = "5%", width = "100%", height = "95%"},
+      {name = "GUI.tabbedInfoWindow.footer", x = 0, y = "8%", width = "100%", height = "92%"},
       GUI.tabbedInfoWindow.container
     )
   GUI.tabbedInfoWindow.footer:setStyleSheet([[font-family: Tahoma, Geneva, sans-serif;
@@ -2567,21 +2583,57 @@ function GUI.updateGroup()
         hp_color = "&lt;red&gt;"
       end
 			
-			local formatted_level = "[" .. GUI.group_data[i].LEVEL .. "]"
-			local formatted_name = GUI.group_data[i].NAME 
-			formatted_level = string.cut(formatted_level.."   ", 4)			
-			formatted_name = string.cut(formatted_name.."                     ", 23)
+			-- Format leader indicator
+			local leader_icon = ""
+			if GUI.group_data[i].IS_LEADER == "1" then
+			  leader_icon = "&lt;gold&gt;♔ "  -- Crown symbol for leader
+			else
+			  leader_icon = "  "
+			end
 			
-			local member = string.format("&lt;green&gt;[%2s] &lt;white&gt;%-23s: &lt;green&gt;[%s%3s&lt;green&gt;/%-3s]H [%3s/%-3s]V\n"
-																	 , GUI.group_data[i].LEVEL
-																	 , GUI.group_data[i].NAME
-																	 , hp_color
-																	 , GUI.group_data[i].HEALTH
-																	 , GUI.group_data[i].HEALTH_MAX
-																	 , GUI.group_data[i].MOVEMENT
-																	 , GUI.group_data[i].MOVEMENT_MAX)
+			-- Format name with class abbreviation
+			local class_abbr = GUI.group_data[i].CLASS_STRING or ""
+			if #class_abbr > 3 then
+			  class_abbr = string.sub(class_abbr, 1, 3):upper()
+			end
+			
+			-- Enhanced member display with better formatting
+			local member = string.format("%s&lt;cyan&gt;[&lt;b&gt;%2s&lt;/b&gt;] &lt;white&gt;&lt;b&gt;%-20s&lt;/b&gt; &lt;light_gray&gt;%-3s\n", 
+			                            leader_icon,
+			                            GUI.group_data[i].LEVEL,
+			                            GUI.group_data[i].NAME,
+			                            class_abbr)
+			                            
+			-- Health bar visualization
+			local health_pct = math.floor(pct_health)
+			local bar_length = 20
+			local filled = math.floor((health_pct / 100) * bar_length)
+			local empty = bar_length - filled
+			
+			member = member .. string.format("   &lt;light_gray&gt;HP: %s%3d%%&lt;light_gray&gt; [%s%s&lt;light_gray&gt;%s&lt;light_gray&gt;] &lt;dim_gray&gt;%s/%s\n",
+			                                hp_color,
+			                                health_pct,
+			                                hp_color,
+			                                string.rep("=", filled),
+			                                string.rep("-", empty),
+			                                GUI.group_data[i].HEALTH,
+			                                GUI.group_data[i].HEALTH_MAX)
+			                                
+			-- Movement display
+			local move_pct = tonumber(GUI.group_data[i].MOVEMENT) / tonumber(GUI.group_data[i].MOVEMENT_MAX) * 100
+			local move_color = move_pct > 50 and "&lt;cyan&gt;" or (move_pct > 20 and "&lt;yellow&gt;" or "&lt;red&gt;")
+			member = member .. string.format("   &lt;light_gray&gt;MV: %s%3d%%&lt;light_gray&gt; &lt;dim_gray&gt;(%s/%s)\n",
+			                                move_color,
+			                                math.floor(move_pct),
+			                                GUI.group_data[i].MOVEMENT,
+			                                GUI.group_data[i].MOVEMENT_MAX)
+			
+			-- Add separator between members
+			if i &lt; num_grouped then
+			  member = member .. "&lt;dim_gray&gt;   ─────────────────────────────\n"
+			end
+			
       GUI.GroupConsole:cecho(member)
-      --GUI.GroupConsole:cecho(status_msg .. "\n")
     end
   end
 
@@ -2617,25 +2669,45 @@ function GUI.updatePlayer()
     return
   end
   
-  -- Build the player info display with proper null checks
-  local playerInfo = [[&lt;p style="font-size:16px;font-style:normal;font-family: 'Bitstream Vera Sans Mono'"&gt;]]
+  -- Build the player info display with proper null checks and enhanced styling
+  local playerInfo = [[&lt;div style="padding: 5px;"&gt;]]
   
-  -- Character name and level
-  playerInfo = playerInfo .. (msdp.CHARACTER_NAME or "Unknown") .. [[&lt;br/&gt;Level ]]
-  playerInfo = playerInfo .. (msdp.LEVEL or "?") .. [[ ]]
-  playerInfo = playerInfo .. (msdp.CLASS or "Unknown") .. [[&lt;br/&gt;]]
-  playerInfo = playerInfo .. (msdp.RACE or "Unknown") .. [[&lt;br/&gt;&lt;br/&gt;]]
+  -- Character name and level (larger, bold)
+  playerInfo = playerInfo .. [[&lt;p style="font-size:18px;font-weight:bold;color:#FFD700;font-family:'Bitstream Vera Sans Mono';margin:0;text-shadow:1px 1px 2px #000;"&gt;]]
+  playerInfo = playerInfo .. (msdp.CHARACTER_NAME or "Unknown") .. [[&lt;/p&gt;]]
   
-  -- Stats
-  playerInfo = playerInfo .. [[Str: ]] .. (msdp.STR or "?")
-  playerInfo = playerInfo .. [[&lt;br/&gt;Dex: ]] .. (msdp.DEX or "?")
-  playerInfo = playerInfo .. [[&lt;br/&gt;Con: ]] .. (msdp.CON or "?")
-  playerInfo = playerInfo .. [[&lt;br/&gt;Int: ]] .. (msdp.INT or "?")
-  playerInfo = playerInfo .. [[&lt;br/&gt;Wis: ]] .. (msdp.WIS or "?")
-  playerInfo = playerInfo .. [[&lt;br/&gt;Cha: ]] .. (msdp.CHA or "?")
-  playerInfo = playerInfo .. [[&lt;br/&gt;&lt;br/&gt;AC: ]] .. (msdp.AC or "?")
-  playerInfo = playerInfo .. [[&lt;br/&gt;&lt;br/&gt;Gold: ]] .. (msdp.MONEY or "0")
-  playerInfo = playerInfo .. [[&lt;br/&gt;&lt;/font&gt;&lt;/p&gt;]]
+  -- Level and Class
+  playerInfo = playerInfo .. [[&lt;p style="font-size:16px;color:#C0C0C0;font-family:'Bitstream Vera Sans Mono';margin:2px 0;"&gt;Level &lt;span style="color:#00FF00;font-weight:bold;"&gt;]]
+  playerInfo = playerInfo .. (msdp.LEVEL or "?") .. [[&lt;/span&gt; ]]
+  playerInfo = playerInfo .. [[&lt;span style="color:#4169E1;font-weight:bold;"&gt;]] .. (msdp.CLASS or "Unknown") .. [[&lt;/span&gt;&lt;/p&gt;]]
+  
+  -- Race
+  playerInfo = playerInfo .. [[&lt;p style="font-size:14px;color:#DDA0DD;font-family:'Bitstream Vera Sans Mono';margin:2px 0;"&gt;]]
+  playerInfo = playerInfo .. (msdp.RACE or "Unknown") .. [[&lt;/p&gt;]]
+  
+  -- Stats section with color coding
+  playerInfo = playerInfo .. [[&lt;hr style="border:1px solid #B8731B;margin:8px 0;"&gt;]]
+  playerInfo = playerInfo .. [[&lt;p style="font-size:15px;color:#FFD700;font-weight:bold;font-family:'Bitstream Vera Sans Mono';margin:5px 0;"&gt;Attributes&lt;/p&gt;]]
+  
+  -- Stats in two columns with proper spacing
+  playerInfo = playerInfo .. [[&lt;table style="width:100%;font-size:14px;font-family:'Bitstream Vera Sans Mono';border-spacing:15px 0;"&gt;]]
+  playerInfo = playerInfo .. [[&lt;tr&gt;]]
+  playerInfo = playerInfo .. [[&lt;td style="color:#FF6B6B;padding-right:20px;width:50%;"&gt;STR: &lt;span style="color:#FFFFFF;font-weight:bold;"&gt;]] .. (msdp.STR or "?") .. [[&lt;/span&gt;&lt;/td&gt;]]
+  playerInfo = playerInfo .. [[&lt;td style="color:#4169E1;padding-left:10px;width:50%;"&gt;INT: &lt;span style="color:#FFFFFF;font-weight:bold;"&gt;]] .. (msdp.INT or "?") .. [[&lt;/span&gt;&lt;/td&gt;]]
+  playerInfo = playerInfo .. [[&lt;/tr&gt;&lt;tr&gt;]]
+  playerInfo = playerInfo .. [[&lt;td style="color:#90EE90;padding-right:20px;"&gt;DEX: &lt;span style="color:#FFFFFF;font-weight:bold;"&gt;]] .. (msdp.DEX or "?") .. [[&lt;/span&gt;&lt;/td&gt;]]
+  playerInfo = playerInfo .. [[&lt;td style="color:#87CEEB;padding-left:10px;"&gt;WIS: &lt;span style="color:#FFFFFF;font-weight:bold;"&gt;]] .. (msdp.WIS or "?") .. [[&lt;/span&gt;&lt;/td&gt;]]
+  playerInfo = playerInfo .. [[&lt;/tr&gt;&lt;tr&gt;]]
+  playerInfo = playerInfo .. [[&lt;td style="color:#FFA500;padding-right:20px;"&gt;CON: &lt;span style="color:#FFFFFF;font-weight:bold;"&gt;]] .. (msdp.CON or "?") .. [[&lt;/span&gt;&lt;/td&gt;]]
+  playerInfo = playerInfo .. [[&lt;td style="color:#DDA0DD;padding-left:10px;"&gt;CHA: &lt;span style="color:#FFFFFF;font-weight:bold;"&gt;]] .. (msdp.CHA or "?") .. [[&lt;/span&gt;&lt;/td&gt;]]
+  playerInfo = playerInfo .. [[&lt;/tr&gt;&lt;/table&gt;]]
+  
+  -- AC and Gold
+  playerInfo = playerInfo .. [[&lt;hr style="border:1px solid #B8731B;margin:8px 0;"&gt;]]
+  playerInfo = playerInfo .. [[&lt;p style="font-size:14px;font-family:'Bitstream Vera Sans Mono';margin:3px 0;"&gt;&lt;span style="color:#C0C0C0;"&gt;AC:&lt;/span&gt; &lt;span style="color:#00CED1;font-weight:bold;font-size:16px;"&gt;]] .. (msdp.AC or "?") .. [[&lt;/span&gt;&lt;/p&gt;]]
+  playerInfo = playerInfo .. [[&lt;p style="font-size:14px;font-family:'Bitstream Vera Sans Mono';margin:3px 0;"&gt;&lt;span style="color:#C0C0C0;"&gt;Gold:&lt;/span&gt; &lt;span style="color:#FFD700;font-weight:bold;font-size:16px;"&gt;]] .. (msdp.MONEY or "0") .. [[&lt;/span&gt;&lt;/p&gt;]]
+  
+  playerInfo = playerInfo .. [[&lt;/div&gt;]]
   
   -- Update the display
   GUI.tabbedInfoWindow["Playercenter"]:echo(playerInfo)
@@ -2740,7 +2812,30 @@ function GUI.buttonWindow.init()
       [[font-family: Tahoma, Geneva, sans-serif; 
 			border-image: url(]] ..
       getMudletHomeDir():gsub("\\", "/") ..
-      [[/LuminariGUI/images/buttons/button.png) 0 0 0 0 stretch stretch;]]
+      [[/LuminariGUI/images/buttons/button.png) 0 0 0 0 stretch stretch;
+			border: 1px solid rgba(184, 115, 27, 0.6);
+			border-radius: 4px;
+			padding: 4px;
+			font-weight: bold;
+			color: white;
+		]]
+    )
+  
+  -- Add hover and pressed effects CSS
+  GUI.buttonWindowHoverCSS =
+    CSSMan.new(
+      [[font-family: Tahoma, Geneva, sans-serif; 
+			border-image: url(]] ..
+      getMudletHomeDir():gsub("\\", "/") ..
+      [[/LuminariGUI/images/buttons/button.png) 0 0 0 0 stretch stretch;
+			border: 1px solid rgba(184, 115, 27, 1.0);
+			border-radius: 4px;
+			padding: 4px;
+			font-weight: bold;
+			color: white;
+			background-color: rgba(255, 255, 255, 0.1);
+			box-shadow: 0px 0px 4px rgba(184, 115, 27, 0.6);
+		]]
     )
 		
 --Entire Box3 Container for Buttons
@@ -2826,35 +2921,52 @@ end </script>
 						<packageName></packageName>
 						<script>
 function GUI.updateRoom()
+  local roomInfo = [[&lt;div style="padding: 5px;"&gt;]]
+  
   if msdp.ROOM.ENVIRONMENT == "Wilderness" then
-    GUI.buttonWindow.roomInfo:echo(
-		  [[&lt;p style="font-size:18px;font-style:normal;font-family: 'Bitstream Vera Sans Mono'"&gt;]] .. 	
-      [[ ]] ..
-      (msdp.ROOM.ENVIRONMENT or "Unknown") ..
-      [[&lt;br/&gt;&amp;nbsp;Coords: ]] ..
-      ("("..msdp.ROOM.COORDS.X..", "..msdp.ROOM.COORDS.Y..")" or "Unknown") ..
-      [[&lt;br/&gt;Terrain: ]] ..
-      (msdp.ROOM.TERRAIN or "Unknown") ..
-      [[&lt;br/&gt;]] ..
-		  [[&lt;/font&gt;&lt;/p&gt;]]
-    )	
-	else
-    GUI.buttonWindow.roomInfo:echo(
-		  [[&lt;p style="font-size:18px;font-style:normal;font-family: 'Bitstream Vera Sans Mono'"&gt;]] .. 	
-      [[&lt;br/&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;Room: ]] ..
-      (msdp.ROOM.NAME or "Unknown") ..
-      [[&lt;br/&gt;&amp;nbsp;Room #: ]] ..
-      (msdp.ROOM.VNUM or "Unknown") ..
-      [[&lt;br/&gt;Terrain: ]] ..
-      (msdp.ROOM.TERRAIN or "Unknown") ..
-      [[&lt;br/&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;Area: ]] ..
-      (msdp.ROOM.AREA or "Unknown") ..
-	 -- [[&lt;br/&gt;&amp;nbsp;Levels: ]] ..
-   -- (msdp.ROOM.WHATTT or "Unknown") ..
-      [[&lt;br/&gt;]] ..
-		  [[&lt;/font&gt;&lt;/p&gt;]]
-    )
-  end		
+    -- Wilderness display
+    roomInfo = roomInfo .. [[&lt;p style="font-size:16px;font-weight:bold;color:#90EE90;font-family:'Bitstream Vera Sans Mono';margin:0;text-shadow:1px 1px 2px #000;"&gt;]]
+    roomInfo = roomInfo .. [[&lt;center&gt;🌲 WILDERNESS 🌲&lt;/center&gt;&lt;/p&gt;]]
+    
+    roomInfo = roomInfo .. [[&lt;hr style="border:1px solid #B8731B;margin:5px 0;"&gt;]]
+    
+    -- Coordinates
+    roomInfo = roomInfo .. [[&lt;p style="font-size:14px;font-family:'Bitstream Vera Sans Mono';margin:3px 0;"&gt;]]
+    roomInfo = roomInfo .. [[&lt;span style="color:#C0C0C0;"&gt;Coords:&lt;/span&gt; &lt;span style="color:#00CED1;font-weight:bold;"&gt;(]]
+    roomInfo = roomInfo .. (msdp.ROOM.COORDS.X or "?") .. ", " .. (msdp.ROOM.COORDS.Y or "?")
+    roomInfo = roomInfo .. [[)&lt;/span&gt;&lt;/p&gt;]]
+    
+    -- Terrain
+    roomInfo = roomInfo .. [[&lt;p style="font-size:14px;font-family:'Bitstream Vera Sans Mono';margin:3px 0;"&gt;]]
+    roomInfo = roomInfo .. [[&lt;span style="color:#C0C0C0;"&gt;Terrain:&lt;/span&gt; &lt;span style="color:#FFA500;font-weight:bold;"&gt;]]
+    roomInfo = roomInfo .. (msdp.ROOM.TERRAIN or "Unknown") .. [[&lt;/span&gt;&lt;/p&gt;]]
+    
+  else
+    -- Regular room display
+    -- Room name
+    roomInfo = roomInfo .. [[&lt;p style="font-size:16px;font-weight:bold;color:#FFD700;font-family:'Bitstream Vera Sans Mono';margin:0;text-align:center;text-shadow:1px 1px 2px #000;"&gt;]]
+    roomInfo = roomInfo .. (msdp.ROOM.NAME or "Unknown") .. [[&lt;/p&gt;]]
+    
+    roomInfo = roomInfo .. [[&lt;hr style="border:1px solid #B8731B;margin:5px 0;"&gt;]]
+    
+    -- Room VNUM
+    roomInfo = roomInfo .. [[&lt;p style="font-size:14px;font-family:'Bitstream Vera Sans Mono';margin:3px 0;"&gt;]]
+    roomInfo = roomInfo .. [[&lt;span style="color:#C0C0C0;"&gt;Room #:&lt;/span&gt; &lt;span style="color:#87CEEB;font-weight:bold;"&gt;]]
+    roomInfo = roomInfo .. (msdp.ROOM.VNUM or "Unknown") .. [[&lt;/span&gt;&lt;/p&gt;]]
+    
+    -- Terrain
+    roomInfo = roomInfo .. [[&lt;p style="font-size:14px;font-family:'Bitstream Vera Sans Mono';margin:3px 0;"&gt;]]
+    roomInfo = roomInfo .. [[&lt;span style="color:#C0C0C0;"&gt;Terrain:&lt;/span&gt; &lt;span style="color:#FFA500;font-weight:bold;"&gt;]]
+    roomInfo = roomInfo .. (msdp.ROOM.TERRAIN or "Unknown") .. [[&lt;/span&gt;&lt;/p&gt;]]
+    
+    -- Area
+    roomInfo = roomInfo .. [[&lt;p style="font-size:14px;font-family:'Bitstream Vera Sans Mono';margin:3px 0;"&gt;]]
+    roomInfo = roomInfo .. [[&lt;span style="color:#C0C0C0;"&gt;Area:&lt;/span&gt; &lt;span style="color:#DDA0DD;font-weight:bold;"&gt;]]
+    roomInfo = roomInfo .. (msdp.ROOM.AREA or "Unknown") .. [[&lt;/span&gt;&lt;/p&gt;]]
+  end
+  
+  roomInfo = roomInfo .. [[&lt;/div&gt;]]
+  GUI.buttonWindow.roomInfo:echo(roomInfo)
 end
 		
 --Whattt to be replaced with MSDP or GMCP once coded in
@@ -3617,16 +3729,30 @@ GUI.AdjustableContainers.saveDir = string.format("%s/LuminariGUI/layouts/", getM
 GUI.AdjustableContainers.defaultStyle = {
   adjLabelstyle = [[
     background-image: url(]] .. getMudletHomeDir():gsub("\\", "/") .. [[/LuminariGUI/images/ui_texture.jpg);
-    background-color: rgb(20,0,20);
-    border: 2px solid #666;
-    border-radius: 4px;
+    background-color: rgba(38, 25, 47, 0.9);
+    border: 2px solid rgba(184, 115, 27, 0.8);
+    border-radius: 5px;
+    padding: 5px;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
     font-family: Tahoma, Geneva, sans-serif;
   ]],
   buttonstyle = [[
-    QLabel { border-radius: 7px; background-color: rgba(100,100,100,100%); }
-    QLabel::hover { background-color: rgba(120,120,120,100%); }
+    QLabel { 
+      border-radius: 7px; 
+      background-color: rgba(100,100,100,100%); 
+      border: 1px solid rgba(184, 115, 27, 0.5);
+    }
+    QLabel::hover { 
+      background-color: rgba(120,120,120,100%); 
+      border: 1px solid rgba(184, 115, 27, 0.8);
+      box-shadow: 0px 0px 3px rgba(184, 115, 27, 0.5);
+    }
+    QLabel::pressed {
+      background-color: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(184, 115, 27, 1.0);
+    }
   ]],
-  titleTxtColor = "white",
+  titleTxtColor = "#FFD700",  -- Golden color for better contrast
   buttonFontSize = 10,
   buttonsize = 20,
   padding = 5,
@@ -4461,7 +4587,12 @@ function demonnic.chat:create()
 		demonnic.chat.tabs[tab]:setStyleSheet(
 		 [[font-family: Tahoma, Geneva, sans-serif; 
 		border-image: url(]] ..
-    getMudletHomeDir():gsub("\\", "/") .. [[/LuminariGUI/images/buttons/button.png) 0 0 0 0 stretch stretch;]])
+    getMudletHomeDir():gsub("\\", "/") .. [[/LuminariGUI/images/buttons/button.png) 0 0 0 0 stretch stretch;
+		border: 1px solid rgba(184, 115, 27, 0.5);
+		border-radius: 3px 3px 0px 0px;
+		padding: 2px;
+		font-weight: bold;
+		]])
 		
     demonnic.chat.windows[tab] = Geyser.MiniConsole:new({
 --      fontSize = demonnic.chat.config.fontSize,
@@ -4532,6 +4663,27 @@ function demonnic.chat:append(chat)
         demonnic.chat.windows[demonnic.chat.config.Alltab]:echo(" ")
       end
   end
+  
+  -- Add colored channel prefixes based on TASK_LIST.md requirements
+  local channelColors = {
+    ["Group"] = "&lt;green&gt;[GSAY]&lt;reset&gt; ",      -- Bright green for GSAY
+    ["OOC"] = "&lt;light_gray&gt;[OOC]&lt;reset&gt; ",        -- Silver/Light gray for OOC
+    ["Tell"] = "&lt;magenta&gt;[TELL]&lt;reset&gt; ",    -- Bright magenta for TELLS
+    ["Say"] = "&lt;white&gt;[SAY]&lt;reset&gt; ",        -- White for SAYS
+    ["Auction"] = "&lt;gold&gt;[AUC]&lt;reset&gt; ",     -- Gold for AUC
+    ["Chat"] = "&lt;cyan&gt;[CHAT]&lt;reset&gt; ",       -- Default cyan for other chat
+    ["Congrats"] = "&lt;yellow&gt;[GRATS]&lt;reset&gt; ", -- Yellow for congrats
+    ["Wiz"] = "&lt;purple&gt;[WIZ]&lt;reset&gt; "        -- Purple for wizard channel
+  }
+  
+  -- Add channel prefix before the message
+  if channelColors[chat] then
+    demonnic.chat.windows[chat]:cecho(channelColors[chat])
+    if demonnic.chat.config.Alltab then
+      demonnic.chat.windows[demonnic.chat.config.Alltab]:cecho(channelColors[chat])
+    end
+  end
+  
   demonnic.chat.windows[chat]:append()
   if demonnic.chat.config.gag then 
     deleteLine() 

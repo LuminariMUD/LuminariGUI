@@ -7,9 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.4.015] - 2025-07-20
+
+### Changed
+- **Visual Improvements**: Complete UI overhaul with premium gaming aesthetics
+  - Enhanced chat colors with channel-specific prefixes ([GSAY], [OOC], [TELL], etc.)
+  - Styled containers with dark purple backgrounds (rgba(38, 25, 47, 0.9)) and golden borders
+  - Improved text display with bold formatting and better color coding
+  - Added hover and pressed effects to buttons with golden glow
+  - Enhanced status displays in Player, Group, and Room info tabs
+  - Added shadows and improved contrast throughout the interface
+  - Fixed Mudlet color tag compatibility (silver → light_gray)
+  - Improved attribute column spacing in Player tab
+  - Increased tab header height to prevent button cutoff
+
 ## [2.0.4.014] - 2025-07-20
 
 ### Added
+- **Numpad Movement Keys**: Complete directional movement using the numeric keypad
+  - Numpad 1: Southwest
+  - Numpad 2: South
+  - Numpad 3: Southeast
+  - Numpad 4: West
+  - Numpad 5: Look
+  - Numpad 6: East
+  - Numpad 7: Northwest
+  - Numpad 8: North
+  - Numpad 9: Northeast
+  - Numpad /: Inventory
+  - Numpad *: Scan
+  - Numpad -: Up
+  - Numpad +: Down
+
 - **Chat Sound Notifications**: Comprehensive sound alert system for chat messages
   - New `dsound` command to quickly toggle chat sounds on/off
   - Plays notification sound (audio/chat_sound.mp3) for ALL chat channels when enabled

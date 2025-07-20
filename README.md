@@ -23,12 +23,15 @@ See [`CLAUDE.md`](CLAUDE.md) for detailed information about the XML formatting r
 - **Action Economy Tracking**: Visual indicators for standard, move, and swift actions
 - **Spell Casting Console**: Real-time spell casting progress and status updates
 - **Adjustable Containers**: All GUI components can be resized, repositioned, and minimized (v2.0.4.001+)
+- **Numpad Movement**: Complete directional movement using numeric keypad (NumLock must be ON)
 
 ### 💬 Communication System
 - **Tabbed Chat (YATCO)**: Organized chat channels with customizable tabs
-- **Channel Management**: Tell, Chat, Group, Auction, Congrats, and Wizard channels
+- **Channel Management**: Tell, Chat, Group, Auction, Congrats, Wizard, and Say channels
+- **Say Channel**: Dedicated tab for local room communication (say, shout, holler, whisper, ask)
 - **Chat Filtering**: Optional main window gagging with dedicated chat interface
 - **Notification System**: Tab blinking for new messages
+- **Sound Notifications**: Audio alerts for incoming messages on all channels with customizable settings
 
 ### 🗺️ Mapping System
 - **Dual Mapping Support**: Integrated Mudlet mapper and ASCII map display
@@ -48,6 +51,13 @@ See [`CLAUDE.md`](CLAUDE.md) for detailed information about the XML formatting r
 - **Mode Indicators**: Combat modes, defensive stances, and ability states
 - **Spell-like Affects**: Detailed spell effect information with durations
 - **Status Categories**: Organized affect display for different effect types
+
+### 🎨 Visual Theme & Interface
+- **Premium Gaming Aesthetics**: Dark purple backgrounds with golden accents throughout
+- **Enhanced Readability**: Improved contrast, larger fonts, and bold text for important information
+- **Professional Styling**: Rounded corners, shadows, and hover effects on interactive elements
+- **Color-Coded Information**: Channel-specific prefixes and color coding for better organization
+- **Gauge Improvements**: Gradient colors with golden borders and enhanced text visibility
 
 ## Installation
 
@@ -96,8 +106,11 @@ Once connected and the GUI has initialized:
 
 1. **Character Stats**: Your health, movement, and experience will automatically display in the bottom gauges
 2. **Chat System**: Chat messages will appear in the tabbed interface at the bottom
+   - Use `dsound` to toggle sound notifications for incoming messages
+   - Sound alerts play for messages on ANY channel when enabled
 3. **Mapping**: Move around to see the automatic room mapping in action
 4. **Group Play**: Join a group to see member status in the "Group" tab
+5. **Display Options**: Use `hscroll` to toggle between word wrap and horizontal scrolling
 
 ### Essential Commands
 
@@ -114,16 +127,52 @@ show self
 -- Fix chat positioning issues
 fix chat
 
+-- Toggle chat sound notifications (plays test sound when enabled)
+dsound
+
+-- Configure chat sounds
+set chat sound on/off              -- Enable or disable sound notifications
+set chat sound volume <0-100>      -- Set notification volume
+set chat sound file <filename>     -- Use custom sound file
+set chat sound cooldown <seconds>  -- Set minimum time between sounds
+set chat sound test               -- Test current sound configuration
+
+-- Toggle horizontal scrolling vs word wrap
+hscroll
+
 -- Manual mapping controls
 start mapping
 stop mapping
 
--- Debug YATCO chat system
-debug
+-- Debug commands
+debug                 -- Toggle debug output
+debug list           -- List available debug categories
+debugc <category>    -- Watch specific debug category (e.g., debugc msdp)
 
 -- Toggle blink notifications for chat tabs
 dblink
+
+-- Reset chasing functionality
+reset chasing
 ```
+
+### Numpad Movement Keys
+
+With NumLock ON, use the numeric keypad for directional movement:
+
+```
+7 (NW)    8 (N)     9 (NE)
+4 (W)     5 (Look)  6 (E)
+1 (SW)    2 (S)     3 (SE)
+
+Additional Keys:
+/ - Inventory
+* - Scan
+- - Up
++ - Down
+```
+
+**Note**: NumLock must be ON for these keybindings to work properly.
 
 ### GUI Components
 
