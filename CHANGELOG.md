@@ -7,6 +7,79 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.4.015] - 2025-07-20
+
+### Changed
+- **Visual Improvements**: Complete UI overhaul with premium gaming aesthetics
+  - Enhanced chat colors with channel-specific prefixes ([GSAY], [OOC], [TELL], etc.)
+  - Styled containers with dark purple backgrounds (rgba(38, 25, 47, 0.9)) and golden borders
+  - Improved text display with bold formatting and better color coding
+  - Added hover and pressed effects to buttons with golden glow
+  - Enhanced status displays in Player, Group, and Room info tabs
+  - Added shadows and improved contrast throughout the interface
+  - Fixed Mudlet color tag compatibility (silver → light_gray)
+  - Improved attribute column spacing in Player tab
+  - Increased tab header height to prevent button cutoff
+
+## [2.0.4.014] - 2025-07-20
+
+### Added
+- **Numpad Movement Keys**: Complete directional movement using the numeric keypad
+  - Numpad 1: Southwest
+  - Numpad 2: South
+  - Numpad 3: Southeast
+  - Numpad 4: West
+  - Numpad 5: Look
+  - Numpad 6: East
+  - Numpad 7: Northwest
+  - Numpad 8: North
+  - Numpad 9: Northeast
+  - Numpad /: Inventory
+  - Numpad *: Scan
+  - Numpad -: Up
+  - Numpad +: Down
+
+- **Chat Sound Notifications**: Comprehensive sound alert system for chat messages
+  - New `dsound` command to quickly toggle chat sounds on/off
+  - Plays notification sound (audio/chat_sound.mp3) for ALL chat channels when enabled
+  - Sound alerts work on all tabs including the "All" tab
+  - Configurable volume control (0-100)
+  - Cooldown system to prevent sound spam
+  - Settings persist across sessions via GUI.toggles system
+
+### Features
+- **Sound Management Commands**:
+  - `dsound` - Quick toggle for chat sounds (with test sound on enable)
+  - `set chat sound on/off` - Enable or disable sounds permanently
+  - `set chat sound volume <0-100>` - Adjust notification volume
+  - `set chat sound file <filename>` - Use custom sound file
+  - `set chat sound cooldown <seconds>` - Set minimum time between sounds
+  - `set chat sound test` - Test current sound configuration
+  
+- **Smart Sound Behavior**:
+  - Sounds play for messages on ANY chat channel when enabled
+  - No sound when viewing the specific channel where message arrives
+  - Works correctly on "All" tab (plays for all incoming messages)
+  - Multiple fallback options: package sound → user directory → system beep
+  - Sound file path follows same pattern as images: `getMudletHomeDir()/LuminariGUI/audio/`
+
+### Fixed
+- **Critical All Tab Bug**: Fixed early return in blink logic that prevented sounds on "All" tab
+  - Removed `return` statement that was exiting append() function prematurely
+  - Sound notifications now work correctly regardless of which tab is active
+  
+### Technical Implementation
+- Sound configuration added to YATCO config with sensible defaults
+- Modified `demonnic.chat:append()` function to include sound playback logic
+- Integrated with existing GUI.toggles persistence system
+- Added audio directory to package creation script
+- Included chat_sound.mp3 (46,570 bytes) as default notification sound
+- Fixed multiple `playSound()` calls that aren't available in Mudlet (replaced with `playSoundFile()`)
+
+### Package Updates
+- Updated create_package.py to include audio/ directory in packages
+- Audio files are now properly packaged and extracted to LuminariGUI directory
+
 ## [2.0.4.013] - 2025-07-20
 
 ### Added
