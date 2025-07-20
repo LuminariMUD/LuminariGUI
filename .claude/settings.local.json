@@ -31,7 +31,8 @@
       "WebFetch(domain:wiki.mudlet.org)",
       "Bash(git merge:*)",
       "Bash(git rm:*)",
-      "Bash(git cherry-pick:*)"
+      "Bash(git cherry-pick:*)",
+      "Bash(git restore:*)"
     ],
     "deny": []
   }
