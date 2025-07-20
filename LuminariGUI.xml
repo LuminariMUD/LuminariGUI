@@ -117,6 +117,48 @@ end</script>
 					</regexCodePropertyList>
 				</Trigger>
 				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>Say</name>
+					<script>demonnic.chat:append("Say")
+
+if GUI.toggles.gagChat == true then
+  deleteLineP()
+end</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>You say, '</string>
+						<string>You shout, '</string>
+						<string>You holler, '</string>
+						<string>You whisper to</string>
+						<string>You ask</string>
+						<string>^(\w+) says, '</string>
+						<string>^(\w+) shouts, '</string>
+						<string>^(\w+) hollers, '</string>
+						<string>whispers to you, '</string>
+						<string>asks you, '</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>2</integer>
+						<integer>2</integer>
+						<integer>2</integer>
+						<integer>2</integer>
+						<integer>2</integer>
+						<integer>1</integer>
+						<integer>1</integer>
+						<integer>1</integer>
+						<integer>2</integer>
+						<integer>2</integer>
+					</regexCodePropertyList>
+				</Trigger>
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 					<name>Auction</name>
 					<script>demonnic.chat:append("Auction")
 
@@ -3947,6 +3989,7 @@ demonnic.chat.config.channels = {
   "All",
   "Tell",
   "Chat",
+	"Say",
 	"Wiz",
 	"Group",
 	"Congrats",
