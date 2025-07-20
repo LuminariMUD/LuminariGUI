@@ -761,6 +761,10 @@ local function make_room()
     if terrain_types[info.TERRAIN] then
         setRoomEnv(info.VNUM, terrain_types[info.TERRAIN].id + 16)
     end
+    -- Set the room name from MSDP data
+    if info.NAME then
+        setRoomName(info.VNUM, info.NAME)
+    end
 		if map.prev_info then -- Check if you moved into here from another room.
 			local prev_exits = getRoomExits(map.prev_info.VNUM)
 			for dir, id in pairs(map.prev_info.EXITS) do
