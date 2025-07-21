@@ -139,11 +139,13 @@ end</script>
 						<string>You holler, '</string>
 						<string>You whisper to</string>
 						<string>You ask</string>
+						<string>You say out-of-character, '</string>
 						<string>^(\w+) says, '</string>
 						<string>^(\w+) shouts, '</string>
 						<string>^(\w+) hollers, '</string>
 						<string>whispers to you, '</string>
 						<string>asks you, '</string>
+						<string>^(\w+) says out-of-character, '</string>
 					</regexCodeList>
 					<regexCodePropertyList>
 						<integer>2</integer>
@@ -151,11 +153,13 @@ end</script>
 						<integer>2</integer>
 						<integer>2</integer>
 						<integer>2</integer>
+						<integer>2</integer>
 						<integer>1</integer>
 						<integer>1</integer>
 						<integer>1</integer>
 						<integer>2</integer>
 						<integer>2</integer>
+						<integer>1</integer>
 					</regexCodePropertyList>
 				</Trigger>
 				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
