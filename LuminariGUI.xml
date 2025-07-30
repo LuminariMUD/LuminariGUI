@@ -139,11 +139,13 @@ end</script>
 						<string>You holler, '</string>
 						<string>You whisper to</string>
 						<string>You ask</string>
+						<string>You say out-of-character, '</string>
 						<string>^(\w+) says, '</string>
 						<string>^(\w+) shouts, '</string>
 						<string>^(\w+) hollers, '</string>
 						<string>whispers to you, '</string>
 						<string>asks you, '</string>
+						<string>^(\w+) says out-of-character, '</string>
 					</regexCodeList>
 					<regexCodePropertyList>
 						<integer>2</integer>
@@ -151,11 +153,13 @@ end</script>
 						<integer>2</integer>
 						<integer>2</integer>
 						<integer>2</integer>
+						<integer>2</integer>
 						<integer>1</integer>
 						<integer>1</integer>
 						<integer>1</integer>
 						<integer>2</integer>
 						<integer>2</integer>
+						<integer>1</integer>
 					</regexCodePropertyList>
 				</Trigger>
 				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
@@ -1764,7 +1768,7 @@ end</script>
     )
   GUI.Status =
     Geyser.HBox:new(
-      {name = "GUI.Status", x = 9, y = 25, width = "-18", height = "-34", margin = 5}, GUI.Box7
+      {name = "GUI.Status", x = 9, y = 18, width = "-18", height = "-18", margin = 5}, GUI.Box7
     )
   -- Action icons moved to separate Adjustable Container
   GUI.GaugeBar =
@@ -1815,53 +1819,61 @@ end</script>
   width: 100%;
   font-family: BitstreamVeraSans;
   font-weight: bold;
-  font-size: 14px;
   text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
   box-shadow: 0 0 5px rgba(255,255,255,0.3), inset 0 1px 3px rgba(255,255,255,0.2);
 ]]
     )
   GUI.Health =
-    Geyser.Gauge:new({name = "GUI.Health", height = 32, v_policy = Geyser.Fixed}, GUI.GaugeBar)
+    Geyser.Gauge:new({name = "GUI.Health", height = "17%", h_policy = Geyser.Dynamic, v_policy = Geyser.Dynamic}, GUI.GaugeBar)
   GUI.GaugeFrontCSS:set("background-color", "#FF6B6B")
   GUI.GaugeBackCSS:set("background-color", "#8B0000")
   GUI.Health.front:setStyleSheet(GUI.GaugeFrontCSS:getCSS())
   GUI.Health.back:setStyleSheet(GUI.GaugeBackCSS:getCSS())
-  GUI.Health:setValue(math.random(100), 100)
-  GUI.Health.front:echo([[&lt;span style = "color: black; text-shadow: 1px 1px 1px rgba(255,255,255,0.5);"&gt;&lt;b&gt;HEALTH&lt;/b&gt;&lt;/span&gt;]])
+  GUI.Health:setValue(100, 100)
+  GUI.Health.front:echo([[&lt;span style = "color: black; text-shadow: 1px 1px 1px rgba(255,255,255,0.5);"&gt;&lt;b&gt;HEALTH: 100/100&lt;/b&gt;&lt;/span&gt;]])
+  -- GUI.Experience =
+  --   Geyser.Gauge:new({name = "GUI.Experience", height = "17%", h_policy = Geyser.Dynamic, v_policy = Geyser.Dynamic}, GUI.GaugeBar)
+  -- GUI.GaugeFrontCSS:set("background-color", "#9370DB")
+  -- GUI.GaugeBackCSS:set("background-color", "#4B0082")
+  -- GUI.Experience.front:setStyleSheet(GUI.GaugeFrontCSS:getCSS())
+  -- GUI.Experience.back:setStyleSheet(GUI.GaugeBackCSS:getCSS())
+  -- GUI.Experience:setValue(math.random(100), 100)
+  -- GUI.Experience.front:echo([[&lt;span style = "color: black; text-shadow: 1px 1px 1px rgba(255,255,255,0.5);"&gt;&lt;b&gt;EXPERIENCE&lt;/b&gt;&lt;/span&gt;]])
+  GUI.PSP =
+    Geyser.Gauge:new({name = "GUI.PSP", height = "17%", h_policy = Geyser.Dynamic, v_policy = Geyser.Dynamic}, GUI.GaugeBar)
+  GUI.GaugeFrontCSS:set("background-color", "#40E0D0")
+  GUI.GaugeBackCSS:set("background-color", "#008B8B")
+  GUI.PSP.front:setStyleSheet(GUI.GaugeFrontCSS:getCSS())
+  GUI.PSP.back:setStyleSheet(GUI.GaugeBackCSS:getCSS())
+  GUI.PSP:setValue(100, 100)
+  GUI.PSP.front:echo([[&lt;span style = "color: black; text-shadow: 1px 1px 1px rgba(255,255,255,0.5);"&gt;&lt;b&gt;PSP: 100/100&lt;/b&gt;&lt;/span&gt;]])
   GUI.Moves =
-    Geyser.Gauge:new({name = "GUI.Moves", height = 32, v_policy = Geyser.Fixed}, GUI.GaugeBar)
+    Geyser.Gauge:new({name = "GUI.Moves", height = "17%", h_policy = Geyser.Dynamic, v_policy = Geyser.Dynamic}, GUI.GaugeBar)
   GUI.GaugeFrontCSS:set("background-color", "#FFD700")
   GUI.GaugeBackCSS:set("background-color", "#B8860B")
   GUI.Moves.front:setStyleSheet(GUI.GaugeFrontCSS:getCSS())
   GUI.Moves.back:setStyleSheet(GUI.GaugeBackCSS:getCSS())
-  GUI.Moves:setValue(math.random(100), 100)
-  GUI.Moves.front:echo([[&lt;span style = "color: black; text-shadow: 1px 1px 1px rgba(255,255,255,0.5);"&gt;&lt;b&gt;MOVEMENT&lt;/b&gt;&lt;/span&gt;]])
-  GUI.Experience =
-    Geyser.Gauge:new({name = "GUI.Experience", height = 32, v_policy = Geyser.Fixed}, GUI.GaugeBar)
-  GUI.GaugeFrontCSS:set("background-color", "#9370DB")
-  GUI.GaugeBackCSS:set("background-color", "#4B0082")
-  GUI.Experience.front:setStyleSheet(GUI.GaugeFrontCSS:getCSS())
-  GUI.Experience.back:setStyleSheet(GUI.GaugeBackCSS:getCSS())
-  GUI.Experience:setValue(math.random(100), 100)
-  GUI.Experience.front:echo([[&lt;span style = "color: black; text-shadow: 1px 1px 1px rgba(255,255,255,0.5);"&gt;&lt;b&gt;EXPERIENCE&lt;/b&gt;&lt;/span&gt;]])
+  GUI.Moves:setValue(100, 100)
+  GUI.Moves.front:echo([[&lt;span style = "color: black; text-shadow: 1px 1px 1px rgba(255,255,255,0.5);"&gt;&lt;b&gt;MOVES: 100/100&lt;/b&gt;&lt;/span&gt;]])
   GUI.Enemy =
-    Geyser.Gauge:new({name = "GUI.Enemy", height = 32, v_policy = Geyser.Fixed}, GUI.GaugeBar)
+    Geyser.Gauge:new({name = "GUI.Enemy", height = "17%", h_policy = Geyser.Dynamic, v_policy = Geyser.Dynamic}, GUI.GaugeBar)
   GUI.GaugeFrontCSS:set("background-color", "#9370DB")
   GUI.GaugeBackCSS:set("background-color", "#4B0082")
   GUI.Enemy.front:setStyleSheet(GUI.GaugeFrontCSS:getCSS())
   GUI.Enemy.back:setStyleSheet(GUI.GaugeBackCSS:getCSS())
-  GUI.Enemy:setValue(math.random(100), 100)
-  GUI.Enemy.front:echo([[&lt;b&gt;ENEMY&lt;/b&gt;]])
+  GUI.Enemy:setValue(0, 100)
+  GUI.Enemy.front:echo([[&lt;b&gt;ENEMY: 0/0&lt;/b&gt;]])
+  GUI.Enemy:hide() -- Hide until there's an actual enemy
   GUI.AffectedByIconsBox =
     Geyser.HBox:new(
       {
         name = "GUI.AffectedByIconsBox",
         x = 0,
         y = 0,
-        height = 48,
+        height = "32%",
         width = "100%",
-        h_policy = Geyser.Fixed,
-        v_policy = Geyser.Fixed,
+        h_policy = Geyser.Dynamic,
+        v_policy = Geyser.Dynamic,
       },
       GUI.GaugeBar
     )
@@ -2365,8 +2377,8 @@ function GUI.Affects.init()
           name = "GUI.AffectIcon" .. tostring(i),
           width = GUI.Affects.Modes.icon_width,
           height = GUI.Affects.Modes.icon_height,
-          h_policy = Geyser.Fixed,
-          v_policy = Geyser.Fixed,
+          h_policy = Geyser.Dynamic,
+          v_policy = Geyser.Dynamic,
         },
         GUI.AffectedByIconsBox
       )
@@ -3098,7 +3110,7 @@ function GUI.updateHealthGauge()
   end
   
   -- Update display
-  local displayText = "&lt;b&gt;HEALTH: &lt;span style='font-size:16px;'&gt;" .. health .. "&lt;/span&gt;&lt;span style='color:#4B0082;'&gt;/&lt;/span&gt;&lt;span style='font-size:14px;'&gt;" .. max_health .. "&lt;/span&gt;&lt;/b&gt;"
+  local displayText = "&lt;b&gt;HEALTH: " .. health .. "/" .. max_health .. "&lt;/b&gt;"
   GUI.Health.front:echo([[&lt;span style = "color: black; text-shadow: 1px 1px 1px rgba(255,255,255,0.5);"&gt;]] .. displayText .. [[&lt;/span&gt;]])
   GUI.Health.back:echo([[&lt;span&gt;]] .. displayText .. [[&lt;/span&gt;]])
   
@@ -3133,51 +3145,89 @@ function GUI.updateMovesGauge()
   end
   
   -- Update display
-  local displayText = "&lt;b&gt;MOVES: &lt;span style='font-size:16px;'&gt;" .. moves .. "&lt;/span&gt;&lt;span style='color:#4B0082;'&gt;/&lt;/span&gt;&lt;span style='font-size:14px;'&gt;" .. max_moves .. "&lt;/span&gt;&lt;/b&gt;"
+  local displayText = "&lt;b&gt;MOVES: " .. moves .. "/" .. max_moves .. "&lt;/b&gt;"
   GUI.Moves.front:echo([[&lt;span style = "color: black; text-shadow: 1px 1px 1px rgba(255,255,255,0.5);"&gt;]] .. displayText .. [[&lt;/span&gt;]])
   GUI.Moves.back:echo([[&lt;span&gt;]] .. displayText .. [[&lt;/span&gt;]])
   
   -- Set gauge value
-  if pct_moves > 100 then
+  if pct_moves &gt; 100 then
     GUI.Moves:setValue(100, 100)
   else
     GUI.Moves:setValue(pct_moves, 100)
   end
 end
 
-function GUI.updateExperienceGauge()
+-- function GUI.updateExperienceGauge()
+--   -- This function handles the following events:
+--   --   msdp.EXPERIENCE
+--   --   msdp.EXPERIENCE_TNL
+--   
+--   -- Check if gauge exists
+--   if not GUI.Experience then
+--     return
+--   end
+--   
+--   -- Get values with defaults
+--   local xp = tonumber(msdp.EXPERIENCE) or 0
+--   local xp_tnl = tonumber(msdp.EXPERIENCE_TNL) or 0
+--   
+--   -- Calculate percentage
+--   local pct_xp
+--   local total_xp = xp + xp_tnl
+--   if total_xp &gt; 0 then
+--     pct_xp = (xp / total_xp) * 100
+--   else
+--     pct_xp = 0
+--   end
+--   
+--   -- Update display with dynamic font sizes
+--   local gaugeHeight = GUI.Experience:get_height()
+--   local fontSize1 = math.max(8, math.floor(gaugeHeight * 0.4))
+--   local fontSize2 = math.max(6, math.floor(gaugeHeight * 0.3))
+--   local displayText = "&lt;b&gt;EXP: &lt;span style='font-size:" .. fontSize1 .. "px;'&gt;" .. xp .. "&lt;/span&gt;&lt;span style='color:#4B0082;'&gt;/&lt;/span&gt;&lt;span style='font-size:" .. fontSize2 .. "px;'&gt;" .. total_xp .. "&lt;/span&gt;&lt;/b&gt;"
+--   GUI.Experience.front:echo([[&lt;span style = "color: black; text-shadow: 1px 1px 1px rgba(255,255,255,0.5);"&gt;]] .. displayText .. [[&lt;/span&gt;]])
+--   GUI.Experience.back:echo([[&lt;span&gt;]] .. displayText .. [[&lt;/span&gt;]])
+--   
+--   -- Set gauge value
+--   if pct_xp &gt; 100 then
+--     GUI.Experience:setValue(100, 100)
+--   else
+--     GUI.Experience:setValue(pct_xp, 100)
+--   end
+-- end
+
+function GUI.updatePSPGauge()
   -- This function handles the following events:
-  --   msdp.EXPERIENCE
-  --   msdp.EXPERIENCE_TNL
+  --   msdp.PSP
+  --   msdp.PSP_MAX
   
   -- Check if gauge exists
-  if not GUI.Experience then
+  if not GUI.PSP then
     return
   end
   
   -- Get values with defaults
-  local xp = tonumber(msdp.EXPERIENCE) or 0
-  local xp_tnl = tonumber(msdp.EXPERIENCE_TNL) or 0
+  local psp = tonumber(msdp.PSP) or 0
+  local max_psp = tonumber(msdp.PSP_MAX) or 1
   
   -- Calculate percentage
-  local pct_xp
-  local total_xp = xp + xp_tnl
-  if total_xp &gt; 0 then
-    pct_xp = (xp / total_xp) * 100
+  local pct_psp
+  if max_psp &gt; 0 then
+    pct_psp = (psp / max_psp) * 100
   else
-    pct_xp = 0
+    pct_psp = 0
   end
   
   -- Update display
-  local displayText = "&lt;b&gt;EXP: &lt;span style='font-size:16px;'&gt;" .. xp .. "&lt;/span&gt;&lt;span style='color:#4B0082;'&gt;/&lt;/span&gt;&lt;span style='font-size:14px;'&gt;" .. total_xp .. "&lt;/span&gt;&lt;/b&gt;"
-  GUI.Experience.front:echo([[&lt;span style = "color: black; text-shadow: 1px 1px 1px rgba(255,255,255,0.5);"&gt;]] .. displayText .. [[&lt;/span&gt;]])
-  GUI.Experience.back:echo([[&lt;span&gt;]] .. displayText .. [[&lt;/span&gt;]])
+  local displayText = "&lt;b&gt;PSP: " .. psp .. "/" .. max_psp .. "&lt;/b&gt;"
+  GUI.PSP.front:echo([[&lt;span style = "color: black; text-shadow: 1px 1px 1px rgba(255,255,255,0.5);"&gt;]] .. displayText .. [[&lt;/span&gt;]])
+  GUI.PSP.back:echo([[&lt;span&gt;]] .. displayText .. [[&lt;/span&gt;]])
   
   -- Set gauge value
-  if pct_xp &gt; 100 then
-    GUI.Experience:setValue(100, 100)
+  if pct_psp &gt; 100 then
+    GUI.PSP:setValue(100, 100)
   else
-    GUI.Experience:setValue(pct_xp, 100)
+    GUI.PSP:setValue(pct_psp, 100)
   end
 end
 
@@ -3216,7 +3266,7 @@ function GUI.updateEnemyGauge()
   end
   
   -- Update display
-  local displayText = "&lt;b&gt;" .. opponent_name:upper() .. ": &lt;span style='color:#FF0000;font-size:16px;'&gt;" .. health .. "&lt;/span&gt;&lt;span style='color:#9370DB;'&gt;/&lt;/span&gt;&lt;span style='color:#FFFFFF;font-size:14px;'&gt;" .. max_health .. "&lt;/span&gt;&lt;/b&gt;"
+  local displayText = "&lt;b&gt;" .. opponent_name:upper() .. ": &lt;span style='color:#FF0000;'&gt;" .. health .. "&lt;/span&gt;&lt;span style='color:#9370DB;'&gt;/&lt;/span&gt;&lt;span style='color:#FFFFFF;'&gt;" .. max_health .. "&lt;/span&gt;&lt;/b&gt;"
   GUI.Enemy.front:echo(displayText)
   GUI.Enemy.back:echo(displayText)
   
@@ -3374,8 +3424,10 @@ function GUI.registerEventHandlers()
     ["msdp.OPPONENT_NAME"] = "GUI.updateEnemyGauge",
     ["msdp.MOVEMENT"] = "GUI.updateMovesGauge",
     ["msdp.MOVEMENT_MAX"] = "GUI.updateMovesGauge",
-    ["msdp.EXPERIENCE"] = "GUI.updateExperienceGauge",
-    ["msdp.EXPERIENCE_TNL"] = "GUI.updateExperienceGauge",
+    -- ["msdp.EXPERIENCE"] = "GUI.updateExperienceGauge",
+    -- ["msdp.EXPERIENCE_TNL"] = "GUI.updateExperienceGauge",
+    ["msdp.PSP"] = "GUI.updatePSPGauge",
+    ["msdp.PSP_MAX"] = "GUI.updatePSPGauge",
     ["msdp.ACTIONS"] = "GUI.updateActionIcons",
     ["msdp.CHARACTER_NAME"] = "GUI.updatePlayer",
     ["msdp.RACE"] = "GUI.updatePlayer",
@@ -3449,8 +3501,11 @@ function GUI.registerEventHandlers()
     if msdp.MOVEMENT and msdp.MOVEMENT_MAX then
       GUI.updateMovesGauge()
     end
-    if msdp.EXPERIENCE and msdp.EXPERIENCE_TNL then
-      GUI.updateExperienceGauge()
+    -- if msdp.EXPERIENCE and msdp.EXPERIENCE_TNL then
+    --   GUI.updateExperienceGauge()
+    -- end
+    if msdp.PSP and msdp.PSP_MAX then
+      GUI.updatePSPGauge()
     end
     
     -- Enemy gauge refresh (only if opponent data exists)
@@ -3530,7 +3585,8 @@ function GUI.initializeOrRefresh(context)
     GUI.Box7:raise()
     if msdp.HEALTH then GUI.updateHealthGauge() end
     if msdp.MOVEMENT then GUI.updateMovesGauge() end
-    if msdp.EXPERIENCE then GUI.updateExperienceGauge() end
+    -- if msdp.EXPERIENCE then GUI.updateExperienceGauge() end
+    if msdp.PSP then GUI.updatePSPGauge() end
     table.insert(refreshed, "status gauges")
   end
   

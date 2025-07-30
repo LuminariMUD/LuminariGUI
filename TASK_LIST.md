@@ -1,5 +1,71 @@
 # TASK_LIST.md
 
+## ✅ GUI.init_gauges() Function Analysis - FIXED
+**Location: LuminariGUI.xml, Lines 1764-1927**
+**Status: All issues have been resolved**
+
+### Summary of Fixes Applied:
+1. **CSS Reuse Bug**: Replaced shared CSS objects with inline CSS templates using string.format()
+2. **MSDP Integration**: Gauges now initialize with actual MSDP data (HEALTH, PSP, MOVEMENT, OPPONENT_HEALTH)
+3. **Error Handling**: Added validation for parent containers (GUI.Bottom, GUI.Box7)
+4. **Event Handlers**: Registered MSDP event handlers for automatic gauge updates
+5. **Clean Echo Commands**: Removed HTML entities, using proper string formatting
+6. **Correct Colors**: Each gauge now displays its intended color (red, turquoise, gold, purple)
+
+### Critical Issues Fixed:
+
+#### 1. **CSS Object Reuse Bug (CRITICAL)**
+- **Lines**: 1793-1866
+- **Problem**: The same CSS objects (`GUI.GaugeFrontCSS` and `GUI.GaugeBackCSS`) are modified repeatedly for each gauge
+- **Impact**: All gauges end up with the Enemy gauge's purple color scheme because each `:set()` call overwrites the previous color
+- **Example**:
+  ```lua
+  GUI.GaugeFrontCSS:set("background-color", "#FF6B6B") -- Health (red)
+  GUI.GaugeFrontCSS:set("background-color", "#40E0D0") -- PSP (turquoise) - overwrites!
+  GUI.GaugeFrontCSS:set("background-color", "#FFD700") -- Moves (gold) - overwrites!
+  GUI.GaugeFrontCSS:set("background-color", "#9370DB") -- Enemy (purple) - final color!
+  ```
+
+#### 2. **Hardcoded Initial Values**
+- **Lines**: 1832, 1848, 1856, 1864
+- **Problem**: All gauges initialized with static values (100/100 or 0/0) instead of actual game data
+- **Impact**: Gauges show incorrect values until first update from server
+
+#### 3. **No Error Handling**
+- **Entire function**: 1764-1880
+- **Problem**: No validation that parent containers exist before creating children
+- **Impact**: Potential runtime errors if GUI structure changes
+
+#### 4. **Inefficient CSS Management**
+- **Lines**: 1793-1825
+- **Problem**: Creates "shared" CSS objects but then modifies them per-gauge, defeating reusability
+- **Impact**: Memory inefficiency and confusing code structure
+
+#### 5. **Mixed HTML Entity Usage**
+- **Lines**: 1833, 1849, 1857
+- **Problem**: Using `&lt;span style = "..."&gt;` HTML entities in echo commands
+- **Impact**: May not render correctly in all Mudlet versions
+
+#### 6. **Missing Event Handlers**
+- **Entire function**: No event registration
+- **Problem**: Gauges created but not connected to MSDP data updates
+- **Impact**: Gauges remain static until external code updates them
+
+#### 7. **Fixed Layout Percentages**
+- **Lines**: 1827, 1843, 1851, 1859, 1873
+- **Problem**: Hardcoded 17% height for gauges, 32% for icons
+- **Impact**: Poor adaptability to different screen sizes
+
+### Recommendations:
+1. Create separate CSS objects for each gauge or use inline styles
+2. Initialize gauges with actual MSDP data or sensible defaults
+3. Add error checking for parent container existence
+4. Register event handlers for MSDP updates within initialization
+5. Consider making heights configurable or responsive
+
+### Code Section Reference:
+The complete `GUI.init_gauges()` function spans from line 1764 to line 1880 in LuminariGUI.xml.
+
 ---
 
 ## 🔧 FUNCTIONAL IMPROVEMENTS - Missing Commands/Features
