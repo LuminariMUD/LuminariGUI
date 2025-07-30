@@ -3109,11 +3109,7 @@ function GUI.updateHealthGauge()
     pct_health = 0
   end
   
-  -- Update display with dynamic font sizes
-  local gaugeHeight = GUI.Health:get_height()
-  local fontSize = math.max(8, math.floor(gaugeHeight * 0.5))
-  GUI.Health.front:setFontSize(fontSize)
-  GUI.Health.back:setFontSize(fontSize)
+  -- Update display
   local displayText = "&lt;b&gt;HEALTH: " .. health .. "/" .. max_health .. "&lt;/b&gt;"
   GUI.Health.front:echo([[&lt;span style = "color: black; text-shadow: 1px 1px 1px rgba(255,255,255,0.5);"&gt;]] .. displayText .. [[&lt;/span&gt;]])
   GUI.Health.back:echo([[&lt;span&gt;]] .. displayText .. [[&lt;/span&gt;]])
@@ -3148,11 +3144,7 @@ function GUI.updateMovesGauge()
     pct_moves = 0
   end
   
-  -- Update display with dynamic font sizes
-  local gaugeHeight = GUI.Moves:get_height()
-  local fontSize = math.max(8, math.floor(gaugeHeight * 0.5))
-  GUI.Moves.front:setFontSize(fontSize)
-  GUI.Moves.back:setFontSize(fontSize)
+  -- Update display
   local displayText = "&lt;b&gt;MOVES: " .. moves .. "/" .. max_moves .. "&lt;/b&gt;"
   GUI.Moves.front:echo([[&lt;span style = "color: black; text-shadow: 1px 1px 1px rgba(255,255,255,0.5);"&gt;]] .. displayText .. [[&lt;/span&gt;]])
   GUI.Moves.back:echo([[&lt;span&gt;]] .. displayText .. [[&lt;/span&gt;]])
@@ -3226,11 +3218,7 @@ function GUI.updatePSPGauge()
     pct_psp = 0
   end
   
-  -- Update display with dynamic font sizes
-  local gaugeHeight = GUI.PSP:get_height()
-  local fontSize = math.max(8, math.floor(gaugeHeight * 0.5))
-  GUI.PSP.front:setFontSize(fontSize)
-  GUI.PSP.back:setFontSize(fontSize)
+  -- Update display
   local displayText = "&lt;b&gt;PSP: " .. psp .. "/" .. max_psp .. "&lt;/b&gt;"
   GUI.PSP.front:echo([[&lt;span style = "color: black; text-shadow: 1px 1px 1px rgba(255,255,255,0.5);"&gt;]] .. displayText .. [[&lt;/span&gt;]])
   GUI.PSP.back:echo([[&lt;span&gt;]] .. displayText .. [[&lt;/span&gt;]])
@@ -3277,11 +3265,7 @@ function GUI.updateEnemyGauge()
     pct_health = 0
   end
   
-  -- Update display with dynamic font sizes
-  local gaugeHeight = GUI.Enemy:get_height()
-  local fontSize = math.max(8, math.floor(gaugeHeight * 0.5))
-  GUI.Enemy.front:setFontSize(fontSize)
-  GUI.Enemy.back:setFontSize(fontSize)
+  -- Update display
   local displayText = "&lt;b&gt;" .. opponent_name:upper() .. ": &lt;span style='color:#FF0000;'&gt;" .. health .. "&lt;/span&gt;&lt;span style='color:#9370DB;'&gt;/&lt;/span&gt;&lt;span style='color:#FFFFFF;'&gt;" .. max_health .. "&lt;/span&gt;&lt;/b&gt;"
   GUI.Enemy.front:echo(displayText)
   GUI.Enemy.back:echo(displayText)
