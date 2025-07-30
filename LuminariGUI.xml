@@ -1825,7 +1825,7 @@ end</script>
 ]]
     )
   GUI.Health =
-    Geyser.Gauge:new({name = "GUI.Health", height = 32, v_policy = Geyser.Fixed}, GUI.GaugeBar)
+    Geyser.Gauge:new({name = "GUI.Health", height = "25%", h_policy = Geyser.Dynamic, v_policy = Geyser.Dynamic}, GUI.GaugeBar)
   GUI.GaugeFrontCSS:set("background-color", "#FF6B6B")
   GUI.GaugeBackCSS:set("background-color", "#8B0000")
   GUI.Health.front:setStyleSheet(GUI.GaugeFrontCSS:getCSS())
@@ -1833,7 +1833,7 @@ end</script>
   GUI.Health:setValue(math.random(100), 100)
   GUI.Health.front:echo([[&lt;span style = "color: black; text-shadow: 1px 1px 1px rgba(255,255,255,0.5);"&gt;&lt;b&gt;HEALTH&lt;/b&gt;&lt;/span&gt;]])
   GUI.Moves =
-    Geyser.Gauge:new({name = "GUI.Moves", height = 32, v_policy = Geyser.Fixed}, GUI.GaugeBar)
+    Geyser.Gauge:new({name = "GUI.Moves", height = "25%", h_policy = Geyser.Dynamic, v_policy = Geyser.Dynamic}, GUI.GaugeBar)
   GUI.GaugeFrontCSS:set("background-color", "#FFD700")
   GUI.GaugeBackCSS:set("background-color", "#B8860B")
   GUI.Moves.front:setStyleSheet(GUI.GaugeFrontCSS:getCSS())
@@ -1841,7 +1841,7 @@ end</script>
   GUI.Moves:setValue(math.random(100), 100)
   GUI.Moves.front:echo([[&lt;span style = "color: black; text-shadow: 1px 1px 1px rgba(255,255,255,0.5);"&gt;&lt;b&gt;MOVEMENT&lt;/b&gt;&lt;/span&gt;]])
   GUI.Experience =
-    Geyser.Gauge:new({name = "GUI.Experience", height = 32, v_policy = Geyser.Fixed}, GUI.GaugeBar)
+    Geyser.Gauge:new({name = "GUI.Experience", height = "25%", h_policy = Geyser.Dynamic, v_policy = Geyser.Dynamic}, GUI.GaugeBar)
   GUI.GaugeFrontCSS:set("background-color", "#9370DB")
   GUI.GaugeBackCSS:set("background-color", "#4B0082")
   GUI.Experience.front:setStyleSheet(GUI.GaugeFrontCSS:getCSS())
@@ -1849,7 +1849,7 @@ end</script>
   GUI.Experience:setValue(math.random(100), 100)
   GUI.Experience.front:echo([[&lt;span style = "color: black; text-shadow: 1px 1px 1px rgba(255,255,255,0.5);"&gt;&lt;b&gt;EXPERIENCE&lt;/b&gt;&lt;/span&gt;]])
   GUI.Enemy =
-    Geyser.Gauge:new({name = "GUI.Enemy", height = 32, v_policy = Geyser.Fixed}, GUI.GaugeBar)
+    Geyser.Gauge:new({name = "GUI.Enemy", height = "25%", h_policy = Geyser.Dynamic, v_policy = Geyser.Dynamic}, GUI.GaugeBar)
   GUI.GaugeFrontCSS:set("background-color", "#9370DB")
   GUI.GaugeBackCSS:set("background-color", "#4B0082")
   GUI.Enemy.front:setStyleSheet(GUI.GaugeFrontCSS:getCSS())
@@ -1864,8 +1864,8 @@ end</script>
         y = 0,
         height = 48,
         width = "100%",
-        h_policy = Geyser.Fixed,
-        v_policy = Geyser.Fixed,
+        h_policy = Geyser.Dynamic,
+        v_policy = Geyser.Dynamic,
       },
       GUI.GaugeBar
     )
@@ -2369,8 +2369,8 @@ function GUI.Affects.init()
           name = "GUI.AffectIcon" .. tostring(i),
           width = GUI.Affects.Modes.icon_width,
           height = GUI.Affects.Modes.icon_height,
-          h_policy = Geyser.Fixed,
-          v_policy = Geyser.Fixed,
+          h_policy = Geyser.Dynamic,
+          v_policy = Geyser.Dynamic,
         },
         GUI.AffectedByIconsBox
       )
