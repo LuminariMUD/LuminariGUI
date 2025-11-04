@@ -32,6 +32,7 @@ test_results_latest.json
 *.swo
 *~
 .claude/
+CLAUDE.md
 
 # OS
 .DS_Store
