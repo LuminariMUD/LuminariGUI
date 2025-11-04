@@ -11,7 +11,7 @@ import os
 
 # Try to import Lua syntax tester
 try:
-    from test_lua_syntax import LuaSyntaxTester
+    from tests.test_lua_syntax import LuaSyntaxTester
     SYNTAX_TESTING_AVAILABLE = True
 except ImportError:
     SYNTAX_TESTING_AVAILABLE = False
@@ -136,7 +136,7 @@ if __name__ == "__main__":
     import argparse
     
     parser = argparse.ArgumentParser(description='Validate LuminariGUI package (XML structure and Lua syntax)')
-    parser.add_argument('filename', nargs='?', default='LuminariGUI.xml', 
+    parser.add_argument('filename', nargs='?', default='../LuminariGUI.xml', 
                         help='XML file to validate (default: LuminariGUI.xml)')
     parser.add_argument('--no-lua-syntax', action='store_true',
                         help='Skip Lua syntax validation')

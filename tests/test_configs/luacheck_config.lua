@@ -76,7 +76,7 @@ ignore = {
 
 -- File-specific configurations
 files = {
-    ["tests/sample_scripts/*.lua"] = {
+    ["sample_scripts/*.lua"] = {
         ignore = {"111", "112", "113"} -- Allow undefined variables in test scripts
     }
 }

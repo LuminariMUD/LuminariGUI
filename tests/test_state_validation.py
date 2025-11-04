@@ -202,7 +202,7 @@ def test_state_validation():
     
     try:
         # Read the XML to extract the State Validator script
-        with open('LuminariGUI.xml', 'r', encoding='utf-8') as f:
+        with open('../LuminariGUI.xml', 'r', encoding='utf-8') as f:
             content = f.read()
         
         # Extract the State Validator script

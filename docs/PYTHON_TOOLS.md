@@ -5,9 +5,9 @@
 The LuminariGUI project includes a sophisticated Python toolchain that provides comprehensive development workflow automation, XML management, and release orchestration. These tools work together to streamline the development process from code validation to production releases.
 
 ### Tool Suite
-- **[`validate_package.py`](#validate_packagepy---package-validation)** - Package validation with integrated Lua syntax checking
-- **[`format_xml.py`](#format_xmlpy---xml-formatting)** - XML formatting and maintenance  
-- **[`create_package.py`](#create_packagepy---release-management)** - Complete release management with optional testing integration
+- **[`scripts/validate_package.py`](#validate_packagepy---package-validation)** - Package validation with integrated Lua syntax checking
+- **[`scripts/format_xml.py`](#format_xmlpy---xml-formatting)** - XML formatting and maintenance  
+- **[`scripts/create_package.py`](#create_packagepy---release-management)** - Complete release management with optional testing integration
 - **[`run_tests.py`](#run_testspy---testing-orchestration)** - Comprehensive testing framework orchestrator
 - **Testing Infrastructure** - Complete suite of automated testing tools for code quality assurance
 
@@ -82,7 +82,7 @@ python3 validate_package.py --quiet
 - **Component Analysis**: Counts and reports package components
 - **Common Issues Detection**: Identifies unescaped characters and potential problems
 - **Comprehensive Error Reporting**: Shows both XML structure and Lua syntax errors
-- **Integration Ready**: Called automatically by [`create_package.py`](#create_packagepy---release-management)
+- **Integration Ready**: Called automatically by [`scripts/create_package.py`](#create_packagepy---release-management)
 - **Flexible Options**: Can skip Lua checking for XML-only validation
 
 #### Output Interpretation
@@ -220,7 +220,7 @@ python3 create_package.py --verbose
 The `--release` option executes a complete release workflow:
 
 1. **Pre-release Validation**
-   - Package validation using [`validate_package.py`](#validate_packagepy---package-validation)
+   - Package validation using [`scripts/validate_package.py`](#validate_packagepy---package-validation)
    - Git repository status check
    - Version consistency verification
 
@@ -416,7 +416,7 @@ echo "✅ Release completed successfully!"
 ```
 **Solutions**:
 - Commit changes: `git add . && git commit -m "Update"`
-- Skip check: `python3 create_package.py --skip-git-check`
+- Skip check: `python3 scripts/create_package.py --skip-git-check`
 - Stash changes: `git stash`
 
 #### Version Inconsistencies
@@ -433,7 +433,7 @@ echo "✅ Release completed successfully!"
 ```
 **Solutions**:
 - Check file exists: `ls -la LuminariGUI.xml`
-- Specify path: `python3 create_package.py --xml path/to/file.xml`
+- Specify path: `python3 scripts/create_package.py --xml path/to/file.xml`
 - Verify working directory
 
 ### Platform-Specific Notes
@@ -494,12 +494,12 @@ python3 run_tests.py --report results.txt --format text
 ### Testing Infrastructure Components
 
 #### Individual Test Tools
-- **`test_lua_syntax.py`** - Validates Lua syntax using luac compiler
-- **`test_lua_quality.py`** - Static code analysis using luacheck with comprehensive rules
-- **`test_functions.py`** - Unit tests for core functions with mock data
-- **`test_events.py`** - Event system testing with MSDP mocks and cascade testing
-- **`test_system.py`** - Memory leak detection and error boundary validation
-- **`test_performance.py`** - Performance benchmarks with threshold monitoring
+- **`tests/test_lua_syntax.py`** - Validates Lua syntax using luac compiler
+- **`tests/test_lua_quality.py`** - Static code analysis using luacheck with comprehensive rules
+- **`tests/test_functions.py`** - Unit tests for core functions with mock data
+- **`tests/test_events.py`** - Event system testing with MSDP mocks and cascade testing
+- **`tests/test_system.py`** - Memory leak detection and error boundary validation
+- **`tests/test_performance.py`** - Performance benchmarks with threshold monitoring
 
 #### Test Data & Configuration
 - **`tests/mock_data/`** - Mock MSDP data for testing (room, affects, group data)
@@ -613,19 +613,19 @@ python3 create_package.py --version 2.1.0 --git-commit
 ## Best Practices
 
 ### Development
-1. **Always validate before committing**: `python3 validate_package.py`
-2. **Use development packages for testing**: `python3 create_package.py --dev`
-3. **Format XML regularly**: `python3 format_xml.py`
-4. **Test release workflow**: `python3 create_package.py --release --dry-run`
+1. **Always validate before committing**: `python3 scripts/validate_package.py`
+2. **Use development packages for testing**: `python3 scripts/create_package.py --dev`
+3. **Format XML regularly**: `python3 scripts/format_xml.py`
+4. **Test release workflow**: `python3 scripts/create_package.py --release --dry-run`
 
 ### Release Management
-1. **Use the integrated release workflow**: `python3 create_package.py --release`
+1. **Use the integrated release workflow**: `python3 scripts/create_package.py --release`
 2. **Test before pushing**: Omit `--push` flag initially
 3. **Maintain clean git history**: Commit changes before releasing
 4. **Document releases**: Update CHANGELOG.md before releasing
 
 ### Maintenance
-1. **Regular cleanup**: `python3 create_package.py --cleanup-legacy`
+1. **Regular cleanup**: `python3 scripts/create_package.py --cleanup-legacy`
 2. **Monitor package sizes**: Review output of `--list` command
 3. **Backup important releases**: Keep copies of major version packages
 4. **Update metadata**: Run `--migrate-metadata` after tool updates

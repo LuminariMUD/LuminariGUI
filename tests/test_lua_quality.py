@@ -14,7 +14,7 @@ import re
 from pathlib import Path
 
 class LuaQualityAnalyzer:
-    def __init__(self, xml_file="LuminariGUI.xml"):
+    def __init__(self, xml_file="../LuminariGUI.xml"):
         self.xml_file = xml_file
         self.luacheck_path = self._find_luacheck()
         self.errors = []
@@ -70,12 +70,12 @@ class LuaQualityAnalyzer:
     def _get_luacheck_config(self):
         """Get the path to the luacheck configuration file."""
         # Check if custom config exists
-        config_path = os.path.join("tests", "test_configs", "luacheck_config.lua")
+        config_path = os.path.join("test_configs", "luacheck_config.lua")
         if os.path.exists(config_path):
             return config_path
-        
+
         # Fallback to creating a temporary config
-        self.warnings.append("Using fallback luacheck configuration. Consider using tests/test_configs/luacheck_config.lua")
+        self.warnings.append("Using fallback luacheck configuration. Consider using test_configs/luacheck_config.lua")
         config_content = """
 -- Fallback Mudlet/LuminariGUI configuration
 std = "luajit"
@@ -272,7 +272,7 @@ def main():
     import argparse
     
     parser = argparse.ArgumentParser(description='Analyze Lua code quality in LuminariGUI XML')
-    parser.add_argument('--xml', default='LuminariGUI.xml', help='XML file to analyze')
+    parser.add_argument('--xml', default='../LuminariGUI.xml', help='XML file to analyze')
     parser.add_argument('--strict', action='store_true', help='Fail on warnings too')
     parser.add_argument('--verbose', '-v', action='store_true', help='Verbose output')
     parser.add_argument('--quiet', '-q', action='store_true', help='Quiet mode - only errors')

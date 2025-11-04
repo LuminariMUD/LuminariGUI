@@ -281,10 +281,10 @@ This project includes comprehensive documentation for all aspects of development
 
 #### **🧪 Testing & Quality**
 - **[`tests/README.md`](tests/README.md)**: Testing infrastructure documentation
-- **[`create_package.py`](create_package.py)**: Automated .mpackage creation with optional testing integration
-- **[`format_xml.py`](format_xml.py)**: XML formatting utility for maintaining code standards
-- **[`validate_package.py`](validate_package.py)**: Package validation tool with integrated Lua syntax checking
-- **[`run_tests.py`](run_tests.py)**: Comprehensive test suite runner with parallel execution
+- **[`scripts/create_package.py`](scripts/create_package.py)**: Automated .mpackage creation with optional testing integration
+- **[`scripts/format_xml.py`](scripts/format_xml.py)**: XML formatting utility for maintaining code standards
+- **[`scripts/validate_package.py`](scripts/validate_package.py)**: Package validation tool with integrated Lua syntax checking
+- **[`run_tests.py`](tests/run_tests.py)**: Comprehensive test suite runner with parallel execution
 
 #### **🎨 Resources**
 - **[`images/README`](images/README)**: Image assets documentation
@@ -302,7 +302,7 @@ This project includes comprehensive documentation for all aspects of development
 | **Handle Mudlet XML specifics** | [`CLAUDE.md`](CLAUDE.md) |
 | **Check development tasks** | [`TASK_LIST.md`](TASK_LIST.md) |
 | **Run tests** | [`tests/README.md`](tests/README.md) |
-| **Create .mpackage files** | [`create_package.py`](create_package.py) |
+| **Create .mpackage files** | [`scripts/create_package.py`](scripts/create_package.py) |
 | **Check version changes** | [`CHANGELOG.md`](CHANGELOG.md) |
 
 ## Development
@@ -347,14 +347,14 @@ python format_xml.py            # ⚠️ Will fail - this is expected
 python run_tests.py --test functions events performance
 
 # Individual working tests
-python test_functions.py      # Unit tests ✅
-python test_events.py         # Event handler testing ✅  
-python test_performance.py    # Performance benchmarks ✅
+python tests/test_functions.py      # Unit tests ✅
+python tests/test_events.py         # Event handler testing ✅  
+python tests/test_performance.py    # Performance benchmarks ✅
 
 # Tests that FAIL due to XML parsing (expected):
-python test_lua_syntax.py     # ❌ Cannot parse Mudlet XML
-python test_lua_quality.py    # ❌ Cannot parse Mudlet XML
-python test_system.py         # ❌ Cannot parse Mudlet XML
+python tests/test_lua_syntax.py     # ❌ Cannot parse Mudlet XML
+python tests/test_lua_quality.py    # ❌ Cannot parse Mudlet XML
+python tests/test_system.py         # ❌ Cannot parse Mudlet XML
 python validate_package.py    # ❌ Cannot parse Mudlet XML
 python format_xml.py          # ❌ Cannot parse Mudlet XML
 ```

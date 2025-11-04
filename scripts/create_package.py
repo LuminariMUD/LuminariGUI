@@ -77,7 +77,7 @@ def get_version_from_changelog():
         print(f"⚠️  Warning: Could not read CHANGELOG.md: {e}")
         return None
 
-def get_version_from_xml(xml_file="LuminariGUI.xml"):
+def get_version_from_xml(xml_file="../LuminariGUI.xml"):
     """Extract version from XML file's MudletPackage element"""
     try:
         with open(xml_file, 'r', encoding='utf-8') as f:
@@ -296,7 +296,7 @@ def create_release_branch(version):
 def commit_release_changes(version, files_to_add=None):
     """Commit release-related changes"""
     if files_to_add is None:
-        files_to_add = ['CHANGELOG.md', 'LuminariGUI.xml']
+        files_to_add = ['CHANGELOG.md', '../LuminariGUI.xml']
     
     # Add specified files
     for file_path in files_to_add:
@@ -364,7 +364,7 @@ def push_git_changes(branch_name=None, push_tags=False):
     
     return True
 
-def validate_package_file(xml_file="LuminariGUI.xml", run_tests=False):
+def validate_package_file(xml_file="../LuminariGUI.xml", run_tests=False):
     """Run package validation using validate_package.py and optionally full test suite"""
     if not os.path.exists("validate_package.py"):
         print("⚠️  Warning: validate_package.py not found, skipping package validation")
@@ -494,7 +494,7 @@ def update_changelog_version(version):
         print(f"❌ Error updating changelog: {e}")
         return False
 
-def check_version_consistency(version, xml_file="LuminariGUI.xml"):
+def check_version_consistency(version, xml_file="../LuminariGUI.xml"):
     """Check if version is consistent across files"""
     changelog_version = get_version_from_changelog()
     
@@ -753,7 +753,7 @@ def execute_release_workflow(xml_file, version, dry_run=False, push=False, force
     
     return True
 
-def create_mpackage(xml_file="LuminariGUI.xml", version=None, is_dev=False):
+def create_mpackage(xml_file="../LuminariGUI.xml", version=None, is_dev=False):
     """Create .mpackage file from XML source with proper versioning"""
     
     # Validate source file
@@ -956,7 +956,7 @@ Output Structure:
     )
     
     # Core options
-    parser.add_argument('--xml', default='LuminariGUI.xml', 
+    parser.add_argument('--xml', default='../LuminariGUI.xml', 
                        help='Source XML file (default: LuminariGUI.xml)')
     parser.add_argument('--version', 
                        help='Override version (default: auto-detect from CHANGELOG.md)')

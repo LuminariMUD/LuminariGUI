@@ -91,7 +91,7 @@ def main():
     import argparse
     
     parser = argparse.ArgumentParser(description='Format Mudlet package XML files')
-    parser.add_argument('input_file', nargs='?', default='LuminariGUI.xml',
+    parser.add_argument('input_file', nargs='?', default='../LuminariGUI.xml',
                         help='Input XML file (default: LuminariGUI.xml)')
     parser.add_argument('-o', '--output', dest='output_file',
                         help='Output file (default: format in place)')

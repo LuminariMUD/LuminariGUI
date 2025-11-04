@@ -26,7 +26,7 @@ except ImportError as e:
     sys.exit(1)
 
 class TestRunner:
-    def __init__(self, xml_file="LuminariGUI.xml"):
+    def __init__(self, xml_file="../LuminariGUI.xml"):
         self.xml_file = xml_file
         self.results = {}
         self.start_time = None
@@ -387,7 +387,7 @@ class TestRunner:
 def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(description='Run LuminariGUI tests')
-    parser.add_argument('--xml', default='LuminariGUI.xml', help='XML file to test')
+    parser.add_argument('--xml', default='../LuminariGUI.xml', help='XML file to test')
     parser.add_argument('--parallel', action='store_true', help='Run tests in parallel')
     parser.add_argument('--sequential', action='store_true', help='Run tests sequentially')
     parser.add_argument('--skip-optional', action='store_true', help='Skip tests with missing dependencies')

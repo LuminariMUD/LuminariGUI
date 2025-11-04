@@ -42,11 +42,11 @@ LuminariGUI is a Mudlet GUI package for LuminariMUD, a text-based MUD game. The 
 - **Debug**: Use Mudlet's built-in Lua console and error viewer
 
 ### XML Validation & Formatting
-- **Validate Package**: `python3 validate_package.py` - Check XML structure, common issues, and Lua syntax
-- **Validate XML only**: `python3 validate_package.py --no-lua-syntax` - Skip Lua syntax checking
-- **Format XML**: `python3 format_xml.py` - Pretty-print and format the XML file
-- **Format with output**: `python3 format_xml.py -o formatted.xml` - Format to new file
-- **Format without backup**: `python3 format_xml.py --no-backup` - Skip backup creation
+- **Validate Package**: `python3 scripts/validate_package.py` - Check XML structure, common issues, and Lua syntax
+- **Validate XML only**: `python3 scripts/validate_package.py --no-lua-syntax` - Skip Lua syntax checking
+- **Format XML**: `python3 scripts/format_xml.py` - Pretty-print and format the XML file
+- **Format with output**: `python3 scripts/format_xml.py -o formatted.xml` - Format to new file
+- **Format without backup**: `python3 scripts/format_xml.py --no-backup` - Skip backup creation
 
 **⚠️ IMPORTANT**: These tools will report "errors" that are actually correct for Mudlet. This is expected and acceptable. The XML is designed for Mudlet's parser, not standard XML validators.
 
@@ -55,33 +55,33 @@ Note: XML validation runs automatically on git commit via pre-commit hook
 ### Testing Infrastructure
 
 **⚠️ TESTING LIMITATIONS**: Due to Mudlet-specific XML format, only 3 tests work with current XML:
-- ✅ **PASS**: `python3 test_functions.py` - Unit tests for core functions
-- ✅ **PASS**: `python3 test_events.py` - Event system testing with mocks  
-- ✅ **PASS**: `python3 test_performance.py` - Performance benchmarks
-- ❌ **FAIL**: `python3 test_lua_syntax.py` - Cannot parse Mudlet XML
-- ❌ **FAIL**: `python3 test_lua_quality.py` - Cannot parse Mudlet XML
-- ❌ **FAIL**: `python3 test_system.py` - Cannot parse Mudlet XML
-- ❌ **FAIL**: `python3 validate_package.py` - Cannot parse Mudlet XML
-- ❌ **FAIL**: `python3 format_xml.py` - Cannot parse Mudlet XML
+- ✅ **PASS**: `python3 tests/test_functions.py` - Unit tests for core functions
+- ✅ **PASS**: `python3 tests/test_events.py` - Event system testing with mocks  
+- ✅ **PASS**: `python3 tests/test_performance.py` - Performance benchmarks
+- ❌ **FAIL**: `python3 tests/test_lua_syntax.py` - Cannot parse Mudlet XML
+- ❌ **FAIL**: `python3 tests/test_lua_quality.py` - Cannot parse Mudlet XML
+- ❌ **FAIL**: `python3 tests/test_system.py` - Cannot parse Mudlet XML
+- ❌ **FAIL**: `python3 scripts/validate_package.py` - Cannot parse Mudlet XML
+- ❌ **FAIL**: `python3 scripts/format_xml.py` - Cannot parse Mudlet XML
 
 **This is expected and acceptable** - the XML works perfectly in Mudlet.
 
 #### Available Test Commands
-- **Run working tests**: `python3 run_tests.py --test functions events performance`
-- **Run all tests**: `python3 run_tests.py` - Shows 3 pass, 5 fail (expected)
+- **Run working tests**: `python3 tests/run_tests.py --test functions events performance`
+- **Run all tests**: `python3 tests/run_tests.py` - Shows 3 pass, 5 fail (expected)
 - **Individual working tests**:
-  - `python3 test_functions.py` - Unit tests for core functions
-  - `python3 test_events.py` - Event system testing with mocks
-  - `python3 test_performance.py` - Performance benchmarks
+  - `python3 tests/test_functions.py` - Unit tests for core functions
+  - `python3 tests/test_events.py` - Event system testing with mocks
+  - `python3 tests/test_performance.py` - Performance benchmarks
 
 ### Release Management
-- **Create release**: `python3 create_package.py --release --skip-validation` - Complete release workflow
-- **Development build**: `python3 create_package.py --dev --skip-validation` - Create timestamped dev package
-- **List packages**: `python3 create_package.py --list` - Show all packages with metadata
-- **Dry run**: `python3 create_package.py --release --dry-run --skip-validation` - Test release without changes
-- **Git operations**: `python3 create_package.py --git-tag --git-branch --git-commit`
-- **Cleanup**: `python3 create_package.py --cleanup-legacy` - Remove old/legacy files
-- **Migrate metadata**: `python3 create_package.py --migrate-metadata` - Generate missing JSON files
+- **Create release**: `python3 scripts/create_package.py --release --skip-validation` - Complete release workflow
+- **Development build**: `python3 scripts/create_package.py --dev --skip-validation` - Create timestamped dev package
+- **List packages**: `python3 scripts/create_package.py --list` - Show all packages with metadata
+- **Dry run**: `python3 scripts/create_package.py --release --dry-run --skip-validation` - Test release without changes
+- **Git operations**: `python3 scripts/create_package.py --git-tag --git-branch --git-commit`
+- **Cleanup**: `python3 scripts/create_package.py --cleanup-legacy` - Remove old/legacy files
+- **Migrate metadata**: `python3 scripts/create_package.py --migrate-metadata` - Generate missing JSON files
 
 **⚠️ IMPORTANT**: Always use `--skip-validation` flag because the XML validation will fail on Mudlet-specific formatting.
 
@@ -182,8 +182,8 @@ The GUI uses the Adjustable Container framework for user customization:
 ### Development Workflow
 
 1. Edit the `LuminariGUI.xml` file directly
-2. **Run working tests**: `python3 run_tests.py --test functions events performance`
-3. **Create test package**: `python3 create_package.py --dev --skip-validation`
+2. **Run working tests**: `python3 tests/run_tests.py --test functions events performance`
+3. **Create test package**: `python3 scripts/create_package.py --dev --skip-validation`
 4. **Import into Mudlet** to test changes (THIS IS THE REAL TEST)
 5. **Use Mudlet's error console** to debug issues
 6. **Manual testing**: Test actual functionality in game
@@ -216,9 +216,9 @@ The GUI uses the Adjustable Container framework for user customization:
 
 #### Automated Testing (Limited)
 Due to Mudlet-specific XML formatting, only 3 automated tests work:
-1. **Unit Tests**: `python3 test_functions.py` - Tests core functions with known inputs/outputs ✅
-2. **Event Testing**: `python3 test_events.py` - Mocks MSDP events and tests handlers ✅  
-3. **Performance**: `python3 test_performance.py` - Benchmarks critical functions ✅
+1. **Unit Tests**: `python3 tests/test_functions.py` - Tests core functions with known inputs/outputs ✅
+2. **Event Testing**: `python3 tests/test_events.py` - Mocks MSDP events and tests handlers ✅  
+3. **Performance**: `python3 tests/test_performance.py` - Benchmarks critical functions ✅
 
 #### Manual Testing (PRIMARY METHOD)
 **This is the main testing approach for this project:**

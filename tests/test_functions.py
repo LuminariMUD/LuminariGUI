@@ -14,7 +14,7 @@ import re
 from pathlib import Path
 
 class LuaFunctionTester:
-    def __init__(self, xml_file="LuminariGUI.xml"):
+    def __init__(self, xml_file="../LuminariGUI.xml"):
         self.xml_file = xml_file
         self.lua_path = self._find_lua()
         self.test_results = []
@@ -430,7 +430,7 @@ def main():
     import argparse
     
     parser = argparse.ArgumentParser(description='Run Lua function unit tests for LuminariGUI')
-    parser.add_argument('--xml', default='LuminariGUI.xml', help='XML file to test')
+    parser.add_argument('--xml', default='../LuminariGUI.xml', help='XML file to test')
     parser.add_argument('--verbose', '-v', action='store_true', help='Verbose output')
     parser.add_argument('--quiet', '-q', action='store_true', help='Quiet mode')
     

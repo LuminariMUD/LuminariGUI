@@ -1,6 +1,6 @@
 {
   "test_runner": {
-    "default_xml_file": "LuminariGUI.xml",
+    "default_xml_file": "../LuminariGUI.xml",
     "parallel_execution": true,
     "timeout_seconds": 30,
     "max_workers": 4
@@ -13,7 +13,7 @@
   "quality_tests": {
     "enabled": true,
     "luacheck_path": "auto",
-    "config_file": "tests/test_configs/luacheck_config.lua",
+    "config_file": "test_configs/luacheck_config.lua",
     "strict_mode": false
   },
   "function_tests": {
@@ -23,7 +23,7 @@
   },
   "event_tests": {
     "enabled": true,
-    "mock_data_dir": "tests/mock_data",
+    "mock_data_dir": "mock_data",
     "timeout_per_test": 15
   },
   "system_tests": {

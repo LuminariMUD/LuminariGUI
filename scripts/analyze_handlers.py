@@ -1,7 +1,7 @@
 import xml.etree.ElementTree as ET
 import re
 
-tree = ET.parse('LuminariGUI.xml')
+tree = ET.parse('../LuminariGUI.xml')
 root = tree.getroot()
 
 # Find all Script elements with their names
