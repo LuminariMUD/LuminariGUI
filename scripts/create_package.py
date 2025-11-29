@@ -59,10 +59,18 @@ import hashlib
 import json
 import subprocess
 
+# Get script directory for relative path calculations
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)
+
+def get_project_path(relative_path):
+    """Get absolute path relative to project root"""
+    return os.path.join(PROJECT_ROOT, relative_path)
+
 def get_version_from_changelog():
     """Extract version from CHANGELOG.md"""
     try:
-        with open('CHANGELOG.md', 'r', encoding='utf-8') as f:
+        with open(get_project_path('docs/CHANGELOG.md'), 'r', encoding='utf-8') as f:
             content = f.read()
             
         # Look for version patterns like [2.0.0] or [2.0.4.007] - must be numeric versions
@@ -77,8 +85,10 @@ def get_version_from_changelog():
         print(f"⚠️  Warning: Could not read CHANGELOG.md: {e}")
         return None
 
-def get_version_from_xml(xml_file="../LuminariGUI.xml"):
+def get_version_from_xml(xml_file=None):
     """Extract version from XML file's MudletPackage element"""
+    if xml_file is None:
+        xml_file = get_project_path('LuminariGUI.xml')
     try:
         with open(xml_file, 'r', encoding='utf-8') as f:
             # Read first few lines to find version
@@ -157,12 +167,12 @@ def create_release_metadata(version, package_path, is_dev=False):
 
 def setup_releases_directory():
     """Ensure Releases directory exists and is properly structured"""
-    releases_dir = "Releases"
-    
+    releases_dir = get_project_path('Releases')
+
     if not os.path.exists(releases_dir):
         os.makedirs(releases_dir)
-        print(f"📁 Created {releases_dir}/ directory")
-    
+        print(f"📁 Created Releases/ directory")
+
     return releases_dir
 
 def cleanup_old_dev_packages(releases_dir, keep_latest=3):
@@ -296,7 +306,7 @@ def create_release_branch(version):
 def commit_release_changes(version, files_to_add=None):
     """Commit release-related changes"""
     if files_to_add is None:
-        files_to_add = ['CHANGELOG.md', '../LuminariGUI.xml']
+        files_to_add = [get_project_path('docs/CHANGELOG.md'), get_project_path('LuminariGUI.xml')]
     
     # Add specified files
     for file_path in files_to_add:
@@ -306,7 +316,7 @@ def commit_release_changes(version, files_to_add=None):
                 print(f"⚠️  Warning: Could not add {file_path}: {stderr}")
     
     # Create commit
-    commit_message = f"Prepare release v{version}\n\n🤖 Generated with [Claude Code](https://claude.ai/code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>"
+    commit_message = f"Prepare release v{version}"
     
     stdout, stderr, returncode = run_git_command(['commit', '-m', commit_message])
     if returncode != 0:
@@ -332,7 +342,7 @@ def create_git_tag(version, force=False):
         return False
     
     # Create annotated tag
-    tag_message = f"Release version {version}\n\n🤖 Generated with [Claude Code](https://claude.ai/code)"
+    tag_message = f"Release version {version}"
     
     cmd = ['tag', '-a', tag_name, '-m', tag_message]
     if force:
@@ -364,16 +374,19 @@ def push_git_changes(branch_name=None, push_tags=False):
     
     return True
 
-def validate_package_file(xml_file="../LuminariGUI.xml", run_tests=False):
+def validate_package_file(xml_file=None, run_tests=False):
     """Run package validation using validate_package.py and optionally full test suite"""
-    if not os.path.exists("validate_package.py"):
+    if xml_file is None:
+        xml_file = get_project_path('LuminariGUI.xml')
+    validate_script = os.path.join(SCRIPT_DIR, 'validate_package.py')
+    if not os.path.exists(validate_script):
         print("⚠️  Warning: validate_package.py not found, skipping package validation")
         return True
     
     try:
         # Run XML validation (now includes Lua syntax checking)
         result = subprocess.run(
-            [sys.executable, "validate_package.py", xml_file],
+            [sys.executable, validate_script, xml_file],
             capture_output=True,
             text=True
         )
@@ -396,10 +409,11 @@ def validate_package_file(xml_file="../LuminariGUI.xml", run_tests=False):
     test_suite_passed = True
     if run_tests:
         print("\n🧪 Running full test suite...")
-        if os.path.exists("run_tests.py"):
+        run_tests_script = get_project_path('tests/run_tests.py')
+        if os.path.exists(run_tests_script):
             try:
                 result = subprocess.run(
-                    [sys.executable, "run_tests.py", "--xml", xml_file, "--quiet"],
+                    [sys.executable, run_tests_script, "--xml", xml_file, "--quiet"],
                     capture_output=True,
                     text=True,
                     timeout=300  # 5 minute timeout
@@ -422,7 +436,7 @@ def validate_package_file(xml_file="../LuminariGUI.xml", run_tests=False):
                 print(f"❌ Error running test suite: {e}")
                 test_suite_passed = False
         else:
-            print("⚠️  Warning: run_tests.py not found, skipping test suite")
+            print("⚠️  Warning: tests/run_tests.py not found, skipping test suite")
     
     return xml_validation_passed and test_suite_passed
 
@@ -452,8 +466,9 @@ def update_xml_version(xml_file, version):
 
 def update_changelog_version(version):
     """Update CHANGELOG.md by moving unreleased items to new version section"""
+    changelog_path = get_project_path('docs/CHANGELOG.md')
     try:
-        with open('CHANGELOG.md', 'r', encoding='utf-8') as f:
+        with open(changelog_path, 'r', encoding='utf-8') as f:
             content = f.read()
         
         # Check if version already exists
@@ -481,9 +496,9 @@ def update_changelog_version(version):
                 return f"{header}\n\n{new_version_header}\n\n### Added\n- Release version {version}\n{next_section}"
         
         updated_content = re.sub(unreleased_pattern, replace_unreleased, content, flags=re.DOTALL)
-        
+
         if updated_content != content:
-            with open('CHANGELOG.md', 'w', encoding='utf-8') as f:
+            with open(changelog_path, 'w', encoding='utf-8') as f:
                 f.write(updated_content)
             print(f"✅ Updated CHANGELOG.md with version {version}")
             return True
@@ -494,8 +509,10 @@ def update_changelog_version(version):
         print(f"❌ Error updating changelog: {e}")
         return False
 
-def check_version_consistency(version, xml_file="../LuminariGUI.xml"):
+def check_version_consistency(version, xml_file=None):
     """Check if version is consistent across files"""
+    if xml_file is None:
+        xml_file = get_project_path('LuminariGUI.xml')
     changelog_version = get_version_from_changelog()
     
     print(f"🔍 Version consistency check:")
@@ -527,8 +544,8 @@ def check_version_consistency(version, xml_file="../LuminariGUI.xml"):
 
 def migrate_legacy_packages():
     """Generate metadata for existing packages that don't have .json files"""
-    releases_dir = "Releases"
-    
+    releases_dir = get_project_path('Releases')
+
     if not os.path.exists(releases_dir):
         print("📁 No Releases directory found")
         return
@@ -574,8 +591,8 @@ def migrate_legacy_packages():
 
 def cleanup_legacy_files():
     """Clean up old files and organize releases directory"""
-    releases_dir = "Releases"
-    
+    releases_dir = get_project_path('Releases')
+
     if not os.path.exists(releases_dir):
         return
     
@@ -753,9 +770,11 @@ def execute_release_workflow(xml_file, version, dry_run=False, push=False, force
     
     return True
 
-def create_mpackage(xml_file="../LuminariGUI.xml", version=None, is_dev=False):
+def create_mpackage(xml_file=None, version=None, is_dev=False):
     """Create .mpackage file from XML source with proper versioning"""
-    
+    if xml_file is None:
+        xml_file = get_project_path('LuminariGUI.xml')
+
     # Validate source file
     if not validate_xml_exists(xml_file):
         return False
@@ -794,26 +813,26 @@ def create_mpackage(xml_file="../LuminariGUI.xml", version=None, is_dev=False):
             return False
         
         # Copy images directory if it exists
-        images_dir = "images"
+        images_dir = get_project_path('images')
         if os.path.exists(images_dir) and os.path.isdir(images_dir):
             try:
                 shutil.copytree(images_dir, os.path.join(temp_dir, "images"))
-                print(f"✅ Copied {images_dir}/ directory")
+                print(f"✅ Copied images/ directory")
             except Exception as e:
                 print(f"⚠️  Warning: Could not copy images directory: {e}")
         else:
-            print(f"⚠️  Warning: {images_dir}/ directory not found, skipping")
-        
+            print(f"⚠️  Warning: images/ directory not found, skipping")
+
         # Copy audio directory if it exists
-        audio_dir = "audio"
+        audio_dir = get_project_path('audio')
         if os.path.exists(audio_dir) and os.path.isdir(audio_dir):
             try:
                 shutil.copytree(audio_dir, os.path.join(temp_dir, "audio"))
-                print(f"✅ Copied {audio_dir}/ directory")
+                print(f"✅ Copied audio/ directory")
             except Exception as e:
                 print(f"⚠️  Warning: Could not copy audio directory: {e}")
         else:
-            print(f"⚠️  Warning: {audio_dir}/ directory not found, skipping")
+            print(f"⚠️  Warning: audio/ directory not found, skipping")
         
         # Create config.lua
         config_content = create_config_lua(version)
@@ -879,8 +898,8 @@ def create_mpackage(xml_file="../LuminariGUI.xml", version=None, is_dev=False):
 
 def list_releases():
     """List all packages in the Releases directory"""
-    releases_dir = "Releases"
-    
+    releases_dir = get_project_path('Releases')
+
     if not os.path.exists(releases_dir):
         print("📁 No Releases directory found")
         return
@@ -956,7 +975,7 @@ Output Structure:
     )
     
     # Core options
-    parser.add_argument('--xml', default='../LuminariGUI.xml', 
+    parser.add_argument('--xml', default=None,
                        help='Source XML file (default: LuminariGUI.xml)')
     parser.add_argument('--version', 
                        help='Override version (default: auto-detect from CHANGELOG.md)')
@@ -1007,7 +1026,11 @@ Output Structure:
     # Handle --test as an alias for --dev
     if args.test:
         args.dev = True
-    
+
+    # Set default XML path if not provided
+    if args.xml is None:
+        args.xml = get_project_path('LuminariGUI.xml')
+
     print("🚀 LuminariGUI Package Creator - Enhanced Release System")
     print("=" * 60)
     

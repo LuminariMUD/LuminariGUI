@@ -10,6 +10,14 @@ import sys
 import os
 import shutil
 
+# Get script directory for relative path calculations
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)
+
+def get_project_path(relative_path):
+    """Get absolute path relative to project root"""
+    return os.path.join(PROJECT_ROOT, relative_path)
+
 def format_xml(input_file, output_file=None, backup=True):
     """Format XML file with proper indentation and structure."""
     try:
@@ -80,7 +88,7 @@ def format_xml(input_file, output_file=None, backup=True):
     except ET.ParseError as e:
         print(f"❌ XML Parse Error: {e}")
         print("   The XML file is not well-formed and cannot be formatted.")
-        print("   Please run validate_xml.py first to identify issues.")
+        print("   Please run validate_package.py first to identify issues.")
         return False
     except Exception as e:
         print(f"❌ Error formatting XML: {e}")
@@ -89,17 +97,21 @@ def format_xml(input_file, output_file=None, backup=True):
 def main():
     """Main entry point for command line usage."""
     import argparse
-    
+
     parser = argparse.ArgumentParser(description='Format Mudlet package XML files')
-    parser.add_argument('input_file', nargs='?', default='../LuminariGUI.xml',
+    parser.add_argument('input_file', nargs='?', default=None,
                         help='Input XML file (default: LuminariGUI.xml)')
     parser.add_argument('-o', '--output', dest='output_file',
                         help='Output file (default: format in place)')
     parser.add_argument('--no-backup', action='store_true',
                         help='Do not create backup when formatting in place')
-    
+
     args = parser.parse_args()
-    
+
+    # Set default input file if not provided
+    if args.input_file is None:
+        args.input_file = get_project_path('LuminariGUI.xml')
+
     # Check if input file exists
     if not os.path.exists(args.input_file):
         print(f"Error: File '{args.input_file}' not found.")

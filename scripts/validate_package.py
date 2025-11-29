@@ -9,6 +9,18 @@ import xml.etree.ElementTree as ET
 import sys
 import os
 
+# Get script directory for relative path calculations
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)
+
+# Add parent directory to path for imports when running from scripts/
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+
+def get_project_path(relative_path):
+    """Get absolute path relative to project root"""
+    return os.path.join(PROJECT_ROOT, relative_path)
+
 # Try to import Lua syntax tester
 try:
     from tests.test_lua_syntax import LuaSyntaxTester
@@ -134,17 +146,21 @@ def validate_package(filename, include_lua_syntax=True):
 
 if __name__ == "__main__":
     import argparse
-    
+
     parser = argparse.ArgumentParser(description='Validate LuminariGUI package (XML structure and Lua syntax)')
-    parser.add_argument('filename', nargs='?', default='../LuminariGUI.xml', 
+    parser.add_argument('filename', nargs='?', default=None,
                         help='XML file to validate (default: LuminariGUI.xml)')
     parser.add_argument('--no-lua-syntax', action='store_true',
                         help='Skip Lua syntax validation')
     parser.add_argument('--quiet', '-q', action='store_true',
                         help='Quiet mode - minimal output')
-    
+
     args = parser.parse_args()
-    
+
+    # Set default filename if not provided
+    if args.filename is None:
+        args.filename = get_project_path('LuminariGUI.xml')
+
     # Suppress output in quiet mode
     if args.quiet:
         import io

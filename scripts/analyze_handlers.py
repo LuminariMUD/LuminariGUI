@@ -1,7 +1,23 @@
+#!/usr/bin/env python3
+"""
+Handler Analysis Script for LuminariGUI
+Analyzes Lua scripts within the XML package to track event handler and timer usage.
+Reports on creation vs cleanup of handlers/timers to help identify potential memory leaks.
+"""
+
 import xml.etree.ElementTree as ET
 import re
+import os
 
-tree = ET.parse('../LuminariGUI.xml')
+# Get script directory for relative path calculations
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)
+
+def get_project_path(relative_path):
+    """Get absolute path relative to project root"""
+    return os.path.join(PROJECT_ROOT, relative_path)
+
+tree = ET.parse(get_project_path('LuminariGUI.xml'))
 root = tree.getroot()
 
 # Find all Script elements with their names
@@ -39,18 +55,10 @@ for script_elem in root.iter('Script'):
             'timers': {'created': timer_creates, 'killed': timer_kills}
         }
 
-# Print results
-print("Resource usage by script:")
-print("-" * 50)
-for script, data in sorted(results.items()):
-    h_created = data['handlers']['created']
-    h_killed = data['handlers']['killed']
-    t_created = data['timers']['created']
-    t_killed = data['timers']['killed']
-    
-    if h_created > h_killed or t_created > t_killed:
-        print(f"\n{script}:")
-        if h_created > 0:
-            print(f"  Event handlers: {h_created} created, {h_killed} killed")
-        if t_created > 0:
-            print(f"  Timers: {t_created} created, {t_killed} killed")
+print(f"{'Script Name':<30} | {'Handlers (New/Kill)':<20} | {'Timers (New/Kill)':<20}")
+print("-" * 80)
+
+for name, data in sorted(results.items()):
+    handlers = f"{data['handlers']['created']}/{data['handlers']['killed']}"
+    timers = f"{data['timers']['created']}/{data['timers']['killed']}"
+    print(f"{name:<30} | {handlers:<20} | {timers:<20}")

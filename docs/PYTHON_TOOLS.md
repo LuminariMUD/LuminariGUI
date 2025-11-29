@@ -8,7 +8,7 @@ The LuminariGUI project includes a sophisticated Python toolchain that provides 
 - **[`scripts/validate_package.py`](#validate_packagepy---package-validation)** - Package validation with integrated Lua syntax checking
 - **[`scripts/format_xml.py`](#format_xmlpy---xml-formatting)** - XML formatting and maintenance  
 - **[`scripts/create_package.py`](#create_packagepy---release-management)** - Complete release management with optional testing integration
-- **[`run_tests.py`](#run_testspy---testing-orchestration)** - Comprehensive testing framework orchestrator
+- **[`tests/run_tests.py`](#testsrun_testspy---testing-orchestration)** - Comprehensive testing framework orchestrator
 - **Testing Infrastructure** - Complete suite of automated testing tools for code quality assurance
 
 ### Key Benefits
@@ -464,31 +464,31 @@ python3 create_package.py --release
 sudo apt-get install python3-dev  # Ubuntu/Debian
 ```
 
-## run_tests.py - Testing Orchestration
+## tests/run_tests.py - Testing Orchestration
 
 **Purpose**: Orchestrates comprehensive testing infrastructure to ensure code quality, prevent regressions, and catch issues before they cause system instability.
 
 ### Command-Line Usage
 ```bash
 # Run complete test suite
-python3 run_tests.py
+python3 tests/run_tests.py
 
 # Run specific test type
-python3 run_tests.py --test syntax      # Lua syntax validation
-python3 run_tests.py --test quality     # Static code analysis  
-python3 run_tests.py --test functions   # Unit tests
-python3 run_tests.py --test events      # Event system testing
-python3 run_tests.py --test system      # Memory leak detection
-python3 run_tests.py --test performance # Performance benchmarks
+python3 tests/run_tests.py --test syntax      # Lua syntax validation
+python3 tests/run_tests.py --test quality     # Static code analysis  
+python3 tests/run_tests.py --test functions   # Unit tests
+python3 tests/run_tests.py --test events      # Event system testing
+python3 tests/run_tests.py --test system      # Memory leak detection
+python3 tests/run_tests.py --test performance # Performance benchmarks
 
 # Control execution
-python3 run_tests.py --parallel         # Run tests in parallel
-python3 run_tests.py --sequential       # Run tests sequentially
-python3 run_tests.py --skip-optional    # Skip tests with missing dependencies
+python3 tests/run_tests.py --parallel         # Run tests in parallel
+python3 tests/run_tests.py --sequential       # Run tests sequentially
+python3 tests/run_tests.py --skip-optional    # Skip tests with missing dependencies
 
 # Generate reports
-python3 run_tests.py --report results.json --format json
-python3 run_tests.py --report results.txt --format text
+python3 tests/run_tests.py --report results.json --format json
+python3 tests/run_tests.py --report results.txt --format text
 ```
 
 ### Testing Infrastructure Components
@@ -512,7 +512,7 @@ python3 run_tests.py --report results.txt --format text
 #### Pre-commit Testing
 ```bash
 # Validate before committing
-python3 validate_package.py && python3 run_tests.py
+python3 validate_package.py && python3 tests/run_tests.py
 ```
 
 #### Release Testing

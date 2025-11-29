@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE MudletPackage>
+<MudletPackage version="{{VERSION}}">
+	<TriggerPackage>
+		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+			<name>LuminariGUI</name>
+			<script></script>
+			<triggerType>0</triggerType>
+			<conditonLineDelta>0</conditonLineDelta>
+			<mStayOpen>0</mStayOpen>
+			<mCommand></mCommand>
+			<packageName>LuminariGUI</packageName>
+			<mFgColor>#ff0000</mFgColor>
+			<mBgColor>#ffff00</mBgColor>
+			<mSoundFile></mSoundFile>
+			<colorTriggerFgColor>#000000</colorTriggerFgColor>
+			<colorTriggerBgColor>#000000</colorTriggerBgColor>
+			<regexCodeList />
+			<regexCodePropertyList />
+{{TRIGGERS}}
+		</TriggerGroup>
+	</TriggerPackage>
+	<TimerPackage />
+	<AliasPackage>
+		<AliasGroup isActive="yes" isFolder="yes">
+			<name>LuminariGUI</name>
+			<script></script>
+			<command></command>
+			<packageName>LuminariGUI</packageName>
+			<regex></regex>
+{{ALIASES}}
+		</AliasGroup>
+	</AliasPackage>
+	<ActionPackage />
+	<ScriptPackage>
+		<ScriptGroup isActive="yes" isFolder="yes">
+			<name>LuminariGUI</name>
+			<packageName>LuminariGUI</packageName>
+			<script></script>
+			<eventHandlerList />
+{{SCRIPTS}}
+		</ScriptGroup>
+	</ScriptPackage>
+	<KeyPackage>
+		<KeyGroup isActive="yes" isFolder="yes">
+			<name>Movement</name>
+			<packageName></packageName>
+			<script></script>
+			<command></command>
+			<keyCode>-1</keyCode>
+			<keyModifier>-1</keyModifier>
+{{KEYS}}
+		</KeyGroup>
+	</KeyPackage>
+	<VariablePackage>
+		<HiddenVariables />
+	</VariablePackage>
+</MudletPackage>

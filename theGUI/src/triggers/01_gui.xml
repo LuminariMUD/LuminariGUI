@@ -1,0 +1,273 @@
+			<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>GUI</name>
+				<script></script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList />
+				<regexCodePropertyList />
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>Capture Wilderness Map</name>
+					<script>deleteLine()
+clearUserWindow("map.minimap")
+
+map.container:hide()
+GUI.asciiMapContainer:show()
+
+maplineTrig = tempLineTrigger(1,23,[[onMapLine()]])  -- Edit the max lines to how many your MAP display shows.
+padding = map.calcMinimapPadding()
+
+-- Map Line Processing Handler
+-- Processes individual lines of ASCII map data and handles map display completion
+-- Enhanced with comprehensive error handling for robust map processing
+function onMapLine()
+  -- Validate that we have a valid line to process
+  if not line or line == "" then
+    print("Warning: Empty or invalid map line received")
+    return
+  end
+  -- Check for map completion marker
+  local isLastLine = string.findPattern(line, "&lt;/WILDERNESS_MAP&gt;")
+  if isLastLine then
+    deleteLine()
+    -- Safely cleanup trigger with validation
+    if maplineTrig and exists(maplineTrig, "trigger") ~= 0 then
+      killTrigger(maplineTrig)
+    end
+    maplineTrig = nil
+    return
+  end
+  -- Process map line with error handling
+  pcall(function()
+    selectCurrentLine()
+    copy()
+    if map.minimap and map.minimap.echo then
+      for i = 1, padding do
+        map.minimap:echo(" ")
+      end
+      map.adjustMinimapFontSize()
+      appendBuffer("map.minimap")
+    else
+      print("Warning: map.minimap not available for line processing")
+    end
+    deleteLine()
+  end)
+end</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>&lt;WILDERNESS_MAP&gt;</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>2</integer>
+					</regexCodePropertyList>
+				</Trigger>
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>Capture Room Map</name>
+					<script>deleteLine()
+clearUserWindow("map.minimap")
+
+if GUI.buttonWindow.mudletOrAscii == "ASCII" then
+  map.container:hide()
+  GUI.asciiMapContainer:show()
+elseif GUI.buttonWindow.mudletOrAscii == "Mudlet" then
+  map.container:show()
+  GUI.asciiMapContainer:hide()
+end
+map.minimap:echo("\n")
+maplineTrig = tempLineTrigger(1,11,[[onRoomMapLine()]])  -- Edit the max lines to how many your MAP display shows.
+padding = map.calcAsciimapPadding()
+
+-- Room Map Line Processing Handler
+-- Processes individual lines of room-specific ASCII map data
+-- Enhanced with comprehensive error handling for robust map processing
+function onRoomMapLine()
+  -- Validate that we have a valid line to process
+  if not line or line == "" then
+    print("Warning: Empty or invalid room map line received")
+    return
+  end
+  -- Check for room map completion marker
+  local isLastLine = string.findPattern(line, "&lt;/ROOM_MAP&gt;")
+  if isLastLine then
+    deleteLine()
+    -- Safely cleanup trigger with validation
+    if maplineTrig and exists(maplineTrig, "trigger") ~= 0 then
+      killTrigger(maplineTrig)
+    end
+    maplineTrig = nil
+    return
+  end
+  -- Process room map line with error handling
+  pcall(function()
+    selectCurrentLine()
+    copy()
+    if map.minimap and map.minimap.echo then
+      map.minimap:echo(" ")
+      map.adjustAsciimapFontSize()
+      appendBuffer("map.minimap")
+    else
+      print("Warning: map.minimap not available for room map line processing")
+    end
+    deleteLine()
+  end)
+end</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>&lt;ROOM_MAP&gt;</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>2</integer>
+					</regexCodePropertyList>
+				</Trigger>
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>Gag blank lines</name>
+					<script>deleteLine()</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>^$</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>1</integer>
+					</regexCodePropertyList>
+				</Trigger>
+				<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>Cast Console</name>
+					<script></script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList />
+					<regexCodePropertyList />
+					<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+						<name>Started Cast</name>
+						<script>GUI.castConsole_startCast(matches[2], matches[3])</script>
+						<triggerType>0</triggerType>
+						<conditonLineDelta>0</conditonLineDelta>
+						<mStayOpen>0</mStayOpen>
+						<mCommand></mCommand>
+						<packageName></packageName>
+						<mFgColor>#ff0000</mFgColor>
+						<mBgColor>#ffff00</mBgColor>
+						<mSoundFile></mSoundFile>
+						<colorTriggerFgColor>#000000</colorTriggerFgColor>
+						<colorTriggerBgColor>#000000</colorTriggerBgColor>
+						<regexCodeList>
+							<string>^Casting\: (.+) (\*+)$</string>
+						</regexCodeList>
+						<regexCodePropertyList>
+							<integer>1</integer>
+						</regexCodePropertyList>
+					</Trigger>
+					<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+						<name>Cast Complete</name>
+						<script>GUI.castConsole_completeCast()</script>
+						<triggerType>0</triggerType>
+						<conditonLineDelta>0</conditonLineDelta>
+						<mStayOpen>0</mStayOpen>
+						<mCommand></mCommand>
+						<packageName></packageName>
+						<mFgColor>#ff0000</mFgColor>
+						<mBgColor>#ffff00</mBgColor>
+						<mSoundFile></mSoundFile>
+						<colorTriggerFgColor>#000000</colorTriggerFgColor>
+						<colorTriggerBgColor>#000000</colorTriggerBgColor>
+						<regexCodeList>
+							<string>You complete your spell...</string>
+						</regexCodeList>
+						<regexCodePropertyList>
+							<integer>2</integer>
+						</regexCodePropertyList>
+					</Trigger>
+					<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+						<name>Cast Aborted</name>
+						<script>GUI.castConsole_abortedCast()</script>
+						<triggerType>0</triggerType>
+						<conditonLineDelta>0</conditonLineDelta>
+						<mStayOpen>0</mStayOpen>
+						<mCommand></mCommand>
+						<packageName></packageName>
+						<mFgColor>#ff0000</mFgColor>
+						<mBgColor>#ffff00</mBgColor>
+						<mSoundFile></mSoundFile>
+						<colorTriggerFgColor>#000000</colorTriggerFgColor>
+						<colorTriggerBgColor>#000000</colorTriggerBgColor>
+						<regexCodeList>
+							<string>You abort your spell.</string>
+							<string>Your spell is aborted!</string>
+							<string>You are unable to find the target for your spell!</string>
+							<string>You are unable to find the object for your spell!</string>
+							<string>You are unable to continue your spell in your current position!</string>
+						</regexCodeList>
+						<regexCodePropertyList>
+							<integer>3</integer>
+							<integer>3</integer>
+							<integer>3</integer>
+							<integer>3</integer>
+							<integer>3</integer>
+						</regexCodePropertyList>
+					</Trigger>
+					<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+						<name>Cast Canceled</name>
+						<script>GUI.castConsole_canceledCast()</script>
+						<triggerType>0</triggerType>
+						<conditonLineDelta>0</conditonLineDelta>
+						<mStayOpen>0</mStayOpen>
+						<mCommand></mCommand>
+						<packageName></packageName>
+						<mFgColor>#ff0000</mFgColor>
+						<mBgColor>#ffff00</mBgColor>
+						<mSoundFile></mSoundFile>
+						<colorTriggerFgColor>#000000</colorTriggerFgColor>
+						<colorTriggerBgColor>#000000</colorTriggerBgColor>
+						<regexCodeList>
+							<string>You are unable to continue casting!</string>
+							<string>You are too nauseated to continue casting!</string>
+						</regexCodeList>
+						<regexCodePropertyList>
+							<integer>3</integer>
+							<integer>3</integer>
+						</regexCodePropertyList>
+					</Trigger>
+				</TriggerGroup>
+			</TriggerGroup>

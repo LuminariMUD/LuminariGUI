@@ -1,0 +1,32 @@
+			<AliasGroup isActive="yes" isFolder="yes">
+				<name>Toggles</name>
+				<script></script>
+				<command></command>
+				<packageName></packageName>
+				<regex></regex>
+				<Alias isActive="yes" isFolder="no">
+					<name>Gag Chat</name>
+					<script>--[[Toggling this will determine if the line and follow up
+    prompt are removed from the main buffer for chat.]]
+GUI.gagChatToggle()</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^gag chat$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>Show Self</name>
+					<script>--Toggles whether or not you are shown in the group tab.
+GUI.showSelfToggle()</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^show self$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>Horizontal Scroll</name>
+					<script>--Toggles horizontal scroll bar on main window
+GUI.horizontalScrollToggle()</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^hscroll$</regex>
+				</Alias>
+			</AliasGroup>

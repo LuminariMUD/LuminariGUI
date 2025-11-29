@@ -1,8 +1,27 @@
-# Knowledge Base for Creating Mudlet Packages for MUDs
+# LuminariGUI Development Guide
 
-### *note* this is a 1st draft and may be far from perfect!
+This document outlines the development workflow, architecture, and best practices for the LuminariGUI project.
 
-This guide synthesizes research and best practices to help you create Mudlet packages that enhance player experience and showcase your MUD's unique features. Whether you're a beginner or an experienced developer, this guide aims to provide everything you need to build professional-quality Mudlet packages.
+## Project Architecture
+
+### Single-File Architecture
+Unlike many modern Mudlet projects that use build tools like Muddler to compile Lua files into a package, **LuminariGUI uses a single-file architecture**.
+
+-   **Source of Truth**: `LuminariGUI.xml` is the primary source file. All triggers, aliases, scripts, and UI definitions are contained within this file.
+-   **Embedded Lua**: Lua scripts are embedded directly in the XML.
+-   **Python Toolchain**: We use custom Python scripts (see [PYTHON_TOOLS.md](PYTHON_TOOLS.md)) to validate, format, and release the package, but **not to compile it**.
+
+### Workflow
+1.  **Edit**: Make changes directly to `LuminariGUI.xml` (or import into Mudlet, edit, and export).
+2.  **Validate**: Run `python3 scripts/validate_package.py` to ensure XML structure and Lua syntax are correct.
+3.  **Test**: Run `python3 tests/run_tests.py` to execute the test suite.
+4.  **Release**: Use `python3 scripts/create_package.py --release` to package and tag a new version.
+
+---
+
+## General Mudlet Development Best Practices
+
+*(The following sections provide general advice for Mudlet package development)*
 
 ## Table of Contents
 1. [Foundation: Understanding Mudlet Packages](#foundation)

@@ -1,0 +1,36 @@
+# theGUI/build.yaml
+# LuminariGUI Source-to-Build Configuration
+#
+# This manifest defines how source fragments are assembled into LuminariGUI.xml
+
+package:
+  name: "LuminariGUI"
+  version: "2.0.4.017"
+
+output:
+  file: "../LuminariGUI.xml"
+  encoding: "UTF-8"
+
+options:
+  embed_markers: false
+  marker_format: "<!-- SOURCE: {file} -->"
+  validate_fragments: true
+  validate_output: true
+  strip_dev_comments: true
+
+triggers:
+  - src/triggers/00_yatcoconfig.xml
+  - src/triggers/01_gui.xml
+
+aliases:
+  - src/aliases/00_toggles.xml
+  - src/aliases/01_yatco.xml
+
+scripts:
+  - src/scripts/00_msdpmapper.xml
+  - src/scripts/01_gui.xml
+  - src/scripts/03_yatco.xml
+  - src/scripts/02_yatcoconfig.xml
+
+keys:
+  - src/keys/00_movement.xml
