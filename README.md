@@ -34,19 +34,22 @@ Once installed, the GUI should automatically load when you connect to LuminariMU
 Detailed documentation is available in the `docs/` directory:
 
 *   **[Developer Guide](docs/MUDLET_DEVELOPMENT.md)**: Architecture, best practices, and workflow for contributing to the project.
+*   **[Build System Guide](theGUI/README_theGUI.md)**: How to use the source-to-build system for modular XML development.
 *   **[Python Tools](docs/PYTHON_TOOLS.md)**: Guide to the automated build and testing tools (`validate_package.py`, `run_tests.py`, etc.).
 *   **[Protocol Reference](docs/PROTOCOL_REFERENCE.md)**: Details on MSDP variables and how they map to the GUI.
 *   **[Sound Usage](docs/SOUND_USAGE.md)**: Configuration for sound triggers and audio assets.
 *   **[Changelog](docs/CHANGELOG.md)**: History of changes and updates.
+*   **[Contributing](CONTRIBUTING.md)**: Guidelines for contributing to the project.
 
 ## Development
 
-This project uses a single-file XML structure (`LuminariGUI.xml`) managed with Python automation tools.
+This project uses a modular source-to-build system (`theGUI/`) that assembles XML fragments into the final `LuminariGUI.xml` package. Each build automatically increments the version and archives the previous release.
 
+*   **Build**: Run `python3 theGUI/build.py` to assemble the package.
 *   **Validation**: Run `python3 scripts/validate_package.py` to check for errors.
-*   **Testing**: Run `python3 run_tests.py` to execute the test suite.
+*   **Testing**: Run `python3 tests/run_tests.py` to execute the test suite.
 
-See [MUDLET_DEVELOPMENT.md](docs/MUDLET_DEVELOPMENT.md) for more details.
+See [theGUI/README_theGUI.md](theGUI/README_theGUI.md) for build system details and [MUDLET_DEVELOPMENT.md](docs/MUDLET_DEVELOPMENT.md) for architecture and workflow.
 
 ## License
 
