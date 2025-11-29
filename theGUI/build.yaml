@@ -5,7 +5,7 @@
 
 package:
   name: "LuminariGUI"
-  version: "2.0.4.017"
+  version: "2.0.4.019"
 
 output:
   file: "../LuminariGUI.xml"

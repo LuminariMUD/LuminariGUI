@@ -21,8 +21,8 @@ clearUserWindow("map.minimap")
 map.container:hide()
 GUI.asciiMapContainer:show()
 
-maplineTrig = tempLineTrigger(1,23,[[onMapLine()]])  -- Edit the max lines to how many your MAP display shows.
-padding = map.calcMinimapPadding()
+map.maplineTrig = tempLineTrigger(1,23,[[onMapLine()]])  -- Edit the max lines to how many your MAP display shows.
+map.padding = map.calcMinimapPadding()
 
 -- Map Line Processing Handler
 -- Processes individual lines of ASCII map data and handles map display completion
@@ -38,10 +38,10 @@ function onMapLine()
   if isLastLine then
     deleteLine()
     -- Safely cleanup trigger with validation
-    if maplineTrig and exists(maplineTrig, "trigger") ~= 0 then
-      killTrigger(maplineTrig)
+    if map.maplineTrig and exists(map.maplineTrig, "trigger") ~= 0 then
+      killTrigger(map.maplineTrig)
     end
-    maplineTrig = nil
+    map.maplineTrig = nil
     return
   end
   -- Process map line with error handling
@@ -49,7 +49,7 @@ function onMapLine()
     selectCurrentLine()
     copy()
     if map.minimap and map.minimap.echo then
-      for i = 1, padding do
+      for i = 1, map.padding do
         map.minimap:echo(" ")
       end
       map.adjustMinimapFontSize()
@@ -90,8 +90,8 @@ elseif GUI.buttonWindow.mudletOrAscii == "Mudlet" then
   GUI.asciiMapContainer:hide()
 end
 map.minimap:echo("\n")
-maplineTrig = tempLineTrigger(1,11,[[onRoomMapLine()]])  -- Edit the max lines to how many your MAP display shows.
-padding = map.calcAsciimapPadding()
+map.maplineTrig = tempLineTrigger(1,11,[[onRoomMapLine()]])  -- Edit the max lines to how many your MAP display shows.
+map.padding = map.calcAsciimapPadding()
 
 -- Room Map Line Processing Handler
 -- Processes individual lines of room-specific ASCII map data
@@ -107,10 +107,10 @@ function onRoomMapLine()
   if isLastLine then
     deleteLine()
     -- Safely cleanup trigger with validation
-    if maplineTrig and exists(maplineTrig, "trigger") ~= 0 then
-      killTrigger(maplineTrig)
+    if map.maplineTrig and exists(map.maplineTrig, "trigger") ~= 0 then
+      killTrigger(map.maplineTrig)
     end
-    maplineTrig = nil
+    map.maplineTrig = nil
     return
   end
   -- Process room map line with error handling

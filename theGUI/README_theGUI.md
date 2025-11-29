@@ -1,6 +1,6 @@
 # LuminariGUI Source-to-Build System
 
-This directory contains the source-to-build system for assembling `LuminariGUI.xml` from modular source fragments.
+This directory contains the source-to-build system for assembling `LuminariGUI.xml` from modular source fragments, plus the package manager for creating distributable `.mpackage` files.
 
 ## Overview
 
@@ -9,13 +9,15 @@ Mudlet requires a single XML package file, but development and maintenance benef
 1. **Extracts** the monolithic `LuminariGUI.xml` into manageable source fragments
 2. **Assembles** source fragments back into the final `LuminariGUI.xml`
 3. **Validates** both fragments and final output
+4. **Packages** the XML into distributable `.mpackage` files with full release workflow
 
 ## Directory Structure
 
 ```
 theGUI/
 ├── build.py          # Build/extract script
-├── build.yaml        # Build manifest (fragment list, options)
+├── package.py        # Package manager and release workflow
+├── build.yaml        # Build manifest (fragment list, version)
 ├── skeleton.xml      # Package structure template
 ├── README.md         # This file
 └── src/              # Source fragments
@@ -63,6 +65,33 @@ Validates all fragments and the assembly without writing output.
 | `python build.py --stats` | Show line counts and statistics |
 | `python build.py --clean` | Remove generated output file |
 | `python build.py --watch` | Watch files and rebuild on changes |
+
+## Package Manager (package.py)
+
+After building the XML, use `package.py` to create distributable `.mpackage` files.
+
+### Commands
+
+| Command | Description |
+|---------|-------------|
+| `python package.py create` | Create release package (runs build & tests) |
+| `python package.py create --dev` | Create dev package with timestamp |
+| `python package.py create --skip-build` | Package existing XML without rebuilding |
+| `python package.py release` | Full release workflow (build, test, branch, tag) |
+| `python package.py release --dry-run` | Preview release without changes |
+| `python package.py release --push` | Release and push to remote |
+| `python package.py list` | List existing packages |
+| `python package.py clean` | Remove old dev packages |
+
+### Quick Examples
+
+```bash
+# Build XML and create package for testing
+python build.py && python package.py create --dev
+
+# Full release
+python package.py release --push
+```
 
 ## Configuration (build.yaml)
 

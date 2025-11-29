@@ -13,6 +13,34 @@ Begin Changelog entries below
 
 ## [Unreleased] - 2025-11-29
 
+### Added - Package Manager (theGUI/package.py)
+
+- **New Package Manager**: Introduced `theGUI/package.py` for creating distributable packages
+  - Cleaner replacement for `scripts/create_package.py` (486 vs 1189 lines)
+  - Subcommand-based CLI: `create`, `release`, `list`, `clean`
+  - Integrates with build.py and build.yaml for version management
+  - Modern Python: pathlib, dataclasses, type hints
+
+- **Package Commands**:
+  - `python3 theGUI/package.py create` - Create release .mpackage (runs build & tests)
+  - `python3 theGUI/package.py create --dev` - Create dev package with timestamp
+  - `python3 theGUI/package.py release` - Full workflow (build, test, branch, package, tag)
+  - `python3 theGUI/package.py release --dry-run` - Preview release without changes
+  - `python3 theGUI/package.py release --push` - Release and push to remote
+  - `python3 theGUI/package.py list` - List packages in Releases/
+  - `python3 theGUI/package.py clean` - Remove old dev packages
+
+### Removed
+
+- **Deprecated**: Removed `scripts/create_package.py` - replaced by `theGUI/package.py`
+
+### Changed
+
+- Updated `docs/PYTHON_TOOLS.md` with new package.py documentation
+- Updated `theGUI/README_theGUI.md` with package manager section
+- Updated `CLAUDE.md` with package commands
+- Updated `README.md` development section
+
 ### Added - Source-to-Build System (theGUI)
 
 - **New Build System**: Introduced `theGUI/` source-to-build system for modular XML development

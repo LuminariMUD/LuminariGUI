@@ -125,8 +125,8 @@ end</script>
 							<name>Code</name>
 							<packageName></packageName>
 							<script>--[[
-If the label callbacks ever decide to start taking a function which is part of a table, 0then this will change.
-Or if it's modified to take actual functions. Anonymouse function clickcallback would be awfully nice.
+If the label callbacks ever decide to start taking a function which is part of a table, then this will change.
+Or if it's modified to take actual functions. Anonymous function clickcallback would be awfully nice.
 ]]
 
 function demonnicChatSwitch(chat)
@@ -313,7 +313,7 @@ function demonnic.chat:append(chat)
       local currentTime = os.time()
       if currentTime - demonnic.chat.lastSoundTime >= demonnic.chat.config.soundCooldown then
         -- Construct sound file path - try package directory first
-        local soundPath = getMudletHomeDir() .. "/LuminariGUI/" .. demonnic.chat.config.soundFile
+        local soundPath = getMudletHomeDir():gsub("\\", "/") .. "/LuminariGUI/" .. demonnic.chat.config.soundFile
         
         -- Check if file exists before playing
         local file = io.open(soundPath, "r")
@@ -323,7 +323,7 @@ function demonnic.chat:append(chat)
           demonnic.chat.lastSoundTime = currentTime
         else
           -- Try user's home directory as fallback
-          soundPath = getMudletHomeDir() .. "/" .. demonnic.chat.config.soundFile
+          soundPath = getMudletHomeDir():gsub("\\", "/") .. "/" .. demonnic.chat.config.soundFile
           file = io.open(soundPath, "r")
           if file then
             file:close()

@@ -91,11 +91,11 @@ demonnic.chat.config.channels = {
   "All",
   "Tell",
   "Chat",
-	"Say",
-	"Wiz",
-	"Group",
-	"Congrats",
-	"Auction",  
+  "Say",
+  "Wiz",
+  "Group",
+  "Congrats",
+  "Auction",
 }
 
 
