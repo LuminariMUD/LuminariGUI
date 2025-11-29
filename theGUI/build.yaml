@@ -5,7 +5,7 @@
 
 package:
   name: "LuminariGUI"
-  version: "2.0.4.019"
+  version: "2.0.4.020"
 
 output:
   file: "../LuminariGUI.xml"
@@ -29,8 +29,8 @@ aliases:
 scripts:
   - src/scripts/00_msdpmapper.xml
   - src/scripts/01_gui.xml
-  - src/scripts/03_yatco.xml
   - src/scripts/02_yatcoconfig.xml
+  - src/scripts/03_yatco.xml
 
 keys:
   - src/keys/00_movement.xml
