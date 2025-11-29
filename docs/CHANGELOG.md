@@ -11,9 +11,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Begin Changelog entries below
 ---
 
-## [Unreleased] - 2025-11-04
+## [Unreleased] - 2025-11-29
 
-### Changed - Project Organization and Infrastructure
+### Added - Source-to-Build System (theGUI)
+
+- **New Build System**: Introduced `theGUI/` source-to-build system for modular XML development
+  - `theGUI/build.py`: Python build script that assembles XML fragments into `LuminariGUI.xml`
+  - `theGUI/build.yaml`: Configuration file defining fragment order and build options
+  - `theGUI/skeleton.xml`: Template structure for the final assembled XML
+  - `theGUI/src/`: Modular XML fragments organized by type:
+    - `triggers/`: Trigger definitions (YATCOConfig, GUI)
+    - `aliases/`: Alias definitions (Toggles, YATCO)
+    - `scripts/`: Script definitions (MSDPMapper, GUI, YATCOConfig, YATCO)
+    - `keys/`: Key binding definitions (Movement)
+
+- **Auto-Archiving**: Build system automatically archives previous versions before rebuilding
+  - Archives saved to `docs/archive/LuminariGUI.xml_<version>`
+  - Preserves version history without manual backup steps
+  - Skips archiving if same version already archived
+
+- **Auto-Version Increment**: Build system automatically increments version on each build
+  - Increments last part of version (e.g., 2.0.4.016 → 2.0.4.017)
+  - Preserves leading zeros in version numbers
+  - Updates `build.yaml` with new version automatically
+  - Skipped during `--validate` dry-run mode
+
+- **Build Commands**:
+  - `python3 theGUI/build.py` - Build the package (increments version, archives old, writes new)
+  - `python3 theGUI/build.py --validate` - Validate only, no file changes
+  - `python3 theGUI/build.py --extract` - Split existing XML into fragments
+  - `python3 theGUI/build.py --diff` - Show what would change
+  - `python3 theGUI/build.py --watch` - Rebuild on file changes
+  - `python3 theGUI/build.py --stats` - Show fragment statistics
+
+- **New Documentation**:
+  - `theGUI/README_theGUI.md`: Complete guide to the source-to-build system
+  - `docs/ongoing_projects/source-to-build.md`: Project planning documentation
+  - `docs/docs-audit.md`: Documentation audit notes
+  - `CONTRIBUTING.md`: Contribution guidelines for the project
+
+- **Archive Directory**: `docs/archive/` now stores versioned XML backups
+  - `LuminariGUI.xml_2.0.4.015`
+  - `LuminariGUI.xml_2.0.4.016`
+  - Historical documentation files
+
+### Changed - Project Organization and Infrastructure (2025-11-04)
 
 - **Repository Reorganization**: Complete restructuring of project root for cleaner organization
   - Moved all test files to `tests/` directory:
@@ -65,6 +107,7 @@ See Previous Changelogs for More Details: `docs/previous_changelogs/`
 
 | Version | Release Date | Key Features |
 |---------|--------------|--------------|
+| **2.0.4.017** | 2025-11-29 | Source-to-Build System - New theGUI build system with modular XML fragments, auto-archiving of previous versions, and automatic version increment on each build |
 | **2.0.4.016** | 2025-07-31 | Release v2.0.4.016 - Resolved conflicts and cleaned up dev packages |
 | **2.0.4.015** | 2025-07-20 | Visual Improvements - Complete UI overhaul with premium gaming aesthetics, enhanced chat colors with channel-specific prefixes, styled containers with dark purple backgrounds and golden borders, improved text display with bold formatting |
 | **2.0.4.014** | 2025-07-20 | Numpad Movement Keys - Complete directional movement using numeric keypad + Chat Sound Notifications - Comprehensive sound alert system for all chat channels with `dsound` command, configurable volume control, cooldown system |
