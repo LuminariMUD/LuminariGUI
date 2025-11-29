@@ -1,3 +1,1253 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE MudletPackage>
+<MudletPackage version="2.0.4.020">
+	<TriggerPackage>
+		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+			<name>LuminariGUI</name>
+			<script></script>
+			<triggerType>0</triggerType>
+			<conditonLineDelta>0</conditonLineDelta>
+			<mStayOpen>0</mStayOpen>
+			<mCommand></mCommand>
+			<packageName>LuminariGUI</packageName>
+			<mFgColor>#ff0000</mFgColor>
+			<mBgColor>#ffff00</mBgColor>
+			<mSoundFile></mSoundFile>
+			<colorTriggerFgColor>#000000</colorTriggerFgColor>
+			<colorTriggerBgColor>#000000</colorTriggerBgColor>
+			<regexCodeList />
+			<regexCodePropertyList />
+			<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>YATCOConfig</name>
+				<script></script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName>YATCOConfig</packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList />
+				<regexCodePropertyList />
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>Tell</name>
+					<script>-- Tell Trigger: Captures private messages between players
+-- Regex patterns:
+-- 1. ^(\w+) tells you, '(.*)' - Captures incoming tells: player name and message
+-- 2. You tell - Captures outgoing tell confirmations
+demonnic.chat:append("Tell")
+if GUI.toggles.gagChat == true then
+  deleteLineP()
+end</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>39</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>^(\w+) tells you, '(.*)'</string>
+						<string>You tell </string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>1</integer>
+						<integer>2</integer>
+					</regexCodePropertyList>
+				</Trigger>
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>Congrats</name>
+					<script>-- Congrats Trigger: Captures congratulations channel messages
+-- Regex patterns:
+-- 1. ^(\w+) congrats, '(.*)' - Captures congrats messages: player name and content
+-- 2. You congrat, ' - Captures outgoing congrats confirmations
+demonnic.chat:append("Congrats")
+if GUI.toggles.gagChat == true then
+  deleteLineP()
+end</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>^(\w+) congrats, '(.*)</string>
+						<string>You congrat, '</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>1</integer>
+						<integer>2</integer>
+					</regexCodePropertyList>
+				</Trigger>
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>Chat</name>
+					<script>demonnic.chat:append("Chat")
+
+if GUI.toggles.gagChat == true then
+  deleteLineP()
+end</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>39</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>^(\w+) chats, '(.*)</string>
+						<string>You chat, '</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>1</integer>
+						<integer>2</integer>
+					</regexCodePropertyList>
+				</Trigger>
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>Say</name>
+					<script>demonnic.chat:append("Say")
+
+if GUI.toggles.gagChat == true then
+  deleteLineP()
+end</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>You say, '</string>
+						<string>You shout, '</string>
+						<string>You holler, '</string>
+						<string>You whisper to</string>
+						<string>You ask</string>
+						<string>You say out-of-character, '</string>
+						<string>^(\w+) says, '</string>
+						<string>^(\w+) shouts, '</string>
+						<string>^(\w+) hollers, '</string>
+						<string>whispers to you, '</string>
+						<string>asks you, '</string>
+						<string>^(\w+) says out-of-character, '</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>2</integer>
+						<integer>2</integer>
+						<integer>2</integer>
+						<integer>2</integer>
+						<integer>2</integer>
+						<integer>2</integer>
+						<integer>1</integer>
+						<integer>1</integer>
+						<integer>1</integer>
+						<integer>2</integer>
+						<integer>2</integer>
+						<integer>1</integer>
+					</regexCodePropertyList>
+				</Trigger>
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>Auction</name>
+					<script>demonnic.chat:append("Auction")
+
+if GUI.toggles.gagChat == true then
+  deleteLineP()
+end</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>^(\w+) auctalks, '(.*)</string>
+						<string>You auctalk, '</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>1</integer>
+						<integer>2</integer>
+					</regexCodePropertyList>
+				</Trigger>
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>Group</name>
+					<script>demonnic.chat:append("Group")
+
+if GUI.toggles.gagChat == true then
+  deleteLineP()
+end</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>[Group]</string>
+						<string>You group-say, '</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>2</integer>
+						<integer>2</integer>
+					</regexCodePropertyList>
+				</Trigger>
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>Wiznet</name>
+					<script>demonnic.chat:append("Wiz")
+
+if GUI.toggles.gagChat == true then
+  deleteLineP()
+end</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>[wiznet]</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>2</integer>
+					</regexCodePropertyList>
+				</Trigger>
+			</TriggerGroup>
+			<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>GUI</name>
+				<script></script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList />
+				<regexCodePropertyList />
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>Capture Wilderness Map</name>
+					<script>deleteLine()
+clearUserWindow("map.minimap")
+
+map.container:hide()
+GUI.asciiMapContainer:show()
+
+map.maplineTrig = tempLineTrigger(1,23,[[onMapLine()]])  -- Edit the max lines to how many your MAP display shows.
+map.padding = map.calcMinimapPadding()
+
+-- Map Line Processing Handler
+-- Processes individual lines of ASCII map data and handles map display completion
+-- Enhanced with comprehensive error handling for robust map processing
+function onMapLine()
+  -- Validate that we have a valid line to process
+  if not line or line == "" then
+    print("Warning: Empty or invalid map line received")
+    return
+  end
+  -- Check for map completion marker
+  local isLastLine = string.findPattern(line, "&lt;/WILDERNESS_MAP&gt;")
+  if isLastLine then
+    deleteLine()
+    -- Safely cleanup trigger with validation
+    if map.maplineTrig and exists(map.maplineTrig, "trigger") ~= 0 then
+      killTrigger(map.maplineTrig)
+    end
+    map.maplineTrig = nil
+    return
+  end
+  -- Process map line with error handling
+  pcall(function()
+    selectCurrentLine()
+    copy()
+    if map.minimap and map.minimap.echo then
+      for i = 1, map.padding do
+        map.minimap:echo(" ")
+      end
+      map.adjustMinimapFontSize()
+      appendBuffer("map.minimap")
+    else
+      print("Warning: map.minimap not available for line processing")
+    end
+    deleteLine()
+  end)
+end</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>&lt;WILDERNESS_MAP&gt;</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>2</integer>
+					</regexCodePropertyList>
+				</Trigger>
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>Capture Room Map</name>
+					<script>deleteLine()
+clearUserWindow("map.minimap")
+
+if GUI.buttonWindow.mudletOrAscii == "ASCII" then
+  map.container:hide()
+  GUI.asciiMapContainer:show()
+elseif GUI.buttonWindow.mudletOrAscii == "Mudlet" then
+  map.container:show()
+  GUI.asciiMapContainer:hide()
+end
+map.minimap:echo("\n")
+map.maplineTrig = tempLineTrigger(1,11,[[onRoomMapLine()]])  -- Edit the max lines to how many your MAP display shows.
+map.padding = map.calcAsciimapPadding()
+
+-- Room Map Line Processing Handler
+-- Processes individual lines of room-specific ASCII map data
+-- Enhanced with comprehensive error handling for robust map processing
+function onRoomMapLine()
+  -- Validate that we have a valid line to process
+  if not line or line == "" then
+    print("Warning: Empty or invalid room map line received")
+    return
+  end
+  -- Check for room map completion marker
+  local isLastLine = string.findPattern(line, "&lt;/ROOM_MAP&gt;")
+  if isLastLine then
+    deleteLine()
+    -- Safely cleanup trigger with validation
+    if map.maplineTrig and exists(map.maplineTrig, "trigger") ~= 0 then
+      killTrigger(map.maplineTrig)
+    end
+    map.maplineTrig = nil
+    return
+  end
+  -- Process room map line with error handling
+  pcall(function()
+    selectCurrentLine()
+    copy()
+    if map.minimap and map.minimap.echo then
+      map.minimap:echo(" ")
+      map.adjustAsciimapFontSize()
+      appendBuffer("map.minimap")
+    else
+      print("Warning: map.minimap not available for room map line processing")
+    end
+    deleteLine()
+  end)
+end</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>&lt;ROOM_MAP&gt;</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>2</integer>
+					</regexCodePropertyList>
+				</Trigger>
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>Gag blank lines</name>
+					<script>deleteLine()</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>^$</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>1</integer>
+					</regexCodePropertyList>
+				</Trigger>
+				<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>Cast Console</name>
+					<script></script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList />
+					<regexCodePropertyList />
+					<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+						<name>Started Cast</name>
+						<script>GUI.castConsole_startCast(matches[2], matches[3])</script>
+						<triggerType>0</triggerType>
+						<conditonLineDelta>0</conditonLineDelta>
+						<mStayOpen>0</mStayOpen>
+						<mCommand></mCommand>
+						<packageName></packageName>
+						<mFgColor>#ff0000</mFgColor>
+						<mBgColor>#ffff00</mBgColor>
+						<mSoundFile></mSoundFile>
+						<colorTriggerFgColor>#000000</colorTriggerFgColor>
+						<colorTriggerBgColor>#000000</colorTriggerBgColor>
+						<regexCodeList>
+							<string>^Casting\: (.+) (\*+)$</string>
+						</regexCodeList>
+						<regexCodePropertyList>
+							<integer>1</integer>
+						</regexCodePropertyList>
+					</Trigger>
+					<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+						<name>Cast Complete</name>
+						<script>GUI.castConsole_completeCast()</script>
+						<triggerType>0</triggerType>
+						<conditonLineDelta>0</conditonLineDelta>
+						<mStayOpen>0</mStayOpen>
+						<mCommand></mCommand>
+						<packageName></packageName>
+						<mFgColor>#ff0000</mFgColor>
+						<mBgColor>#ffff00</mBgColor>
+						<mSoundFile></mSoundFile>
+						<colorTriggerFgColor>#000000</colorTriggerFgColor>
+						<colorTriggerBgColor>#000000</colorTriggerBgColor>
+						<regexCodeList>
+							<string>You complete your spell...</string>
+						</regexCodeList>
+						<regexCodePropertyList>
+							<integer>2</integer>
+						</regexCodePropertyList>
+					</Trigger>
+					<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+						<name>Cast Aborted</name>
+						<script>GUI.castConsole_abortedCast()</script>
+						<triggerType>0</triggerType>
+						<conditonLineDelta>0</conditonLineDelta>
+						<mStayOpen>0</mStayOpen>
+						<mCommand></mCommand>
+						<packageName></packageName>
+						<mFgColor>#ff0000</mFgColor>
+						<mBgColor>#ffff00</mBgColor>
+						<mSoundFile></mSoundFile>
+						<colorTriggerFgColor>#000000</colorTriggerFgColor>
+						<colorTriggerBgColor>#000000</colorTriggerBgColor>
+						<regexCodeList>
+							<string>You abort your spell.</string>
+							<string>Your spell is aborted!</string>
+							<string>You are unable to find the target for your spell!</string>
+							<string>You are unable to find the object for your spell!</string>
+							<string>You are unable to continue your spell in your current position!</string>
+						</regexCodeList>
+						<regexCodePropertyList>
+							<integer>3</integer>
+							<integer>3</integer>
+							<integer>3</integer>
+							<integer>3</integer>
+							<integer>3</integer>
+						</regexCodePropertyList>
+					</Trigger>
+					<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+						<name>Cast Canceled</name>
+						<script>GUI.castConsole_canceledCast()</script>
+						<triggerType>0</triggerType>
+						<conditonLineDelta>0</conditonLineDelta>
+						<mStayOpen>0</mStayOpen>
+						<mCommand></mCommand>
+						<packageName></packageName>
+						<mFgColor>#ff0000</mFgColor>
+						<mBgColor>#ffff00</mBgColor>
+						<mSoundFile></mSoundFile>
+						<colorTriggerFgColor>#000000</colorTriggerFgColor>
+						<colorTriggerBgColor>#000000</colorTriggerBgColor>
+						<regexCodeList>
+							<string>You are unable to continue casting!</string>
+							<string>You are too nauseated to continue casting!</string>
+						</regexCodeList>
+						<regexCodePropertyList>
+							<integer>3</integer>
+							<integer>3</integer>
+						</regexCodePropertyList>
+					</Trigger>
+				</TriggerGroup>
+			</TriggerGroup>
+		</TriggerGroup>
+	</TriggerPackage>
+	<TimerPackage />
+	<AliasPackage>
+		<AliasGroup isActive="yes" isFolder="yes">
+			<name>LuminariGUI</name>
+			<script></script>
+			<command></command>
+			<packageName>LuminariGUI</packageName>
+			<regex></regex>
+			<AliasGroup isActive="yes" isFolder="yes">
+				<name>Toggles</name>
+				<script></script>
+				<command></command>
+				<packageName></packageName>
+				<regex></regex>
+				<Alias isActive="yes" isFolder="no">
+					<name>Gag Chat</name>
+					<script>--[[Toggling this will determine if the line and follow up
+    prompt are removed from the main buffer for chat.]]
+GUI.gagChatToggle()</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^gag chat$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>Show Self</name>
+					<script>--Toggles whether or not you are shown in the group tab.
+GUI.showSelfToggle()</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^show self$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>Horizontal Scroll</name>
+					<script>--Toggles horizontal scroll bar on main window
+GUI.horizontalScrollToggle()</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^hscroll$</regex>
+				</Alias>
+			</AliasGroup>
+			<AliasGroup isActive="yes" isFolder="yes">
+				<name>YATCO</name>
+				<script></script>
+				<command></command>
+				<packageName>YATCO</packageName>
+				<regex></regex>
+				<AliasGroup isActive="yes" isFolder="yes">
+					<name>Demonnic</name>
+					<script></script>
+					<command></command>
+					<packageName></packageName>
+					<regex></regex>
+					<AliasGroup isActive="yes" isFolder="yes">
+						<name>Shared</name>
+						<script></script>
+						<command></command>
+						<packageName></packageName>
+						<regex></regex>
+						<Alias isActive="yes" isFolder="no">
+							<name>Reset chasing</name>
+							<script>demonnic.chaser:reset()</script>
+							<command></command>
+							<packageName></packageName>
+							<regex>^chaseres$</regex>
+						</Alias>
+						<Alias isActive="yes" isFolder="no">
+							<name>Fix GUI Events</name>
+							<script>-- =============================================================================
+-- FIX GUI COMMAND
+-- This command uses the centralized initialization system to refresh all
+-- GUI components. It's the user-facing command for manual refresh.
+-- =============================================================================
+if GUI and GUI.initializeOrRefresh then
+    GUI.initializeOrRefresh("fix gui command")
+else
+    cecho("\n&lt;yellow&gt;GUI system not fully loaded. Please close and reopen your profile, then try again.")
+end</script>
+							<command></command>
+							<packageName></packageName>
+							<regex>^fix gui$</regex>
+						</Alias>
+						<Alias isActive="yes" isFolder="no">
+							<name>Debug</name>
+							<script>if matches[2] then
+  demonnic:listCategories()
+else
+  demonnic:toggleDebug()
+end</script>
+							<command></command>
+							<packageName></packageName>
+							<regex>^debug(?: (list))?$</regex>
+						</Alias>
+						<Alias isActive="yes" isFolder="no">
+							<name>debug categories</name>
+							<script>if matches[2] then
+  demonnic:watchCategory( matches[2] )
+else
+  demonnic:listCategories()
+end</script>
+							<command></command>
+							<packageName></packageName>
+							<regex>^debugc(?: (.*))?$</regex>
+						</Alias>
+					</AliasGroup>
+					<AliasGroup isActive="yes" isFolder="yes">
+						<name>Tabbed Chat</name>
+						<script></script>
+						<command></command>
+						<packageName></packageName>
+						<regex></regex>
+						<Alias isActive="yes" isFolder="no">
+							<name>Toggle blinking (temporary change)</name>
+							<script>if demonnic.chat.config.blink then
+  demonnic.chat.config.blink = false
+  demonnic.chat.tabsToBlink = {}
+  demonnic:echo("Blinking temporarily turned &lt;red&gt;off&lt;grey&gt;. It will reset if you edit your tabbed chat configuration, or close and reopen mudlet. To make it permanent, change demonnic.chat.config.blink to false in \"Demonnic-&gt;Tabbed Chat-&gt;Configuration options\" under scripts\n")
+else
+  demonnic.chat.config.blink = true
+  demonnic.chat:blink()
+  demonnic:echo("Blinking temporarily turned &lt;red&gt;on&lt;grey&gt;. It will reset if you edit your tabbed chat configuration, or close and reopen mudlet. To make it permanent, change demonnic.chat.config.blink to true in \"Demonnic-&gt;Tabbed Chat-&gt;Configuration options\" under scripts\n")
+end</script>
+							<command></command>
+							<packageName></packageName>
+							<regex>^dblink$</regex>
+						</Alias>
+						<Alias isActive="yes" isFolder="no">
+							<name>dsound</name>
+							<script>-- Toggle chat sound notifications
+if demonnic and demonnic.chat and demonnic.chat.config then
+    demonnic.chat.config.soundEnabled = not demonnic.chat.config.soundEnabled
+    
+    if demonnic.chat.config.soundEnabled then
+        cecho("\n&lt;green&gt;Chat sound notifications ENABLED&lt;reset&gt;\n")
+        -- Play a test sound
+        local soundPath = getMudletHomeDir():gsub("\\", "/") .. "/LuminariGUI/" .. demonnic.chat.config.soundFile
+        local file = io.open(soundPath, "r")
+        if file then
+            file:close()
+            playSoundFile(soundPath, demonnic.chat.config.soundVolume)
+        else
+            -- Try user's home directory as fallback
+            soundPath = getMudletHomeDir():gsub("\\", "/") .. "/" .. demonnic.chat.config.soundFile
+            file = io.open(soundPath, "r")
+            if file then
+                file:close()
+                playSoundFile(soundPath, demonnic.chat.config.soundVolume)
+            else
+                -- Try system beep as final fallback
+                playSoundFile("")  -- Empty string triggers system beep in Mudlet
+            end
+        end
+    else
+        cecho("\n&lt;red&gt;Chat sound notifications DISABLED&lt;reset&gt;\n")
+    end
+    
+    -- Save to GUI.toggles for persistence
+    if GUI and GUI.toggles then
+        GUI.toggles.chatSound = demonnic.chat.config.soundEnabled
+        table.save(getMudletHomeDir():gsub("\\", "/") .. "/GUI.toggles.lua", GUI.toggles)
+    end
+else
+    cecho("\n&lt;red&gt;Chat system not initialized. Type 'fix chat' to reinitialize.&lt;reset&gt;\n")
+end</script>
+							<command></command>
+							<packageName></packageName>
+							<regex>^dsound$</regex>
+						</Alias>
+						<Alias isActive="yes" isFolder="no">
+							<name>set chat sound</name>
+							<script>local args = matches[2]:split(" ")
+local command = args[1]
+local value = args[2]
+
+if command == "on" or command == "off" then
+    -- Enable/disable sounds
+    demonnic.chat.config.soundEnabled = (command == "on")
+    GUI.toggles.chatSound = demonnic.chat.config.soundEnabled
+    table.save(getMudletHomeDir():gsub("\\", "/") .. "/GUI.toggles.lua", GUI.toggles)
+    cecho(string.format("\n&lt;yellow&gt;Chat sounds %s&lt;reset&gt;\n", command:upper()))
+    
+elseif command == "volume" and value then
+    -- Set volume (0-100)
+    local vol = tonumber(value)
+    if vol and vol >= 0 and vol &lt;= 100 then
+        demonnic.chat.config.soundVolume = vol
+        cecho(string.format("\n&lt;yellow&gt;Chat sound volume set to %d&lt;reset&gt;\n", vol))
+    else
+        cecho("\n&lt;red&gt;Volume must be between 0 and 100&lt;reset&gt;\n")
+    end
+    
+elseif command == "file" and value then
+    -- Set sound file
+    demonnic.chat.config.soundFile = value
+    cecho(string.format("\n&lt;yellow&gt;Chat sound file set to: %s&lt;reset&gt;\n", value))
+    
+elseif command == "cooldown" and value then
+    -- Set cooldown between sounds
+    local cd = tonumber(value)
+    if cd and cd >= 0 then
+        demonnic.chat.config.soundCooldown = cd
+        cecho(string.format("\n&lt;yellow&gt;Chat sound cooldown set to %d seconds&lt;reset&gt;\n", cd))
+    else
+        cecho("\n&lt;red&gt;Cooldown must be 0 or positive number&lt;reset&gt;\n")
+    end
+    
+elseif command == "test" then
+    -- Test the sound
+    local soundPath = getMudletHomeDir():gsub("\\", "/") .. "/LuminariGUI/" .. demonnic.chat.config.soundFile
+    local file = io.open(soundPath, "r")
+    if file then
+        file:close()
+        playSoundFile(soundPath, demonnic.chat.config.soundVolume)
+        cecho("\n&lt;green&gt;Playing test sound...&lt;reset&gt;\n")
+    else
+        -- Try user's home directory as fallback
+        soundPath = getMudletHomeDir():gsub("\\", "/") .. "/" .. demonnic.chat.config.soundFile
+        file = io.open(soundPath, "r")
+        if file then
+            file:close()
+            playSoundFile(soundPath, demonnic.chat.config.soundVolume)
+            cecho("\n&lt;green&gt;Playing test sound from user directory...&lt;reset&gt;\n")
+        else
+            playSoundFile("")  -- Empty string triggers system beep in Mudlet
+            cecho("\n&lt;yellow&gt;Sound file not found, playing default beep&lt;reset&gt;\n")
+        end
+    end
+    
+else
+    -- Show help
+    cecho("\n&lt;cyan&gt;Chat Sound Commands:&lt;reset&gt;\n")
+    cecho("  &lt;white&gt;set chat sound on/off&lt;reset&gt; - Enable or disable sounds for ALL channels\n")
+    cecho("  &lt;white&gt;set chat sound volume &lt;0-100&gt;&lt;reset&gt; - Set volume level\n")
+    cecho("  &lt;white&gt;set chat sound file &lt;filename&gt;&lt;reset&gt; - Set sound file\n")
+    cecho("  &lt;white&gt;set chat sound cooldown &lt;seconds&gt;&lt;reset&gt; - Set cooldown between sounds\n")
+    cecho("  &lt;white&gt;set chat sound test&lt;reset&gt; - Test the current sound\n")
+    cecho("\n&lt;yellow&gt;Current settings:&lt;reset&gt;\n")
+    cecho(string.format("  Enabled: %s (plays for ALL channels)\n", demonnic.chat.config.soundEnabled and "YES" or "NO"))
+    cecho(string.format("  Volume: %d\n", demonnic.chat.config.soundVolume))
+    cecho(string.format("  File: %s\n", demonnic.chat.config.soundFile))
+    cecho(string.format("  Cooldown: %d seconds\n", demonnic.chat.config.soundCooldown))
+end</script>
+							<command></command>
+							<packageName></packageName>
+							<regex>^set chat sound(?:\s+(.*))?$</regex>
+						</Alias>
+						<Alias isActive="yes" isFolder="no">
+							<name>fixChat</name>
+							<script>-- =============================================================================
+-- FIX CHAT COMMAND
+-- This command uses the centralized initialization system with focus on chat.
+-- It ensures the chat system is properly initialized and visible.
+-- =============================================================================
+GUI.initializeOrRefresh("fix chat command")
+
+-- Additional chat-specific actions
+if GUI.chatContainer then
+  GUI.chatContainer:raise()
+  if demonnic.chat and demonnic.chat.container then
+    demonnic.chat:showAllTabs()
+  end
+end</script>
+							<command></command>
+							<packageName></packageName>
+							<regex>^fix chat$</regex>
+						</Alias>
+					</AliasGroup>
+				</AliasGroup>
+			</AliasGroup>
+		</AliasGroup>
+	</AliasPackage>
+	<ActionPackage />
+	<ScriptPackage>
+		<ScriptGroup isActive="yes" isFolder="yes">
+			<name>LuminariGUI</name>
+			<packageName>LuminariGUI</packageName>
+			<script></script>
+			<eventHandlerList />
+			<ScriptGroup isActive="yes" isFolder="yes">
+				<name>MSDPMapper</name>
+				<packageName></packageName>
+				<script></script>
+				<eventHandlerList />
+				<Script isActive="yes" isFolder="no">
+					<name>MSDPMapper</name>
+					<packageName></packageName>
+					<script>-------------------------------------------------
+-- MSDPMapper: MSDP protocol handling and room mapping
+-- Handles map creation, navigation, and ASCII minimap display
+-------------------------------------------------
+
+map = map or {}
+map.room_info = map.room_info or {}
+map.prev_info = map.prev_info or {}
+map.aliases = map.aliases or {}
+map.enabled = false
+map.downloading = false
+map.minimap_font_size = 8
+map.minimap_width = 21
+map.minimap_height = 21
+
+
+local defaults = {
+    -- using Geyser to handle the mapper in this, since this is a totally new script
+    mapper = {x = "75%", y = "0%", width = "25%", height = "50%"}
+}
+
+local terrain_types = {
+    -- used to make rooms of different terrain types have different colors
+    -- add a new entry for each terrain type, and set the color with RGB values
+    -- each id value must be unique, terrain types not listed here will use mapper default color
+    ["Inside"]                       = {id = 1,   r = 130, g = 130, b = 130},
+    ["City"]                         = {id = 2,   r = 200, g = 200, b = 200},
+    ["Field"]                        = {id = 3,   r = 0,   g = 170, b = 0},
+    ["Forest"]                       = {id = 4,   r = 0,   g = 122, b = 0},
+    ["Hills"]                        = {id = 5,   r = 122, g = 69,  b = 0},
+    ["Low Mountains"]                = {id = 6,   r = 100, g = 100, b = 100},
+    ["Water (Swim)"]                 = {id = 7,   r = 0,   g = 0,   b = 255},
+    ["Water (No Swim)"]              = {id = 8,   r = 0,   g = 0,   b = 130},
+    ["In Flight"]                    = {id = 9,   r = 200, g = 200, b = 255},
+    ["Underwater"]                   = {id = 10,  r = 43,  g = 43,  b = 124},
+    ["Zone Entrance"]                = {id = 211, r = 255, g = 0,   b = 0},
+    ["Road North-South"]             = {id = 12,  r = 119, g = 101, b = 86},
+    ["Road East-West"]               = {id = 13,  r = 119, g = 101, b = 86},
+    ["Road Intersection"]            = {id = 14,  r = 119, g = 101, b = 86},
+    ["Desert"]                       = {id = 15,  r = 234, g = 219, b = 124},
+    ["Ocean"]                        = {id = 16,  r = 0,   g = 90,  b = 90},
+    ["Marshland"]                    = {id = 17,  r = 81,  g = 47,  b = 109},
+    ["High Mountains"]               = {id = 18,  r = 255, g = 255, b = 255},
+    ["Outer Planes"]                 = {id = 19,  r = 168, g = 42,  b = 138},
+    ["Underdark - Wild"]             = {id = 20,  r = 131, g = 110, b = 145},
+    ["Underdark - City"]             = {id = 21,  r = 183, g = 178, b = 186},
+    ["Underdark - Inside"]           = {id = 22,  r = 132, g = 132, b = 132},
+    ["Underdark - Water (Swim)"]     = {id = 23,  r = 70,  g = 139, b = 175},
+    ["Underdark - Water (No Swim)"]  = {id = 24,  r = 34,  g = 68,  b = 86},
+    ["Underdark - In Flight"]        = {id = 25,  r = 158, g = 178, b = 188},
+    ["Lava"]                         = {id = 26,  r = 255, g = 119, b = 0},
+    ["Dirt Road North-South"]        = {id = 27,  r = 142, g = 85,  b = 0},
+    ["Dirt Road East-West"]          = {id = 28,  r = 142, g = 85,  b = 0},
+    ["Dirt Road Intersection"]       = {id = 29,  r = 142, g = 85,  b = 0},
+    ["Cave"]                         = {id = 30,  r = 80,  g = 80,  b = 80},
+    ["Jungle"]                       = {id = 31,  r = 21,  g = 132, b = 101},
+    ["Tundra"]                       = {id = 32,  r = 224, g = 224, b = 224},
+    ["Taiga"]                        = {id = 33,  r = 103, g = 137, b = 104},
+    ["Beach"]                        = {id = 34,  r = 239, g = 235, b = 0},
+}
+
+-- list of possible movement directions and appropriate coordinate changes
+local move_vectors = {
+    north = {0,1,0}, south = {0,-1,0}, east = {1,0,0}, west = {-1,0,0},
+    northwest = {-1,1,0}, northeast = {1,1,0}, southwest = {-1,-1,0}, southeast = {1,-1,0},
+    up = {0,0,1}, down = {0,0,-1}
+}
+
+-- used to convert short dirs for full dirs
+local exits = {
+    n = "north", s = "south", w = "west", e = "east",
+    nw = "northwest", ne = "northeast", sw = "southwest", se = "southeast",
+    u = "up", d = "down"
+}
+
+local exitmap = {
+    north = 1,      northeast = 2,      northwest = 3,      east = 4,
+    west = 5,       south = 6,          southeast = 7,      southwest = 8,
+    up = 9,         down = 10,          ["in"] = 11,        out = 12,
+    [1] = "north",  [2] = "northeast",  [3] = "northwest",  [4] = "east",
+    [5] = "west",   [6] = "south",      [7] = "southeast",  [8] = "southwest",
+    [9] = "up",     [10] = "down",      [11] = "in",        [12] = "out",
+}
+
+local function make_room()
+    local info = map.room_info
+    local coords = {0,0,0}
+    addRoom(info.VNUM)
+    local areas = getAreaTable()
+    local areaID = areas[info.AREA]
+    if not areaID then
+        areaID = addAreaName(info.AREA)
+    else
+        coords = {getRoomCoordinates(map.prev_info.VNUM)}								
+        local shift = {0,0,0}
+        for k,v in pairs(map.prev_info.EXITS) do
+            if v == info.VNUM and move_vectors[k] then
+                shift = move_vectors[k]								
+                break
+            end
+        end
+				
+        for n = 1,3 do
+            coords[n] = coords[n] + shift[n]
+        end
+											
+        -- map stretching
+        local overlap = getRoomsByPosition(areaID,coords[1],coords[2],coords[3])				
+				
+        if not table.is_empty(overlap) then
+            local rooms = getAreaRooms(areaID)
+            local rcoords		
+            for _,id in ipairs(rooms) do
+                local x, y, z = getRoomCoordinates(id)
+								rcoords = {x, y, z}
+                for n = 1,3 do
+                    if shift[n] ~= 0 and (rcoords[n] - coords[n]) * shift[n] &gt;= 0 then
+                        rcoords[n] = rcoords[n] + shift[n]
+                    end
+                end
+                setRoomCoordinates(id,rcoords[1],rcoords[2],rcoords[3])
+            end
+        end
+    end
+		setRoomArea(info.VNUM, areaID)
+    setRoomCoordinates(info.VNUM, coords[1], coords[2], coords[3])
+    if terrain_types[info.TERRAIN] then
+        setRoomEnv(info.VNUM, terrain_types[info.TERRAIN].id + 16)
+    end
+    -- Set the room name from MSDP data
+    if info.NAME then
+        setRoomName(info.VNUM, info.NAME)
+    end
+		if map.prev_info then -- Check if you moved into here from another room.
+			local prev_exits = getRoomExits(map.prev_info.VNUM)
+			for dir, id in pairs(map.prev_info.EXITS) do
+				if prev_exits[dir] == nil then
+			    if not setExit(map.prev_info.VNUM, id, exitmap[dir]) then       
+            setExitStub(map.prev_info.VNUM, exitmap[dir], true)
+          end
+				end
+			end
+		end
+    for dir, id in pairs(info.EXITS) do
+        -- need to see how special exits are represented to handle those properly here				
+        if not setExit(info.VNUM, id, exitmap[dir]) then       
+            setExitStub(info.VNUM, exitmap[dir], true)
+        end
+    end
+end
+
+local function shift_room(dir)
+    local ID = map.room_info.VNUM
+    local x,y,z = getRoomCoordinates(ID)
+    local x1,y1,z1 = move_vectors[dir]
+    x = x + x1
+    y = y + y1
+    z = z + z1
+    setRoomCoordinates(ID,x,y,z)
+    updateMap()
+end
+
+local function handle_move()
+	if map.enabled == true and map.room_info.ENVIRONMENT ~= "Wilderness" then
+    if not getRoomName(map.room_info.VNUM) then
+        make_room()
+    else		
+			if terrain_types[map.room_info.TERRAIN] then
+        setRoomEnv(map.room_info.VNUM, terrain_types[map.room_info.TERRAIN].id + 16)
+    	end 	  
+      local stubs = getExitStubs1(map.room_info.VNUM)				
+			if stubs then		
+       	for _, n in ipairs(stubs) do
+          local dir = exitmap[n]				
+	        local id = map.room_info.EXITS[dir]
+	        -- need to see how special exits are represented to handle those properly here
+	        if getRoomName(id) then	        
+					  setExit(map.room_info.VNUM, id, exitmap[dir])
+	        end
+  	    end
+			end
+    end
+	end
+  centerview(map.room_info.VNUM)
+end
+
+local function make_aliases()
+    -- Create mapping control aliases
+    -- Uses named keys in map.aliases for proper cleanup on reload
+    local id
+    local tbl = {
+        ["Start Mapping Alias"] = {[[^start mapping$]], [[map.start_mapping()]]},
+        ["Stop Mapping Alias"] = {[[^stop mapping$]], [[map.stop_mapping()]]},
+        ["Mapping On Alias"] = {[[^mc on$]], [[map.start_mapping()]]},
+        ["Mapping Off Alias"] = {[[^mc off$]], [[map.stop_mapping()]]},
+        ["Shift Room Alias"] = {[[^shift (\w+)$]], [[raiseEvent("shiftRoom",matches[2])]]},
+    }
+    for k, v in pairs(tbl) do
+        if map.aliases[k] and exists(map.aliases[k], "alias") ~= 0 then
+            killAlias(map.aliases[k])
+        end
+        id = tempAlias(v[1], v[2])
+        map.aliases[k] = id
+    end
+end
+
+function map.load_map(use_local)
+    local path = getMudletHomeDir() .. "/map.dat"		
+    if use_local then
+        loadMap(path)
+        print("Map reloaded from local copy.")
+    else
+        local address = 'http://www.luminarimud.com/download/map.dat'
+        map.downloading = true
+        downloadFile(path,address)
+        print("Downloading Map File.")
+    end
+end
+
+function map.adjustMinimapFontSize()
+  local w = map.minimap.get_width()
+  local h = map.minimap.get_height()
+  local font_size = 8
+  repeat
+    font_size = font_size + 1
+    local width, height = calcFontSize(font_size)
+    width = width * map.minimap_width
+    height = height * map.minimap_height
+  until (w &lt; width) or (h &lt; height)
+	map.minimap_font_size = font_size - 1
+  setMiniConsoleFontSize("map.minimap", map.minimap_font_size)
+end
+
+function map.adjustAsciimapFontSize()
+  local w = map.minimap.get_width()
+  local h = map.minimap.get_height()
+  local font_size = 8
+  repeat
+    font_size = font_size + 1
+    local width, height = calcFontSize(font_size)
+    width = width * 20
+    height = height * 11
+  until (w &lt; width) or (h &lt; height)
+	map.minimap_font_size = font_size - 1
+  setMiniConsoleFontSize("map.minimap", map.minimap_font_size)
+end
+
+function map.calcMinimapPadding()
+	local width = calcFontSize(map.minimap_font_size)
+	local characters = map.minimap.get_width() / width
+	return (characters - map.minimap_width) / 4
+end
+
+function map.calcAsciimapPadding()
+	local width = calcFontSize(map.minimap_font_size)
+	local characters = map.minimap.get_width() / width
+	return (characters - 19) / 4
+end
+
+local function config()        
+    -- setting terrain colors
+    for k,v in pairs(terrain_types) do
+        setCustomEnvColor(v.id + 16, v.r, v.g, v.b, 255)
+    end
+    -- making mapper window
+    local info = defaults.mapper
+    
+    -- Create map as Adjustable Container
+    map.container = GUI.AdjustableContainers.create("Map", "map", {
+      x = info.x,
+      y = info.y,
+      width = info.width,
+      height = info.height,
+      name = "LuminariGUI_Map",
+      titleText = "Map",
+      adjLabelstyle = GUI.AdjustableContainers.defaultStyle.adjLabelstyle,
+      buttonstyle = GUI.AdjustableContainers.defaultStyle.buttonstyle,
+      tabstyle = GUI.AdjustableContainers.defaultStyle.tabstyle,
+      titleTxtColor = "green",
+      padding = 9,
+      lockStyle = "border",
+      autoSave = true,
+      autoLoad = true,
+      attached = "tr",  -- Top-right attachment
+      defaultDir = GUI.AdjustableContainers.saveDir,
+      noClose = true
+    })
+    
+    -- Create separate Adjustable Container for ASCII map
+    GUI.asciiMapContainer = GUI.AdjustableContainers.create("ASCIIMap", "ascii_map", {
+      x = info.x,
+      y = info.y,
+      width = info.width,
+      height = info.height,
+      name = "LuminariGUI_ASCIIMap",
+      titleText = "ASCII Map",
+      adjLabelstyle = info.adjLabelstyle or "background-color: rgba(0,0,0,0%); border: 4px solid #444444;",
+      raiseOnClick = false,
+      savePosition = true,
+      titleTxtColor = "green",
+      padding = 9,
+      lockStyle = "border",
+      autoSave = true,
+      autoLoad = true,
+      attached = "tr",  -- Top-right attachment
+      defaultDir = GUI.AdjustableContainers.saveDir,
+      noClose = true
+    })
+    
+    -- Create ASCII minimap MiniConsole inside the new container
+		map.minimap = Geyser.MiniConsole:new({
+  		name="map.minimap",
+  		x=9, y= 25,
+  		width="-18", height="-34",
+		}, GUI.asciiMapContainer)
+		
+		map.minimap:setColor("black")
+		
+		-- Keep reference for backward compatibility
+		map.minimapcontainer = GUI.asciiMapContainer
+		
+		-- Hide ASCII map by default (Mudlet map shows first)
+		GUI.asciiMapContainer:hide()
+    
+    -- Create mapper window within the adjustable container
+    if not map.container then
+      print("ERROR: Map container not created - cannot initialize mapper")
+      return
+    end
+    
+		map.mapwindow = Geyser.Mapper:new({
+      name = "map.mapwindow", 
+      x = 0, 
+      y = 0, 
+      width = "100%", 
+      height = "100%"
+    }, map.container)
+    
+    if not map.mapwindow then
+      print("ERROR: Failed to create Geyser.Mapper instance")
+      return
+    end
+    
+    -- Single initialization timer to ensure proper rendering
+    tempTimer(0.2, function()
+      if map.mapwindow then
+        map.mapwindow:show()
+        map.mapwindow:resize()
+        -- Force a second resize to handle any rendering issues
+        map.mapwindow:resize()
+      else
+        print("ERROR: Failed to initialize map window")
+      end
+    end)
+    
+    -- Show the map container
+    if map.container then
+      map.container:show()
+      -- No need to manipulate z-order here - let Adjustable Container handle it
+    end
+		
+		map.adjustMinimapFontSize()
+		make_aliases()		
+		
+		map.get_default_map()
+end
+
+function map.get_default_map()
+	-- If the user has no map, download the default map from the server!
+	local areas = getAreaTable()
+	local path = getMudletHomeDir() .. "/map.dat"
+	 
+	
+	if (areas["Mosswood"] == nil) then
+		local address = 'http://www.luminarimud.com/download/map.dat'
+    map.downloading = true
+    downloadFile(path, address)
+    print("Downloading Map File.")
+	end
+end
+
+function map.start_mapping()
+  map.enabled=true
+	print("Mapping enabled.")
+end
+
+function map.stop_mapping()
+	map.enabled=false
+	print("Mapping disabled.")
+end
+
+function map.eventHandler(event,...)     
+    if event == "msdp.ROOM" then
+        map.prev_info = map.room_info
+        map.room_info = table.update({},msdp.ROOM)
+				-- Check if we have moved between regular and wilderness areas
+
+				if map.prev_info.ENVIRONMENT == "Wilderness" and map.room_info.ENVIRONMENT == "Room" then
+					 -- re-enable the mapper!
+					 if GUI.asciiMapContainer then GUI.asciiMapContainer:hide() end
+					 if map.container then 
+					   map.container:show()
+					   -- Delay mapper refresh to ensure container is visible
+					   tempTimer(0.1, function()
+					     if map.mapwindow then
+					       map.mapwindow:show()
+					       map.mapwindow:resize()
+					     end
+					   end)
+					 end
+				elseif map.prev_info.ENVIRONMENT == "Room" and map.room_info.ENVIRONMENT == "Wilderness" then
+					 -- disable the mapper!
+					 if map.container then map.container:hide() end
+					 if GUI.asciiMapContainer then GUI.asciiMapContainer:show() end
+				end
+        handle_move()
+    elseif event == "shiftRoom" then
+        local dir = exits[arg[1]] or arg[1]
+        if not table.contains(exits, dir) then
+            echo("Error: Invalid direction '" .. dir .. "'.")
+        else
+            shift_room(dir)
+        end
+		elseif event == "sysDownloadDone" and map.downloading then
+        loadMap(getMudletHomeDir() .. "/map.dat")
+        map.downloading = false
+        print("Map File Loaded.")				
+    elseif event == "sysConnectionEvent" then
+        config()			 
+		end
+		
+end
+
+function map.onProtocolEnabled(_, protocol)
+  if protocol == "MSDP" then
+    print("MSDP enabled!")
+		sendMSDP("REPORT", "ROOM")
+		config()	
+  end
+end
+
+registerAnonymousEventHandler("msdp.ROOM","map.eventHandler")
+registerAnonymousEventHandler("shiftRoom","map.eventHandler")
+registerAnonymousEventHandler("sysConnectionEvent", "map.eventHandler")
+registerAnonymousEventHandler("sysProtocolEnabled", "map.onProtocolEnabled")
+registerAnonymousEventHandler("sysDownloadDone", "map.eventHandler")</script>
+					<eventHandlerList />
+				</Script>
+			</ScriptGroup>
 			<ScriptGroup isActive="yes" isFolder="yes">
 				<name>GUI</name>
 				<packageName>Template</packageName>
@@ -1423,7 +2673,7 @@ end</script>
 						<script>GUI.buttonWindow =
   GUI.buttonWindow or
   {
-    button = {"Legend", "Map"},
+    button = {"Legend", "Mudlet", "ASCII"},
     color1 = "rgba(0,0,0,0)",
     color2 = "rgba(0,0,0,0)",
     width = "100%",
@@ -1466,38 +2716,6 @@ function GUI.buttonWindow.legendClick()
     GUI.buttonWindow.Legend:hide()
 		GUI.buttonWindow.roomOrLegend = "Room"
 		GUI.buttonWindow.Legendbutton:echo("Legend/Room", "white", "c")
-	end
-end
-
---Button callback for Map toggle (Mudlet/ASCII)
-function GUI.buttonWindow.mapClick()
-	-- Ensure containers exist before toggling
-	if not map.container or not GUI.asciiMapContainer then
-		print("ERROR: Map containers not initialized")
-		return
-	end
-
-	if GUI.buttonWindow.mudletOrAscii == "Mudlet" then
-		-- Switch TO ASCII view
-		map.container:hide()
-		GUI.asciiMapContainer:show()
-		GUI.buttonWindow.mudletOrAscii = "ASCII"
-		GUI.buttonWindow.Mapbutton:echo("Mudlet/ASCII", "yellow", "c")
-		GUI.asciiMapContainer:raise()
-	elseif GUI.buttonWindow.mudletOrAscii == "ASCII" then
-		-- Switch TO Mudlet view
-		GUI.asciiMapContainer:hide()
-		map.container:show()
-		GUI.buttonWindow.mudletOrAscii = "Mudlet"
-		GUI.buttonWindow.Mapbutton:echo("Mudlet/ASCII", "white", "c")
-
-		-- Ensure mapper is visible and properly refreshed with a small delay
-		tempTimer(0.1, function()
-			if map.mapwindow then
-				map.mapwindow:show()
-				map.mapwindow:resize()
-			end
-		end)
 	end
 end
 
@@ -1626,30 +2844,27 @@ function GUI.buttonWindow.init()
     GUI.buttonWindow[v .. "button"] =
       Geyser.Label:new({name = "GUI.buttonWindow." .. v .. "button"}, GUI.buttonWindow.buttonContainer)
     GUI.buttonWindow[v .. "button"]:setStyleSheet(GUI.buttonWindowCSS:getCSS())
-    -- Set appropriate display text for each button
-    local displayText = v
-    if v == "Legend" then
-      displayText = "Legend/Room"
-    elseif v == "Map" then
-      displayText = "Mudlet/ASCII"
-    end
-    GUI.buttonWindow[v .. "button"]:echo("&lt;center&gt;" .. displayText)
+    GUI.buttonWindow[v .. "button"]:echo("&lt;center&gt;" .. (v == "Legend" and "Legend/Room" or v))
   end
 
 --Legend Call Back
-  GUI.buttonWindow.Legendbutton:setClickCallback("GUI.buttonWindow.legendClick")
---Map (Mudlet/ASCII) Callback
-  GUI.buttonWindow.Mapbutton:setClickCallback("GUI.buttonWindow.mapClick")
-
+  GUI.buttonWindow.Legendbutton:setClickCallback("GUI.buttonWindow.legendClick")		
+--Mudlet/ASCII Callback
+  GUI.buttonWindow.Mudletbutton:setClickCallback("GUI.buttonWindow.mudletClick")	
+  GUI.buttonWindow.ASCIIbutton:setClickCallback("GUI.buttonWindow.asciiClick")	
+	
 --Show Room Info on Startup
 	GUI.buttonWindow.roomInfo:show()
   GUI.buttonWindow.Legend:hide()
-
+	
 --Populating Legend
 	GUI.updateLegend()
 
---Set initial Map button state (Mudlet is default/active)
-	GUI.buttonWindow.Mapbutton:echo("Mudlet/ASCII", "white", "c")
+--[[Will error line 33 if we call mudletClick callback
+  so handling echo this way since Mudlet loads its map
+  by default. ]]
+	GUI.buttonWindow.Mudletbutton:echo("Mudlet", "yellow", "c")
+	GUI.buttonWindow.ASCIIbutton:echo("ASCII", "white", "c")
 	
 end </script>
 						<eventHandlerList />
@@ -2940,3 +4155,871 @@ end</script>
 					</Script>
 				</ScriptGroup>
 			</ScriptGroup>
+			<ScriptGroup isActive="yes" isFolder="yes">
+				<name>YATCOConfig</name>
+				<packageName>YATCOConfig</packageName>
+				<script></script>
+				<eventHandlerList />
+				<ScriptGroup isActive="yes" isFolder="yes">
+					<name>YATCOCONFIG</name>
+					<packageName></packageName>
+					<script>demonnic = demonnic or {}
+demonnic.chat = demonnic.chat or {}
+demonnic.chat.config = demonnic.chat.config or {}</script>
+					<eventHandlerList />
+					<Script isActive="yes" isFolder="no">
+						<name>Configuration Options</name>
+						<packageName></packageName>
+						<script>--[[
+This is where all of the configuration options can be set. 
+Anything I've put in this script object can be changed, but please do pay attention to what you're doing.
+If you change one of the values to something it shouldn't be, you could break it. 
+]]
+
+--This is where you tell it to use tabbed chat.
+demonnic.chat.use = true
+
+--[[
+This is where you put what container to put the tabbed chat stuff into. Make it
+equal to the actual container object you want it in, or false for none. Defaults to false
+Which is to say if you want to put the tabbed chat stuff into a container made using 
+uiRight = Geyser.Container:new()
+
+you would put
+
+demonnic.chat.useContainer = uiRight
+
+and if you don't want it in a container you would put
+
+demonnic.chat.useContainer = false
+]]
+
+-- Chat container will be set after GUI initialization
+demonnic.chat.useContainer = false
+
+--[[
+The timestamp option is set here.
+Set to false if you do not want any timestamps displayed for chat.
+If you do want it displayed, set to the string for the format you wish. 
+see http://wiki.mudlet.org/w/Manual:Lua_Functions#getTime for information
+how to format the string
+]]
+--demonnic.chat.config.timestamp = "HH:mm:ss"
+demonnic.chat.config.timestamp = false
+
+--[[ Should we use our own colors for the timestamp?
+Set to true if you want to specify foreground and background colors
+for the timestamp.
+Set to false if you want the timestamps background and foreground
+colors to match that of the mud output.
+]]
+demonnic.chat.config.timestampCustomColor = false
+--[[
+and what foreground color? You can either use one of the 'named' colors
+(see http://wiki.mudlet.org/images/c/c3/ShowColors.png for available colors)
+demonnic.chat.config.timestampFG = "slate_grey"
+
+Or you can use a table of R,G,B values. 
+demonnic.chat.config.timestampFG = {
+  255,
+    0,
+    0,
+}
+then the foreground for the timestamp would be 255 read, 100 green, and 0 blue
+]]
+demonnic.chat.config.timestampFG = "red"
+
+--and background? Same rules as for the foreground above
+demonnic.chat.config.timestampBG = "blue"
+
+--[[
+This is where you say what corner of the screen you want the tabbed chat on
+Valid settings are "topright", "topleft", "bottomright", "bottomleft"
+]]--
+demonnic.chat.config.location = "topright"
+
+--[[
+This is a table of channels you would like.
+AKA the place you tell the script what tabs you want.
+Each entry must be a string. The defaults should be a pretty effective guide.
+]]
+
+demonnic.chat.config.channels = {
+  "All",
+  "Tell",
+  "Chat",
+  "Say",
+  "Wiz",
+  "Group",
+  "Congrats",
+  "Auction",
+}
+
+
+--Set this to the name of the channel you want to have everything sent to. 
+--Per the default, this would be the "All" channel. If you have a different name for it:
+--
+--demonnic.chat.config.Alltab = "Bucket"  
+--
+--And if you don't want it turned on at all:
+--
+--demonnic.chat.config.Alltab = false
+
+demonnic.chat.config.Alltab = "All"
+
+--Set this to the name of the channel you want to display your map. Set to "" if you
+--don't want to display the map in your YATCO tabs
+demonnic.chat.config.Maptab = ""
+
+
+---------------------------------------------------------------------------------
+--                                                                             --
+--The infamous blinking stuff!!!                                               --
+--                                                                             --
+---------------------------------------------------------------------------------
+
+--[[
+Do you want tabs to blink when you get new messages, until you click on the tab?
+True if yes, false if no.
+]]
+demonnic.chat.config.blink = true
+
+--How long (in seconds) between blinks? For example, 1 would mean a 1 second pause in between blinks.
+demonnic.chat.config.blinkTime = 3
+
+--Blink if the bucket tab ("All" by default, but configured above) is in focus?
+demonnic.chat.config.blinkFromAll = false
+
+-- Sound notification settings
+demonnic.chat.config.soundEnabled = demonnic.chat.config.soundEnabled or false  -- Default OFF
+demonnic.chat.config.soundFile = demonnic.chat.config.soundFile or "audio/chat_sound.mp3"   -- Default sound file
+demonnic.chat.config.soundVolume = demonnic.chat.config.soundVolume or 100      -- Volume 0-100
+demonnic.chat.config.soundCooldown = demonnic.chat.config.soundCooldown or 0      -- Cooldown in seconds (0 = no cooldown)
+demonnic.chat.lastSoundTime = demonnic.chat.lastSoundTime or 0                   -- Track last sound timestamp
+
+
+
+
+--Font size for the chat messages
+
+demonnic.chat.config.fontSize = getFontSize("main")
+
+--[[
+Should we preserve the formatting of the text. 
+Or should we set the background of it to match the window color?
+Set this to false if you want the background for all chat to match the background of the window.
+Useful if you change the background from black, and don't like the way the pasted chat makes blocks in it
+]]
+
+demonnic.chat.config.preserveBackground = true
+
+--[[
+Gag the chat lines in the main window?
+defaults to false, set to true if you want to gag.
+]]
+
+demonnic.chat.config.gag = false
+
+--[[
+Number of lines of chat visible at once. 
+Will determine how tall the window for the chats is.
+]]
+
+demonnic.chat.config.lines = 22
+
+--[[
+Number of characters to wrap the chatlines at.
+This will also determine how wide the chat windows are.
+]]
+
+demonnic.chat.config.width = getColumnCount("main")
+
+--[[
+Set the color for the active tab. R,G,B format.
+The default here is a brightish green
+]]
+
+demonnic.chat.config.activeColors = {
+  r = 0,
+  g = 180,
+  b = 0,
+}
+
+--[[
+Set the color for the inactive tab. R,G,B format.
+The default here is a drab grey
+]]
+
+demonnic.chat.config.inactiveColors = {
+  r = 60,
+  g = 60,
+  b = 60,
+}
+
+--[[
+Set the color for the chat window itself. R,G,B format.
+Defaulted to the black of my twisted hardened soul. Or something.
+]]
+
+demonnic.chat.config.windowColors = {
+  r = 0,
+  g = 0,
+  b = 0,
+}
+
+--[[
+Set the color for the text on the active tab. Uses color names.
+Set the default to purple. So the tab you're looking at, by default will be purple on bright green. 
+Did I mention I'm a bit colorblind?
+]]
+
+demonnic.chat.config.activeTabText = "yellow"
+
+--[[
+Set the color for the text on the inactive tabs. Uses color names.
+Defaulted this to white. So the tabs you're not looking at will be white text on boring grey background.
+]]
+
+demonnic.chat.config.inactiveTabText = "white"
+
+--[[
+have to make sure a currentTab is set... 
+so we'll use the one for the bucket, or the first one in the channels table
+Or, you know... what it's currently set to, if it's already set.
+]]
+demonnic.chat.currentTab = demonnic.chat.currentTab or demonnic.chat.config.Alltab or demonnic.chat.config.channels[1]
+</script>
+						<eventHandlerList />
+					</Script>
+				</ScriptGroup>
+			</ScriptGroup>
+			<ScriptGroup isActive="yes" isFolder="yes">
+				<name>YATCO</name>
+				<packageName>YATCO</packageName>
+				<script></script>
+				<eventHandlerList />
+				<ScriptGroup isActive="yes" isFolder="yes">
+					<name>Demonnic</name>
+					<packageName></packageName>
+					<script></script>
+					<eventHandlerList />
+					<ScriptGroup isActive="yes" isFolder="yes">
+						<name>Shared</name>
+						<packageName></packageName>
+						<script>--Bootstrapping variables/etc. Don't touch this unless you really know what you're doing
+
+--I mean it. I'll point. AND laugh. loudly. 
+demonnic = demonnic or {}
+demonnic.config = demonnic.config or {}
+demonnic.balances = demonnic.balances or {}
+demonnic.balances.balance = demonnic.balances.balance or 1
+demonnic.balances.equilibrium = demonnic.balances.equilibrium or 1
+demonnic.debug = demonnic.debug or {}
+demonnic.debug.active = demonnic.debug.active or nil
+demonnic.debug.categories = demonnic.debug.categories or { }
+
+
+function demonnic:echo(msg)
+ cecho(string.format("\n&lt;blue&gt;(&lt;green&gt;Demonnic&lt;blue&gt;):&lt;white&gt; %s", msg))
+end</script>
+						<eventHandlerList />
+						<Script isActive="yes" isFolder="no">
+							<name>Debugging</name>
+							<packageName></packageName>
+							<script>--Adds debugging functionality 
+
+function demonnic:Debug(category,debugData)
+   if category then
+      if table.contains(demonnic.debug.categories, category) then
+         if type(debugData) == "table" then
+            demonnic:echo("&lt;red&gt;DEBUG " .. category .. ":&lt;white&gt;")
+            display(debugData)
+         elseif type(debugData) == "string" or type(debugData) == "number" then
+            demonnic:echo("&lt;red&gt;DEBUG " .. category .. ":&lt;white&gt; " .. debugData .. "\n" )
+         else
+            demonnic:echo("&lt;red&gt;DEBUG " .. category .. ":&lt;white&gt; " .. tostring(debugData) .. "\n" )
+         end
+      end
+   else
+      if type(debugData) == "table" then
+         demonnic:echo("&lt;red&gt;DEBUG:&lt;white&gt;")
+         display(debugData)
+      elseif type(debugData) == "string" or type(debugData) == "number" then
+         demonnic:echo("&lt;red&gt;DEBUG:&lt;white&gt; " .. debugData)
+      else
+         demonnic:echo("&lt;red&gt;DEBUG:&lt;white&gt; " .. tostring(debugData))
+      end
+   end
+end
+
+function demonnic:printDebug(category, debugData)
+   if not demonnic.debug.active then return end
+   demonnic:Debug(category, debugData)
+end
+
+function demonnic:toggleDebug()
+   if demonnic.debug.active then demonnic.debug.active = nil
+   else demonnic.debug.active = true
+   end
+   demonnic:echo("Debugging is currently " .. (( demonnic.debug.active and "&lt;green&gt;ON&lt;white&gt;") or "&lt;red&gt;OFF&lt;white&gt;"))
+end
+
+function demonnic:watchCategory( category )
+   if table.contains(demonnic.debug.categories, category) then
+      for i,v in ipairs(demonnic.debug.categories) do
+         if v == category then
+            table.remove(demonnic.debug.categories, i)
+         end
+      end
+      demonnic:echo("No longer watching the '&lt;red&gt;"..category.."&lt;white&gt;' category.") 
+   else
+      table.insert(demonnic.debug.categories, category)
+      demonnic:echo("Now watching the '&lt;red&gt;"..category.."&lt;white&gt;' category.")
+   end
+   demonnic:echo("Debugging is currently " .. (( demonnic.debug.active and "&lt;green&gt;ON&lt;white&gt;") or "&lt;red&gt;OFF&lt;white&gt;"))
+end
+
+function demonnic:listCategories()
+   if #demonnic.debug.categories &gt; 0 then
+      demonnic:echo("You are currently watching the following categories:\n" .. table.concat(demonnic.debug.categories,", ") )
+   else
+      demonnic:echo("You are not watching any debugs.")
+   end
+end
+</script>
+							<eventHandlerList />
+						</Script>
+						<Script isActive="yes" isFolder="no">
+							<name>Geyser Additions</name>
+							<packageName></packageName>
+							<script>function Geyser.MiniConsole:clear()
+   clearWindow(self.name)
+end
+
+function Geyser.MiniConsole:append()
+  appendBuffer(self.name)
+end</script>
+							<eventHandlerList />
+						</Script>
+					</ScriptGroup>
+					<ScriptGroup isActive="yes" isFolder="yes">
+						<name>Tabbed Chat</name>
+						<packageName></packageName>
+						<script>--Do not remove the following lines. Or change them.
+demonnic = demonnic or {}
+demonnic.chat = demonnic.chat or {}
+demonnic.chat.tabsToBlink = demonnic.chat.tabsToBlink or {}
+demonnic.chat.tabs = demonnic.chat.tabs or {}
+demonnic.chat.windows = demonnic.chat.windows or {}
+if not demonnic.chat.config then
+  cecho("&lt;red:white&gt;YOU DO NOT HAVE THE YATCO CONFIG PACKAGE IN PLACE. THINGS WILL NOT WORK AS EXPECTED\n\n")
+  demonnic.chat.error = "NO CONFIG"
+end</script>
+						<eventHandlerList />
+						<Script isActive="yes" isFolder="no">
+							<name>Code</name>
+							<packageName></packageName>
+							<script>--[[
+If the label callbacks ever decide to start taking a function which is part of a table, then this will change.
+Or if it's modified to take actual functions. Anonymous function clickcallback would be awfully nice.
+]]
+
+function demonnicChatSwitch(chat)
+  local r = demonnic.chat.config.inactiveColors.r
+  local g = demonnic.chat.config.inactiveColors.g
+  local b = demonnic.chat.config.inactiveColors.b
+  local newr = demonnic.chat.config.activeColors.r
+  local newg = demonnic.chat.config.activeColors.g
+  local newb = demonnic.chat.config.activeColors.b
+  local oldchat = demonnic.chat.currentTab
+  if demonnic.chat.currentTab ~= chat then
+    demonnic.chat.windows[oldchat]:hide()
+    demonnic.chat.tabs[oldchat]:setColor(r,g,b)
+    demonnic.chat.tabs[oldchat]:echo(oldchat, demonnic.chat.config.inactiveTabText, "c")
+    if demonnic.chat.config.blink and demonnic.chat.tabsToBlink[chat] then
+      demonnic.chat.tabsToBlink[chat] = nil
+    end
+    if demonnic.chat.config.blink and chat == demonnic.chat.config.Alltab then
+      demonnic.chat.tabsToBlink = {}
+    end
+  end
+  demonnic.chat.tabs[chat]:setColor(newr,newg,newb)
+  demonnic.chat.tabs[chat]:echo(chat, demonnic.chat.config.activeTabText, "c")
+  demonnic.chat.windows[chat]:show()
+  demonnic.chat.currentTab = chat  
+end
+
+function demonnic.chat:resetUI()
+  demonnic.chat.container = demonnic.chat.useContainer or Geyser.Container:new(demonnic.chat[demonnic.chat.config.location]())
+  demonnic.chat.tabBox = Geyser.HBox:new({
+    x=0,
+    y=0,
+    width = "100%",
+    height = "25px",
+    name = "DemonChatTabs",
+  },demonnic.chat.container)
+
+end
+
+function demonnic.chat:create()
+  --reset the UI
+  demonnic.chat:resetUI()
+  --Set some variables locally to increase readability
+  local r = demonnic.chat.config.inactiveColors.r
+  local g = demonnic.chat.config.inactiveColors.g
+  local b = demonnic.chat.config.inactiveColors.b
+  local winr = demonnic.chat.config.windowColors.r
+  local wing = demonnic.chat.config.windowColors.g
+  local winb = demonnic.chat.config.windowColors.b
+
+  --iterate the table of channels and create some windows and tabs
+  for i,tab in ipairs(demonnic.chat.config.channels) do
+    demonnic.chat.tabs[tab] = Geyser.Label:new({
+      name=string.format("tab%s", tab),
+    }, demonnic.chat.tabBox)
+    demonnic.chat.tabs[tab]:echo(tab, demonnic.chat.config.inactiveTabText, "c")
+    demonnic.chat.tabs[tab]:setColor(r,g,b)
+    demonnic.chat.tabs[tab]:setClickCallback("demonnicChatSwitch", tab)
+		
+		demonnic.chat.tabs[tab]:setStyleSheet(
+		 [[font-family: Tahoma, Geneva, sans-serif; 
+		border-image: url(]] ..
+    getMudletHomeDir():gsub("\\", "/") .. [[/LuminariGUI/images/buttons/button.png) 0 0 0 0 stretch stretch;
+		border: 1px solid rgba(184, 115, 27, 0.5);
+		border-radius: 3px 3px 0px 0px;
+		padding: 2px;
+		font-weight: bold;
+		]])
+		
+    demonnic.chat.windows[tab] = Geyser.MiniConsole:new({
+--      fontSize = demonnic.chat.config.fontSize,
+      x = 0,
+      y = 25,
+      height = "100%",
+      width = "100%",
+      name = string.format("win%s", tab),
+    }, demonnic.chat.container)
+    demonnic.chat.windows[tab]:setFontSize(demonnic.chat.config.fontSize)
+    demonnic.chat.windows[tab]:setColor(winr,wing,winb)
+    demonnic.chat.windows[tab]:setWrap(demonnic.chat.config.width)
+    demonnic.chat.windows[tab]:hide()
+  end
+  if demonnic.chat.config.Maptab and demonnic.chat.config.Maptab ~= "" then
+    demonnic.chat.mapWindow = Geyser.Mapper:new({
+      x = 0,
+      y = 0,
+      height = "100%",
+      width = "100%",
+    }, demonnic.chat.windows[demonnic.chat.config.Maptab])
+    demonnic.chat.windows[demonnic.chat.config.Maptab]:hide()
+  end
+  local showme = demonnic.chat.config.Alltab or demonnic.chat.config.channels[1]
+  demonnicChatSwitch(showme)
+  --start the blink timers, if enabled
+  if demonnic.chat.config.blink and not demonnic.chat.blinkTimerOn then
+    demonnic.chat:blink()
+  end
+end
+
+function demonnic.chat:append(chat)
+  local r = demonnic.chat.config.windowColors.r
+  local g = demonnic.chat.config.windowColors.g
+  local b = demonnic.chat.config.windowColors.b
+  selectCurrentLine()
+  local ofr,ofg,ofb = getFgColor()
+  local obr,obg,obb = getBgColor()
+  if demonnic.chat.config.preserveBackground then
+    setBgColor(r,g,b)
+  end
+  copy()
+  if demonnic.chat.config.timestamp then
+    local timestamp = getTime(true, demonnic.chat.config.timestamp)
+    local tsfg = {}
+    local tsbg = {}
+    local colorLeader = ""
+    if demonnic.chat.config.timestampCustomColor then
+      if type(demonnic.chat.config.timestampFG) == "string" then
+        tsfg = color_table[demonnic.chat.config.timestampFG]
+      else
+        tsfg = demonnic.chat.config.timestampFG
+      end
+      if type(demonnic.chat.config.timestampBG) == "string" then
+        tsbg = color_table[demonnic.chat.config.timestampBG]
+      else
+        tsbg = demonnic.chat.config.timestampBG
+      end
+      colorLeader = string.format("&lt;%s,%s,%s:%s,%s,%s&gt;",tsfg[1],tsfg[2],tsfg[3],tsbg[1],tsbg[2],tsbg[3])
+    else
+      colorLeader = string.format("&lt;%s,%s,%s:%s,%s,%s&gt;",ofr,ofg,ofb,obr,obg,obb)
+    end
+    local fullstamp = string.format("%s%s",colorLeader,timestamp)
+      demonnic.chat.windows[chat]:decho(fullstamp)
+      demonnic.chat.windows[chat]:echo(" ")
+      if demonnic.chat.config.Alltab then 
+        demonnic.chat.windows[demonnic.chat.config.Alltab]:decho(fullstamp)
+        demonnic.chat.windows[demonnic.chat.config.Alltab]:echo(" ")
+      end
+  end
+  
+  -- Add colored channel prefixes based on TASK_LIST.md requirements
+  local channelColors = {
+    ["Group"] = "&lt;green&gt;[GSAY]&lt;reset&gt; ",      -- Bright green for GSAY
+    ["OOC"] = "&lt;light_gray&gt;[OOC]&lt;reset&gt; ",        -- Silver/Light gray for OOC
+    ["Tell"] = "&lt;magenta&gt;[TELL]&lt;reset&gt; ",    -- Bright magenta for TELLS
+    ["Say"] = "&lt;white&gt;[SAY]&lt;reset&gt; ",        -- White for SAYS
+    ["Auction"] = "&lt;gold&gt;[AUC]&lt;reset&gt; ",     -- Gold for AUC
+    ["Chat"] = "&lt;cyan&gt;[CHAT]&lt;reset&gt; ",       -- Default cyan for other chat
+    ["Congrats"] = "&lt;yellow&gt;[GRATS]&lt;reset&gt; ", -- Yellow for congrats
+    ["Wiz"] = "&lt;purple&gt;[WIZ]&lt;reset&gt; "        -- Purple for wizard channel
+  }
+  
+  -- Add channel prefix before the message
+  if channelColors[chat] then
+    demonnic.chat.windows[chat]:cecho(channelColors[chat])
+    if demonnic.chat.config.Alltab then
+      demonnic.chat.windows[demonnic.chat.config.Alltab]:cecho(channelColors[chat])
+    end
+  end
+  
+  demonnic.chat.windows[chat]:append()
+  if demonnic.chat.config.gag then 
+    deleteLine() 
+    tempLineTrigger(1,1, [[if isPrompt() then deleteLine() end]])
+  end
+  if demonnic.chat.config.Alltab then appendBuffer(string.format("win%s", demonnic.chat.config.Alltab)) end
+  if demonnic.chat.config.blink and chat ~= demonnic.chat.currentTab then 
+    if not ((demonnic.chat.config.Alltab == demonnic.chat.currentTab) and not demonnic.chat.config.blinkOnAll) then
+      demonnic.chat.tabsToBlink[chat] = true
+    end
+  end
+  
+  -- Sound notification logic - play for ALL channels when enabled
+  if demonnic.chat.config.soundEnabled then
+    -- Check if we should play sound
+    local shouldPlaySound = true
+    
+    -- Don't play sound if we're viewing the specific channel tab (not "All")
+    if demonnic.chat.currentTab ~= demonnic.chat.config.Alltab and chat == demonnic.chat.currentTab then
+      shouldPlaySound = false
+    end
+    
+    if shouldPlaySound then
+      -- Check cooldown
+      local currentTime = os.time()
+      if currentTime - demonnic.chat.lastSoundTime >= demonnic.chat.config.soundCooldown then
+        -- Construct sound file path - try package directory first
+        local soundPath = getMudletHomeDir():gsub("\\", "/") .. "/LuminariGUI/" .. demonnic.chat.config.soundFile
+        
+        -- Check if file exists before playing
+        local file = io.open(soundPath, "r")
+        if file then
+          file:close()
+          playSoundFile(soundPath, demonnic.chat.config.soundVolume)
+          demonnic.chat.lastSoundTime = currentTime
+        else
+          -- Try user's home directory as fallback
+          soundPath = getMudletHomeDir():gsub("\\", "/") .. "/" .. demonnic.chat.config.soundFile
+          file = io.open(soundPath, "r")
+          if file then
+            file:close()
+            playSoundFile(soundPath, demonnic.chat.config.soundVolume)
+            demonnic.chat.lastSoundTime = currentTime
+          else
+            -- Use system beep as final fallback
+            playSoundFile("")  -- Empty string triggers system beep in Mudlet
+            demonnic.chat.lastSoundTime = currentTime
+          end
+        end
+      end
+    end
+  end
+end
+
+
+
+function demonnic.chat:blink()
+  if demonnic.chat.blinkID then killTimer(demonnic.chat.blinkID) end
+  if not demonnic.chat.config.blink then 
+    demonnic.chat.blinkTimerOn = false
+    return 
+  end
+  if not demonnic.chat.container.hidden then
+    for tab,_ in pairs(demonnic.chat.tabsToBlink) do
+      demonnic.chat.tabs[tab]:flash()
+    end
+  end
+  demonnic.chat.blinkID = tempTimer(demonnic.chat.config.blinkTime, function () demonnic.chat:blink() end)
+end
+
+function demonnic.chat:topright()
+  return {
+    fontSize = demonnic.chat.config.fontSize,
+    x=string.format("-%sc",demonnic.chat.config.width + 2),
+    y=0,
+    width="-15px",
+    height=string.format("%ic", demonnic.chat.config.lines + 2),
+  }
+end
+
+function demonnic.chat:topleft()
+  return {
+    fontSize = demonnic.chat.config.fontSize,
+    x=0,
+    y=0,
+    width=string.format("%sc",demonnic.chat.config.width),
+    height=string.format("%ic", demonnic.chat.config.lines + 2),
+  }
+end
+
+function demonnic.chat:bottomright()
+  return {
+    fontSize = demonnic.chat.config.fontSize,
+    x=string.format("-%sc",demonnic.chat.config.width + 2),
+    y=string.format("-%sc",demonnic.chat.config.lines + 2),
+    width="-15px",
+    height=string.format("%ic", demonnic.chat.config.lines + 2),
+  }
+end
+
+function demonnic.chat:bottomleft()
+  return {
+    fontSize = demonnic.chat.config.fontSize,
+    x=0,
+    y=string.format("-%sc",demonnic.chat.config.lines + 2),
+    width=string.format("%sc",demonnic.chat.config.width),
+    height=string.format("%ic", demonnic.chat.config.lines + 2),
+  }
+end</script>
+							<eventHandlerList />
+						</Script>
+						<Script isActive="yes" isFolder="no">
+							<name>demonnicOnStart</name>
+							<packageName></packageName>
+							<script>function demonnicOnStart()
+  if demonnic.chat.use then
+    -- Set the container now that GUI is initialized
+    -- Use the inner container to account for title bar and padding
+    if GUI.chatContainerInner then
+      demonnic.chat.useContainer = GUI.chatContainerInner
+    elseif GUI.chatContainer then
+      -- Fallback to main container if inner doesn't exist
+      demonnic.chat.useContainer = GUI.chatContainer
+    else
+      print("Warning: GUI.chatContainer not found. Chat system may not display properly.")
+    end
+    
+    local success, err = pcall(demonnic.chat.create, demonnic.chat)
+    if not success then
+      print(string.format("Error initializing chat system: %s", err))
+    end
+  end
+end</script>
+							<eventHandlerList>
+								<string>sysLoadEvent</string>
+							</eventHandlerList>
+						</Script>
+						<Script isActive="yes" isFolder="no">
+							<name>echo functions</name>
+							<packageName></packageName>
+							<script>
+function demonnic.chat:cecho(chat, message)
+  local alltab = demonnic.chat.config.Alltab
+  local blink = demonnic.chat.config.blink
+  cecho(string.format("win%s",chat), message)
+  if alltab and chat ~= alltab then 
+    cecho(string.format("win%s", alltab), message)
+  end
+  if blink and chat ~= demonnic.chat.currentTab then
+    if (alltab == demonnic.chat.currentTab) and not demonnic.chat.config.blinkOnAll then
+      return
+    else
+      demonnic.chat.tabsToBlink[chat] = true
+    end
+  end
+end
+
+function demonnic.chat:decho(chat, message)
+  local alltab = demonnic.chat.config.Alltab
+  local blink = demonnic.chat.config.blink
+  decho(string.format("win%s",chat), message)
+  if alltab and chat ~= alltab then 
+    decho(string.format("win%s", alltab), message)
+  end
+  if blink and chat ~= demonnic.chat.currentTab then
+    if (alltab == demonnic.chat.currentTab) and not demonnic.chat.config.blinkOnAll then
+      return
+    else
+      demonnic.chat.tabsToBlink[chat] = true
+    end
+  end
+end
+
+function demonnic.chat:hecho(chat, message)
+  local alltab = demonnic.chat.config.Alltab
+  local blink = demonnic.chat.config.blink
+  hecho(string.format("win%s",chat), message)
+  if alltab and chat ~= alltab then 
+    hecho(string.format("win%s", alltab), message)
+  end
+  if blink and chat ~= demonnic.chat.currentTab then
+    if (alltab == demonnic.chat.currentTab) and not demonnic.chat.config.blinkOnAll then
+      return
+    else
+      demonnic.chat.tabsToBlink[chat] = true
+    end
+  end
+end
+
+function demonnic.chat:echo(chat, message)
+  local alltab = demonnic.chat.config.Alltab
+  local blink = demonnic.chat.config.blink
+  echo(string.format("win%s",chat), message)
+  if alltab and chat ~= alltab then 
+    echo(string.format("win%s", alltab), message)
+  end
+  if blink and chat ~= demonnic.chat.currentTab then
+    if (alltab == demonnic.chat.currentTab) and not demonnic.chat.config.blinkOnAll then
+      return
+    else
+      demonnic.chat.tabsToBlink[chat] = true
+    end
+  end
+end</script>
+							<eventHandlerList />
+						</Script>
+						<Script isActive="yes" isFolder="no">
+							<name>demonnicOnInstall</name>
+							<packageName></packageName>
+							<script>function demonnicOnInstall(_, package)
+  -- Check for both LuminariGUI and YATCO package names to handle mid-session imports
+  if package:find("YATCO") or package:find("LuminariGUI") then
+    demonnicOnStart()
+  end
+end</script>
+							<eventHandlerList>
+								<string>sysInstall</string>
+							</eventHandlerList>
+						</Script>
+					</ScriptGroup>
+				</ScriptGroup>
+			</ScriptGroup>
+		</ScriptGroup>
+	</ScriptPackage>
+	<KeyPackage>
+		<KeyGroup isActive="yes" isFolder="yes">
+			<name>Movement</name>
+			<packageName></packageName>
+			<script></script>
+			<command></command>
+			<keyCode>-1</keyCode>
+			<keyModifier>-1</keyModifier>
+			<Key isActive="yes" isFolder="no">
+				<name>Southwest</name>
+				<packageName></packageName>
+				<script></script>
+				<command>southwest</command>
+				<keyCode>49</keyCode>
+				<keyModifier>536870912</keyModifier>
+			</Key>
+			<Key isActive="yes" isFolder="no">
+				<name>South</name>
+				<packageName></packageName>
+				<script></script>
+				<command>south</command>
+				<keyCode>50</keyCode>
+				<keyModifier>536870912</keyModifier>
+			</Key>
+			<Key isActive="yes" isFolder="no">
+				<name>Southeast</name>
+				<packageName></packageName>
+				<script></script>
+				<command>southeast</command>
+				<keyCode>51</keyCode>
+				<keyModifier>536870912</keyModifier>
+			</Key>
+			<Key isActive="yes" isFolder="no">
+				<name>West</name>
+				<packageName></packageName>
+				<script></script>
+				<command>west</command>
+				<keyCode>52</keyCode>
+				<keyModifier>536870912</keyModifier>
+			</Key>
+			<Key isActive="yes" isFolder="no">
+				<name>Look</name>
+				<packageName></packageName>
+				<script></script>
+				<command>look</command>
+				<keyCode>53</keyCode>
+				<keyModifier>536870912</keyModifier>
+			</Key>
+			<Key isActive="yes" isFolder="no">
+				<name>East</name>
+				<packageName></packageName>
+				<script></script>
+				<command>east</command>
+				<keyCode>54</keyCode>
+				<keyModifier>536870912</keyModifier>
+			</Key>
+			<Key isActive="yes" isFolder="no">
+				<name>Northwest</name>
+				<packageName></packageName>
+				<script></script>
+				<command>northwest</command>
+				<keyCode>55</keyCode>
+				<keyModifier>536870912</keyModifier>
+			</Key>
+			<Key isActive="yes" isFolder="no">
+				<name>North</name>
+				<packageName></packageName>
+				<script></script>
+				<command>north</command>
+				<keyCode>56</keyCode>
+				<keyModifier>536870912</keyModifier>
+			</Key>
+			<Key isActive="yes" isFolder="no">
+				<name>Northeast</name>
+				<packageName></packageName>
+				<script></script>
+				<command>northeast</command>
+				<keyCode>57</keyCode>
+				<keyModifier>536870912</keyModifier>
+			</Key>
+			<Key isActive="yes" isFolder="no">
+				<name>Inventory</name>
+				<packageName></packageName>
+				<script></script>
+				<command>inv</command>
+				<keyCode>47</keyCode>
+				<keyModifier>536870912</keyModifier>
+			</Key>
+			<Key isActive="yes" isFolder="no">
+				<name>Scan</name>
+				<packageName></packageName>
+				<script></script>
+				<command>scan</command>
+				<keyCode>42</keyCode>
+				<keyModifier>536870912</keyModifier>
+			</Key>
+			<Key isActive="yes" isFolder="no">
+				<name>Up</name>
+				<packageName></packageName>
+				<script></script>
+				<command>up</command>
+				<keyCode>45</keyCode>
+				<keyModifier>536870912</keyModifier>
+			</Key>
+			<Key isActive="yes" isFolder="no">
+				<name>Down</name>
+				<packageName></packageName>
+				<script></script>
+				<command>down</command>
+				<keyCode>43</keyCode>
+				<keyModifier>536870912</keyModifier>
+			</Key>
+		</KeyGroup>
+	</KeyPackage>
+	<VariablePackage>
+		<HiddenVariables />
+	</VariablePackage>
+</MudletPackage>

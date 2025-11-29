@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE MudletPackage>
-<MudletPackage version="2.0.4.020">
+<MudletPackage version="2.0.4.022">
 	<TriggerPackage>
 		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 			<name>LuminariGUI</name>
@@ -2673,7 +2673,7 @@ end</script>
 						<script>GUI.buttonWindow =
   GUI.buttonWindow or
   {
-    button = {"Legend", "Mudlet", "ASCII"},
+    button = {"Legend", "Map"},
     color1 = "rgba(0,0,0,0)",
     color2 = "rgba(0,0,0,0)",
     width = "100%",
@@ -2716,6 +2716,38 @@ function GUI.buttonWindow.legendClick()
     GUI.buttonWindow.Legend:hide()
 		GUI.buttonWindow.roomOrLegend = "Room"
 		GUI.buttonWindow.Legendbutton:echo("Legend/Room", "white", "c")
+	end
+end
+
+--Button callback for Map toggle (Mudlet/ASCII)
+function GUI.buttonWindow.mapClick()
+	-- Ensure containers exist before toggling
+	if not map.container or not GUI.asciiMapContainer then
+		print("ERROR: Map containers not initialized")
+		return
+	end
+
+	if GUI.buttonWindow.mudletOrAscii == "Mudlet" then
+		-- Switch TO ASCII view
+		map.container:hide()
+		GUI.asciiMapContainer:show()
+		GUI.buttonWindow.mudletOrAscii = "ASCII"
+		GUI.buttonWindow.Mapbutton:echo("Mudlet/ASCII", "yellow", "c")
+		GUI.asciiMapContainer:raise()
+	elseif GUI.buttonWindow.mudletOrAscii == "ASCII" then
+		-- Switch TO Mudlet view
+		GUI.asciiMapContainer:hide()
+		map.container:show()
+		GUI.buttonWindow.mudletOrAscii = "Mudlet"
+		GUI.buttonWindow.Mapbutton:echo("Mudlet/ASCII", "white", "c")
+
+		-- Ensure mapper is visible and properly refreshed with a small delay
+		tempTimer(0.1, function()
+			if map.mapwindow then
+				map.mapwindow:show()
+				map.mapwindow:resize()
+			end
+		end)
 	end
 end
 
@@ -2844,27 +2876,30 @@ function GUI.buttonWindow.init()
     GUI.buttonWindow[v .. "button"] =
       Geyser.Label:new({name = "GUI.buttonWindow." .. v .. "button"}, GUI.buttonWindow.buttonContainer)
     GUI.buttonWindow[v .. "button"]:setStyleSheet(GUI.buttonWindowCSS:getCSS())
-    GUI.buttonWindow[v .. "button"]:echo("&lt;center&gt;" .. (v == "Legend" and "Legend/Room" or v))
+    -- Set appropriate display text for each button
+    local displayText = v
+    if v == "Legend" then
+      displayText = "Legend/Room"
+    elseif v == "Map" then
+      displayText = "Mudlet/ASCII"
+    end
+    GUI.buttonWindow[v .. "button"]:echo("&lt;center&gt;" .. displayText)
   end
 
 --Legend Call Back
-  GUI.buttonWindow.Legendbutton:setClickCallback("GUI.buttonWindow.legendClick")		
---Mudlet/ASCII Callback
-  GUI.buttonWindow.Mudletbutton:setClickCallback("GUI.buttonWindow.mudletClick")	
-  GUI.buttonWindow.ASCIIbutton:setClickCallback("GUI.buttonWindow.asciiClick")	
-	
+  GUI.buttonWindow.Legendbutton:setClickCallback("GUI.buttonWindow.legendClick")
+--Map (Mudlet/ASCII) Callback
+  GUI.buttonWindow.Mapbutton:setClickCallback("GUI.buttonWindow.mapClick")
+
 --Show Room Info on Startup
 	GUI.buttonWindow.roomInfo:show()
   GUI.buttonWindow.Legend:hide()
-	
+
 --Populating Legend
 	GUI.updateLegend()
 
---[[Will error line 33 if we call mudletClick callback
-  so handling echo this way since Mudlet loads its map
-  by default. ]]
-	GUI.buttonWindow.Mudletbutton:echo("Mudlet", "yellow", "c")
-	GUI.buttonWindow.ASCIIbutton:echo("ASCII", "white", "c")
+--Set initial Map button state (Mudlet is default/active)
+	GUI.buttonWindow.Mapbutton:echo("Mudlet/ASCII", "white", "c")
 	
 end </script>
 						<eventHandlerList />
