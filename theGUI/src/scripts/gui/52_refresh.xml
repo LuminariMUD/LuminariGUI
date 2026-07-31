@@ -1,0 +1,216 @@
+					<Script isActive="yes" isFolder="no">
+						<name>GUI Refresh</name>
+						<packageName></packageName>
+						<script>-- =============================================================================
+-- CENTRALIZED GUI INITIALIZATION SYSTEM
+-- =============================================================================
+-- This function provides a single point of control for all GUI initialization
+-- and refresh operations. It should be called from ALL relevant entry points.
+--
+-- WHEN TO CALL THIS FUNCTION:
+-- 1. Package load/install (sysLoadEvent, sysInstall) 
+-- 2. Connection established (sysConnectionEvent)
+-- 3. MSDP protocol enabled (sysProtocolEnabled)
+-- 4. Manual refresh commands (fix gui, fix chat)
+-- 5. After login/reconnect (when MSDP data starts flowing)
+--
+-- WHAT IT DOES:
+-- - Initializes or refreshes all GUI components
+-- - Re-registers event handlers that may have failed
+-- - Refreshes all displays with current MSDP data
+-- - Ensures proper container visibility and z-order
+-- - Handles both initial setup and runtime refresh
+-- =============================================================================
+function GUI.initializeOrRefresh(context)
+  context = context or "unknown"
+  GUI.debug("GUI/REFRESH", "initializeOrRefresh requested", {
+    context = context,
+    initialized = GUI.initialized,
+    initFailures = GUI.initFailures,
+    msdpCount = GUI.debugCountEntries(msdp),
+  })
+  
+  -- Track if this is initial setup or refresh
+  local isRefresh = (GUI.initialized == true)
+  
+  if not isRefresh then
+    -- GUI not initialized yet - initialize it now
+    cecho(string.format("\n&lt;yellow&gt;Initializing GUI components (%s)...", context))
+    GUI.init()
+    return
+  else
+    -- Refresh existing GUI
+    cecho(string.format("\n&lt;yellow&gt;Refreshing GUI components (%s)...", context))
+  end
+  
+  -- Always ensure event handlers are registered
+  GUI.registerEventHandlers()
+  
+  -- Refresh all adjustable containers
+  local refreshed = {}
+  
+  -- Status Gauges
+  if GUI.Box7 then
+    GUI.Box7:show()
+    GUI.Box7:raise()
+    if msdp.HEALTH then GUI.updateHealthGauge() end
+    if msdp.MOVEMENT then GUI.updateMovesGauge() end
+    -- if msdp.EXPERIENCE then GUI.updateExperienceGauge() end
+    if msdp.PSP then GUI.updatePSPGauge() end
+    table.insert(refreshed, "status gauges")
+  end
+  
+  -- TabbedInfo Window
+  if GUI.tabbedInfoWindowContainer then
+    GUI.tabbedInfoWindowContainer:show()
+    GUI.tabbedInfoWindowContainer:raise()
+    -- Ensure Player tab is visible and updated
+    if GUI.tabbedInfoWindow and GUI.tabbedInfoWindow.Player then
+      GUI.tabbedInfoWindow.click("Player")
+      if msdp.CHARACTER_NAME then GUI.updatePlayer() end
+    end
+    table.insert(refreshed, "tabbed info window")
+  end
+  
+  -- Action Icons
+  if GUI.actionIconsContainer then
+    GUI.actionIconsContainer:show()
+    GUI.actionIconsContainer:raise()
+    if msdp.ACTIONS then GUI.updateActionIcons() end
+    table.insert(refreshed, "action icons")
+  end
+  
+  -- Enemy gauge (combat only)
+  if msdp.OPPONENT_NAME and msdp.OPPONENT_NAME ~= "" then
+    GUI.updateEnemyGauge()
+  elseif GUI.Enemy then
+    GUI.Enemy:hide()
+  end
+  
+  -- Group tab
+  if GUI.groupWindow and msdp.GROUP then
+    GUI.updateGroup()
+    table.insert(refreshed, "Group tab")
+  end
+  
+  -- Player tab
+  if GUI.playerWindow and msdp.CHARACTER_NAME then
+    GUI.updatePlayer()
+    table.insert(refreshed, "Player tab")
+  end
+  
+  -- Room info
+  if GUI.Box5 and msdp.ROOM then
+    GUI.updateRoom()
+    table.insert(refreshed, "room info")
+  end
+  
+  -- ASCII map
+  if map.minimap and msdp.ROOM then
+    map.eventHandler("msdp.ROOM")
+    table.insert(refreshed, "ASCII map")
+  end
+  
+  -- Mudlet mapper
+  if map.mapwindow then
+    map.mapwindow:show()
+    map.mapwindow:resize()
+    -- Force refresh with delayed operations
+    tempTimer(0.1, GUI.debugWrap("GUI/REFRESH/mapper delayed resize", function()
+      if map.mapwindow then
+        map.mapwindow:resize()
+        if map.mapwindow.raise then
+          map.mapwindow:raise()
+        end
+        -- Try to center on current room
+        if map.currentRoom and map.currentRoom > 0 then
+          centerview(map.currentRoom)
+        end
+      end
+    end))
+    table.insert(refreshed, "Mudlet mapper")
+  end
+  
+  -- Chat system
+  if GUI.chatContainer then
+    GUI.chatContainer:show()
+    -- Initialize chat if needed
+    if demonnic.chat.use and not demonnic.chat.container then
+      demonnicOnStart()
+      table.insert(refreshed, "chat system (initialized)")
+    else
+      table.insert(refreshed, "chat container")
+    end
+  end
+  
+  -- Button Panel (Controls)
+  if GUI.buttonPanelContainer then
+    GUI.buttonPanelContainer:show()
+    GUI.buttonPanelContainer:raise()
+    table.insert(refreshed, "button panel")
+  end
+  
+  -- Room Info Container
+  if GUI.roomInfoContainer then
+    GUI.roomInfoContainer:show()
+    GUI.roomInfoContainer:raise()
+    -- Update room data if available
+    if msdp.ROOM then
+      GUI.updateRoom()
+    end
+    table.insert(refreshed, "room info container")
+  end
+  
+  -- Cast Console
+  if GUI.castConsoleContainer then
+    GUI.castConsoleContainer:show()
+    GUI.castConsoleContainer:raise()
+    table.insert(refreshed, "cast console")
+  end
+  
+  -- ASCII Map Container (ensure it exists before mode check)
+  if GUI.asciiMapContainer then
+    GUI.asciiMapContainer:show()
+    table.insert(refreshed, "ASCII map container")
+  end
+  
+  -- Handle map container visibility based on mode
+  if GUI.buttonWindow and GUI.buttonWindow.mudletOrAscii then
+    if GUI.buttonWindow.mudletOrAscii == "ASCII" then
+      if map.container then map.container:hide() end
+      if GUI.asciiMapContainer then
+        GUI.asciiMapContainer:raise()
+      end
+    else
+      if GUI.asciiMapContainer then GUI.asciiMapContainer:hide() end
+      if map.container then
+        map.container:show()
+        map.container:raise()
+      end
+    end
+  end
+  
+  -- Ensure proper z-order (delayed to allow all components to initialize)
+  tempTimer(0.5, GUI.debugWrap("GUI/REFRESH/z-order timer", function()
+    -- Let Adjustable Containers manage their own z-order
+    -- Only raise containers that need to be on top of others
+    if GUI.chatContainer then GUI.chatContainer:raise() end
+    if GUI.actionIconsContainer then GUI.actionIconsContainer:raise() end
+  end))
+  
+  -- Report results
+  if #refreshed > 0 then
+    cecho(string.format("\n&lt;green&gt;%s complete: %s", 
+      isRefresh and "Refresh" or "Initialization",
+      table.concat(refreshed, ", ")))
+  end
+  GUI.debug("GUI/REFRESH", "initializeOrRefresh complete", {
+    context = context,
+    isRefresh = isRefresh,
+    refreshed = refreshed,
+  })
+end
+
+</script>
+						<eventHandlerList />
+					</Script>

@@ -8,10 +8,10 @@
 					<packageName></packageName>
 					<script>-- GUI.AdjustableContainers - early foundation
 --
--- This fragment must load before 01_gui.xml. The GUI Config script creates
--- its core boxes immediately while Mudlet imports the package, so delaying
--- this namespace until the end of 01_gui.xml leaves those boxes without
--- parents and causes later labels to be created on the root window.
+-- This fragment must load before the 01_gui.xml composite wrapper. Its
+-- GUI Boot child creates core boxes immediately while Mudlet imports the
+-- package, so delaying this namespace until the later layout-profile child
+-- leaves those boxes without parents and creates labels on the root window.
 
 GUI = GUI or {}
 GUI.AdjustableContainers = GUI.AdjustableContainers or {}

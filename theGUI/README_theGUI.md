@@ -6,9 +6,9 @@ This directory contains the source-to-build system for assembling `LuminariGUI.x
 
 Mudlet requires a single XML package file, but development and maintenance benefit from modular source files. This build system:
 
-1. **Extracts** the monolithic `LuminariGUI.xml` into manageable source fragments
-2. **Assembles** source fragments back into the final `LuminariGUI.xml`
-3. **Validates** both fragments and final output
+1. **Assembles** source fragments into the final `LuminariGUI.xml`
+2. **Expands** explicit composite-fragment includes without flattening Mudlet groups
+3. **Validates** physical fragments, expanded fragments, and final output
 4. **Packages** the XML into distributable `.mpackage` files with full release workflow
 
 ## Directory Structure
@@ -19,11 +19,12 @@ theGUI/
 ├── package.py        # Package manager and release workflow
 ├── build.yaml        # Build manifest (fragment list, version)
 ├── skeleton.xml      # Package structure template
-├── README.md         # This file
+├── README_theGUI.md  # This file
 └── src/              # Source fragments
     ├── triggers/     # Trigger definitions
     ├── aliases/      # Alias definitions
-    ├── scripts/      # Script definitions
+    ├── scripts/      # Script definitions and composite wrappers
+    │   └── gui/      # Focused children of the composite GUI wrapper
     └── keys/         # Key binding definitions
 ```
 
@@ -37,7 +38,9 @@ python build.py --extract
 ```
 
 This overwrites source fragments and regenerates `build.yaml` from the existing
-`LuminariGUI.xml`; use it only for intentional reverse extraction.
+`LuminariGUI.xml`; use it only for intentional reverse extraction. The command
+refuses before writing while a configured fragment contains `BUILD_INCLUDE`,
+because reverse extraction cannot preserve a composite layout safely.
 
 ### Build Package
 
@@ -127,8 +130,10 @@ aliases:
   - src/aliases/01_yatco.xml
 
 scripts:
+  - src/scripts/00_debug.xml
+  - src/scripts/00_adjustablecontainers.xml
   - src/scripts/00_msdpmapper.xml
-  - src/scripts/01_gui.xml
+  - src/scripts/01_gui.xml  # Composite wrapper; children are ordered inside it
   # ... more fragments
 
 keys:
@@ -163,6 +168,28 @@ change.
 ## Fragment Format
 
 Each fragment must be valid XML that can be injected into the skeleton structure.
+
+### Composite Script Fragments
+
+`src/scripts/01_gui.xml` preserves the outer and nested Mudlet `ScriptGroup`
+topology while including focused children from `src/scripts/gui/` in explicit
+load order:
+
+```xml
+<!-- BUILD_INCLUDE: gui/40_msdp_protocol.xml -->
+<!-- BUILD_INCLUDE: gui/41_msdp_gauges.xml -->
+```
+
+Include paths are relative to the file containing the directive. They must be
+explicit paths: missing files, globs, cycles, and paths outside `theGUI/src`
+are fatal. Every physical child and fully expanded wrapper is validated, and
+the build directives are removed from `LuminariGUI.xml`. `--stats` lists each
+included file separately. Nested XML files are watched by `--watch`.
+
+The inner GUI scripts are intentionally ordered. Protocol definitions precede
+their lifecycle registration, component constructors precede `GUI Boot`, and
+the event registry and refresh functions precede `GUI Lifecycle`. Add or move
+GUI children by editing the wrapper's include list, not `build.yaml`.
 
 ### Script Fragment Example
 
@@ -225,7 +252,7 @@ descriptive_name = lowercase_with_underscores
 ### Validation Errors
 
 ```
-ERROR: Malformed XML in src/scripts/01_gui.xml
+ERROR: Invalid source fragment src/scripts/gui/31_affects.xml
   Line 45: Unclosed tag <Script>
 ```
 
@@ -238,7 +265,7 @@ Use `python build.py --diff` to see what would change.
 ### Missing Fragments
 
 ```
-WARNING: Fragment not found: src/scripts/missing.xml
+ERROR: Fragment not found: src/scripts/missing.xml
 ```
 
 Either create the file or remove it from `build.yaml`.

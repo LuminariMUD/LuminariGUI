@@ -32,7 +32,6 @@ except ImportError:
 
 # Script directory for relative paths
 SCRIPT_DIR = Path(__file__).parent.resolve()
-PROJECT_ROOT = SCRIPT_DIR.parent
 
 VERSION_PATTERN = re.compile(r"^[0-9A-Za-z]+(?:[._+-][0-9A-Za-z]+)*$")
 BUILD_INCLUDE_PATTERN = re.compile(

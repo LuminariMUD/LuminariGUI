@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE MudletPackage>
-<MudletPackage version="2.0.4.035">
+<MudletPackage version="2.0.4.034">
 	<TriggerPackage>
 		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 			<name>LuminariGUI</name>
@@ -1086,10 +1086,10 @@ GUI.debug("BOOT", "early environment", {
 					<packageName></packageName>
 					<script>-- GUI.AdjustableContainers - early foundation
 --
--- This fragment must load before the 01_gui.xml composite wrapper. Its
--- GUI Boot child creates core boxes immediately while Mudlet imports the
--- package, so delaying this namespace until the later layout-profile child
--- leaves those boxes without parents and creates labels on the root window.
+-- This fragment must load before 01_gui.xml. The GUI Config script creates
+-- its core boxes immediately while Mudlet imports the package, so delaying
+-- this namespace until the end of 01_gui.xml leaves those boxes without
+-- parents and causes later labels to be created on the root window.
 
 GUI = GUI or {}
 GUI.AdjustableContainers = GUI.AdjustableContainers or {}
@@ -3701,7 +3701,7 @@ end</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
-						<name>MSDP Protocol</name>
+						<name>MSDP</name>
 						<packageName></packageName>
 						<script>-- All MSDP variables the GUI subscribes to.
 GUI.MSDP_REPORT_VARS = {
@@ -3789,13 +3789,7 @@ function GUI.onProtocolEnabled(_, protocol)
   end
 end
 
-</script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="yes" isFolder="no">
-						<name>MSDP Gauges</name>
-						<packageName></packageName>
-						<script>function GUI.updateHealthGauge()
+function GUI.updateHealthGauge()
   GUI.debug("GUI/GAUGE/HEALTH", "update requested", {
     health = msdp and msdp.HEALTH,
     maximum = msdp and msdp.HEALTH_MAX,
@@ -4011,13 +4005,7 @@ function GUI.updateEnemyGauge()
   end
 end
 
-</script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="yes" isFolder="no">
-						<name>MSDP Actions</name>
-						<packageName></packageName>
-						<script>function GUI.updateActionIcons()
+function GUI.updateActionIcons()
   GUI.debug("GUI/ACTIONS", "updating action icons", {
     actions = msdp and msdp.ACTIONS,
     standardIcon = type(GUI.StandardActionIcon),
@@ -4093,7 +4081,7 @@ end
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
-						<name>GUI Boot</name>
+						<name>Config</name>
 						<packageName></packageName>
 						<script>  -- CRITICAL: These initialization calls MUST remain outside any function!
   -- Mudlet requires GUI elements to be created immediately when the script loads.
@@ -4233,13 +4221,7 @@ function GUI.init()
   })
 end
 
-</script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="yes" isFolder="no">
-						<name>GUI Event Registry</name>
-						<packageName></packageName>
-						<script>-- Robust event handler registration with error handling and verification
+-- Robust event handler registration with error handling and verification
 function GUI.registerEventHandlers()
   -- Define all event handlers in a table for easy management
   local eventHandlers = {
@@ -4426,13 +4408,7 @@ function GUI.registerEventHandlers()
   end))
 end
 
-</script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="yes" isFolder="no">
-						<name>GUI Refresh</name>
-						<packageName></packageName>
-						<script>-- =============================================================================
+-- =============================================================================
 -- CENTRALIZED GUI INITIALIZATION SYSTEM
 -- =============================================================================
 -- This function provides a single point of control for all GUI initialization
@@ -4642,13 +4618,7 @@ function GUI.initializeOrRefresh(context)
   })
 end
 
-</script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="yes" isFolder="no">
-						<name>GUI Lifecycle</name>
-						<packageName></packageName>
-						<script>-- =============================================================================
+-- =============================================================================
 -- ENTRY POINT HANDLERS
 -- These ensure GUI.initializeOrRefresh is called at the right times
 -- while preserving other initialization functions

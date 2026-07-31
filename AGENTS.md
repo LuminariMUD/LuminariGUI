@@ -158,7 +158,8 @@ theGUI/
 └── src/              # SOURCE OF TRUTH
     ├── triggers/     # Trigger definitions
     ├── aliases/      # Alias definitions
-    ├── scripts/      # Lua scripts
+    ├── scripts/      # Lua scripts and composite wrappers
+    │   └── gui/      # Focused children included by 01_gui.xml
     └── keys/         # Key bindings
 ```
 
@@ -170,7 +171,11 @@ The build system assembles `theGUI/src/` fragments into `LuminariGUI.xml`. Each 
 ### Key Components (in `theGUI/src/scripts/`)
 
 - **MSDPMapper** (`00_msdpmapper.xml`): MSDP protocol handling and room mapping
-- **GUI** (`01_gui.xml`): Main UI framework using Geyser, gauges, boxes, affects display — by far the largest fragment
+- **GUI wrapper** (`01_gui.xml`): Outer/nested Mudlet group scaffolding and the
+  explicit ordered include index for `scripts/gui/`
+- **GUI children** (`scripts/gui/*.xml`): Focused widgets, MSDP updates,
+  initialization, event ownership, refresh, and lifecycle scripts; no child is
+  intended to exceed roughly 300 Lua lines
 - **YATCOConfig** (`02_yatcoconfig.xml`): Chat system configuration
 - **YATCO** (`03_yatco.xml`): Tabbed chat organization
 
@@ -202,7 +207,11 @@ local health = tonumber(msdp.HEALTH) or 0
 
 ### Event Registration
 
-Most handlers are **not** registered with scattered direct calls. `GUI.registerEventHandlers()` in `01_gui.xml` holds a central `eventHandlers` table and registers each entry through `pcall` so a bad handler logs instead of aborting the loop. **Add new MSDP-driven handlers to that table**, not as standalone calls:
+Most handlers are **not** registered with scattered direct calls.
+`GUI.registerEventHandlers()` in `scripts/gui/51_event_registry.xml` holds a
+central `eventHandlers` table and registers each entry through `pcall` so a bad
+handler logs instead of aborting the loop. **Add new MSDP-driven handlers to
+that table**, not as standalone calls:
 
 ```lua
 local eventHandlers = {
@@ -222,7 +231,9 @@ Direct `registerAnonymousEventHandler` calls are used at file scope for lifecycl
 
 Since Mudlet 4.20, `sysLoadEvent` passes a boolean second argument (`true` = fresh load, `false` = after `resetProfile()`). The package uses this: after a reset, neither `sysConnectionEvent` nor `sysProtocolEnabled` fires again, so it calls `map.initialize()` to recreate both map views, then `GUI.requestMSDPReports()` and `GUI.initializeOrRefresh()`.
 
-MSDP subscriptions live in `GUI.MSDP_REPORT_VARS`; add new variables there rather than writing bare `sendMSDP("REPORT", ...)` calls.
+MSDP subscriptions live in `GUI.MSDP_REPORT_VARS` in
+`scripts/gui/40_msdp_protocol.xml`; add new variables there rather than writing
+bare `sendMSDP("REPORT", ...)` calls.
 
 ### CSS Styling (CSSMan)
 

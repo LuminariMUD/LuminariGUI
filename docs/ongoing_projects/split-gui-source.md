@@ -1,6 +1,6 @@
 # Split the Main GUI Source Fragment
 
-- **Status:** Proposed
+- **Status:** Implemented; automated validation passes, manual Mudlet validation pending
 - **Created:** 2026-07-31
 - **Scope:** `theGUI/src/scripts/01_gui.xml` and the build/test support needed
   to split it safely
@@ -15,9 +15,9 @@ Mudlet must still receive one assembled `LuminariGUI.xml` package. This project
 changes the development sources and their assembly; it does not change that
 distribution model.
 
-## Current State
+## Pre-Migration State
 
-`01_gui.xml` is physically monolithic but already contains useful logical
+`01_gui.xml` was physically monolithic but already contained useful logical
 boundaries:
 
 - One outer `GUI` `ScriptGroup`.
@@ -28,10 +28,10 @@ boundaries:
   - `MSDP`: approximately 374 Lua lines.
   - `Config`: approximately 616 Lua lines.
 
-The source-to-build system only assembles manifest fragments at the
-`ScriptPackage` level. It cannot currently insert independently maintained
-fragments inside the existing nested GUI groups. Consequently, the logical
-Mudlet scripts remain bundled in one source file.
+Before this project, the source-to-build system only assembled manifest
+fragments at the `ScriptPackage` level. It could not insert independently
+maintained fragments inside the existing nested GUI groups. Consequently, the
+logical Mudlet scripts remained bundled in one source file.
 
 Baseline checks as of 2026-07-31:
 
@@ -62,7 +62,7 @@ would flatten or reparent the Mudlet package tree. It is also preferred over
 putting unmatched opening and closing XML tags in separate files, because every
 source fragment should remain independently valid XML.
 
-## Proposed Source Layout
+## Implemented Source Layout
 
 ```text
 theGUI/src/scripts/
@@ -70,14 +70,19 @@ theGUI/src/scripts/
 └── gui/
     ├── 00_cssman.xml                  # CSSMan subgroup
     ├── 01_preferences.xml             # Toggles, persistence, cleanup
-    ├── 10_layout_shell.xml             # Background, borders, base boxes
-    ├── 11_status_widgets.xml           # Gauges and action-icon widgets
-    ├── 12_cast_header.xml              # Cast console and header icons
-    ├── 20_tab_shell.xml                # Tabbed-info container
-    ├── 21_character_tabs.xml           # Player and group displays
-    ├── 22_affects.xml                  # Affects, modes, SLAffects
-    ├── 30_map_controls.xml             # Map and legend controls
-    ├── 31_room_info.xml                # Room info, legend, frame stub
+    ├── 10_create_background.xml        # Main background
+    ├── 11_set_borders.xml              # Main-window borders
+    ├── 12_boxes.xml                    # Base GUI containers
+    ├── 20_gauges.xml                   # Gauges and action-icon widgets
+    ├── 21_cast_console.xml              # Cast console
+    ├── 22_header_icons.xml              # Header icons
+    ├── 30_tab_shell.xml                # Tabbed-info container
+    ├── 31_affects.xml                  # Affects, modes, SLAffects
+    ├── 32_group.xml                    # Group display
+    ├── 33_player.xml                   # Player display
+    ├── 34_map_controls.xml             # Map and legend controls
+    ├── 35_room_info.xml                # Room info and legend
+    ├── 36_draw_frames.xml              # Frame stub
     ├── 40_msdp_protocol.xml            # REPORT list and protocol callback
     ├── 41_msdp_gauges.xml              # Resource/opponent updates
     ├── 42_msdp_actions.xml             # Action-state updates
@@ -86,17 +91,16 @@ theGUI/src/scripts/
     ├── 52_refresh.xml                  # initializeOrRefresh
     ├── 53_lifecycle.xml                # Load/install/connect handlers
     ├── 60_layout_profiles.xml          # Adjustable-container profiles
-    └── 70_styles_utilities.xml         # Scrollbar and small utilities
+    ├── 70_custom_scrollbar.xml         # Scrollbar styling
+    └── 71_delete_line_prompt.xml       # Prompt-line utility
 ```
 
-The exact filenames may change during implementation if a clearer boundary is
-found, but responsibilities and load order should remain explicit. The final
-target is no GUI child fragment larger than approximately 300 Lua lines and a
-wrapper smaller than approximately 100 lines.
+The implemented responsibilities and load order are explicit. The wrapper is
+82 physical lines, and the largest child script is 269 Lua lines.
 
 ## Builder Support
 
-Add a general, explicit include mechanism to `theGUI/build.py`. A wrapper could
+`theGUI/build.py` now provides a general, explicit include mechanism. Wrappers
 use build-only XML comments such as:
 
 ```xml
@@ -128,26 +132,26 @@ the project back into one monolithic GUI fragment.
 
 ### Phase 1: Add composite-fragment support
 
-- [ ] Add build include parsing and expansion.
-- [ ] Add missing-file, invalid-fragment, traversal, and cycle diagnostics.
-- [ ] Update build statistics for included fragments.
-- [ ] Verify watch-mode discovery.
-- [ ] Guard or update `--extract` for composite sources.
-- [ ] Add focused Python tests for the include mechanism.
+- [x] Add build include parsing and expansion.
+- [x] Add missing-file, invalid-fragment, traversal, and cycle diagnostics.
+- [x] Update build statistics for included fragments.
+- [x] Verify watch-mode discovery.
+- [x] Guard or update `--extract` for composite sources.
+- [x] Add focused Python tests for the include mechanism.
 
 No production XML or Lua should move in this phase.
 
 ### Phase 2: Mechanical one-node-per-fragment extraction
 
-- [ ] Create `theGUI/src/scripts/gui/`.
-- [ ] Reduce `01_gui.xml` to the outer/nested group scaffolding and ordered
+- [x] Create `theGUI/src/scripts/gui/`.
+- [x] Reduce `01_gui.xml` to the outer/nested group scaffolding and ordered
   include directives.
-- [ ] Move the existing `CSSman` subgroup unchanged.
-- [ ] Move each existing `Script` node unchanged into a child fragment.
-- [ ] Retain the nested GUI group-level bootstrap script in the wrapper unless
+- [x] Move the existing `CSSman` subgroup unchanged.
+- [x] Move each existing `Script` node unchanged into a child fragment.
+- [x] Retain the nested GUI group-level bootstrap script in the wrapper unless
   the builder supports preserving it elsewhere without changing output.
-- [ ] Preserve the exact current child order.
-- [ ] Confirm `python3 theGUI/build.py --diff --fail-on-diff` reports no drift.
+- [x] Preserve the exact current child order.
+- [x] Confirm `python3 theGUI/build.py --diff --fail-on-diff` reports no drift.
 
 This phase should be its own commit. It must not contain Lua cleanup, formatting,
 renaming, or behavior changes.
@@ -208,15 +212,15 @@ The immediate boot block must remain file-scope code. Do not move it inside
 assembles the GUI source in build order or parses an in-memory build and locates
 scripts by their XML `<name>`.
 
-- [ ] Remove the hardcoded single-file GUI source path.
-- [ ] Locate production Lua by script name, not by physical file layout.
-- [ ] Update the manifest load-order assertion for the composite GUI entry.
-- [ ] Preserve the orphan-widget and handler-ownership regression tests.
-- [ ] Add an assertion covering expected GUI script names/order.
-- [ ] Update `theGUI/README_theGUI.md`.
-- [ ] Update `docs/ongoing_projects/source-to-build.md` or mark its older layout
+- [x] Remove the hardcoded single-file GUI source path.
+- [x] Locate production Lua by script name, not by physical file layout.
+- [x] Update the manifest load-order assertion for the composite GUI entry.
+- [x] Preserve the orphan-widget and handler-ownership regression tests.
+- [x] Add an assertion covering expected GUI script names/order.
+- [x] Update `theGUI/README_theGUI.md`.
+- [x] Update `docs/ongoing_projects/source-to-build.md` or mark its older layout
   proposal superseded.
-- [ ] Replace stale `01_gui.xml:<line>` references in
+- [x] Replace stale `01_gui.xml:<line>` references in
   `docs/MUDLET_COMPATIBILITY.md` with fragment paths or function names.
 
 ### Phase 6: Full validation and Mudlet testing
@@ -229,6 +233,17 @@ python3 theGUI/build.py --diff --fail-on-diff
 python3 tests/run_tests.py --skip-optional
 python3 scripts/validate_package.py
 ```
+
+Automated result for build `2.0.4.035` (2026-07-31): all four commands pass.
+The full runner reports 6/6 supported suites and the lifecycle suite reports
+26/26 cases. `luacheck` is not installed, so the documented `--skip-optional`
+path was used. The package contains 78 syntax-valid Lua scripts. The build
+directive leak check is empty, and the generated XML is synchronized with the
+sources.
+
+Mudlet is not installed in the implementation environment. The hands-on 4.22
+and 4.21 checks below therefore remain release-owner validation items and are
+not represented as complete by the automated mocks.
 
 After phases that intentionally change the generated XML, run a normal build
 once, review the version/archive/output changes, and rerun the full suite.
@@ -305,15 +320,17 @@ stable.
 
 The project is complete when:
 
-- [ ] `01_gui.xml` is a small wrapper/index rather than a 3,000-line source.
-- [ ] GUI behavior is maintained in focused files under `src/scripts/gui/`.
-- [ ] No GUI child fragment exceeds approximately 300 Lua lines without an
+- [x] `01_gui.xml` is a small wrapper/index rather than a 3,000-line source.
+- [x] GUI behavior is maintained in focused files under `src/scripts/gui/`.
+- [x] No GUI child fragment exceeds approximately 300 Lua lines without an
   explicit justification.
-- [ ] The builder validates included fragments and reports useful failures.
-- [ ] Phase 2 produces an unchanged generated package.
+- [x] The builder validates included fragments and reports useful failures.
+- [x] Phase 2 produces an unchanged generated package.
 - [ ] Later intentional XML changes are reviewed and tested as upgrades.
-- [ ] The complete automated test suite passes.
-- [ ] Package validation passes.
+  Automated topology, handler-ownership, and reset-profile regressions pass;
+  the manual in-place upgrade remains pending.
+- [x] The complete automated test suite passes.
+- [x] Package validation passes.
 - [ ] Manual Mudlet lifecycle and UI checks pass.
-- [ ] Documentation and source-aware tests no longer assume one monolithic GUI
+- [x] Documentation and source-aware tests no longer assume one monolithic GUI
   file.

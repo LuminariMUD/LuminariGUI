@@ -68,8 +68,13 @@ GUI.debug("GUI/BOOT", "GUI namespace fragment loaded", {
 					<!-- BUILD_INCLUDE: gui/34_map_controls.xml -->
 					<!-- BUILD_INCLUDE: gui/35_room_info.xml -->
 					<!-- BUILD_INCLUDE: gui/36_draw_frames.xml -->
-					<!-- BUILD_INCLUDE: gui/40_msdp.xml -->
-					<!-- BUILD_INCLUDE: gui/50_config.xml -->
+					<!-- BUILD_INCLUDE: gui/40_msdp_protocol.xml -->
+					<!-- BUILD_INCLUDE: gui/41_msdp_gauges.xml -->
+					<!-- BUILD_INCLUDE: gui/42_msdp_actions.xml -->
+					<!-- BUILD_INCLUDE: gui/50_boot.xml -->
+					<!-- BUILD_INCLUDE: gui/51_event_registry.xml -->
+					<!-- BUILD_INCLUDE: gui/52_refresh.xml -->
+					<!-- BUILD_INCLUDE: gui/53_lifecycle.xml -->
 					<!-- BUILD_INCLUDE: gui/60_layout_profiles.xml -->
 					<!-- BUILD_INCLUDE: gui/70_custom_scrollbar.xml -->
 					<!-- BUILD_INCLUDE: gui/71_delete_line_prompt.xml -->

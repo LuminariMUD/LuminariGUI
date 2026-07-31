@@ -1,5 +1,11 @@
 # LuminariGUI Chunk Audit Plan
 
+> **Historical layout note:** This audit predates the composite GUI source
+> migration. References to `src/scripts/01_gui.xml` describe the former
+> monolithic source and are superseded by
+> [`split-gui-source.md`](split-gui-source.md) and the focused files under
+> `src/scripts/gui/`. The trigger file with the same basename is unchanged.
+
 This document defines the comprehensive audit checklist for reviewing and perfecting each source fragment in `theGUI/src/`.
 
 ## Audit Overview

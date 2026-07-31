@@ -10,6 +10,7 @@ working tree.
 
 import html
 import importlib.util
+import io
 import json
 import os
 import re
@@ -19,13 +20,13 @@ import sys
 import tempfile
 import zipfile
 import xml.etree.ElementTree as ET
+from contextlib import redirect_stdout
 from pathlib import Path
 
 
 class LifecycleRegressionTester:
     def __init__(self, _xml_file=None):
         self.repo_root = Path(__file__).resolve().parents[1]
-        self.gui_source_path = self.repo_root / "theGUI" / "src" / "scripts" / "01_gui.xml"
         self.mapper_source_path = (
             self.repo_root / "theGUI" / "src" / "scripts" / "00_msdpmapper.xml"
         )
@@ -50,6 +51,8 @@ class LifecycleRegressionTester:
         self.test_results = []
         self.errors = []
         self.warnings = []
+        self._gui_scripts_cache = None
+        self._gui_script_order_cache = None
 
     @staticmethod
     def _find_lua():
@@ -64,6 +67,79 @@ class LifecycleRegressionTester:
         start = source.index(start_marker)
         end = source.index(end_marker, start)
         return html.unescape(source[start:end])
+
+    def _load_gui_scripts(self):
+        """Assemble current sources and index inner-GUI Lua by Mudlet name."""
+        if self._gui_scripts_cache is not None:
+            return self._gui_scripts_cache
+
+        module_path = self.repo_root / "theGUI" / "build.py"
+        spec = importlib.util.spec_from_file_location(
+            "luminari_gui_source_probe",
+            module_path,
+        )
+        if spec is None or spec.loader is None:
+            raise AssertionError("could not load build.py for GUI source assembly")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+
+        build_log = io.StringIO()
+        with redirect_stdout(build_log):
+            success, assembled = module.Builder(module.BuildConfig()).build(
+                validate_only=True
+            )
+        self._require(
+            success,
+            "could not assemble current GUI sources:\n" + build_log.getvalue(),
+        )
+        self._require(
+            "BUILD_INCLUDE:" not in assembled,
+            "build include directive leaked into assembled XML",
+        )
+
+        root = ET.fromstring(assembled)
+        script_package = root.find("ScriptPackage")
+        self._require(script_package is not None, "assembled XML has no ScriptPackage")
+        outer_gui = next(
+            (
+                node
+                for node in script_package.iter("ScriptGroup")
+                if node.findtext("name") == "GUI"
+            ),
+            None,
+        )
+        self._require(outer_gui is not None, "assembled XML has no outer GUI group")
+        inner_gui = next(
+            (
+                node
+                for node in outer_gui.findall("./ScriptGroup")
+                if node.findtext("name") == "GUI"
+            ),
+            None,
+        )
+        self._require(inner_gui is not None, "assembled XML has no inner GUI group")
+
+        scripts = {}
+        order = []
+        for node in inner_gui.findall("./Script"):
+            name = node.findtext("name")
+            self._require(name, "inner GUI contains an unnamed Script")
+            self._require(name not in scripts, f"duplicate inner GUI script name: {name}")
+            scripts[name] = node.findtext("script") or ""
+            order.append(name)
+
+        self._gui_scripts_cache = scripts
+        self._gui_script_order_cache = order
+        return scripts
+
+    def _gui_script(self, name):
+        scripts = self._load_gui_scripts()
+        self._require(name in scripts, f"assembled GUI script was not found: {name}")
+        return scripts[name]
+
+    def _gui_lua_source(self):
+        scripts = self._load_gui_scripts()
+        return "\n".join(scripts[name] for name in self._gui_script_order_cache)
 
     def _run_lua(self, script):
         result = subprocess.run(
@@ -83,13 +159,8 @@ class LifecycleRegressionTester:
             raise AssertionError(message)
 
     def _test_upgrade_preserves_file_scope_handler_ids(self):
-        source = self.gui_source_path.read_text(encoding="utf-8")
-        register_function = self._extract(
-            source,
-            "function GUI.registerEventHandlers()",
-            "\n-- =============================================================================\n"
-            "-- CENTRALIZED GUI INITIALIZATION SYSTEM",
-        )
+        source = self._gui_script("GUI Event Registry")
+        register_function = source[source.index("function GUI.registerEventHandlers()"):]
 
         script = f'''
 GUI = {{
@@ -235,7 +306,7 @@ assert(map.minimap == firstMinimap)
         self._run_lua(script)
 
     def _test_profile_reset_initializes_mapper(self):
-        source = self.gui_source_path.read_text(encoding="utf-8")
+        source = self._gui_script("GUI Lifecycle")
         reset_handler = self._extract(
             source,
             'registerAnonymousEventHandler("sysLoadEvent", function(_, isNewLoad)',
@@ -314,7 +385,13 @@ assert(calls.mapper == 1, "reset recovery ran during a fresh profile load")
         self._require(
             scripts.index("src/scripts/00_adjustablecontainers.xml")
             < scripts.index("src/scripts/01_gui.xml"),
-            "AdjustableContainers foundation does not load before GUI Config",
+            "AdjustableContainers foundation does not load before the GUI wrapper",
+        )
+        self._require(
+            scripts.index("src/scripts/00_msdpmapper.xml")
+            < scripts.index("src/scripts/01_gui.xml")
+            < scripts.index("src/scripts/02_yatcoconfig.xml"),
+            "composite GUI entry is not between the mapper and YATCOConfig",
         )
 
         source_text = "\n".join(
@@ -349,6 +426,76 @@ assert(calls.mapper == 1, "reset recovery ran during a fresh profile load")
             "debug snapshot checks the wrong ASCII mapper field",
         )
 
+    def _test_gui_script_names_and_order(self):
+        self._load_gui_scripts()
+        expected = [
+            "Toggles",
+            "Create Background",
+            "Set Borders",
+            "Boxes",
+            "Gauges",
+            "Cast Console",
+            "Header Icons",
+            "TabbedInfoWindow",
+            "Affects",
+            "Group",
+            "Player",
+            "Buttons",
+            "Room Info/Legend",
+            "DrawFrames",
+            "MSDP Protocol",
+            "MSDP Gauges",
+            "MSDP Actions",
+            "GUI Boot",
+            "GUI Event Registry",
+            "GUI Refresh",
+            "GUI Lifecycle",
+            "AdjustableContainers",
+            "Custom Scrollbar",
+            "Delete Line and  Prompt",
+        ]
+        self._require(
+            self._gui_script_order_cache == expected,
+            "unexpected inner GUI script order: "
+            + " -> ".join(self._gui_script_order_cache),
+        )
+
+    def _test_gui_wrapper_and_fragment_sizes(self):
+        wrapper_path = (
+            self.repo_root / "theGUI" / "src" / "scripts" / "01_gui.xml"
+        )
+        wrapper = wrapper_path.read_text(encoding="utf-8")
+        wrapper_lines = len(wrapper.splitlines())
+        self._require(
+            wrapper_lines < 100,
+            f"composite GUI wrapper is too large: {wrapper_lines} lines",
+        )
+
+        include_paths = re.findall(
+            r"<!--\s*BUILD_INCLUDE:\s*(gui/[^\s]+)\s*-->",
+            wrapper,
+        )
+        self._require(include_paths, "GUI wrapper has no child includes")
+        self._require(
+            len(include_paths) == len(set(include_paths)),
+            "GUI wrapper includes the same child more than once",
+        )
+
+        for rel_path in include_paths:
+            path = wrapper_path.parent / rel_path
+            self._require(path.is_file(), f"GUI child does not exist: {rel_path}")
+            root = ET.fromstring(
+                "<root>" + path.read_text(encoding="utf-8") + "</root>"
+            )
+            scripts = root.findall(".//Script")
+            for script_node in scripts:
+                name = script_node.findtext("name") or rel_path
+                lua_lines = len((script_node.findtext("script") or "").splitlines())
+                self._require(
+                    lua_lines <= 300,
+                    f"GUI child {name} exceeds 300 Lua lines: {lua_lines}",
+                )
+
     def _test_core_parent_load_order_and_orphan_guard(self):
         foundation_root = ET.parse(self.adjustable_source_path).getroot()
         foundation_script = foundation_root.find(".//Script/script").text
@@ -357,18 +504,9 @@ assert(calls.mapper == 1, "reset recovery ran during a fresh profile load")
             "AdjustableContainers foundation has no Lua script",
         )
 
-        gui_root = ET.parse(self.gui_source_path).getroot()
-        buttons_script = None
-        boxes_script = None
-        for script_node in gui_root.findall(".//Script"):
-            if script_node.findtext("name") == "Buttons":
-                buttons_script = script_node.findtext("script")
-            elif script_node.findtext("name") == "Boxes":
-                boxes_script = script_node.findtext("script")
-        self._require(buttons_script, "Buttons script was not found")
-        self._require(boxes_script, "Boxes script was not found")
-
-        gui_source = self.gui_source_path.read_text(encoding="utf-8")
+        buttons_script = self._gui_script("Buttons")
+        boxes_script = self._gui_script("Boxes")
+        gui_source = self._gui_lua_source()
         self._require(
             "function GUI.AdjustableContainers.create" not in gui_source,
             "AdjustableContainers foundation is duplicated inside late GUI scripts",
@@ -556,7 +694,9 @@ assert(propagated == false,
         self._run_lua(script)
 
     def _test_debug_startup_boundary_and_system_coverage(self):
-        gui_source = self.gui_source_path.read_text(encoding="utf-8")
+        gui_source = self._gui_lua_source()
+        boot_source = self._gui_script("GUI Boot")
+        refresh_source = self._gui_script("GUI Refresh")
         mapper_source = self.mapper_source_path.read_text(encoding="utf-8")
         yatco_source = (
             self.repo_root / "theGUI" / "src" / "scripts" / "03_yatco.xml"
@@ -570,26 +710,26 @@ assert(propagated == false,
         )
         key_path = self.repo_root / "theGUI" / "src" / "keys" / "00_movement.xml"
 
-        config_start = gui_source.index('<name>Config</name>')
-        initializer = gui_source.index(
-            "function GUI.initializeOrRefresh(context)", config_start
-        )
+        initializer = gui_source.index("function GUI.initializeOrRefresh(context)")
         for stage in (
             "GUI.init_background",
             "GUI.set_borders",
             "GUI.init_boxes",
         ):
             stage_position = gui_source.index(
-                f'{{name = "{stage}", callable = {stage}}}', config_start
+                f'{{name = "{stage}", callable = {stage}}}'
             )
             self._require(
                 stage_position < initializer,
                 f"{stage} is not guarded before initializeOrRefresh is defined",
             )
         self._require(
-            gui_source.index('"BOOT/CONFIG/" .. stage.name', config_start)
-            < initializer,
+            '"BOOT/CONFIG/" .. stage.name' in boot_source,
             "startup stages do not run through the debug error boundary",
+        )
+        self._require(
+            "function GUI.initializeOrRefresh(context)" in refresh_source,
+            "GUI Refresh does not define initializeOrRefresh",
         )
 
         coverage_markers = {
@@ -623,13 +763,8 @@ assert(propagated == false,
             )
 
     def _test_debug_event_callbacks_keep_their_event_and_handler(self):
-        source = self.gui_source_path.read_text(encoding="utf-8")
-        register_function = self._extract(
-            source,
-            "function GUI.registerEventHandlers()",
-            "\n-- =============================================================================\n"
-            "-- CENTRALIZED GUI INITIALIZATION SYSTEM",
-        )
+        source = self._gui_script("GUI Event Registry")
+        register_function = source[source.index("function GUI.registerEventHandlers()"):]
 
         script = f'''
 handlers = {{}}
@@ -1507,6 +1642,14 @@ raise SystemExit(1)
             (
                 "debug_runtime_output_and_errors",
                 self._test_debug_runtime_output_and_error_semantics,
+            ),
+            (
+                "gui_script_names_and_order",
+                self._test_gui_script_names_and_order,
+            ),
+            (
+                "gui_wrapper_and_fragment_sizes",
+                self._test_gui_wrapper_and_fragment_sizes,
             ),
             (
                 "core_parent_load_order_and_orphan_guard",

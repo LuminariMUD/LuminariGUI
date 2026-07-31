@@ -1,0 +1,86 @@
+					<Script isActive="yes" isFolder="no">
+						<name>GUI Lifecycle</name>
+						<packageName></packageName>
+						<script>-- =============================================================================
+-- ENTRY POINT HANDLERS
+-- These ensure GUI.initializeOrRefresh is called at the right times
+-- while preserving other initialization functions
+-- =============================================================================
+
+-- The onProtocolEnabled handler is defined in the MSDP script section
+-- It handles MSDP variable registration and GUI initialization
+
+-- The main initialization handlers are registered at the bottom of this script
+-- along with the original GUI.init() registration to ensure proper order
+
+-- Register the proper initialization sequence
+-- Since Mudlet 4.20, sysLoadEvent passes a boolean: true for a fresh profile
+-- load, false when it fires after resetProfile(). That distinction matters:
+-- after a resetProfile() the connection is usually still up and MSDP was
+-- already negotiated, so sysProtocolEnabled will NOT fire again and the GUI
+-- would otherwise sit empty, never having sent its REPORT subscriptions.
+registerAnonymousEventHandler("sysLoadEvent", function(_, isNewLoad)
+  GUI.debug("LIFECYCLE", "sysLoadEvent fired", {
+    isNewLoad = isNewLoad,
+    initializedBefore = GUI.initialized,
+  })
+  GUI.init()
+  if type(GUI.debugSnapshot) == "function" then
+    GUI.debugCall(
+      "SNAPSHOT/sysLoad immediate",
+      GUI.debugSnapshot,
+      "sysLoadEvent immediate"
+    )
+    tempTimer(2, GUI.debugWrap("LIFECYCLE/sysLoad delayed snapshot", function()
+      GUI.debugCall(
+        "SNAPSHOT/sysLoad delayed",
+        GUI.debugSnapshot,
+        "sysLoadEvent plus two seconds"
+      )
+    end))
+  end
+
+  -- isNewLoad == false means we came from resetProfile(). Older Mudlet
+  -- versions pass nil here, so only take this path on an explicit false.
+  if isNewLoad == false then
+    tempTimer(0.5, GUI.debugWrap("LIFECYCLE/profile reset recovery", function()
+      if map and map.initialize then
+        local ok, initialized = GUI.debugCall(
+          "LIFECYCLE/profile reset/map.initialize",
+          map.initialize
+        )
+        if not ok or initialized == false then
+          print("[GUI] Mapper initialization failed after profile reset: " .. tostring(initialized))
+        end
+      else
+        print("[GUI] Mapper initialization is unavailable after profile reset")
+      end
+      if GUI.requestMSDPReports() then
+        print("[GUI] Re-subscribed to MSDP after profile reset")
+      end
+      GUI.initializeOrRefresh("profile reset")
+    end))
+  end
+end)
+registerAnonymousEventHandler("sysInstall", "GUI.init")
+
+-- Register protocol handler early to ensure it catches MSDP enablement
+-- This is critical because MSDP can be enabled before GUI.init() completes
+registerAnonymousEventHandler("sysProtocolEnabled", "GUI.onProtocolEnabled")
+
+-- Add connection-based refresh
+registerAnonymousEventHandler("sysConnectionEvent", function(...)
+  GUI.debug("LIFECYCLE", "sysConnectionEvent fired", {...})
+  tempTimer(1, GUI.debugWrap("LIFECYCLE/connection refresh timer", function()
+    GUI.initializeOrRefresh("connection established")
+    if type(GUI.debugSnapshot) == "function" then
+      GUI.debugCall(
+        "SNAPSHOT/connection",
+        GUI.debugSnapshot,
+        "one second after connection"
+      )
+    end
+  end))
+end)</script>
+						<eventHandlerList />
+					</Script>

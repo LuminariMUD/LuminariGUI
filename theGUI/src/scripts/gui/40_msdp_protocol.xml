@@ -1,0 +1,92 @@
+					<Script isActive="yes" isFolder="no">
+						<name>MSDP Protocol</name>
+						<packageName></packageName>
+						<script>-- All MSDP variables the GUI subscribes to.
+GUI.MSDP_REPORT_VARS = {
+  "CHARACTER_NAME", "RACE", "CLASS", "ALIGNMENT", "LEVEL",
+  "STR", "DEX", "CON", "INT", "WIS", "CHA", "AC", "MONEY",
+  "HEALTH", "HEALTH_MAX",
+  "OPPONENT_HEALTH", "OPPONENT_HEALTH_MAX", "OPPONENT_NAME",
+  "MOVEMENT", "MOVEMENT_MAX",
+  "PSP", "PSP_MAX",
+  "EXPERIENCE", "EXPERIENCE_TNL",
+  "ACTIONS", "GROUP", "AFFECTS",
+  -- "INVENTORY",
+  "ROOM", "AREA_NAME", "ROOM_EXITS", "ROOM_NAME", "ROOM_VNUM",
+  "WORLD_TIME",
+}
+
+-- Subscribe to every MSDP variable the GUI needs.
+-- Safe to call more than once; re-REPORTing an already-reported variable
+-- simply refreshes it. Needed after resetProfile(), where sysProtocolEnabled
+-- does NOT fire again because MSDP was already negotiated on the connection.
+function GUI.requestMSDPReports()
+  GUI.debug("MSDP/REPORT", "subscription request started", {
+    sendMSDP = type(sendMSDP),
+    variableCount = #GUI.MSDP_REPORT_VARS,
+  })
+  if not sendMSDP then
+    GUI.debugError("MSDP/REPORT", "sendMSDP is unavailable")
+    return false
+  end
+  for _, var in ipairs(GUI.MSDP_REPORT_VARS) do
+    GUI.debug("MSDP/REPORT", "sending REPORT", var)
+    local ok, result = GUI.debugCall(
+      "MSDP/REPORT/" .. var,
+      sendMSDP,
+      "REPORT",
+      var
+    )
+    if not ok then
+      GUI.debug("MSDP/REPORT", "REPORT failed", {
+        variable = var,
+        error = result,
+      })
+    end
+  end
+  GUI.debug("MSDP/REPORT", "subscription request complete")
+  return true
+end
+
+function GUI.onProtocolEnabled(_, protocol)
+  GUI.debug("MSDP/PROTOCOL", "sysProtocolEnabled received", {
+    protocol = protocol,
+    enableMSDP = type(getConfig) == "function" and getConfig("enableMSDP") or "unavailable",
+  })
+  if protocol == "MSDP" then
+    print("[GUI] MSDP Protocol enabled - initializing variables")
+
+    GUI.requestMSDPReports()
+
+    -- Debug: Show what variables are available after a short delay
+    tempTimer(2, GUI.debugWrap("MSDP/PROTOCOL/two-second inventory", function()
+      GUI.debug("MSDP/PROTOCOL", "MSDP variables received")
+      local count = 0
+      for k, v in pairs(msdp) do
+        if type(v) ~= "function" then
+          count = count + 1
+          GUI.debug("MSDP/VALUE", "msdp." .. tostring(k), v)
+        end
+      end
+      GUI.debug("MSDP/PROTOCOL", "MSDP variable inventory complete", {
+        count = count,
+      })
+      if type(GUI.debugSnapshot) == "function" then
+        GUI.debugCall(
+          "SNAPSHOT/MSDP protocol",
+          GUI.debugSnapshot,
+          "two seconds after MSDP protocol enabled"
+        )
+      end
+    end))
+    
+    -- Initialize or refresh GUI after a short delay to ensure MSDP data arrives
+    tempTimer(0.5, GUI.debugWrap("MSDP/PROTOCOL/GUI refresh", function()
+      GUI.initializeOrRefresh("MSDP protocol enabled")
+    end))
+  end
+end
+
+</script>
+						<eventHandlerList />
+					</Script>

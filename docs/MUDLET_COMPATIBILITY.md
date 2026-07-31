@@ -91,9 +91,9 @@ Separately, six event→handler pairs were registered **twice** — once at file
 ### 1. Legacy string-name callbacks with arguments — *high priority*
 ```lua
 theGUI/src/scripts/03_yatco.xml:187  demonnic.chat.tabs[tab]:setClickCallback("demonnicChatSwitch", tab)
-theGUI/src/scripts/01_gui.xml:900    GUI.tabbedInfoWindow[v .. "tab"]:setClickCallback("GUI.tabbedInfoWindow.click", v)
-theGUI/src/scripts/01_gui.xml:1640   GUI.buttonWindow.Legendbutton:setClickCallback("GUI.buttonWindow.legendClick")
-theGUI/src/scripts/01_gui.xml:1642   GUI.buttonWindow.Mapbutton:setClickCallback("GUI.buttonWindow.mapClick")
+theGUI/src/scripts/gui/30_tab_shell.xml (`GUI.tabbedInfoWindow.init`)  tab:setClickCallback("GUI.tabbedInfoWindow.click", v)
+theGUI/src/scripts/gui/34_map_controls.xml (`GUI.buttonWindow.init`)  Legendbutton:setClickCallback("GUI.buttonWindow.legendClick")
+theGUI/src/scripts/gui/34_map_controls.xml (`GUI.buttonWindow.init`)  Mapbutton:setClickCallback("GUI.buttonWindow.mapClick")
 ```
 Passing a **function name as a string plus trailing arguments** is the legacy Geyser form. This is exactly the surface touched by the label-callback registry lifetime work in 4.20/4.21 ([#9254](https://github.com/Mudlet/Mudlet/issues/9254) / [#9255](https://github.com/Mudlet/Mudlet/pull/9255)). **Fixed:** all four sites now use the closure form below. If chat tab switching or the info-window tabs still fail to respond to clicks, that points at the upstream label-callback bug rather than this code.
 ```lua
@@ -124,7 +124,11 @@ Mudlet's own package exporter (`src/dlgPackageExporter.cpp`, `writeConfigFile`) 
 **Fixed:** raised to `4.21+` — the first release where Qt6 is universal *and* the `resetProfile()` label regression is fixed. This is a judgement call; adjust if you need to support older clients.
 
 ### 5. `sysLoadEvent` handlers ignore the new boolean
-`GUI.loadToggles()` (`01_gui.xml:189`), `GUI.init()` (`01_gui.xml:2089`), and `GUI.AdjustableContainers.init()` (`01_gui.xml:2785`) take no parameters. Since 4.20 they receive `(event, isNewLoad)`. Ignoring it meant the package **could not distinguish a fresh profile load from a `resetProfile()`**.
+`GUI.loadToggles()` (`gui/01_preferences.xml`), `GUI.init()`
+(`gui/50_boot.xml`), and `GUI.AdjustableContainers.init()`
+(`gui/60_layout_profiles.xml`) take no parameters. Since 4.20 they receive
+`(event, isNewLoad)`. Ignoring it meant the package **could not distinguish a
+fresh profile load from a `resetProfile()`**.
 
 This turned out to matter: after `resetProfile()` the connection is usually still up and MSDP was already negotiated, so `sysProtocolEnabled` does **not** fire again — the GUI never re-sent its `REPORT` subscriptions and sat empty.
 

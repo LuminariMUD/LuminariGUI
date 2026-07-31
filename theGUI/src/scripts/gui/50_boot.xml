@@ -1,0 +1,144 @@
+					<Script isActive="yes" isFolder="no">
+						<name>GUI Boot</name>
+						<packageName></packageName>
+						<script>  -- CRITICAL: These initialization calls MUST remain outside any function!
+  -- Mudlet requires GUI elements to be created immediately when the script loads.
+  -- Moving these inside GUI.init() or any other function will cause complete failure.
+  -- The GUI background, borders, and boxes must exist before any other initialization.
+  -- This needs to be outside the config, since YATCO needs to have the boxes set.
+	GUI.image_location = getMudletHomeDir():gsub("\\", "/") .. "/LuminariGUI/images/"
+  GUI.debug("BOOT/CONFIG", "Config script reached", {
+    imageLocation = GUI.image_location,
+    initBackground = type(GUI.init_background),
+    setBorders = type(GUI.set_borders),
+    initBoxes = type(GUI.init_boxes),
+  })
+
+  -- These calls used to run unguarded before GUI.initializeOrRefresh was
+  -- defined. Any one error aborted this entire script and produced the
+  -- misleading "GUI system not fully loaded" message. In debug mode each
+  -- stage now prints its entry, result, and stack trace, then allows the rest
+  -- of the diagnostic/lifecycle functions to load.
+  local bootStages = {
+    {name = "GUI.init_background", callable = GUI.init_background},
+    {name = "GUI.set_borders", callable = GUI.set_borders},
+    {name = "GUI.init_boxes", callable = GUI.init_boxes},
+  }
+  for _, stage in ipairs(bootStages) do
+    local ok, result = GUI.debugCall("BOOT/CONFIG/" .. stage.name, stage.callable)
+    GUI.debugBootResults[stage.name] = {
+      ok = ok,
+      result = result,
+    }
+    GUI.debug("BOOT/CONFIG", "stage complete", {
+      stage = stage.name,
+      ok = ok,
+      result = result,
+    })
+  end
+
+function GUI.validateCoreLayout()
+  local requiredParents = {
+    Bottom = GUI.Bottom,
+    chatContainer = GUI.chatContainer,
+    chatContainerInner = GUI.chatContainerInner,
+    buttonPanelContainer = GUI.buttonPanelContainer,
+    roomInfoContainer = GUI.roomInfoContainer,
+    statusGaugesContainer = GUI.Box7,
+  }
+  local missing = {}
+  for name, value in pairs(requiredParents) do
+    if type(value) ~= "table" then
+      missing[#missing + 1] = name
+    end
+  end
+  table.sort(missing)
+  if #missing > 0 then
+    return false, "missing core GUI parents: " .. table.concat(missing, ", ")
+  end
+  return true
+end
+
+function GUI.init()
+  GUI.debug("GUI/INIT", "initialization sequence starting", {
+    alreadyInitialized = GUI.initialized,
+  })
+  GUI.AffectIcons = GUI.AffectIcons or {}
+  GUI.Affects = GUI.Affects or {}
+  GUI.Affects.Rows = GUI.Affects.Rows or {}
+  GUI.Affects.Modes = GUI.Affects.Modes or {}
+
+  GUI.initFailures = {}
+  local coreReady, coreError = GUI.validateCoreLayout()
+  if not coreReady then
+    GUI.initFailures[1] = {
+      stage = "GUI.validateCoreLayout",
+      error = coreError,
+    }
+    GUI.initialized = false
+    GUI.debugError("GUI/INIT/CORE", coreError)
+    print("[GUI] Initialization stopped safely: " .. coreError)
+    return false, coreError
+  end
+
+  local initStages = {
+    {name = "GUI.init_gauges", callable = GUI.init_gauges},
+    {name = "GUI.init_action_icons", callable = GUI.init_action_icons},
+    {name = "GUI.tabbedInfoWindow.init", callable = GUI.tabbedInfoWindow.init},
+    {name = "GUI.init_player", callable = GUI.init_player},
+    {name = "GUI.init_group", callable = GUI.init_group},
+    {name = "GUI.Affects.init", callable = GUI.Affects.init},
+    {name = "GUI.draw_frames", callable = GUI.draw_frames},
+    {name = "GUI.buttonWindow.init", callable = GUI.buttonWindow.init},
+    {name = "GUI.init_castConsole", callable = GUI.init_castConsole},
+    {name = "GUI.styleScrollbar", callable = GUI.styleScrollbar},
+    {name = "GUI.registerEventHandlers", callable = GUI.registerEventHandlers},
+  }
+
+  for _, stage in ipairs(initStages) do
+    local ok, result = GUI.debugCall("GUI/INIT/" .. stage.name, stage.callable)
+    if not ok then
+      GUI.initFailures[#GUI.initFailures + 1] = {
+        stage = stage.name,
+        error = result,
+      }
+    end
+  end
+
+  -- Ensure proper z-order of adjustable containers
+  tempTimer(0.5, GUI.debugWrap("GUI/INIT/z-order timer", function()
+    -- Bring containers to front in correct order
+    -- Map should be at the back
+    if map and map.container then
+      map.container:show()
+    end
+    if GUI.chatContainer then
+      GUI.chatContainer:show()
+    end
+    if GUI.roomInfoContainer then
+      GUI.roomInfoContainer:show()
+      GUI.roomInfoContainer:raise()  -- Bring above map
+    end
+    if GUI.buttonPanelContainer then
+      GUI.buttonPanelContainer:show()
+      GUI.buttonPanelContainer:raise()  -- Bring to front
+    end
+    if GUI.actionIconsContainer then
+      GUI.actionIconsContainer:show()
+      GUI.actionIconsContainer:raise()  -- Bring to front
+    end
+  end))
+
+  -- Preserve the old failure semantics: before diagnostic catching, an error
+  -- prevented this flag from ever being reached. A failed debug run therefore
+  -- remains retryable through "fix gui".
+  GUI.initialized = (#GUI.initFailures == 0)
+  GUI.debug("GUI/INIT", "initialization sequence complete", {
+    initialized = GUI.initialized,
+    failures = GUI.initFailures,
+  })
+end
+
+</script>
+						<eventHandlerList />
+					</Script>

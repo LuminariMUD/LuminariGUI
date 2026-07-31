@@ -1,0 +1,78 @@
+					<Script isActive="yes" isFolder="no">
+						<name>MSDP Actions</name>
+						<packageName></packageName>
+						<script>function GUI.updateActionIcons()
+  GUI.debug("GUI/ACTIONS", "updating action icons", {
+    actions = msdp and msdp.ACTIONS,
+    standardIcon = type(GUI.StandardActionIcon),
+    moveIcon = type(GUI.MoveActionIcon),
+    swiftIcon = type(GUI.SwiftActionIcon),
+  })
+  -- Check if ACTIONS data exists
+  if not msdp.ACTIONS then
+    -- No ACTIONS data yet, skip update
+    return
+  end
+  
+  -- Ensure action icons exist before updating
+  if not GUI.StandardActionIcon or not GUI.MoveActionIcon or not GUI.SwiftActionIcon then
+    print("[GUI] Action icons not initialized yet")
+    return
+  end
+  
+  -- Update Standard Action icon
+  if msdp.ACTIONS.STANDARD_ACTION == "1" then
+    GUI.ActionIconCSS:set(
+      "border-image",
+      [[url("]] ..
+      getMudletHomeDir():gsub("\\", "/") ..
+      [[/LuminariGUI/images/action-standard.png");]]
+    )
+    GUI.StandardActionIcon:setStyleSheet(GUI.ActionIconCSS:getCSS())
+  elseif msdp.ACTIONS.STANDARD_ACTION == "0" then
+    GUI.ActionIconCSS:set(
+      "border-image",
+      [[url("]] ..
+      getMudletHomeDir():gsub("\\", "/") ..
+      [[/LuminariGUI/images/action-standard-50.png");]]
+    )
+    GUI.StandardActionIcon:setStyleSheet(GUI.ActionIconCSS:getCSS())
+  end
+  
+  -- Update Move Action icon
+  if msdp.ACTIONS.MOVE_ACTION == "1" then
+    GUI.ActionIconCSS:set(
+      "border-image",
+      [[url("]] .. getMudletHomeDir():gsub("\\", "/") .. [[/LuminariGUI/images/action-move.png");]]
+    )
+    GUI.MoveActionIcon:setStyleSheet(GUI.ActionIconCSS:getCSS())
+  elseif msdp.ACTIONS.MOVE_ACTION == "0" then
+    GUI.ActionIconCSS:set(
+      "border-image",
+      [[url("]] ..
+      getMudletHomeDir():gsub("\\", "/") ..
+      [[/LuminariGUI/images/action-move-50.png");]]
+    )
+    GUI.MoveActionIcon:setStyleSheet(GUI.ActionIconCSS:getCSS())
+  end
+  
+  -- Update Swift Action icon
+  if msdp.ACTIONS.SWIFT_ACTION == "1" then
+    GUI.ActionIconCSS:set(
+      "border-image",
+      [[url("]] .. getMudletHomeDir():gsub("\\", "/") .. [[/LuminariGUI/images/action-swift.png");]]
+    )
+    GUI.SwiftActionIcon:setStyleSheet(GUI.ActionIconCSS:getCSS())
+  elseif msdp.ACTIONS.SWIFT_ACTION == "0" then
+    GUI.ActionIconCSS:set(
+      "border-image",
+      [[url("]] ..
+      getMudletHomeDir():gsub("\\", "/") ..
+      [[/LuminariGUI/images/action-swift-50.png");]]
+    )
+    GUI.SwiftActionIcon:setStyleSheet(GUI.ActionIconCSS:getCSS())
+  end
+end
+</script>
+						<eventHandlerList />
+					</Script>
