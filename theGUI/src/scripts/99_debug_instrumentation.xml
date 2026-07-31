@@ -1,0 +1,237 @@
+			<ScriptGroup isActive="yes" isFolder="yes">
+				<name>LuminariDebugInstrumentation</name>
+				<packageName>LuminariGUI</packageName>
+				<script></script>
+				<eventHandlerList />
+				<Script isActive="yes" isFolder="no">
+					<name>End-to-End Instrumentation</name>
+					<packageName></packageName>
+					<script>-- End-to-end instrumentation is loaded last so it can inventory and wrap
+-- functions from every LuminariGUI subsystem.
+
+function GUI.debugSnapshot(reason)
+  if GUI.DEBUG ~= true then
+    return
+  end
+
+  GUI.debug("SNAPSHOT", "BEGIN " .. tostring(reason or "unspecified"))
+
+  local environment = {
+    debugEnabled = GUI.DEBUG,
+    GUI = type(GUI),
+    Geyser = type(Geyser),
+    Adjustable = type(Adjustable),
+    CSSMan = type(CSSMan),
+    map = type(map),
+    msdp = type(msdp),
+    demonnic = type(demonnic),
+    chat = type(demonnic and demonnic.chat),
+    initialized = GUI.initialized,
+  }
+
+  if type(getMudletVersion) == "function" then
+    local ok, value = pcall(getMudletVersion, "string")
+    environment.mudletVersion = ok and value or ("ERROR: " .. tostring(value))
+  end
+  if type(getOS) == "function" then
+    local ok, operatingSystem, operatingSystemVersion = pcall(getOS)
+    environment.operatingSystem =
+      ok and (tostring(operatingSystem) .. " " .. tostring(operatingSystemVersion or ""))
+      or ("ERROR: " .. tostring(operatingSystem))
+  end
+  if type(getPackageInfo) == "function" then
+    local ok, value = pcall(getPackageInfo, "LuminariGUI", "version")
+    environment.packageVersion = ok and value or ("ERROR: " .. tostring(value))
+  end
+  if type(getConfig) == "function" then
+    local ok, value = pcall(getConfig, "enableMSDP")
+    environment.enableMSDP = ok and value or ("ERROR: " .. tostring(value))
+  end
+  if type(getMainWindowSize) == "function" then
+    local ok, width, height = pcall(getMainWindowSize)
+    environment.mainWindow =
+      ok and (tostring(width) .. "x" .. tostring(height))
+      or ("ERROR: " .. tostring(width))
+  end
+  if type(getMudletHomeDir) == "function" then
+    local ok, value = pcall(getMudletHomeDir)
+    environment.profileHome = ok and value or ("ERROR: " .. tostring(value))
+  end
+  GUI.debug("SNAPSHOT", "environment", environment)
+
+  local requiredFunctions = {
+    "GUI.init_background",
+    "GUI.set_borders",
+    "GUI.init_boxes",
+    "GUI.init_gauges",
+    "GUI.init_action_icons",
+    "GUI.tabbedInfoWindow.init",
+    "GUI.init_player",
+    "GUI.init_group",
+    "GUI.Affects.init",
+    "GUI.buttonWindow.init",
+    "GUI.init_castConsole",
+    "GUI.styleScrollbar",
+    "GUI.registerEventHandlers",
+    "GUI.initializeOrRefresh",
+    "GUI.requestMSDPReports",
+    "GUI.onProtocolEnabled",
+    "GUI.AdjustableContainers.init",
+    "map.initialize",
+    "map.eventHandler",
+    "map.onProtocolEnabled",
+    "demonnic.chat.create",
+    "demonnic.chat.append",
+    "demonnicOnStart",
+  }
+  for _, functionPath in ipairs(requiredFunctions) do
+    GUI.debug("SNAPSHOT", "required function " .. functionPath, {
+      status = type(GUI.debugResolve(functionPath)),
+    })
+  end
+
+  GUI.debug("SNAPSHOT", "important runtime objects", {
+    Left = type(GUI.Left),
+    Right = type(GUI.Right),
+    Bottom = type(GUI.Bottom),
+    Box2 = type(GUI.Box2),
+    Health = type(GUI.Health),
+    Moves = type(GUI.Moves),
+    PSP = type(GUI.PSP),
+    Enemy = type(GUI.Enemy),
+    chatContainer = type(GUI.chatContainer),
+    roomInfoContainer = type(GUI.roomInfoContainer),
+    buttonPanelContainer = type(GUI.buttonPanelContainer),
+    actionIconsContainer = type(GUI.actionIconsContainer),
+    mapContainer = type(map and map.container),
+    mapWindow = type(map and map.window),
+    asciiMapWindow = type(map and map.asciiwindow),
+  })
+
+  GUI.debug("SNAPSHOT", "handler and container counts", {
+    eventHandlerIds = GUI.debugCountEntries(GUI.eventHandlerIds),
+    adjustableContainers = GUI.debugCountEntries(
+      GUI.AdjustableContainers and GUI.AdjustableContainers.containers
+    ),
+    chatTabs = GUI.debugCountEntries(demonnic and demonnic.chat and demonnic.chat.tabs),
+    chatWindows = GUI.debugCountEntries(
+      demonnic and demonnic.chat and demonnic.chat.windows
+    ),
+  })
+
+  local home = type(getMudletHomeDir) == "function" and getMudletHomeDir():gsub("\\", "/") or ""
+  local assets = {
+    "images/ui_texture.jpg",
+    "images/ui_texture.png",
+    "images/buttons/button.png",
+    "images/action-standard.png",
+    "images/action-standard-50.png",
+    "images/action-move.png",
+    "images/action-move-50.png",
+    "images/action-swift.png",
+    "images/action-swift-50.png",
+  }
+  for _, relativePath in ipairs(assets) do
+    local fullPath = home .. "/LuminariGUI/" .. relativePath
+    local exists = type(io.exists) == "function" and io.exists(fullPath) or false
+    GUI.debug("ASSET", relativePath, {exists = exists, path = fullPath})
+  end
+
+  GUI.debug("MSDP", "variable inventory", {
+    count = GUI.debugCountEntries(msdp),
+    tableType = type(msdp),
+  })
+  if type(msdp) == "table" then
+    local keys = {}
+    for key in pairs(msdp) do
+      if type(msdp[key]) ~= "function" then
+        keys[#keys + 1] = key
+      end
+    end
+    table.sort(keys, function(left, right)
+      return tostring(left) &lt; tostring(right)
+    end)
+    for _, key in ipairs(keys) do
+      GUI.debug("MSDP", "msdp." .. tostring(key), msdp[key])
+    end
+  end
+
+  GUI.debug("SNAPSHOT", "boot-stage results", GUI.debugBootResults)
+  GUI.debug("SNAPSHOT", "END " .. tostring(reason or "unspecified"))
+end
+
+local function wrapTableFunctions(owner, tableName, exclusions)
+  if type(owner) ~= "table" then
+    GUI.debug("INSTRUMENT", "table unavailable", tableName)
+    return
+  end
+
+  local functionNames = {}
+  for functionName, value in pairs(owner) do
+    if type(value) == "function" and not exclusions[functionName] then
+      functionNames[#functionNames + 1] = functionName
+    end
+  end
+  table.sort(functionNames)
+  for _, functionName in ipairs(functionNames) do
+    GUI.debugWrapFunction(
+      owner,
+      functionName,
+      tableName .. "." .. tostring(functionName)
+    )
+  end
+end
+
+local guiExclusions = {
+  debug = true,
+  debugCall = true,
+  debugCountEntries = true,
+  debugError = true,
+  debugResolve = true,
+  debugSnapshot = true,
+  debugValue = true,
+  debugWrap = true,
+  debugWrapFunction = true,
+}
+
+wrapTableFunctions(GUI, "GUI", guiExclusions)
+wrapTableFunctions(GUI.Affects, "GUI.Affects", {})
+wrapTableFunctions(GUI.tabbedInfoWindow, "GUI.tabbedInfoWindow", {})
+wrapTableFunctions(GUI.buttonWindow, "GUI.buttonWindow", {})
+wrapTableFunctions(GUI.AdjustableContainers, "GUI.AdjustableContainers", {})
+wrapTableFunctions(CSSMan, "CSSMan", {})
+wrapTableFunctions(map, "map", {})
+wrapTableFunctions(demonnic, "demonnic", {})
+-- append() must select/copy the current server line before anything echoes to
+-- the main console. Its own tail-end diagnostic records the operation safely.
+wrapTableFunctions(demonnic and demonnic.chat, "demonnic.chat", {append = true})
+
+if type(demonnicChatSwitch) == "function" then
+  demonnicChatSwitch = GUI.debugWrap("YATCO.demonnicChatSwitch", demonnicChatSwitch)
+end
+if type(demonnicOnStart) == "function" then
+  demonnicOnStart = GUI.debugWrap("YATCO.demonnicOnStart", demonnicOnStart)
+end
+if type(demonnicOnInstall) == "function" then
+  demonnicOnInstall = GUI.debugWrap("YATCO.demonnicOnInstall", demonnicOnInstall)
+end
+
+GUI.debug("INSTRUMENT", "end-to-end function wrapping complete")
+GUI.debugCall(
+  "SNAPSHOT/instrumentation load",
+  GUI.debugSnapshot,
+  "instrumentation fragment loaded"
+)
+
+if type(tempTimer) == "function" then
+  tempTimer(2, GUI.debugWrap("SNAPSHOT/instrumentation delayed timer", function()
+    GUI.debugCall(
+      "SNAPSHOT/instrumentation delayed",
+      GUI.debugSnapshot,
+      "two seconds after instrumentation load"
+    )
+  end))
+end</script>
+					<eventHandlerList />
+				</Script>
+			</ScriptGroup>

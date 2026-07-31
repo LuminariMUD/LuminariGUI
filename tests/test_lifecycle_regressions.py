@@ -28,6 +28,16 @@ class LifecycleRegressionTester:
         self.mapper_source_path = (
             self.repo_root / "theGUI" / "src" / "scripts" / "00_msdpmapper.xml"
         )
+        self.debug_source_path = (
+            self.repo_root / "theGUI" / "src" / "scripts" / "00_debug.xml"
+        )
+        self.instrumentation_source_path = (
+            self.repo_root
+            / "theGUI"
+            / "src"
+            / "scripts"
+            / "99_debug_instrumentation.xml"
+        )
         self.lua_path = self._find_lua()
         self.test_results = []
         self.errors = []
@@ -75,6 +85,11 @@ class LifecycleRegressionTester:
 
         script = f'''
 GUI = {{
+  DEBUG = false,
+  debug = function() end,
+  debugError = function() end,
+  debugCountEntries = function() return 0 end,
+  debugWrap = function(_, callable) return callable end,
   eventHandlerIds = {{
     shiftRoom = 101,
     sysConnectionEvent = 102,
@@ -149,6 +164,13 @@ function tempTimer(_, callback)
 end
 
 GUI = {{
+  debug = function() end,
+  debugCall = function(_, callable, ...)
+    return true, callable(...)
+  end,
+  debugWrap = function(_, callable)
+    return callable
+  end,
   init = function() calls.gui = calls.gui + 1 end,
   requestMSDPReports = function()
     calls.reports = calls.reports + 1
@@ -175,6 +197,236 @@ assert(calls.refresh == 1)
 handlers.sysLoadEvent("sysLoadEvent", true)
 assert(calls.gui == 2)
 assert(calls.mapper == 1, "reset recovery ran during a fresh profile load")
+'''
+        self._run_lua(script)
+
+    def _test_debug_master_toggle_and_load_order(self):
+        debug_source = self.debug_source_path.read_text(encoding="utf-8")
+        instrumentation_source = self.instrumentation_source_path.read_text(
+            encoding="utf-8"
+        )
+        manifest = (self.repo_root / "theGUI" / "build.yaml").read_text(
+            encoding="utf-8"
+        )
+
+        script_block = manifest.split("scripts:", 1)[1].split("keys:", 1)[0]
+        scripts = re.findall(r"-\s+(src/scripts/[^\s]+)", script_block)
+        self._require(scripts, "build manifest has no script fragments")
+        self._require(
+            scripts[0] == "src/scripts/00_debug.xml",
+            "debug bootstrap is not the first script fragment",
+        )
+        self._require(
+            scripts[-1] == "src/scripts/99_debug_instrumentation.xml",
+            "debug instrumentation is not the last script fragment",
+        )
+
+        source_text = "\n".join(
+            path.read_text(encoding="utf-8")
+            for path in (self.repo_root / "theGUI" / "src").rglob("*.xml")
+        )
+        explicit_boolean_assignments = re.findall(
+            r"\bGUI\.DEBUG\s*=\s*(?:true|false)\b", source_text
+        )
+        self._require(
+            explicit_boolean_assignments == ["GUI.DEBUG = true"],
+            "GUI.DEBUG must have exactly one explicit boolean assignment set to true",
+        )
+        self._require(
+            "This is the ONE switch" in debug_source,
+            "master debug toggle is not documented as the single switch",
+        )
+        self._require(
+            "demonnic.debug.active = (GUI.DEBUG == true)" in source_text,
+            "legacy YATCO debug state does not mirror the master switch",
+        )
+        self._require(
+            "wrapTableFunctions(GUI.AdjustableContainers" in instrumentation_source,
+            "adjustable containers are not instrumented",
+        )
+
+    def _test_debug_runtime_output_and_error_semantics(self):
+        root = ET.parse(self.debug_source_path).getroot()
+        debug_script = root.find(".//Script/script").text
+        self._require(debug_script, "debug bootstrap has no Lua script")
+
+        script = f'''
+captured = {{}}
+function echo(value)
+  captured[#captured + 1] = value
+end
+function cecho(value)
+  captured[#captured + 1] = value
+end
+
+{debug_script}
+
+assert(GUI.DEBUG == true, "debug mode is not enabled")
+GUI.debug("TEST", "visible message", {{answer = 42}})
+local joined = table.concat(captured, "\\n")
+assert(joined:find("LGUI%-DEBUG"), "debug prefix was not written")
+assert(joined:find("visible message", 1, true), "debug message was not written")
+assert(joined:find("answer=42", 1, true), "debug details were not written")
+
+local ok, failure = GUI.debugCall("TEST/failure", function()
+  error("intentional debug failure")
+end)
+assert(ok == false, "debug mode did not catch the test error")
+assert(tostring(failure):find("intentional debug failure", 1, true))
+joined = table.concat(captured, "\\n")
+assert(joined:find("LGUI%-ERROR"), "error prefix was not written")
+assert(joined:find("LGUI%-TRACE"), "stack trace lines were not written")
+assert(joined:find("intentional debug failure", 1, true))
+
+local wrapped = GUI.debugWrap("TEST/multiple returns", function()
+  return "first", nil, "third"
+end)
+local first, second, third = wrapped()
+assert(first == "first" and second == nil and third == "third",
+  "debug wrapper changed multiple return values")
+
+local beforeDisabledCall = #captured
+GUI.DEBUG = false
+GUI.debug("TEST", "must stay hidden")
+assert(#captured == beforeDisabledCall, "debug output continued while disabled")
+local propagated = pcall(function()
+  GUI.debugCall("TEST/disabled failure", function()
+    error("must propagate")
+  end)
+end)
+assert(propagated == false,
+  "disabled debug mode swallowed an error instead of preserving production behavior")
+'''
+        self._run_lua(script)
+
+    def _test_debug_startup_boundary_and_system_coverage(self):
+        gui_source = self.gui_source_path.read_text(encoding="utf-8")
+        mapper_source = self.mapper_source_path.read_text(encoding="utf-8")
+        yatco_source = (
+            self.repo_root / "theGUI" / "src" / "scripts" / "03_yatco.xml"
+        ).read_text(encoding="utf-8")
+        trigger_source = (
+            self.repo_root / "theGUI" / "src" / "triggers" / "01_gui.xml"
+        ).read_text(encoding="utf-8")
+        alias_source = "\n".join(
+            path.read_text(encoding="utf-8")
+            for path in (self.repo_root / "theGUI" / "src" / "aliases").glob("*.xml")
+        )
+        key_path = self.repo_root / "theGUI" / "src" / "keys" / "00_movement.xml"
+
+        config_start = gui_source.index('<name>Config</name>')
+        initializer = gui_source.index(
+            "function GUI.initializeOrRefresh(context)", config_start
+        )
+        for stage in (
+            "GUI.init_background",
+            "GUI.set_borders",
+            "GUI.init_boxes",
+        ):
+            stage_position = gui_source.index(
+                f'{{name = "{stage}", callable = {stage}}}', config_start
+            )
+            self._require(
+                stage_position < initializer,
+                f"{stage} is not guarded before initializeOrRefresh is defined",
+            )
+        self._require(
+            gui_source.index('"BOOT/CONFIG/" .. stage.name', config_start)
+            < initializer,
+            "startup stages do not run through the debug error boundary",
+        )
+
+        coverage_markers = {
+            "GUI initialization": (gui_source, "GUI/INIT"),
+            "GUI lifecycle": (gui_source, "LIFECYCLE"),
+            "event registration": (gui_source, "EVENT/REGISTER"),
+            "event firing": (gui_source, "EVENT/FIRE"),
+            "MSDP reports": (gui_source, "MSDP/REPORT"),
+            "MSDP values": (gui_source, "MSDP/VALUE"),
+            "mapper events": (mapper_source, "MAPPER/EVENT"),
+            "mapper initialization": (mapper_source, "MAPPER/INIT"),
+            "map triggers": (trigger_source, "TRIGGER/MAP"),
+            "chat creation": (yatco_source, "YATCO/CREATE"),
+            "chat capture": (yatco_source, "YATCO/APPEND"),
+            "aliases": (alias_source, 'GUI.debug("ALIAS"'),
+        }
+        for area, (source, marker) in coverage_markers.items():
+            self._require(marker in source, f"missing debug coverage for {area}")
+
+        key_root = ET.fromstring(
+            "<root>" + key_path.read_text(encoding="utf-8") + "</root>"
+        )
+        keys = key_root.findall(".//Key")
+        self._require(keys, "movement key fragment has no keys")
+        for key in keys:
+            name = key.findtext("name")
+            script = key.findtext("script") or ""
+            self._require(
+                'GUI.debug("KEY"' in script,
+                f"key {name} does not emit debug details",
+            )
+
+    def _test_debug_event_callbacks_keep_their_event_and_handler(self):
+        source = self.gui_source_path.read_text(encoding="utf-8")
+        register_function = self._extract(
+            source,
+            "function GUI.registerEventHandlers()",
+            "\n-- =============================================================================\n"
+            "-- CENTRALIZED GUI INITIALIZATION SYSTEM",
+        )
+
+        script = f'''
+handlers = {{}}
+next_id = 0
+calls = {{health = 0, room = 0}}
+msdp = {{HEALTH = 17, ROOM = {{VNUM = 99}}}}
+demonnic = {{chat = {{use = false}}}}
+
+local resolved = {{
+  ["GUI.updateHealthGauge"] = function(event)
+    assert(event == "msdp.HEALTH")
+    calls.health = calls.health + 1
+  end,
+  ["GUI.updateRoom"] = function(event)
+    assert(event == "msdp.ROOM")
+    calls.room = calls.room + 1
+  end,
+}}
+
+GUI = {{
+  DEBUG = true,
+  eventHandlerIds = {{}},
+  debug = function() end,
+  debugError = function(_, message) error(message) end,
+  debugCountEntries = function() return 0 end,
+  debugResolve = function(path)
+    return resolved[path] or function() end
+  end,
+  debugCall = function(_, callable, ...)
+    return true, callable(...)
+  end,
+  debugWrap = function(_, callable)
+    return callable
+  end,
+}}
+
+function registerAnonymousEventHandler(event, callback)
+  next_id = next_id + 1
+  handlers[event] = callback
+  return next_id
+end
+function killAnonymousEventHandler() return true end
+function tempTimer() end
+
+{register_function}
+
+GUI.registerEventHandlers()
+assert(type(handlers["msdp.HEALTH"]) == "function")
+assert(type(handlers["msdp.ROOM"]) == "function")
+handlers["msdp.HEALTH"]("msdp.HEALTH")
+handlers["msdp.ROOM"]("msdp.ROOM")
+assert(calls.health == 1, "HEALTH callback lost its loop-local handler")
+assert(calls.room == 1, "ROOM callback lost its loop-local handler")
 '''
         self._run_lua(script)
 
@@ -796,6 +1048,22 @@ raise SystemExit(1)
             return False
 
         tests = [
+            (
+                "debug_master_toggle_and_load_order",
+                self._test_debug_master_toggle_and_load_order,
+            ),
+            (
+                "debug_runtime_output_and_errors",
+                self._test_debug_runtime_output_and_error_semantics,
+            ),
+            (
+                "debug_startup_boundary_and_coverage",
+                self._test_debug_startup_boundary_and_system_coverage,
+            ),
+            (
+                "debug_event_callback_mapping",
+                self._test_debug_event_callbacks_keep_their_event_and_handler,
+            ),
             (
                 "upgrade_handler_ownership",
                 self._test_upgrade_preserves_file_scope_handler_ids,

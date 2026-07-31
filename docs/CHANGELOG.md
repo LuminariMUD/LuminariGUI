@@ -13,6 +13,20 @@ Begin Changelog entries below
 
 ## [Unreleased]
 
+### Added
+
+- **End-to-end screen diagnostic mode.** A first-loaded debug bootstrap exposes
+  one master `GUI.DEBUG` switch, currently set to `true`, and emits copyable
+  `LGUI-DEBUG`, `LGUI-ERROR`, and `LGUI-TRACE` output in Mudlet's main
+  console. Instrumentation covers boot stages, lifecycle events, MSDP
+  subscriptions and values, handler registration/invocation, GUI components,
+  mapper activity, adjustable containers, YATCO/chat, triggers, aliases, keys,
+  assets, and runtime snapshots.
+- **Fault-safe startup tracing.** The three GUI calls that run before
+  `GUI.initializeOrRefresh` and the YATCO configuration boundary now report
+  full stack traces and allow later diagnostics to load while debug mode is
+  enabled. With debugging disabled, original error propagation is preserved.
+
 ### Changed
 
 - **Release now means published.** `python3 theGUI/package.py release`

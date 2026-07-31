@@ -16,6 +16,11 @@ LuminariGUI is a comprehensive graphical user interface package for [LuminariMUD
 
 > **Mudlet version:** Mudlet 4.20 migrated to Qt6 and 4.21 changed label/callback internals and MSDP negotiation. If you have recently upgraded Mudlet and the GUI is misbehaving, see **[Mudlet Compatibility](docs/MUDLET_COMPATIBILITY.md)** — it includes a triage checklist. The most common cause is that **MSDP needs re-enabling**: since 4.20 the protocol settings live in a *dropdown* under Profile Preferences → Protocols, not the old checkbox list.
 
+> **Diagnostic build:** Screen diagnostics are controlled by the single
+> `GUI.DEBUG` switch in `theGUI/src/scripts/00_debug.xml`. See
+> **[Screen Diagnostics](docs/DEBUGGING.md)** for output prefixes and report
+> collection.
+
 1.  **Download**: Get the latest `LuminariGUI.xml` file from the [Releases](Releases/) folder or the latest release tag.
 2.  **Import into Mudlet**:
     *   Open Mudlet and connect to your profile.

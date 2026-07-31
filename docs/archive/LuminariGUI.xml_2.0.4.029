@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE MudletPackage>
-<MudletPackage version="2.0.4.030">
+<MudletPackage version="2.0.4.029">
 	<TriggerPackage>
 		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 			<name>LuminariGUI</name>
@@ -257,11 +257,6 @@ end</script>
 				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 					<name>Capture Wilderness Map</name>
 					<script>deleteLine()
-GUI.debug("TRIGGER/MAP", "Capture Wilderness Map matched", {
-  minimap = type(map and map.minimap),
-  mapContainer = type(map and map.container),
-  asciiMapContainer = type(GUI.asciiMapContainer),
-})
 clearUserWindow("map.minimap")
 
 map.container:hide()
@@ -277,7 +272,6 @@ function onMapLine()
   -- Validate that we have a valid line to process
   if not line or line == "" then
     print("Warning: Empty or invalid map line received")
-    GUI.debugError("TRIGGER/MAP/WILDERNESS", "empty or invalid map line")
     return
   end
   -- Check for map completion marker
@@ -289,11 +283,10 @@ function onMapLine()
       killTrigger(map.maplineTrig)
     end
     map.maplineTrig = nil
-    GUI.debug("TRIGGER/MAP/WILDERNESS", "map completion marker received")
     return
   end
   -- Process map line with error handling
-  local success, failure = xpcall(function()
+  pcall(function()
     selectCurrentLine()
     copy()
     if map.minimap and map.minimap.echo then
@@ -306,15 +299,7 @@ function onMapLine()
       print("Warning: map.minimap not available for line processing")
     end
     deleteLine()
-  end, debug.traceback)
-  if success then
-    GUI.debug("TRIGGER/MAP/WILDERNESS", "map line appended", {
-      line = line,
-      padding = map.padding,
-    })
-  else
-    GUI.debugError("TRIGGER/MAP/WILDERNESS", failure)
-  end
+  end)
 end</script>
 					<triggerType>0</triggerType>
 					<conditonLineDelta>0</conditonLineDelta>
@@ -336,12 +321,6 @@ end</script>
 				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 					<name>Capture Room Map</name>
 					<script>deleteLine()
-GUI.debug("TRIGGER/MAP", "Capture Room Map matched", {
-  mode = GUI.buttonWindow and GUI.buttonWindow.mudletOrAscii,
-  minimap = type(map and map.minimap),
-  mapContainer = type(map and map.container),
-  asciiMapContainer = type(GUI.asciiMapContainer),
-})
 clearUserWindow("map.minimap")
 
 if GUI.buttonWindow.mudletOrAscii == "ASCII" then
@@ -362,7 +341,6 @@ function onRoomMapLine()
   -- Validate that we have a valid line to process
   if not line or line == "" then
     print("Warning: Empty or invalid room map line received")
-    GUI.debugError("TRIGGER/MAP/ROOM", "empty or invalid room map line")
     return
   end
   -- Check for room map completion marker
@@ -374,11 +352,10 @@ function onRoomMapLine()
       killTrigger(map.maplineTrig)
     end
     map.maplineTrig = nil
-    GUI.debug("TRIGGER/MAP/ROOM", "room map completion marker received")
     return
   end
   -- Process room map line with error handling
-  local success, failure = xpcall(function()
+  pcall(function()
     selectCurrentLine()
     copy()
     if map.minimap and map.minimap.echo then
@@ -389,15 +366,7 @@ function onRoomMapLine()
       print("Warning: map.minimap not available for room map line processing")
     end
     deleteLine()
-  end, debug.traceback)
-  if success then
-    GUI.debug("TRIGGER/MAP/ROOM", "room map line appended", {
-      line = line,
-      padding = map.padding,
-    })
-  else
-    GUI.debugError("TRIGGER/MAP/ROOM", failure)
-  end
+  end)
 end</script>
 					<triggerType>0</triggerType>
 					<conditonLineDelta>0</conditonLineDelta>
@@ -563,7 +532,6 @@ end</script>
 					<name>Gag Chat</name>
 					<script>--[[Toggling this will determine if the line and follow up
     prompt are removed from the main buffer for chat.]]
-GUI.debug("ALIAS", "gag chat matched", matches)
 GUI.gagChatToggle()</script>
 					<command></command>
 					<packageName></packageName>
@@ -572,7 +540,6 @@ GUI.gagChatToggle()</script>
 				<Alias isActive="yes" isFolder="no">
 					<name>Show Self</name>
 					<script>--Toggles whether or not you are shown in the group tab.
-GUI.debug("ALIAS", "show self matched", matches)
 GUI.showSelfToggle()</script>
 					<command></command>
 					<packageName></packageName>
@@ -581,7 +548,6 @@ GUI.showSelfToggle()</script>
 				<Alias isActive="yes" isFolder="no">
 					<name>Horizontal Scroll</name>
 					<script>--Toggles horizontal scroll bar on main window
-GUI.debug("ALIAS", "hscroll matched", matches)
 GUI.horizontalScrollToggle()</script>
 					<command></command>
 					<packageName></packageName>
@@ -608,8 +574,7 @@ GUI.horizontalScrollToggle()</script>
 						<regex></regex>
 						<Alias isActive="yes" isFolder="no">
 							<name>Reset chasing</name>
-							<script>GUI.debug("ALIAS", "chaseres matched", matches)
-demonnic.chaser:reset()</script>
+							<script>demonnic.chaser:reset()</script>
 							<command></command>
 							<packageName></packageName>
 							<regex>^chaseres$</regex>
@@ -621,24 +586,9 @@ demonnic.chaser:reset()</script>
 -- This command uses the centralized initialization system to refresh all
 -- GUI components. It's the user-facing command for manual refresh.
 -- =============================================================================
-GUI.debug("ALIAS", "fix gui matched", {
-    matches = matches,
-    GUI = type(GUI),
-    initializeOrRefresh = type(GUI and GUI.initializeOrRefresh),
-    initialized = GUI and GUI.initialized,
-    initFailures = GUI and GUI.initFailures,
-    bootResults = GUI and GUI.debugBootResults,
-})
 if GUI and GUI.initializeOrRefresh then
     GUI.initializeOrRefresh("fix gui command")
 else
-    if GUI and type(GUI.debugSnapshot) == "function" then
-        GUI.debugCall(
-            "SNAPSHOT/fix gui unavailable",
-            GUI.debugSnapshot,
-            "fix gui found initializeOrRefresh unavailable"
-        )
-    end
     cecho("\n&lt;yellow&gt;GUI system not fully loaded. Please close and reopen your profile, then try again.")
 end</script>
 							<command></command>
@@ -647,8 +597,7 @@ end</script>
 						</Alias>
 						<Alias isActive="yes" isFolder="no">
 							<name>Debug</name>
-							<script>GUI.debug("ALIAS", "debug matched", matches)
-if matches[2] then
+							<script>if matches[2] then
   demonnic:listCategories()
 else
   demonnic:toggleDebug()
@@ -659,8 +608,7 @@ end</script>
 						</Alias>
 						<Alias isActive="yes" isFolder="no">
 							<name>debug categories</name>
-							<script>GUI.debug("ALIAS", "debugc matched", matches)
-if matches[2] then
+							<script>if matches[2] then
   demonnic:watchCategory( matches[2] )
 else
   demonnic:listCategories()
@@ -678,8 +626,7 @@ end</script>
 						<regex></regex>
 						<Alias isActive="yes" isFolder="no">
 							<name>Toggle blinking (temporary change)</name>
-							<script>GUI.debug("ALIAS", "dblink matched", matches)
-if demonnic.chat.config.blink then
+							<script>if demonnic.chat.config.blink then
   demonnic.chat.config.blink = false
   demonnic.chat.tabsToBlink = {}
   demonnic:echo("Blinking temporarily turned &lt;red&gt;off&lt;grey&gt;. It will reset if you edit your tabbed chat configuration, or close and reopen mudlet. To make it permanent, change demonnic.chat.config.blink to false in \"Demonnic-&gt;Tabbed Chat-&gt;Configuration options\" under scripts\n")
@@ -695,7 +642,6 @@ end</script>
 						<Alias isActive="yes" isFolder="no">
 							<name>dsound</name>
 							<script>-- Toggle chat sound notifications
-GUI.debug("ALIAS", "dsound matched", matches)
 if demonnic and demonnic.chat and demonnic.chat.config then
     demonnic.chat.config.soundEnabled = not demonnic.chat.config.soundEnabled
     
@@ -737,8 +683,7 @@ end</script>
 						</Alias>
 						<Alias isActive="yes" isFolder="no">
 							<name>set chat sound</name>
-							<script>GUI.debug("ALIAS", "set chat sound matched", matches)
-local args = matches[2]:split(" ")
+							<script>local args = matches[2]:split(" ")
 local command = args[1]
 local value = args[2]
 
@@ -821,7 +766,6 @@ end</script>
 -- This command uses the centralized initialization system with focus on chat.
 -- It ensures the chat system is properly initialized and visible.
 -- =============================================================================
-GUI.debug("ALIAS", "fix chat matched", matches)
 GUI.initializeOrRefresh("fix chat command")
 
 -- Additional chat-specific actions
@@ -848,235 +792,6 @@ end</script>
 			<script></script>
 			<eventHandlerList />
 			<ScriptGroup isActive="yes" isFolder="yes">
-				<name>LuminariDebug</name>
-				<packageName>LuminariGUI</packageName>
-				<script></script>
-				<eventHandlerList />
-				<Script isActive="yes" isFolder="no">
-					<name>Debug Bootstrap</name>
-					<packageName></packageName>
-					<script>-- =============================================================================
--- LUMINARIGUI MASTER DEBUG TOGGLE
--- =============================================================================
--- This is the ONE switch for all LuminariGUI diagnostic output.
--- Set it to false after the startup problem has been found.
-GUI = GUI or {}
-GUI.DEBUG = true
-
--- Everything below this point is infrastructure. Do not add another debug
--- enable/disable flag elsewhere; all package diagnostics must use GUI.DEBUG.
-GUI.debugSequence = 0
-GUI.debugBootResults = GUI.debugBootResults or {}
-
-local luaDebugLibrary = debug
-local unpackValues = table.unpack or unpack
-
-local function packValues(...)
-  return {n = select("#", ...), ...}
-end
-
-local function cleanString(value)
-  local rendered = tostring(value)
-  rendered = rendered:gsub("\r", "\\r"):gsub("\n", "\\n")
-  if #rendered &gt; 600 then
-    rendered = rendered:sub(1, 600) .. "...&lt;truncated&gt;"
-  end
-  return rendered
-end
-
-local function summarize(value, depth, seen)
-  local valueType = type(value)
-  if valueType ~= "table" then
-    return cleanString(value)
-  end
-
-  depth = depth or 0
-  seen = seen or {}
-  if seen[value] then
-    return "{&lt;cycle&gt;}"
-  end
-  if depth &gt;= 2 then
-    return "{...}"
-  end
-
-  seen[value] = true
-  local entries = {}
-  local keys = {}
-  for key in pairs(value) do
-    keys[#keys + 1] = key
-  end
-  table.sort(keys, function(left, right)
-    return tostring(left) &lt; tostring(right)
-  end)
-
-  for index, key in ipairs(keys) do
-    if index &gt; 20 then
-      entries[#entries + 1] = "...(" .. tostring(#keys - 20) .. " more)"
-      break
-    end
-    entries[#entries + 1] =
-      cleanString(key) .. "=" .. summarize(value[key], depth + 1, seen)
-  end
-  seen[value] = nil
-  return "{" .. table.concat(entries, ", ") .. "}"
-end
-
-local function writeToMainConsole(line)
-  if type(echo) == "function" then
-    echo("\n" .. line)
-  elseif type(cecho) == "function" then
-    cecho("\n" .. line)
-  else
-    print(line)
-  end
-end
-
-local function tracebackMessage(errorValue)
-  local rendered = tostring(errorValue)
-  if luaDebugLibrary and type(luaDebugLibrary.traceback) == "function" then
-    return luaDebugLibrary.traceback(rendered, 2)
-  end
-  return rendered
-end
-
-function GUI.debugValue(value)
-  return summarize(value, 0, {})
-end
-
-function GUI.debug(scope, message, details)
-  if GUI.DEBUG ~= true then
-    return
-  end
-
-  GUI.debugSequence = (GUI.debugSequence or 0) + 1
-  local timestamp = os.date("%H:%M:%S")
-  local line = string.format(
-    "[LGUI-DEBUG #%05d %s][%s] %s",
-    GUI.debugSequence,
-    timestamp,
-    tostring(scope or "GENERAL"),
-    tostring(message or "")
-  )
-  if details ~= nil then
-    line = line .. " | " .. GUI.debugValue(details)
-  end
-  writeToMainConsole(line)
-end
-
-function GUI.debugError(scope, errorValue)
-  if GUI.DEBUG ~= true then
-    return
-  end
-  local rendered = tostring(errorValue)
-  if not rendered:find("stack traceback", 1, true) then
-    rendered = tracebackMessage(errorValue)
-  end
-
-  GUI.debugSequence = (GUI.debugSequence or 0) + 1
-  writeToMainConsole(string.format(
-    "[LGUI-ERROR #%05d %s][%s] ERROR + STACK TRACE",
-    GUI.debugSequence,
-    os.date("%H:%M:%S"),
-    tostring(scope or "ERROR")
-  ))
-  for traceLine in rendered:gmatch("[^\r\n]+") do
-    writeToMainConsole("[LGUI-TRACE] " .. traceLine)
-  end
-end
-
--- Execute a function with entry/exit/error tracing while debug mode is on.
--- With debug mode off this deliberately calls the function directly, so
--- production error propagation remains exactly as it was before debugging.
-function GUI.debugCall(scope, callable, ...)
-  if type(callable) ~= "function" then
-    local message = "attempted to call " .. type(callable) .. " instead of function"
-    if GUI.DEBUG == true then
-      GUI.debugError(scope, message)
-      return false, message
-    end
-    error(message)
-  end
-
-  if GUI.DEBUG ~= true then
-    return true, callable(...)
-  end
-
-  local arguments = packValues(...)
-  GUI.debug(scope, "ENTER", arguments)
-  local results = packValues(xpcall(function()
-    return callable(unpackValues(arguments, 1, arguments.n))
-  end, tracebackMessage))
-
-  if not results[1] then
-    GUI.debugError(scope, results[2])
-    return false, results[2]
-  end
-
-  local returned = {n = results.n - 1}
-  for index = 2, results.n do
-    returned[index - 1] = results[index]
-  end
-  GUI.debug(scope, "EXIT", returned)
-  return true, unpackValues(returned, 1, returned.n)
-end
-
-function GUI.debugWrap(scope, callable)
-  return function(...)
-    local results = packValues(GUI.debugCall(scope, callable, ...))
-    if not results[1] then
-      return nil, results[2]
-    end
-    return unpackValues(results, 2, results.n)
-  end
-end
-
-function GUI.debugWrapFunction(owner, functionName, scope)
-  if type(owner) ~= "table" or type(owner[functionName]) ~= "function" then
-    GUI.debug("INSTRUMENT", "function unavailable", {
-      scope = scope,
-      functionName = functionName,
-      ownerType = type(owner),
-    })
-    return false
-  end
-  owner[functionName] = GUI.debugWrap(scope or functionName, owner[functionName])
-  GUI.debug("INSTRUMENT", "wrapped function", scope or functionName)
-  return true
-end
-
-function GUI.debugResolve(functionPath)
-  local current = _G
-  for segment in tostring(functionPath):gmatch("[^%.]+") do
-    if type(current) ~= "table" then
-      return nil
-    end
-    current = current[segment]
-  end
-  return current
-end
-
-function GUI.debugCountEntries(value)
-  local count = 0
-  if type(value) == "table" then
-    for _ in pairs(value) do
-      count = count + 1
-    end
-  end
-  return count
-end
-
-GUI.debug("BOOT", "debug bootstrap loaded; GUI.DEBUG is TRUE")
-GUI.debug("BOOT", "early environment", {
-  GUI = type(GUI),
-  Geyser = type(Geyser),
-  Adjustable = type(Adjustable),
-  msdp = type(msdp),
-  registerAnonymousEventHandler = type(registerAnonymousEventHandler),
-})</script>
-					<eventHandlerList />
-				</Script>
-			</ScriptGroup>
-			<ScriptGroup isActive="yes" isFolder="yes">
 				<name>MSDPMapper</name>
 				<packageName></packageName>
 				<script></script>
@@ -1099,12 +814,6 @@ map.minimap_font_size = 8
 map.minimap_width = 21
 map.minimap_height = 21
 
-GUI.debug("MAPPER/BOOT", "MSDPMapper fragment loaded", {
-    map = type(map),
-    msdp = type(msdp),
-    Geyser = type(Geyser),
-    AdjustableContainers = type(GUI.AdjustableContainers),
-})
 
 local defaults = {
     -- using Geyser to handle the mapper in this, since this is a totally new script
@@ -1177,15 +886,10 @@ local exitmap = {
 local function make_room()
     local info = map.room_info
     local coords = {0,0,0}
-    GUI.debug("MAPPER/ROOM", "creating room", {
-        room = info,
-        previousRoom = map.prev_info,
-    })
     addRoom(info.VNUM)
     local areas = getAreaTable()
     local areaID = areas[info.AREA]
     if not areaID then
-        GUI.debug("MAPPER/ROOM", "creating map area", info.AREA)
         areaID = addAreaName(info.AREA)
     else
         coords = {getRoomCoordinates(map.prev_info.VNUM)}								
@@ -1203,12 +907,6 @@ local function make_room()
 											
         -- map stretching
         local overlap = getRoomsByPosition(areaID,coords[1],coords[2],coords[3])				
-        GUI.debug("MAPPER/ROOM", "calculated room coordinates", {
-            areaID = areaID,
-            coordinates = coords,
-            shift = shift,
-            overlap = overlap,
-        })
 				
         if not table.is_empty(overlap) then
             local rooms = getAreaRooms(areaID)
@@ -1250,43 +948,22 @@ local function make_room()
             setExitStub(info.VNUM, exitmap[dir], true)
         end
     end
-    GUI.debug("MAPPER/ROOM", "room creation complete", {
-        vnum = info.VNUM,
-        areaID = areaID,
-        coordinates = coords,
-        exits = info.EXITS,
-    })
 end
 
 local function shift_room(dir)
     local ID = map.room_info.VNUM
     local x,y,z = getRoomCoordinates(ID)
     local x1,y1,z1 = move_vectors[dir]
-    GUI.debug("MAPPER/SHIFT", "shifting room", {
-        direction = dir,
-        vnum = ID,
-        before = {x, y, z},
-        vector = {x1, y1, z1},
-    })
     x = x + x1
     y = y + y1
     z = z + z1
     setRoomCoordinates(ID,x,y,z)
     updateMap()
-    GUI.debug("MAPPER/SHIFT", "room shifted", {
-        vnum = ID,
-        after = {x, y, z},
-    })
 end
 
 local function handle_move()
-  GUI.debug("MAPPER/MOVE", "handling room movement", {
-    enabled = map.enabled,
-    room = map.room_info,
-  })
 	if map.enabled == true and map.room_info.ENVIRONMENT ~= "Wilderness" then
     if not getRoomName(map.room_info.VNUM) then
-        GUI.debug("MAPPER/MOVE", "room absent from map; creating it", map.room_info.VNUM)
         make_room()
     else		
 			if terrain_types[map.room_info.TERRAIN] then
@@ -1305,7 +982,6 @@ local function handle_move()
 			end
     end
 	end
-  GUI.debug("MAPPER/MOVE", "centering mapper", map.room_info.VNUM)
   centerview(map.room_info.VNUM)
 end
 
@@ -1321,29 +997,16 @@ local function make_aliases()
         ["Shift Room Alias"] = {[[^shift (\w+)$]], [[raiseEvent("shiftRoom",matches[2])]]},
     }
     for k, v in pairs(tbl) do
-        GUI.debug("MAPPER/ALIAS", "preparing mapping alias", {
-            name = k,
-            pattern = v[1],
-            existingId = map.aliases[k],
-        })
         if map.aliases[k] and exists(map.aliases[k], "alias") ~= 0 then
             killAlias(map.aliases[k])
         end
         id = tempAlias(v[1], v[2])
         map.aliases[k] = id
-        GUI.debug("MAPPER/ALIAS", "mapping alias registered", {
-            name = k,
-            handlerId = id,
-        })
     end
 end
 
 function map.load_map(use_local)
     local path = getMudletHomeDir() .. "/map.dat"		
-    GUI.debug("MAPPER/DOWNLOAD", "load_map requested", {
-        useLocal = use_local,
-        path = path,
-    })
     if use_local then
         loadMap(path)
         print("Map reloaded from local copy.")
@@ -1399,13 +1062,6 @@ end
 -- connection remains active (resetProfile() does not emit connection or
 -- protocol-enabled events).
 function map.initialize()
-    GUI.debug("MAPPER/INIT", "mapper initialization starting", {
-      terrainCount = GUI.debugCountEntries(terrain_types),
-      adjustableNamespace = type(GUI.AdjustableContainers),
-      createFunction = type(GUI.AdjustableContainers and GUI.AdjustableContainers.create),
-      GeyserMapper = type(Geyser and Geyser.Mapper),
-      GeyserMiniConsole = type(Geyser and Geyser.MiniConsole),
-    })
     -- setting terrain colors
     for k,v in pairs(terrain_types) do
         setCustomEnvColor(v.id + 16, v.r, v.g, v.b, 255)
@@ -1433,9 +1089,6 @@ function map.initialize()
       defaultDir = GUI.AdjustableContainers.saveDir,
       noClose = true
     })
-    GUI.debug("MAPPER/INIT", "map adjustable container result", {
-      container = type(map.container),
-    })
     
     -- Create separate Adjustable Container for ASCII map
     GUI.asciiMapContainer = GUI.AdjustableContainers.create("ASCIIMap", "ascii_map", {
@@ -1457,9 +1110,6 @@ function map.initialize()
       defaultDir = GUI.AdjustableContainers.saveDir,
       noClose = true
     })
-    GUI.debug("MAPPER/INIT", "ASCII map adjustable container result", {
-      container = type(GUI.asciiMapContainer),
-    })
     
     -- Create ASCII minimap MiniConsole inside the new container
 		map.minimap = Geyser.MiniConsole:new({
@@ -1467,9 +1117,6 @@ function map.initialize()
   		x=9, y= 25,
   		width="-18", height="-34",
 		}, GUI.asciiMapContainer)
-    GUI.debug("MAPPER/INIT", "ASCII minimap MiniConsole created", {
-      minimap = type(map.minimap),
-    })
 		
 		map.minimap:setColor("black")
 		
@@ -1492,9 +1139,6 @@ function map.initialize()
       width = "100%", 
       height = "100%"
     }, map.container)
-    GUI.debug("MAPPER/INIT", "Geyser.Mapper creation returned", {
-      mapwindow = type(map.mapwindow),
-    })
     
     if not map.mapwindow then
       print("ERROR: Failed to create Geyser.Mapper instance")
@@ -1502,7 +1146,7 @@ function map.initialize()
     end
     
     -- Single initialization timer to ensure proper rendering
-    tempTimer(0.2, GUI.debugWrap("MAPPER/INIT/render timer", function()
+    tempTimer(0.2, function()
       if map.mapwindow then
         map.mapwindow:show()
         map.mapwindow:resize()
@@ -1511,7 +1155,7 @@ function map.initialize()
       else
         print("ERROR: Failed to initialize map window")
       end
-    end))
+    end)
     
     -- Show the map container
     if map.container then
@@ -1523,12 +1167,6 @@ function map.initialize()
 		make_aliases()		
 		
 		map.get_default_map()
-    GUI.debug("MAPPER/INIT", "mapper initialization complete", {
-      container = type(map.container),
-      mapwindow = type(map.mapwindow),
-      minimap = type(map.minimap),
-      asciiMapContainer = type(GUI.asciiMapContainer),
-    })
     return true
 end
 
@@ -1536,10 +1174,6 @@ function map.get_default_map()
 	-- If the user has no map, download the default map from the server!
 	local areas = getAreaTable()
 	local path = getMudletHomeDir() .. "/map.dat"
-  GUI.debug("MAPPER/DOWNLOAD", "checking for default map", {
-    mosswoodArea = areas["Mosswood"],
-    path = path,
-  })
 	 
 	
 	if (areas["Mosswood"] == nil) then
@@ -1552,111 +1186,69 @@ end
 
 function map.start_mapping()
   map.enabled=true
-  GUI.debug("MAPPER", "mapping enabled")
 	print("Mapping enabled.")
 end
 
 function map.stop_mapping()
 	map.enabled=false
-  GUI.debug("MAPPER", "mapping disabled")
 	print("Mapping disabled.")
 end
 
 function map.eventHandler(event,...)     
-    local arguments = {...}
-    GUI.debug("MAPPER/EVENT", "event received", {
-        event = event,
-        arguments = arguments,
-        downloading = map.downloading,
-        room = msdp and msdp.ROOM,
-    })
     if event == "msdp.ROOM" then
         map.prev_info = map.room_info
         map.room_info = table.update({},msdp.ROOM)
-        GUI.debug("MAPPER/EVENT", "room state copied", {
-            previousRoom = map.prev_info,
-            currentRoom = map.room_info,
-        })
 				-- Check if we have moved between regular and wilderness areas
 
 				if map.prev_info.ENVIRONMENT == "Wilderness" and map.room_info.ENVIRONMENT == "Room" then
-           GUI.debug("MAPPER/EVENT", "transition Wilderness -&gt; Room")
 					 -- re-enable the mapper!
 					 if GUI.asciiMapContainer then GUI.asciiMapContainer:hide() end
 					 if map.container then 
 					   map.container:show()
 					   -- Delay mapper refresh to ensure container is visible
-					   tempTimer(0.1, GUI.debugWrap("MAPPER/EVENT/room transition resize", function()
+					   tempTimer(0.1, function()
 					     if map.mapwindow then
 					       map.mapwindow:show()
 					       map.mapwindow:resize()
 					     end
-					   end))
+					   end)
 					 end
 				elseif map.prev_info.ENVIRONMENT == "Room" and map.room_info.ENVIRONMENT == "Wilderness" then
-           GUI.debug("MAPPER/EVENT", "transition Room -&gt; Wilderness")
 					 -- disable the mapper!
 					 if map.container then map.container:hide() end
 					 if GUI.asciiMapContainer then GUI.asciiMapContainer:show() end
 				end
         handle_move()
     elseif event == "shiftRoom" then
-        local requestedDirection = arguments[1]
-        local dir = exits[requestedDirection] or requestedDirection
-        GUI.debug("MAPPER/EVENT", "shiftRoom requested", {
-            requested = requestedDirection,
-            normalized = dir,
-        })
+        local dir = exits[arg[1]] or arg[1]
         if not table.contains(exits, dir) then
             echo("Error: Invalid direction '" .. dir .. "'.")
         else
             shift_room(dir)
         end
 		elseif event == "sysDownloadDone" and map.downloading then
-        GUI.debug("MAPPER/DOWNLOAD", "download finished; loading map")
         loadMap(getMudletHomeDir() .. "/map.dat")
         map.downloading = false
         print("Map File Loaded.")				
     elseif event == "sysConnectionEvent" then
-        GUI.debug("MAPPER/EVENT", "connection event initializing mapper")
         map.initialize()
 		end
 		
 end
 
 function map.onProtocolEnabled(_, protocol)
-  GUI.debug("MAPPER/PROTOCOL", "sysProtocolEnabled received", {
-    protocol = protocol,
-  })
   if protocol == "MSDP" then
     print("MSDP enabled!")
-    GUI.debug("MAPPER/PROTOCOL", "requesting ROOM and initializing mapper")
 		sendMSDP("REPORT", "ROOM")
 		map.initialize()
   end
 end
 
-map.fileScopeHandlerIds = map.fileScopeHandlerIds or {}
-local function registerFileScopeHandler(event, handler)
-  local ok, handlerId = GUI.debugCall(
-    "MAPPER/EVENT/register/" .. event,
-    registerAnonymousEventHandler,
-    event,
-    handler
-  )
-  if ok then
-    map.fileScopeHandlerIds[event] = handlerId
-  else
-    map.fileScopeHandlerIds[event] = nil
-  end
-end
-
-registerFileScopeHandler("msdp.ROOM", "map.eventHandler")
-registerFileScopeHandler("shiftRoom", "map.eventHandler")
-registerFileScopeHandler("sysConnectionEvent", "map.eventHandler")
-registerFileScopeHandler("sysProtocolEnabled", "map.onProtocolEnabled")
-registerFileScopeHandler("sysDownloadDone", "map.eventHandler")
-GUI.debug("MAPPER/EVENT", "file-scope handlers registered", map.fileScopeHandlerIds)</script>
+registerAnonymousEventHandler("msdp.ROOM","map.eventHandler")
+registerAnonymousEventHandler("shiftRoom","map.eventHandler")
+registerAnonymousEventHandler("sysConnectionEvent", "map.eventHandler")
+registerAnonymousEventHandler("sysProtocolEnabled", "map.onProtocolEnabled")
+registerAnonymousEventHandler("sysDownloadDone", "map.eventHandler")</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
@@ -1679,11 +1271,6 @@ CSSMan = {}
 CSSMan.__index = CSSMan
 
 function CSSMan.new(stylesheet)
-  GUI.debug("CSSMAN", "new stylesheet requested", {
-    stylesheetType = type(stylesheet),
-    stylesheet = stylesheet,
-    stringTrim = type(string.trim),
-  })
   local obj  = { stylesheet = {} }
   setmetatable(obj,CSSMan)
   local trim = string.trim
@@ -1698,10 +1285,6 @@ function CSSMan.new(stylesheet)
     end
   end
 
-  GUI.debug("CSSMAN", "stylesheet parsed", {
-    attributeCount = GUI.debugCountEntries(obj.stylesheet),
-    attributes = obj.stylesheet,
-  })
   return obj
 end
 
@@ -1774,11 +1357,6 @@ end</script>
 -- =============================================================================
 
 GUI = GUI or {}
-GUI.debug("GUI/BOOT", "GUI namespace fragment loaded", {
-  debugEnabled = GUI.DEBUG,
-  CSSMan = type(CSSMan),
-  Geyser = type(Geyser),
-})
 </script>
 					<eventHandlerList />
 					<Script isActive="yes" isFolder="no">
@@ -1857,7 +1435,7 @@ function GUI.horizontalScrollToggle()
     end
     cecho("\n&lt;white&gt;Horizontal scrolling disabled on main window (word wrap enabled).")
   end
-
+  
   -- Save the toggle state
   GUI.saveToggles()
 end
@@ -2638,7 +2216,6 @@ GUI.Affects.Rows = GUI.Affects.Rows or {}
 GUI.Affects.Modes = GUI.Affects.Modes or {}
 
 function GUI.Affects.init()
-  GUI.debug("GUI/AFFECTS", "initializing affects display")
   -- Initialize all the labels and such	
   -- Don't overwrite GUI.Affects itself - preserve the init function!
   GUI.Affects.Labels = {}
@@ -2785,9 +2362,6 @@ function GUI.Affects.init()
 end
 
 function GUI.updateSLAffects()
-  GUI.debug("GUI/AFFECTS", "updating spell-like affects", {
-    affects = msdp and msdp.AFFECTS,
-  })
 	if msdp.AFFECTS and msdp.AFFECTS.SPELL_LIKE_AFFECTS and #msdp.AFFECTS.SPELL_LIKE_AFFECTS &gt; 0 then
 		-- We have spell like affects to process!		
 		for i = 1, GUI.SLAffects.num_rows do
@@ -2809,9 +2383,6 @@ function GUI.updateSLAffects()
 end
 
 function GUI.updateAffectIcons()
-  GUI.debug("GUI/AFFECTS", "updating affect icons", {
-    affects = msdp and msdp.AFFECTS,
-  })
   -- Also update spell-like affects display
   GUI.updateSLAffects()
   
@@ -2900,11 +2471,6 @@ end</script>
 end
 
 function GUI.updateGroup()
-  GUI.debug("GUI/GROUP", "updating group display", {
-    group = msdp and msdp.GROUP,
-    characterName = msdp and msdp.CHARACTER_NAME,
-    includeSelf = GUI.toggles and GUI.toggles.includeInGroup,
-  })
   GUI.group_data = {}
   -- Remove the player from the group data if toggled off.
   local j = 1
@@ -3049,23 +2615,6 @@ function GUI.updateGroup()
 end
 
 function GUI.updatePlayer()
-  GUI.debug("GUI/PLAYER", "updating player display", {
-    characterName = msdp and msdp.CHARACTER_NAME,
-    level = msdp and msdp.LEVEL,
-    class = msdp and msdp.CLASS,
-    race = msdp and msdp.RACE,
-    alignment = msdp and msdp.ALIGNMENT,
-    stats = {
-      STR = msdp and msdp.STR,
-      DEX = msdp and msdp.DEX,
-      CON = msdp and msdp.CON,
-      INT = msdp and msdp.INT,
-      WIS = msdp and msdp.WIS,
-      CHA = msdp and msdp.CHA,
-      AC = msdp and msdp.AC,
-      MONEY = msdp and msdp.MONEY,
-    },
-  })
   -- Check if tabbedInfoWindow is initialized
   if not GUI.tabbedInfoWindow or not GUI.tabbedInfoWindow["Playercenter"] then
     print("[GUI] Player tab not ready for update")
@@ -3358,13 +2907,6 @@ end </script>
 						<packageName></packageName>
 						<script>
 function GUI.updateRoom()
-  GUI.debug("GUI/ROOM", "updating room display", {
-    room = msdp and msdp.ROOM,
-    roomName = msdp and msdp.ROOM_NAME,
-    roomVnum = msdp and msdp.ROOM_VNUM,
-    areaName = msdp and msdp.AREA_NAME,
-    roomExits = msdp and msdp.ROOM_EXITS,
-  })
   local roomInfo = [[&lt;div style="padding: 5px;"&gt;]]
   
   if msdp.ROOM.ENVIRONMENT == "Wilderness" then
@@ -3417,7 +2959,6 @@ end
 
 
 function GUI.updateLegend()
-  GUI.debug("GUI/ROOM", "updating legend display")
   clearUserWindow("GUI.buttonWindow.Legend")
 	GUI.buttonWindow.Legend:decho("\n &lt;102,0,0&gt; + &lt;255,255,255&gt; Up           &lt;0,102,102&gt;[&lt;0,255,255&gt;^&lt;0,102,102&gt;] &lt;255,255,255&gt;Air           &lt;0,102,102&gt;[&lt;255,0,255&gt;Y&lt;0,102,102&gt;] &lt;255,255,255&gt;UD Wild")
 	GUI.buttonWindow.Legend:decho("\n &lt;102,0,0&gt; - &lt;255,255,255&gt; Down         &lt;0,102,102&gt;[&lt;0,0,102&gt;U&lt;0,102,102&gt;] &lt;255,255,255&gt;Underwater    &lt;0,102,102&gt;[&lt;102,0,102&gt;C&lt;0,102,102&gt;] &lt;255,255,255&gt;UD City")
@@ -3465,78 +3006,53 @@ GUI.MSDP_REPORT_VARS = {
 -- simply refreshes it. Needed after resetProfile(), where sysProtocolEnabled
 -- does NOT fire again because MSDP was already negotiated on the connection.
 function GUI.requestMSDPReports()
-  GUI.debug("MSDP/REPORT", "subscription request started", {
-    sendMSDP = type(sendMSDP),
-    variableCount = #GUI.MSDP_REPORT_VARS,
-  })
   if not sendMSDP then
-    GUI.debugError("MSDP/REPORT", "sendMSDP is unavailable")
     return false
   end
   for _, var in ipairs(GUI.MSDP_REPORT_VARS) do
-    GUI.debug("MSDP/REPORT", "sending REPORT", var)
-    local ok, result = GUI.debugCall(
-      "MSDP/REPORT/" .. var,
-      sendMSDP,
-      "REPORT",
-      var
-    )
-    if not ok then
-      GUI.debug("MSDP/REPORT", "REPORT failed", {
-        variable = var,
-        error = result,
-      })
-    end
+    sendMSDP("REPORT", var)
   end
-  GUI.debug("MSDP/REPORT", "subscription request complete")
   return true
 end
 
 function GUI.onProtocolEnabled(_, protocol)
-  GUI.debug("MSDP/PROTOCOL", "sysProtocolEnabled received", {
-    protocol = protocol,
-    enableMSDP = type(getConfig) == "function" and getConfig("enableMSDP") or "unavailable",
-  })
   if protocol == "MSDP" then
     print("[GUI] MSDP Protocol enabled - initializing variables")
 
     GUI.requestMSDPReports()
 
     -- Debug: Show what variables are available after a short delay
-    tempTimer(2, GUI.debugWrap("MSDP/PROTOCOL/two-second inventory", function()
-      GUI.debug("MSDP/PROTOCOL", "MSDP variables received")
+    tempTimer(2, function()
+      print("[GUI] MSDP variables received:")
       local count = 0
       for k, v in pairs(msdp) do
         if type(v) ~= "function" then
           count = count + 1
-          GUI.debug("MSDP/VALUE", "msdp." .. tostring(k), v)
+          if k == "ACTIONS" then
+            -- Special handling for ACTIONS to show its structure
+            print(string.format("  %s = %s (type: %s)", k, tostring(v), type(v)))
+            if type(v) == "table" then
+              print("    ACTIONS table contents:")
+              for action_k, action_v in pairs(v) do
+                print(string.format("      %s = %s", action_k, tostring(action_v)))
+              end
+            end
+          else
+            print(string.format("  %s = %s", k, tostring(v)))
+          end
         end
       end
-      GUI.debug("MSDP/PROTOCOL", "MSDP variable inventory complete", {
-        count = count,
-      })
-      if type(GUI.debugSnapshot) == "function" then
-        GUI.debugCall(
-          "SNAPSHOT/MSDP protocol",
-          GUI.debugSnapshot,
-          "two seconds after MSDP protocol enabled"
-        )
-      end
-    end))
+      print(string.format("[GUI] Total MSDP variables: %d", count))
+    end)
     
     -- Initialize or refresh GUI after a short delay to ensure MSDP data arrives
-    tempTimer(0.5, GUI.debugWrap("MSDP/PROTOCOL/GUI refresh", function()
+    tempTimer(0.5, function()
       GUI.initializeOrRefresh("MSDP protocol enabled")
-    end))
+    end)
   end
 end
 
 function GUI.updateHealthGauge()
-  GUI.debug("GUI/GAUGE/HEALTH", "update requested", {
-    health = msdp and msdp.HEALTH,
-    maximum = msdp and msdp.HEALTH_MAX,
-    gauge = type(GUI.Health),
-  })
   -- This function handles the following events:
   --   msdp.HEALTH
   --   msdp.HEALTH_MAX
@@ -3576,11 +3092,6 @@ function GUI.updateHealthGauge()
 end
 
 function GUI.updateMovesGauge()
-  GUI.debug("GUI/GAUGE/MOVEMENT", "update requested", {
-    movement = msdp and msdp.MOVEMENT,
-    maximum = msdp and msdp.MOVEMENT_MAX,
-    gauge = type(GUI.Moves),
-  })
   -- This function handles the following events:
   --   msdp.MOVEMENT
   --   msdp.MOVEMENT_MAX
@@ -3655,11 +3166,6 @@ end
 -- end
 
 function GUI.updatePSPGauge()
-  GUI.debug("GUI/GAUGE/PSP", "update requested", {
-    psp = msdp and msdp.PSP,
-    maximum = msdp and msdp.PSP_MAX,
-    gauge = type(GUI.PSP),
-  })
   -- This function handles the following events:
   --   msdp.PSP
   --   msdp.PSP_MAX
@@ -3695,12 +3201,6 @@ function GUI.updatePSPGauge()
 end
 
 function GUI.updateEnemyGauge()
-  GUI.debug("GUI/GAUGE/ENEMY", "update requested", {
-    opponentName = msdp and msdp.OPPONENT_NAME,
-    health = msdp and msdp.OPPONENT_HEALTH,
-    maximum = msdp and msdp.OPPONENT_HEALTH_MAX,
-    gauge = type(GUI.Enemy),
-  })
   -- This function handles the following events:
   --   msdp.OPPONENT_HEALTH
   --   msdp.OPPONENT_HEALTH_MAX
@@ -3748,12 +3248,6 @@ function GUI.updateEnemyGauge()
 end
 
 function GUI.updateActionIcons()
-  GUI.debug("GUI/ACTIONS", "updating action icons", {
-    actions = msdp and msdp.ACTIONS,
-    standardIcon = type(GUI.StandardActionIcon),
-    moveIcon = type(GUI.MoveActionIcon),
-    swiftIcon = type(GUI.SwiftActionIcon),
-  })
   -- Check if ACTIONS data exists
   if not msdp.ACTIONS then
     -- No ACTIONS data yet, skip update
@@ -3831,72 +3325,33 @@ end
   -- The GUI background, borders, and boxes must exist before any other initialization.
   -- This needs to be outside the config, since YATCO needs to have the boxes set.
 	GUI.image_location = getMudletHomeDir():gsub("\\", "/") .. "/LuminariGUI/images/"
-  GUI.debug("BOOT/CONFIG", "Config script reached", {
-    imageLocation = GUI.image_location,
-    initBackground = type(GUI.init_background),
-    setBorders = type(GUI.set_borders),
-    initBoxes = type(GUI.init_boxes),
-  })
-
-  -- These calls used to run unguarded before GUI.initializeOrRefresh was
-  -- defined. Any one error aborted this entire script and produced the
-  -- misleading "GUI system not fully loaded" message. In debug mode each
-  -- stage now prints its entry, result, and stack trace, then allows the rest
-  -- of the diagnostic/lifecycle functions to load.
-  local bootStages = {
-    {name = "GUI.init_background", callable = GUI.init_background},
-    {name = "GUI.set_borders", callable = GUI.set_borders},
-    {name = "GUI.init_boxes", callable = GUI.init_boxes},
-  }
-  for _, stage in ipairs(bootStages) do
-    local ok, result = GUI.debugCall("BOOT/CONFIG/" .. stage.name, stage.callable)
-    GUI.debugBootResults[stage.name] = {
-      ok = ok,
-      result = result,
-    }
-    GUI.debug("BOOT/CONFIG", "stage complete", {
-      stage = stage.name,
-      ok = ok,
-      result = result,
-    })
-  end
+	GUI.init_background()
+  GUI.set_borders()
+  GUI.init_boxes()
 	
 function GUI.init()
-  GUI.debug("GUI/INIT", "initialization sequence starting", {
-    alreadyInitialized = GUI.initialized,
-  })
   GUI.AffectIcons = GUI.AffectIcons or {}
   GUI.Affects = GUI.Affects or {}
   GUI.Affects.Rows = GUI.Affects.Rows or {}
   GUI.Affects.Modes = GUI.Affects.Modes or {}
-
-  local initStages = {
-    {name = "GUI.init_gauges", callable = GUI.init_gauges},
-    {name = "GUI.init_action_icons", callable = GUI.init_action_icons},
-    {name = "GUI.tabbedInfoWindow.init", callable = GUI.tabbedInfoWindow.init},
-    {name = "GUI.init_player", callable = GUI.init_player},
-    {name = "GUI.init_group", callable = GUI.init_group},
-    {name = "GUI.Affects.init", callable = GUI.Affects.init},
-    {name = "GUI.draw_frames", callable = GUI.draw_frames},
-    {name = "GUI.buttonWindow.init", callable = GUI.buttonWindow.init},
-    {name = "GUI.init_castConsole", callable = GUI.init_castConsole},
-    {name = "GUI.styleScrollbar", callable = GUI.styleScrollbar},
-    {name = "GUI.registerEventHandlers", callable = GUI.registerEventHandlers},
-  }
-
-  GUI.initFailures = {}
-  for _, stage in ipairs(initStages) do
-    local ok, result = GUI.debugCall("GUI/INIT/" .. stage.name, stage.callable)
-    if not ok then
-      GUI.initFailures[#GUI.initFailures + 1] = {
-        stage = stage.name,
-        error = result,
-      }
-    end
-  end
-
+  --
+  GUI.init_gauges()
+  GUI.init_action_icons()
+  --GUI.init_header_icons()
+  GUI.tabbedInfoWindow.init()
+  GUI.init_player()
+  GUI.init_group()
+  GUI.Affects.init()
+  GUI.draw_frames()
+	GUI.buttonWindow.init()
+  GUI.init_castConsole()
+  GUI.styleScrollbar()
+	
+  -- Register all event handlers with error handling
+  GUI.registerEventHandlers()
+  
   -- Ensure proper z-order of adjustable containers
-  tempTimer(0.5, GUI.debugWrap("GUI/INIT/z-order timer", function()
+  tempTimer(0.5, function()
     -- Bring containers to front in correct order
     -- Map should be at the back
     if map and map.container then
@@ -3917,16 +3372,10 @@ function GUI.init()
       GUI.actionIconsContainer:show()
       GUI.actionIconsContainer:raise()  -- Bring to front
     end
-  end))
-
-  -- Preserve the old failure semantics: before diagnostic catching, an error
-  -- prevented this flag from ever being reached. A failed debug run therefore
-  -- remains retryable through "fix gui".
-  GUI.initialized = (#GUI.initFailures == 0)
-  GUI.debug("GUI/INIT", "initialization sequence complete", {
-    initialized = GUI.initialized,
-    failures = GUI.initFailures,
-  })
+  end)
+  
+  -- Mark GUI as initialized for the refresh system
+  GUI.initialized = true
 end
 
 -- Robust event handler registration with error handling and verification
@@ -3996,72 +3445,29 @@ function GUI.registerEventHandlers()
     local handlerId = GUI.eventHandlerIds[event]
     if handlerId then
       local ok = pcall(killAnonymousEventHandler, handlerId)
-      GUI.debug("EVENT/REGISTER", "remove owned handler", {
-        event = event,
-        handlerId = handlerId,
-        success = ok,
-      })
       if ok then killed = killed + 1 end
     end
     GUI.eventHandlerIds[event] = nil
   end
-  GUI.debug("EVENT/REGISTER", "owned handler cleanup complete", {
-    killed = killed,
-  })
+  if killed > 0 then
+    -- Uncomment when debugging handler lifetime:
+    -- print(string.format("[GUI] Cleared %d stale event handlers", killed))
+  end
 
   -- Register GUI event handlers
   for event, handler in pairs(eventHandlers) do
-    local eventName = event
-    local handlerName = handler
-    local callback = handler
-    if GUI.DEBUG == true then
-      callback = function(...)
-        local variableName = eventName:match("^msdp%.(.+)$")
-        GUI.debug("EVENT/FIRE", eventName .. " -&gt; " .. handlerName, {
-          arguments = {...},
-          msdpVariable = variableName,
-          msdpValue = variableName and msdp and msdp[variableName] or nil,
-        })
-        local callable = GUI.debugResolve(handlerName)
-        local ok, result = GUI.debugCall(
-          "EVENT/HANDLER/" .. eventName .. "/" .. handlerName,
-          callable,
-          ...
-        )
-        if not ok then
-          return nil, result
-        end
-        return result
-      end
-    end
-
-    local success, handlerId = pcall(
-      registerAnonymousEventHandler,
-      eventName,
-      callback
-    )
+    local success, handlerId = pcall(registerAnonymousEventHandler, event, handler)
     if success then
-      GUI.eventHandlerIds[eventName] = handlerId
-      GUI.debug("EVENT/REGISTER", "registered GUI handler", {
-        event = eventName,
-        handler = handlerName,
-        handlerId = handlerId,
-        callbackType = type(callback),
-      })
+      GUI.eventHandlerIds[event] = handlerId
+      -- Optional: uncomment for debugging
+      -- print(string.format("✓ Registered GUI handler for %s", event))
     else
-      GUI.debugError(
-        "EVENT/REGISTER/" .. eventName,
-        "failed to register " .. handlerName .. ": " .. tostring(handlerId)
-      )
-      print(string.format("✗ Failed to register GUI handler for %s: %s", eventName, handlerId))
+      print(string.format("✗ Failed to register GUI handler for %s: %s", event, handlerId))
     end
   end
 
   -- Verify critical handlers are working and refresh displays
-  tempTimer(2, GUI.debugWrap("EVENT/VERIFY/two-second refresh", function()
-    GUI.debug("EVENT/VERIFY", "checking current MSDP-backed displays", {
-      msdpCount = GUI.debugCountEntries(msdp),
-    })
+  tempTimer(2, function()
     -- Group tab refresh
     if msdp.GROUP and #msdp.GROUP > 0 then
       GUI.updateGroup()
@@ -4100,20 +3506,14 @@ function GUI.registerEventHandlers()
     if msdp.ROOM then
       GUI.updateRoom()
     end
-  end))
+  end)
   
   -- Initialize chat system if it's enabled but not created
-  tempTimer(1, GUI.debugWrap("EVENT/VERIFY/chat startup", function()
-    GUI.debug("EVENT/VERIFY", "chat startup check", {
-      demonnic = type(demonnic),
-      chat = type(demonnic and demonnic.chat),
-      use = demonnic and demonnic.chat and demonnic.chat.use,
-      container = type(demonnic and demonnic.chat and demonnic.chat.container),
-    })
+  tempTimer(1, function()
     if demonnic.chat.use and not demonnic.chat.container then
       demonnicOnStart()
     end
-  end))
+  end)
 end
 
 -- =============================================================================
@@ -4138,12 +3538,6 @@ end
 -- =============================================================================
 function GUI.initializeOrRefresh(context)
   context = context or "unknown"
-  GUI.debug("GUI/REFRESH", "initializeOrRefresh requested", {
-    context = context,
-    initialized = GUI.initialized,
-    initFailures = GUI.initFailures,
-    msdpCount = GUI.debugCountEntries(msdp),
-  })
   
   -- Track if this is initial setup or refresh
   local isRefresh = (GUI.initialized == true)
@@ -4231,7 +3625,7 @@ function GUI.initializeOrRefresh(context)
     map.mapwindow:show()
     map.mapwindow:resize()
     -- Force refresh with delayed operations
-    tempTimer(0.1, GUI.debugWrap("GUI/REFRESH/mapper delayed resize", function()
+    tempTimer(0.1, function()
       if map.mapwindow then
         map.mapwindow:resize()
         if map.mapwindow.raise then
@@ -4242,7 +3636,7 @@ function GUI.initializeOrRefresh(context)
           centerview(map.currentRoom)
         end
       end
-    end))
+    end)
     table.insert(refreshed, "Mudlet mapper")
   end
   
@@ -4306,12 +3700,12 @@ function GUI.initializeOrRefresh(context)
   end
   
   -- Ensure proper z-order (delayed to allow all components to initialize)
-  tempTimer(0.5, GUI.debugWrap("GUI/REFRESH/z-order timer", function()
+  tempTimer(0.5, function()
     -- Let Adjustable Containers manage their own z-order
     -- Only raise containers that need to be on top of others
     if GUI.chatContainer then GUI.chatContainer:raise() end
     if GUI.actionIconsContainer then GUI.actionIconsContainer:raise() end
-  end))
+  end)
   
   -- Report results
   if #refreshed > 0 then
@@ -4319,11 +3713,6 @@ function GUI.initializeOrRefresh(context)
       isRefresh and "Refresh" or "Initialization",
       table.concat(refreshed, ", ")))
   end
-  GUI.debug("GUI/REFRESH", "initializeOrRefresh complete", {
-    context = context,
-    isRefresh = isRefresh,
-    refreshed = refreshed,
-  })
 end
 
 -- =============================================================================
@@ -4345,35 +3734,14 @@ end
 -- already negotiated, so sysProtocolEnabled will NOT fire again and the GUI
 -- would otherwise sit empty, never having sent its REPORT subscriptions.
 registerAnonymousEventHandler("sysLoadEvent", function(_, isNewLoad)
-  GUI.debug("LIFECYCLE", "sysLoadEvent fired", {
-    isNewLoad = isNewLoad,
-    initializedBefore = GUI.initialized,
-  })
   GUI.init()
-  if type(GUI.debugSnapshot) == "function" then
-    GUI.debugCall(
-      "SNAPSHOT/sysLoad immediate",
-      GUI.debugSnapshot,
-      "sysLoadEvent immediate"
-    )
-    tempTimer(2, GUI.debugWrap("LIFECYCLE/sysLoad delayed snapshot", function()
-      GUI.debugCall(
-        "SNAPSHOT/sysLoad delayed",
-        GUI.debugSnapshot,
-        "sysLoadEvent plus two seconds"
-      )
-    end))
-  end
 
   -- isNewLoad == false means we came from resetProfile(). Older Mudlet
   -- versions pass nil here, so only take this path on an explicit false.
   if isNewLoad == false then
-    tempTimer(0.5, GUI.debugWrap("LIFECYCLE/profile reset recovery", function()
+    tempTimer(0.5, function()
       if map and map.initialize then
-        local ok, initialized = GUI.debugCall(
-          "LIFECYCLE/profile reset/map.initialize",
-          map.initialize
-        )
+        local ok, initialized = pcall(map.initialize)
         if not ok or initialized == false then
           print("[GUI] Mapper initialization failed after profile reset: " .. tostring(initialized))
         end
@@ -4384,7 +3752,7 @@ registerAnonymousEventHandler("sysLoadEvent", function(_, isNewLoad)
         print("[GUI] Re-subscribed to MSDP after profile reset")
       end
       GUI.initializeOrRefresh("profile reset")
-    end))
+    end)
   end
 end)
 registerAnonymousEventHandler("sysInstall", "GUI.init")
@@ -4394,18 +3762,10 @@ registerAnonymousEventHandler("sysInstall", "GUI.init")
 registerAnonymousEventHandler("sysProtocolEnabled", "GUI.onProtocolEnabled")
 
 -- Add connection-based refresh
-registerAnonymousEventHandler("sysConnectionEvent", function(...)
-  GUI.debug("LIFECYCLE", "sysConnectionEvent fired", {...})
-  tempTimer(1, GUI.debugWrap("LIFECYCLE/connection refresh timer", function()
+registerAnonymousEventHandler("sysConnectionEvent", function()
+  tempTimer(1, function()
     GUI.initializeOrRefresh("connection established")
-    if type(GUI.debugSnapshot) == "function" then
-      GUI.debugCall(
-        "SNAPSHOT/connection",
-        GUI.debugSnapshot,
-        "one second after connection"
-      )
-    end
-  end))
+  end)
 end)</script>
 						<eventHandlerList />
 					</Script>
@@ -4867,12 +4227,7 @@ end</script>
 					<packageName></packageName>
 					<script>demonnic = demonnic or {}
 demonnic.chat = demonnic.chat or {}
-demonnic.chat.config = demonnic.chat.config or {}
-GUI.debug("YATCO/CONFIG", "YATCOConfig namespace loaded", {
-  demonnic = type(demonnic),
-  chat = type(demonnic.chat),
-  config = type(demonnic.chat.config),
-})</script>
+demonnic.chat.config = demonnic.chat.config or {}</script>
 					<eventHandlerList />
 					<Script isActive="yes" isFolder="no">
 						<name>Configuration Options</name>
@@ -4882,9 +4237,6 @@ This is where all of the configuration options can be set.
 Anything I've put in this script object can be changed, but please do pay attention to what you're doing.
 If you change one of the values to something it shouldn't be, you could break it. 
 ]]
-
-local function configureYATCO()
-GUI.debug("YATCO/CONFIG", "configuration assignment starting")
 
 --This is where you tell it to use tabbed chat.
 demonnic.chat.use = true
@@ -5098,26 +4450,6 @@ so we'll use the one for the bucket, or the first one in the channels table
 Or, you know... what it's currently set to, if it's already set.
 ]]
 demonnic.chat.currentTab = demonnic.chat.currentTab or demonnic.chat.config.Alltab or demonnic.chat.config.channels[1]
-GUI.debug("YATCO/CONFIG", "configuration assignment complete", {
-  use = demonnic.chat.use,
-  useContainer = type(demonnic.chat.useContainer),
-  channels = demonnic.chat.config.channels,
-  currentTab = demonnic.chat.currentTab,
-  fontSize = demonnic.chat.config.fontSize,
-  width = demonnic.chat.config.width,
-  lines = demonnic.chat.config.lines,
-  gag = demonnic.chat.config.gag,
-  blink = demonnic.chat.config.blink,
-  soundEnabled = demonnic.chat.config.soundEnabled,
-})
-end
-
-local yatcoConfigOK, yatcoConfigResult =
-  GUI.debugCall("YATCO/CONFIG/configureYATCO", configureYATCO)
-GUI.debugBootResults["YATCO.configure"] = {
-  ok = yatcoConfigOK,
-  result = yatcoConfigResult,
-}
 </script>
 						<eventHandlerList />
 					</Script>
@@ -5145,14 +4477,9 @@ demonnic.balances = demonnic.balances or {}
 demonnic.balances.balance = demonnic.balances.balance or 1
 demonnic.balances.equilibrium = demonnic.balances.equilibrium or 1
 demonnic.debug = demonnic.debug or {}
--- Mirror the one package-wide switch. This is not an independent toggle.
-demonnic.debug.active = (GUI.DEBUG == true)
+demonnic.debug.active = demonnic.debug.active or nil
 demonnic.debug.categories = demonnic.debug.categories or { }
 
-GUI.debug("YATCO/BOOT", "Demonnic shared namespace loaded", {
-  demonnic = type(demonnic),
-  debugActive = demonnic.debug.active,
-})
 
 function demonnic:echo(msg)
  cecho(string.format("\n&lt;blue&gt;(&lt;green&gt;Demonnic&lt;blue&gt;):&lt;white&gt; %s", msg))
@@ -5164,13 +4491,6 @@ end</script>
 							<script>--Adds debugging functionality 
 
 function demonnic:Debug(category,debugData)
-   -- Route the legacy YATCO debugger through the single package-wide switch.
-   -- Debug mode intentionally ignores category filtering so no evidence is
-   -- lost during this end-to-end diagnostic build.
-   if GUI and type(GUI.debug) == "function" then
-      GUI.debug("YATCO/" .. tostring(category or "GENERAL"), "legacy debug", debugData)
-      return
-   end
    if category then
       if table.contains(demonnic.debug.categories, category) then
          if type(debugData) == "table" then
@@ -5195,26 +4515,15 @@ function demonnic:Debug(category,debugData)
 end
 
 function demonnic:printDebug(category, debugData)
-   demonnic.debug.active = (GUI and GUI.DEBUG == true)
    if not demonnic.debug.active then return end
    demonnic:Debug(category, debugData)
 end
 
 function demonnic:toggleDebug()
-   if GUI then
-      GUI.DEBUG = not (GUI.DEBUG == true)
-      demonnic.debug.active = GUI.DEBUG
-   else
-      demonnic.debug.active = not demonnic.debug.active
+   if demonnic.debug.active then demonnic.debug.active = nil
+   else demonnic.debug.active = true
    end
    demonnic:echo("Debugging is currently " .. (( demonnic.debug.active and "&lt;green&gt;ON&lt;white&gt;") or "&lt;red&gt;OFF&lt;white&gt;"))
-   if GUI and GUI.DEBUG and type(GUI.debugSnapshot) == "function" then
-      GUI.debugCall(
-         "SNAPSHOT/debug toggle",
-         GUI.debugSnapshot,
-         "debug command toggled mode ON"
-      )
-   end
 end
 
 function demonnic:watchCategory( category )
@@ -5264,15 +4573,9 @@ demonnic.chat = demonnic.chat or {}
 demonnic.chat.tabsToBlink = demonnic.chat.tabsToBlink or {}
 demonnic.chat.tabs = demonnic.chat.tabs or {}
 demonnic.chat.windows = demonnic.chat.windows or {}
-GUI.debug("YATCO/BOOT", "tabbed chat namespace loaded", {
-  config = type(demonnic.chat.config),
-  tabs = GUI.debugCountEntries(demonnic.chat.tabs),
-  windows = GUI.debugCountEntries(demonnic.chat.windows),
-})
 if not demonnic.chat.config then
   cecho("&lt;red:white&gt;YOU DO NOT HAVE THE YATCO CONFIG PACKAGE IN PLACE. THINGS WILL NOT WORK AS EXPECTED\n\n")
   demonnic.chat.error = "NO CONFIG"
-  GUI.debugError("YATCO/BOOT", "YATCO configuration table is missing")
 end</script>
 						<eventHandlerList />
 						<Script isActive="yes" isFolder="no">
@@ -5284,12 +4587,6 @@ Or if it's modified to take actual functions. Anonymous function clickcallback w
 ]]
 
 function demonnicChatSwitch(chat)
-  GUI.debug("YATCO/TAB", "switch requested", {
-    requestedTab = chat,
-    currentTab = demonnic.chat.currentTab,
-    requestedWindow = type(demonnic.chat.windows[chat]),
-    requestedLabel = type(demonnic.chat.tabs[chat]),
-  })
   local r = demonnic.chat.config.inactiveColors.r
   local g = demonnic.chat.config.inactiveColors.g
   local b = demonnic.chat.config.inactiveColors.b
@@ -5312,16 +4609,9 @@ function demonnicChatSwitch(chat)
   demonnic.chat.tabs[chat]:echo(chat, demonnic.chat.config.activeTabText, "c")
   demonnic.chat.windows[chat]:show()
   demonnic.chat.currentTab = chat  
-  GUI.debug("YATCO/TAB", "switch complete", {
-    currentTab = demonnic.chat.currentTab,
-  })
 end
 
 function demonnic.chat:resetUI()
-  GUI.debug("YATCO/CREATE", "resetUI starting", {
-    useContainer = type(demonnic.chat.useContainer),
-    configuredLocation = demonnic.chat.config and demonnic.chat.config.location,
-  })
   demonnic.chat.container = demonnic.chat.useContainer or Geyser.Container:new(demonnic.chat[demonnic.chat.config.location]())
   demonnic.chat.tabBox = Geyser.HBox:new({
     x=0,
@@ -5331,18 +4621,9 @@ function demonnic.chat:resetUI()
     name = "DemonChatTabs",
   },demonnic.chat.container)
 
-  GUI.debug("YATCO/CREATE", "resetUI complete", {
-    container = type(demonnic.chat.container),
-    tabBox = type(demonnic.chat.tabBox),
-  })
 end
 
 function demonnic.chat:create()
-  GUI.debug("YATCO/CREATE", "chat creation starting", {
-    config = demonnic.chat.config,
-    existingContainer = type(demonnic.chat.container),
-    useContainer = type(demonnic.chat.useContainer),
-  })
   --reset the UI
   demonnic.chat:resetUI()
   --Set some variables locally to increase readability
@@ -5355,10 +4636,6 @@ function demonnic.chat:create()
 
   --iterate the table of channels and create some windows and tabs
   for i,tab in ipairs(demonnic.chat.config.channels) do
-    GUI.debug("YATCO/CREATE", "creating tab and window", {
-      index = i,
-      tab = tab,
-    })
     demonnic.chat.tabs[tab] = Geyser.Label:new({
       name=string.format("tab%s", tab),
     }, demonnic.chat.tabBox)
@@ -5391,11 +4668,6 @@ function demonnic.chat:create()
     demonnic.chat.windows[tab]:setColor(winr,wing,winb)
     demonnic.chat.windows[tab]:setWrap(demonnic.chat.config.width)
     demonnic.chat.windows[tab]:hide()
-    GUI.debug("YATCO/CREATE", "tab and window created", {
-      tab = tab,
-      label = type(demonnic.chat.tabs[tab]),
-      window = type(demonnic.chat.windows[tab]),
-    })
   end
   if demonnic.chat.config.Maptab and demonnic.chat.config.Maptab ~= "" then
     demonnic.chat.mapWindow = Geyser.Mapper:new({
@@ -5412,12 +4684,6 @@ function demonnic.chat:create()
   if demonnic.chat.config.blink and not demonnic.chat.blinkTimerOn then
     demonnic.chat:blink()
   end
-  GUI.debug("YATCO/CREATE", "chat creation complete", {
-    currentTab = demonnic.chat.currentTab,
-    tabCount = GUI.debugCountEntries(demonnic.chat.tabs),
-    windowCount = GUI.debugCountEntries(demonnic.chat.windows),
-    container = type(demonnic.chat.container),
-  })
 end
 
 function demonnic.chat:append(chat)
@@ -5532,20 +4798,6 @@ function demonnic.chat:append(chat)
       end
     end
   end
-  -- Deliberately logged at the end: emitting to the main console before
-  -- selectCurrentLine/copy/append would change the current line and corrupt
-  -- chat capture.
-  GUI.debug("YATCO/APPEND", "chat line captured", {
-    channel = chat,
-    currentTab = demonnic.chat.currentTab,
-    allTab = demonnic.chat.config.Alltab,
-    gaggedFromMain = demonnic.chat.config.gag,
-    blinkEnabled = demonnic.chat.config.blink,
-    waitingToBlink = demonnic.chat.tabsToBlink,
-    soundEnabled = demonnic.chat.config.soundEnabled,
-    soundLastPlayed = demonnic.chat.lastSoundTime,
-    triggerMatches = matches,
-  })
 end
 
 
@@ -5609,12 +4861,6 @@ end</script>
 							<name>demonnicOnStart</name>
 							<packageName></packageName>
 							<script>function demonnicOnStart()
-  GUI.debug("YATCO/START", "demonnicOnStart invoked", {
-    use = demonnic.chat.use,
-    chatContainerInner = type(GUI.chatContainerInner),
-    chatContainer = type(GUI.chatContainer),
-    existingChatContainer = type(demonnic.chat.container),
-  })
   if demonnic.chat.use then
     -- Set the container now that GUI is initialized
     -- Use the inner container to account for title bar and padding
@@ -5627,20 +4873,11 @@ end</script>
       print("Warning: GUI.chatContainer not found. Chat system may not display properly.")
     end
     
-    local success, err = GUI.debugCall(
-      "YATCO/START/demonnic.chat.create",
-      demonnic.chat.create,
-      demonnic.chat
-    )
+    local success, err = pcall(demonnic.chat.create, demonnic.chat)
     if not success then
       print(string.format("Error initializing chat system: %s", err))
     end
   end
-  GUI.debug("YATCO/START", "demonnicOnStart complete", {
-    container = type(demonnic.chat.container),
-    tabCount = GUI.debugCountEntries(demonnic.chat.tabs),
-    windowCount = GUI.debugCountEntries(demonnic.chat.windows),
-  })
 end</script>
 							<eventHandlerList>
 								<string>sysLoadEvent</string>
@@ -5719,12 +4956,8 @@ end</script>
 							<name>demonnicOnInstall</name>
 							<packageName></packageName>
 							<script>function demonnicOnInstall(_, package)
-  GUI.debug("YATCO/INSTALL", "sysInstall received", {
-    package = package,
-  })
   -- Check for both LuminariGUI and YATCO package names to handle mid-session imports
-  if type(package) == "string" and
-    (package:find("YATCO") or package:find("LuminariGUI")) then
+  if package:find("YATCO") or package:find("LuminariGUI") then
     demonnicOnStart()
   end
 end</script>
@@ -5734,243 +4967,6 @@ end</script>
 						</Script>
 					</ScriptGroup>
 				</ScriptGroup>
-			</ScriptGroup>
-			<ScriptGroup isActive="yes" isFolder="yes">
-				<name>LuminariDebugInstrumentation</name>
-				<packageName>LuminariGUI</packageName>
-				<script></script>
-				<eventHandlerList />
-				<Script isActive="yes" isFolder="no">
-					<name>End-to-End Instrumentation</name>
-					<packageName></packageName>
-					<script>-- End-to-end instrumentation is loaded last so it can inventory and wrap
--- functions from every LuminariGUI subsystem.
-
-function GUI.debugSnapshot(reason)
-  if GUI.DEBUG ~= true then
-    return
-  end
-
-  GUI.debug("SNAPSHOT", "BEGIN " .. tostring(reason or "unspecified"))
-
-  local environment = {
-    debugEnabled = GUI.DEBUG,
-    GUI = type(GUI),
-    Geyser = type(Geyser),
-    Adjustable = type(Adjustable),
-    CSSMan = type(CSSMan),
-    map = type(map),
-    msdp = type(msdp),
-    demonnic = type(demonnic),
-    chat = type(demonnic and demonnic.chat),
-    initialized = GUI.initialized,
-  }
-
-  if type(getMudletVersion) == "function" then
-    local ok, value = pcall(getMudletVersion, "string")
-    environment.mudletVersion = ok and value or ("ERROR: " .. tostring(value))
-  end
-  if type(getOS) == "function" then
-    local ok, operatingSystem, operatingSystemVersion = pcall(getOS)
-    environment.operatingSystem =
-      ok and (tostring(operatingSystem) .. " " .. tostring(operatingSystemVersion or ""))
-      or ("ERROR: " .. tostring(operatingSystem))
-  end
-  if type(getPackageInfo) == "function" then
-    local ok, value = pcall(getPackageInfo, "LuminariGUI", "version")
-    environment.packageVersion = ok and value or ("ERROR: " .. tostring(value))
-  end
-  if type(getConfig) == "function" then
-    local ok, value = pcall(getConfig, "enableMSDP")
-    environment.enableMSDP = ok and value or ("ERROR: " .. tostring(value))
-  end
-  if type(getMainWindowSize) == "function" then
-    local ok, width, height = pcall(getMainWindowSize)
-    environment.mainWindow =
-      ok and (tostring(width) .. "x" .. tostring(height))
-      or ("ERROR: " .. tostring(width))
-  end
-  if type(getMudletHomeDir) == "function" then
-    local ok, value = pcall(getMudletHomeDir)
-    environment.profileHome = ok and value or ("ERROR: " .. tostring(value))
-  end
-  GUI.debug("SNAPSHOT", "environment", environment)
-
-  local requiredFunctions = {
-    "GUI.init_background",
-    "GUI.set_borders",
-    "GUI.init_boxes",
-    "GUI.init_gauges",
-    "GUI.init_action_icons",
-    "GUI.tabbedInfoWindow.init",
-    "GUI.init_player",
-    "GUI.init_group",
-    "GUI.Affects.init",
-    "GUI.buttonWindow.init",
-    "GUI.init_castConsole",
-    "GUI.styleScrollbar",
-    "GUI.registerEventHandlers",
-    "GUI.initializeOrRefresh",
-    "GUI.requestMSDPReports",
-    "GUI.onProtocolEnabled",
-    "GUI.AdjustableContainers.init",
-    "map.initialize",
-    "map.eventHandler",
-    "map.onProtocolEnabled",
-    "demonnic.chat.create",
-    "demonnic.chat.append",
-    "demonnicOnStart",
-  }
-  for _, functionPath in ipairs(requiredFunctions) do
-    GUI.debug("SNAPSHOT", "required function " .. functionPath, {
-      status = type(GUI.debugResolve(functionPath)),
-    })
-  end
-
-  GUI.debug("SNAPSHOT", "important runtime objects", {
-    Left = type(GUI.Left),
-    Right = type(GUI.Right),
-    Bottom = type(GUI.Bottom),
-    Box2 = type(GUI.Box2),
-    Health = type(GUI.Health),
-    Moves = type(GUI.Moves),
-    PSP = type(GUI.PSP),
-    Enemy = type(GUI.Enemy),
-    chatContainer = type(GUI.chatContainer),
-    roomInfoContainer = type(GUI.roomInfoContainer),
-    buttonPanelContainer = type(GUI.buttonPanelContainer),
-    actionIconsContainer = type(GUI.actionIconsContainer),
-    mapContainer = type(map and map.container),
-    mapWindow = type(map and map.window),
-    asciiMapWindow = type(map and map.asciiwindow),
-  })
-
-  GUI.debug("SNAPSHOT", "handler and container counts", {
-    eventHandlerIds = GUI.debugCountEntries(GUI.eventHandlerIds),
-    adjustableContainers = GUI.debugCountEntries(
-      GUI.AdjustableContainers and GUI.AdjustableContainers.containers
-    ),
-    chatTabs = GUI.debugCountEntries(demonnic and demonnic.chat and demonnic.chat.tabs),
-    chatWindows = GUI.debugCountEntries(
-      demonnic and demonnic.chat and demonnic.chat.windows
-    ),
-  })
-
-  local home = type(getMudletHomeDir) == "function" and getMudletHomeDir():gsub("\\", "/") or ""
-  local assets = {
-    "images/ui_texture.jpg",
-    "images/ui_texture.png",
-    "images/buttons/button.png",
-    "images/action-standard.png",
-    "images/action-standard-50.png",
-    "images/action-move.png",
-    "images/action-move-50.png",
-    "images/action-swift.png",
-    "images/action-swift-50.png",
-  }
-  for _, relativePath in ipairs(assets) do
-    local fullPath = home .. "/LuminariGUI/" .. relativePath
-    local exists = type(io.exists) == "function" and io.exists(fullPath) or false
-    GUI.debug("ASSET", relativePath, {exists = exists, path = fullPath})
-  end
-
-  GUI.debug("MSDP", "variable inventory", {
-    count = GUI.debugCountEntries(msdp),
-    tableType = type(msdp),
-  })
-  if type(msdp) == "table" then
-    local keys = {}
-    for key in pairs(msdp) do
-      if type(msdp[key]) ~= "function" then
-        keys[#keys + 1] = key
-      end
-    end
-    table.sort(keys, function(left, right)
-      return tostring(left) &lt; tostring(right)
-    end)
-    for _, key in ipairs(keys) do
-      GUI.debug("MSDP", "msdp." .. tostring(key), msdp[key])
-    end
-  end
-
-  GUI.debug("SNAPSHOT", "boot-stage results", GUI.debugBootResults)
-  GUI.debug("SNAPSHOT", "END " .. tostring(reason or "unspecified"))
-end
-
-local function wrapTableFunctions(owner, tableName, exclusions)
-  if type(owner) ~= "table" then
-    GUI.debug("INSTRUMENT", "table unavailable", tableName)
-    return
-  end
-
-  local functionNames = {}
-  for functionName, value in pairs(owner) do
-    if type(value) == "function" and not exclusions[functionName] then
-      functionNames[#functionNames + 1] = functionName
-    end
-  end
-  table.sort(functionNames)
-  for _, functionName in ipairs(functionNames) do
-    GUI.debugWrapFunction(
-      owner,
-      functionName,
-      tableName .. "." .. tostring(functionName)
-    )
-  end
-end
-
-local guiExclusions = {
-  debug = true,
-  debugCall = true,
-  debugCountEntries = true,
-  debugError = true,
-  debugResolve = true,
-  debugSnapshot = true,
-  debugValue = true,
-  debugWrap = true,
-  debugWrapFunction = true,
-}
-
-wrapTableFunctions(GUI, "GUI", guiExclusions)
-wrapTableFunctions(GUI.Affects, "GUI.Affects", {})
-wrapTableFunctions(GUI.tabbedInfoWindow, "GUI.tabbedInfoWindow", {})
-wrapTableFunctions(GUI.buttonWindow, "GUI.buttonWindow", {})
-wrapTableFunctions(GUI.AdjustableContainers, "GUI.AdjustableContainers", {})
-wrapTableFunctions(CSSMan, "CSSMan", {})
-wrapTableFunctions(map, "map", {})
-wrapTableFunctions(demonnic, "demonnic", {})
--- append() must select/copy the current server line before anything echoes to
--- the main console. Its own tail-end diagnostic records the operation safely.
-wrapTableFunctions(demonnic and demonnic.chat, "demonnic.chat", {append = true})
-
-if type(demonnicChatSwitch) == "function" then
-  demonnicChatSwitch = GUI.debugWrap("YATCO.demonnicChatSwitch", demonnicChatSwitch)
-end
-if type(demonnicOnStart) == "function" then
-  demonnicOnStart = GUI.debugWrap("YATCO.demonnicOnStart", demonnicOnStart)
-end
-if type(demonnicOnInstall) == "function" then
-  demonnicOnInstall = GUI.debugWrap("YATCO.demonnicOnInstall", demonnicOnInstall)
-end
-
-GUI.debug("INSTRUMENT", "end-to-end function wrapping complete")
-GUI.debugCall(
-  "SNAPSHOT/instrumentation load",
-  GUI.debugSnapshot,
-  "instrumentation fragment loaded"
-)
-
-if type(tempTimer) == "function" then
-  tempTimer(2, GUI.debugWrap("SNAPSHOT/instrumentation delayed timer", function()
-    GUI.debugCall(
-      "SNAPSHOT/instrumentation delayed",
-      GUI.debugSnapshot,
-      "two seconds after instrumentation load"
-    )
-  end))
-end</script>
-					<eventHandlerList />
-				</Script>
 			</ScriptGroup>
 		</ScriptGroup>
 	</ScriptPackage>
@@ -5985,7 +4981,7 @@ end</script>
 			<Key isActive="yes" isFolder="no">
 				<name>Southwest</name>
 				<packageName></packageName>
-				<script>GUI.debug("KEY", "numpad southwest", {command = "southwest"})</script>
+				<script></script>
 				<command>southwest</command>
 				<keyCode>49</keyCode>
 				<keyModifier>536870912</keyModifier>
@@ -5993,7 +4989,7 @@ end</script>
 			<Key isActive="yes" isFolder="no">
 				<name>South</name>
 				<packageName></packageName>
-				<script>GUI.debug("KEY", "numpad south", {command = "south"})</script>
+				<script></script>
 				<command>south</command>
 				<keyCode>50</keyCode>
 				<keyModifier>536870912</keyModifier>
@@ -6001,7 +4997,7 @@ end</script>
 			<Key isActive="yes" isFolder="no">
 				<name>Southeast</name>
 				<packageName></packageName>
-				<script>GUI.debug("KEY", "numpad southeast", {command = "southeast"})</script>
+				<script></script>
 				<command>southeast</command>
 				<keyCode>51</keyCode>
 				<keyModifier>536870912</keyModifier>
@@ -6009,7 +5005,7 @@ end</script>
 			<Key isActive="yes" isFolder="no">
 				<name>West</name>
 				<packageName></packageName>
-				<script>GUI.debug("KEY", "numpad west", {command = "west"})</script>
+				<script></script>
 				<command>west</command>
 				<keyCode>52</keyCode>
 				<keyModifier>536870912</keyModifier>
@@ -6017,7 +5013,7 @@ end</script>
 			<Key isActive="yes" isFolder="no">
 				<name>Look</name>
 				<packageName></packageName>
-				<script>GUI.debug("KEY", "numpad look", {command = "look"})</script>
+				<script></script>
 				<command>look</command>
 				<keyCode>53</keyCode>
 				<keyModifier>536870912</keyModifier>
@@ -6025,7 +5021,7 @@ end</script>
 			<Key isActive="yes" isFolder="no">
 				<name>East</name>
 				<packageName></packageName>
-				<script>GUI.debug("KEY", "numpad east", {command = "east"})</script>
+				<script></script>
 				<command>east</command>
 				<keyCode>54</keyCode>
 				<keyModifier>536870912</keyModifier>
@@ -6033,7 +5029,7 @@ end</script>
 			<Key isActive="yes" isFolder="no">
 				<name>Northwest</name>
 				<packageName></packageName>
-				<script>GUI.debug("KEY", "numpad northwest", {command = "northwest"})</script>
+				<script></script>
 				<command>northwest</command>
 				<keyCode>55</keyCode>
 				<keyModifier>536870912</keyModifier>
@@ -6041,7 +5037,7 @@ end</script>
 			<Key isActive="yes" isFolder="no">
 				<name>North</name>
 				<packageName></packageName>
-				<script>GUI.debug("KEY", "numpad north", {command = "north"})</script>
+				<script></script>
 				<command>north</command>
 				<keyCode>56</keyCode>
 				<keyModifier>536870912</keyModifier>
@@ -6049,7 +5045,7 @@ end</script>
 			<Key isActive="yes" isFolder="no">
 				<name>Northeast</name>
 				<packageName></packageName>
-				<script>GUI.debug("KEY", "numpad northeast", {command = "northeast"})</script>
+				<script></script>
 				<command>northeast</command>
 				<keyCode>57</keyCode>
 				<keyModifier>536870912</keyModifier>
@@ -6057,7 +5053,7 @@ end</script>
 			<Key isActive="yes" isFolder="no">
 				<name>Inventory</name>
 				<packageName></packageName>
-				<script>GUI.debug("KEY", "numpad inventory", {command = "inv"})</script>
+				<script></script>
 				<command>inv</command>
 				<keyCode>47</keyCode>
 				<keyModifier>536870912</keyModifier>
@@ -6065,7 +5061,7 @@ end</script>
 			<Key isActive="yes" isFolder="no">
 				<name>Scan</name>
 				<packageName></packageName>
-				<script>GUI.debug("KEY", "numpad scan", {command = "scan"})</script>
+				<script></script>
 				<command>scan</command>
 				<keyCode>42</keyCode>
 				<keyModifier>536870912</keyModifier>
@@ -6073,7 +5069,7 @@ end</script>
 			<Key isActive="yes" isFolder="no">
 				<name>Up</name>
 				<packageName></packageName>
-				<script>GUI.debug("KEY", "numpad up", {command = "up"})</script>
+				<script></script>
 				<command>up</command>
 				<keyCode>45</keyCode>
 				<keyModifier>536870912</keyModifier>
@@ -6081,7 +5077,7 @@ end</script>
 			<Key isActive="yes" isFolder="no">
 				<name>Down</name>
 				<packageName></packageName>
-				<script>GUI.debug("KEY", "numpad down", {command = "down"})</script>
+				<script></script>
 				<command>down</command>
 				<keyCode>43</keyCode>
 				<keyModifier>536870912</keyModifier>

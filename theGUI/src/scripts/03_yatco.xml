@@ -20,9 +20,14 @@ demonnic.balances = demonnic.balances or {}
 demonnic.balances.balance = demonnic.balances.balance or 1
 demonnic.balances.equilibrium = demonnic.balances.equilibrium or 1
 demonnic.debug = demonnic.debug or {}
-demonnic.debug.active = demonnic.debug.active or nil
+-- Mirror the one package-wide switch. This is not an independent toggle.
+demonnic.debug.active = (GUI.DEBUG == true)
 demonnic.debug.categories = demonnic.debug.categories or { }
 
+GUI.debug("YATCO/BOOT", "Demonnic shared namespace loaded", {
+  demonnic = type(demonnic),
+  debugActive = demonnic.debug.active,
+})
 
 function demonnic:echo(msg)
  cecho(string.format("\n&lt;blue&gt;(&lt;green&gt;Demonnic&lt;blue&gt;):&lt;white&gt; %s", msg))
@@ -34,6 +39,13 @@ end</script>
 							<script>--Adds debugging functionality 
 
 function demonnic:Debug(category,debugData)
+   -- Route the legacy YATCO debugger through the single package-wide switch.
+   -- Debug mode intentionally ignores category filtering so no evidence is
+   -- lost during this end-to-end diagnostic build.
+   if GUI and type(GUI.debug) == "function" then
+      GUI.debug("YATCO/" .. tostring(category or "GENERAL"), "legacy debug", debugData)
+      return
+   end
    if category then
       if table.contains(demonnic.debug.categories, category) then
          if type(debugData) == "table" then
@@ -58,15 +70,26 @@ function demonnic:Debug(category,debugData)
 end
 
 function demonnic:printDebug(category, debugData)
+   demonnic.debug.active = (GUI and GUI.DEBUG == true)
    if not demonnic.debug.active then return end
    demonnic:Debug(category, debugData)
 end
 
 function demonnic:toggleDebug()
-   if demonnic.debug.active then demonnic.debug.active = nil
-   else demonnic.debug.active = true
+   if GUI then
+      GUI.DEBUG = not (GUI.DEBUG == true)
+      demonnic.debug.active = GUI.DEBUG
+   else
+      demonnic.debug.active = not demonnic.debug.active
    end
    demonnic:echo("Debugging is currently " .. (( demonnic.debug.active and "&lt;green&gt;ON&lt;white&gt;") or "&lt;red&gt;OFF&lt;white&gt;"))
+   if GUI and GUI.DEBUG and type(GUI.debugSnapshot) == "function" then
+      GUI.debugCall(
+         "SNAPSHOT/debug toggle",
+         GUI.debugSnapshot,
+         "debug command toggled mode ON"
+      )
+   end
 end
 
 function demonnic:watchCategory( category )
@@ -116,9 +139,15 @@ demonnic.chat = demonnic.chat or {}
 demonnic.chat.tabsToBlink = demonnic.chat.tabsToBlink or {}
 demonnic.chat.tabs = demonnic.chat.tabs or {}
 demonnic.chat.windows = demonnic.chat.windows or {}
+GUI.debug("YATCO/BOOT", "tabbed chat namespace loaded", {
+  config = type(demonnic.chat.config),
+  tabs = GUI.debugCountEntries(demonnic.chat.tabs),
+  windows = GUI.debugCountEntries(demonnic.chat.windows),
+})
 if not demonnic.chat.config then
   cecho("&lt;red:white&gt;YOU DO NOT HAVE THE YATCO CONFIG PACKAGE IN PLACE. THINGS WILL NOT WORK AS EXPECTED\n\n")
   demonnic.chat.error = "NO CONFIG"
+  GUI.debugError("YATCO/BOOT", "YATCO configuration table is missing")
 end</script>
 						<eventHandlerList />
 						<Script isActive="yes" isFolder="no">
@@ -130,6 +159,12 @@ Or if it's modified to take actual functions. Anonymous function clickcallback w
 ]]
 
 function demonnicChatSwitch(chat)
+  GUI.debug("YATCO/TAB", "switch requested", {
+    requestedTab = chat,
+    currentTab = demonnic.chat.currentTab,
+    requestedWindow = type(demonnic.chat.windows[chat]),
+    requestedLabel = type(demonnic.chat.tabs[chat]),
+  })
   local r = demonnic.chat.config.inactiveColors.r
   local g = demonnic.chat.config.inactiveColors.g
   local b = demonnic.chat.config.inactiveColors.b
@@ -152,9 +187,16 @@ function demonnicChatSwitch(chat)
   demonnic.chat.tabs[chat]:echo(chat, demonnic.chat.config.activeTabText, "c")
   demonnic.chat.windows[chat]:show()
   demonnic.chat.currentTab = chat  
+  GUI.debug("YATCO/TAB", "switch complete", {
+    currentTab = demonnic.chat.currentTab,
+  })
 end
 
 function demonnic.chat:resetUI()
+  GUI.debug("YATCO/CREATE", "resetUI starting", {
+    useContainer = type(demonnic.chat.useContainer),
+    configuredLocation = demonnic.chat.config and demonnic.chat.config.location,
+  })
   demonnic.chat.container = demonnic.chat.useContainer or Geyser.Container:new(demonnic.chat[demonnic.chat.config.location]())
   demonnic.chat.tabBox = Geyser.HBox:new({
     x=0,
@@ -164,9 +206,18 @@ function demonnic.chat:resetUI()
     name = "DemonChatTabs",
   },demonnic.chat.container)
 
+  GUI.debug("YATCO/CREATE", "resetUI complete", {
+    container = type(demonnic.chat.container),
+    tabBox = type(demonnic.chat.tabBox),
+  })
 end
 
 function demonnic.chat:create()
+  GUI.debug("YATCO/CREATE", "chat creation starting", {
+    config = demonnic.chat.config,
+    existingContainer = type(demonnic.chat.container),
+    useContainer = type(demonnic.chat.useContainer),
+  })
   --reset the UI
   demonnic.chat:resetUI()
   --Set some variables locally to increase readability
@@ -179,6 +230,10 @@ function demonnic.chat:create()
 
   --iterate the table of channels and create some windows and tabs
   for i,tab in ipairs(demonnic.chat.config.channels) do
+    GUI.debug("YATCO/CREATE", "creating tab and window", {
+      index = i,
+      tab = tab,
+    })
     demonnic.chat.tabs[tab] = Geyser.Label:new({
       name=string.format("tab%s", tab),
     }, demonnic.chat.tabBox)
@@ -211,6 +266,11 @@ function demonnic.chat:create()
     demonnic.chat.windows[tab]:setColor(winr,wing,winb)
     demonnic.chat.windows[tab]:setWrap(demonnic.chat.config.width)
     demonnic.chat.windows[tab]:hide()
+    GUI.debug("YATCO/CREATE", "tab and window created", {
+      tab = tab,
+      label = type(demonnic.chat.tabs[tab]),
+      window = type(demonnic.chat.windows[tab]),
+    })
   end
   if demonnic.chat.config.Maptab and demonnic.chat.config.Maptab ~= "" then
     demonnic.chat.mapWindow = Geyser.Mapper:new({
@@ -227,6 +287,12 @@ function demonnic.chat:create()
   if demonnic.chat.config.blink and not demonnic.chat.blinkTimerOn then
     demonnic.chat:blink()
   end
+  GUI.debug("YATCO/CREATE", "chat creation complete", {
+    currentTab = demonnic.chat.currentTab,
+    tabCount = GUI.debugCountEntries(demonnic.chat.tabs),
+    windowCount = GUI.debugCountEntries(demonnic.chat.windows),
+    container = type(demonnic.chat.container),
+  })
 end
 
 function demonnic.chat:append(chat)
@@ -341,6 +407,20 @@ function demonnic.chat:append(chat)
       end
     end
   end
+  -- Deliberately logged at the end: emitting to the main console before
+  -- selectCurrentLine/copy/append would change the current line and corrupt
+  -- chat capture.
+  GUI.debug("YATCO/APPEND", "chat line captured", {
+    channel = chat,
+    currentTab = demonnic.chat.currentTab,
+    allTab = demonnic.chat.config.Alltab,
+    gaggedFromMain = demonnic.chat.config.gag,
+    blinkEnabled = demonnic.chat.config.blink,
+    waitingToBlink = demonnic.chat.tabsToBlink,
+    soundEnabled = demonnic.chat.config.soundEnabled,
+    soundLastPlayed = demonnic.chat.lastSoundTime,
+    triggerMatches = matches,
+  })
 end
 
 
@@ -404,6 +484,12 @@ end</script>
 							<name>demonnicOnStart</name>
 							<packageName></packageName>
 							<script>function demonnicOnStart()
+  GUI.debug("YATCO/START", "demonnicOnStart invoked", {
+    use = demonnic.chat.use,
+    chatContainerInner = type(GUI.chatContainerInner),
+    chatContainer = type(GUI.chatContainer),
+    existingChatContainer = type(demonnic.chat.container),
+  })
   if demonnic.chat.use then
     -- Set the container now that GUI is initialized
     -- Use the inner container to account for title bar and padding
@@ -416,11 +502,20 @@ end</script>
       print("Warning: GUI.chatContainer not found. Chat system may not display properly.")
     end
     
-    local success, err = pcall(demonnic.chat.create, demonnic.chat)
+    local success, err = GUI.debugCall(
+      "YATCO/START/demonnic.chat.create",
+      demonnic.chat.create,
+      demonnic.chat
+    )
     if not success then
       print(string.format("Error initializing chat system: %s", err))
     end
   end
+  GUI.debug("YATCO/START", "demonnicOnStart complete", {
+    container = type(demonnic.chat.container),
+    tabCount = GUI.debugCountEntries(demonnic.chat.tabs),
+    windowCount = GUI.debugCountEntries(demonnic.chat.windows),
+  })
 end</script>
 							<eventHandlerList>
 								<string>sysLoadEvent</string>
@@ -499,8 +594,12 @@ end</script>
 							<name>demonnicOnInstall</name>
 							<packageName></packageName>
 							<script>function demonnicOnInstall(_, package)
+  GUI.debug("YATCO/INSTALL", "sysInstall received", {
+    package = package,
+  })
   -- Check for both LuminariGUI and YATCO package names to handle mid-session imports
-  if package:find("YATCO") or package:find("LuminariGUI") then
+  if type(package) == "string" and
+    (package:find("YATCO") or package:find("LuminariGUI")) then
     demonnicOnStart()
   end
 end</script>

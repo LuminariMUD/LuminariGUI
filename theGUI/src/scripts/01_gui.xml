@@ -17,6 +17,11 @@ CSSMan = {}
 CSSMan.__index = CSSMan
 
 function CSSMan.new(stylesheet)
+  GUI.debug("CSSMAN", "new stylesheet requested", {
+    stylesheetType = type(stylesheet),
+    stylesheet = stylesheet,
+    stringTrim = type(string.trim),
+  })
   local obj  = { stylesheet = {} }
   setmetatable(obj,CSSMan)
   local trim = string.trim
@@ -31,6 +36,10 @@ function CSSMan.new(stylesheet)
     end
   end
 
+  GUI.debug("CSSMAN", "stylesheet parsed", {
+    attributeCount = GUI.debugCountEntries(obj.stylesheet),
+    attributes = obj.stylesheet,
+  })
   return obj
 end
 
@@ -103,6 +112,11 @@ end</script>
 -- =============================================================================
 
 GUI = GUI or {}
+GUI.debug("GUI/BOOT", "GUI namespace fragment loaded", {
+  debugEnabled = GUI.DEBUG,
+  CSSMan = type(CSSMan),
+  Geyser = type(Geyser),
+})
 </script>
 					<eventHandlerList />
 					<Script isActive="yes" isFolder="no">
@@ -181,7 +195,7 @@ function GUI.horizontalScrollToggle()
     end
     cecho("\n&lt;white&gt;Horizontal scrolling disabled on main window (word wrap enabled).")
   end
-  
+
   -- Save the toggle state
   GUI.saveToggles()
 end
@@ -962,6 +976,7 @@ GUI.Affects.Rows = GUI.Affects.Rows or {}
 GUI.Affects.Modes = GUI.Affects.Modes or {}
 
 function GUI.Affects.init()
+  GUI.debug("GUI/AFFECTS", "initializing affects display")
   -- Initialize all the labels and such	
   -- Don't overwrite GUI.Affects itself - preserve the init function!
   GUI.Affects.Labels = {}
@@ -1108,6 +1123,9 @@ function GUI.Affects.init()
 end
 
 function GUI.updateSLAffects()
+  GUI.debug("GUI/AFFECTS", "updating spell-like affects", {
+    affects = msdp and msdp.AFFECTS,
+  })
 	if msdp.AFFECTS and msdp.AFFECTS.SPELL_LIKE_AFFECTS and #msdp.AFFECTS.SPELL_LIKE_AFFECTS &gt; 0 then
 		-- We have spell like affects to process!		
 		for i = 1, GUI.SLAffects.num_rows do
@@ -1129,6 +1147,9 @@ function GUI.updateSLAffects()
 end
 
 function GUI.updateAffectIcons()
+  GUI.debug("GUI/AFFECTS", "updating affect icons", {
+    affects = msdp and msdp.AFFECTS,
+  })
   -- Also update spell-like affects display
   GUI.updateSLAffects()
   
@@ -1217,6 +1238,11 @@ end</script>
 end
 
 function GUI.updateGroup()
+  GUI.debug("GUI/GROUP", "updating group display", {
+    group = msdp and msdp.GROUP,
+    characterName = msdp and msdp.CHARACTER_NAME,
+    includeSelf = GUI.toggles and GUI.toggles.includeInGroup,
+  })
   GUI.group_data = {}
   -- Remove the player from the group data if toggled off.
   local j = 1
@@ -1361,6 +1387,23 @@ function GUI.updateGroup()
 end
 
 function GUI.updatePlayer()
+  GUI.debug("GUI/PLAYER", "updating player display", {
+    characterName = msdp and msdp.CHARACTER_NAME,
+    level = msdp and msdp.LEVEL,
+    class = msdp and msdp.CLASS,
+    race = msdp and msdp.RACE,
+    alignment = msdp and msdp.ALIGNMENT,
+    stats = {
+      STR = msdp and msdp.STR,
+      DEX = msdp and msdp.DEX,
+      CON = msdp and msdp.CON,
+      INT = msdp and msdp.INT,
+      WIS = msdp and msdp.WIS,
+      CHA = msdp and msdp.CHA,
+      AC = msdp and msdp.AC,
+      MONEY = msdp and msdp.MONEY,
+    },
+  })
   -- Check if tabbedInfoWindow is initialized
   if not GUI.tabbedInfoWindow or not GUI.tabbedInfoWindow["Playercenter"] then
     print("[GUI] Player tab not ready for update")
@@ -1653,6 +1696,13 @@ end </script>
 						<packageName></packageName>
 						<script>
 function GUI.updateRoom()
+  GUI.debug("GUI/ROOM", "updating room display", {
+    room = msdp and msdp.ROOM,
+    roomName = msdp and msdp.ROOM_NAME,
+    roomVnum = msdp and msdp.ROOM_VNUM,
+    areaName = msdp and msdp.AREA_NAME,
+    roomExits = msdp and msdp.ROOM_EXITS,
+  })
   local roomInfo = [[&lt;div style="padding: 5px;"&gt;]]
   
   if msdp.ROOM.ENVIRONMENT == "Wilderness" then
@@ -1705,6 +1755,7 @@ end
 
 
 function GUI.updateLegend()
+  GUI.debug("GUI/ROOM", "updating legend display")
   clearUserWindow("GUI.buttonWindow.Legend")
 	GUI.buttonWindow.Legend:decho("\n &lt;102,0,0&gt; + &lt;255,255,255&gt; Up           &lt;0,102,102&gt;[&lt;0,255,255&gt;^&lt;0,102,102&gt;] &lt;255,255,255&gt;Air           &lt;0,102,102&gt;[&lt;255,0,255&gt;Y&lt;0,102,102&gt;] &lt;255,255,255&gt;UD Wild")
 	GUI.buttonWindow.Legend:decho("\n &lt;102,0,0&gt; - &lt;255,255,255&gt; Down         &lt;0,102,102&gt;[&lt;0,0,102&gt;U&lt;0,102,102&gt;] &lt;255,255,255&gt;Underwater    &lt;0,102,102&gt;[&lt;102,0,102&gt;C&lt;0,102,102&gt;] &lt;255,255,255&gt;UD City")
@@ -1752,53 +1803,78 @@ GUI.MSDP_REPORT_VARS = {
 -- simply refreshes it. Needed after resetProfile(), where sysProtocolEnabled
 -- does NOT fire again because MSDP was already negotiated on the connection.
 function GUI.requestMSDPReports()
+  GUI.debug("MSDP/REPORT", "subscription request started", {
+    sendMSDP = type(sendMSDP),
+    variableCount = #GUI.MSDP_REPORT_VARS,
+  })
   if not sendMSDP then
+    GUI.debugError("MSDP/REPORT", "sendMSDP is unavailable")
     return false
   end
   for _, var in ipairs(GUI.MSDP_REPORT_VARS) do
-    sendMSDP("REPORT", var)
+    GUI.debug("MSDP/REPORT", "sending REPORT", var)
+    local ok, result = GUI.debugCall(
+      "MSDP/REPORT/" .. var,
+      sendMSDP,
+      "REPORT",
+      var
+    )
+    if not ok then
+      GUI.debug("MSDP/REPORT", "REPORT failed", {
+        variable = var,
+        error = result,
+      })
+    end
   end
+  GUI.debug("MSDP/REPORT", "subscription request complete")
   return true
 end
 
 function GUI.onProtocolEnabled(_, protocol)
+  GUI.debug("MSDP/PROTOCOL", "sysProtocolEnabled received", {
+    protocol = protocol,
+    enableMSDP = type(getConfig) == "function" and getConfig("enableMSDP") or "unavailable",
+  })
   if protocol == "MSDP" then
     print("[GUI] MSDP Protocol enabled - initializing variables")
 
     GUI.requestMSDPReports()
 
     -- Debug: Show what variables are available after a short delay
-    tempTimer(2, function()
-      print("[GUI] MSDP variables received:")
+    tempTimer(2, GUI.debugWrap("MSDP/PROTOCOL/two-second inventory", function()
+      GUI.debug("MSDP/PROTOCOL", "MSDP variables received")
       local count = 0
       for k, v in pairs(msdp) do
         if type(v) ~= "function" then
           count = count + 1
-          if k == "ACTIONS" then
-            -- Special handling for ACTIONS to show its structure
-            print(string.format("  %s = %s (type: %s)", k, tostring(v), type(v)))
-            if type(v) == "table" then
-              print("    ACTIONS table contents:")
-              for action_k, action_v in pairs(v) do
-                print(string.format("      %s = %s", action_k, tostring(action_v)))
-              end
-            end
-          else
-            print(string.format("  %s = %s", k, tostring(v)))
-          end
+          GUI.debug("MSDP/VALUE", "msdp." .. tostring(k), v)
         end
       end
-      print(string.format("[GUI] Total MSDP variables: %d", count))
-    end)
+      GUI.debug("MSDP/PROTOCOL", "MSDP variable inventory complete", {
+        count = count,
+      })
+      if type(GUI.debugSnapshot) == "function" then
+        GUI.debugCall(
+          "SNAPSHOT/MSDP protocol",
+          GUI.debugSnapshot,
+          "two seconds after MSDP protocol enabled"
+        )
+      end
+    end))
     
     -- Initialize or refresh GUI after a short delay to ensure MSDP data arrives
-    tempTimer(0.5, function()
+    tempTimer(0.5, GUI.debugWrap("MSDP/PROTOCOL/GUI refresh", function()
       GUI.initializeOrRefresh("MSDP protocol enabled")
-    end)
+    end))
   end
 end
 
 function GUI.updateHealthGauge()
+  GUI.debug("GUI/GAUGE/HEALTH", "update requested", {
+    health = msdp and msdp.HEALTH,
+    maximum = msdp and msdp.HEALTH_MAX,
+    gauge = type(GUI.Health),
+  })
   -- This function handles the following events:
   --   msdp.HEALTH
   --   msdp.HEALTH_MAX
@@ -1838,6 +1914,11 @@ function GUI.updateHealthGauge()
 end
 
 function GUI.updateMovesGauge()
+  GUI.debug("GUI/GAUGE/MOVEMENT", "update requested", {
+    movement = msdp and msdp.MOVEMENT,
+    maximum = msdp and msdp.MOVEMENT_MAX,
+    gauge = type(GUI.Moves),
+  })
   -- This function handles the following events:
   --   msdp.MOVEMENT
   --   msdp.MOVEMENT_MAX
@@ -1912,6 +1993,11 @@ end
 -- end
 
 function GUI.updatePSPGauge()
+  GUI.debug("GUI/GAUGE/PSP", "update requested", {
+    psp = msdp and msdp.PSP,
+    maximum = msdp and msdp.PSP_MAX,
+    gauge = type(GUI.PSP),
+  })
   -- This function handles the following events:
   --   msdp.PSP
   --   msdp.PSP_MAX
@@ -1947,6 +2033,12 @@ function GUI.updatePSPGauge()
 end
 
 function GUI.updateEnemyGauge()
+  GUI.debug("GUI/GAUGE/ENEMY", "update requested", {
+    opponentName = msdp and msdp.OPPONENT_NAME,
+    health = msdp and msdp.OPPONENT_HEALTH,
+    maximum = msdp and msdp.OPPONENT_HEALTH_MAX,
+    gauge = type(GUI.Enemy),
+  })
   -- This function handles the following events:
   --   msdp.OPPONENT_HEALTH
   --   msdp.OPPONENT_HEALTH_MAX
@@ -1994,6 +2086,12 @@ function GUI.updateEnemyGauge()
 end
 
 function GUI.updateActionIcons()
+  GUI.debug("GUI/ACTIONS", "updating action icons", {
+    actions = msdp and msdp.ACTIONS,
+    standardIcon = type(GUI.StandardActionIcon),
+    moveIcon = type(GUI.MoveActionIcon),
+    swiftIcon = type(GUI.SwiftActionIcon),
+  })
   -- Check if ACTIONS data exists
   if not msdp.ACTIONS then
     -- No ACTIONS data yet, skip update
@@ -2071,33 +2169,72 @@ end
   -- The GUI background, borders, and boxes must exist before any other initialization.
   -- This needs to be outside the config, since YATCO needs to have the boxes set.
 	GUI.image_location = getMudletHomeDir():gsub("\\", "/") .. "/LuminariGUI/images/"
-	GUI.init_background()
-  GUI.set_borders()
-  GUI.init_boxes()
+  GUI.debug("BOOT/CONFIG", "Config script reached", {
+    imageLocation = GUI.image_location,
+    initBackground = type(GUI.init_background),
+    setBorders = type(GUI.set_borders),
+    initBoxes = type(GUI.init_boxes),
+  })
+
+  -- These calls used to run unguarded before GUI.initializeOrRefresh was
+  -- defined. Any one error aborted this entire script and produced the
+  -- misleading "GUI system not fully loaded" message. In debug mode each
+  -- stage now prints its entry, result, and stack trace, then allows the rest
+  -- of the diagnostic/lifecycle functions to load.
+  local bootStages = {
+    {name = "GUI.init_background", callable = GUI.init_background},
+    {name = "GUI.set_borders", callable = GUI.set_borders},
+    {name = "GUI.init_boxes", callable = GUI.init_boxes},
+  }
+  for _, stage in ipairs(bootStages) do
+    local ok, result = GUI.debugCall("BOOT/CONFIG/" .. stage.name, stage.callable)
+    GUI.debugBootResults[stage.name] = {
+      ok = ok,
+      result = result,
+    }
+    GUI.debug("BOOT/CONFIG", "stage complete", {
+      stage = stage.name,
+      ok = ok,
+      result = result,
+    })
+  end
 	
 function GUI.init()
+  GUI.debug("GUI/INIT", "initialization sequence starting", {
+    alreadyInitialized = GUI.initialized,
+  })
   GUI.AffectIcons = GUI.AffectIcons or {}
   GUI.Affects = GUI.Affects or {}
   GUI.Affects.Rows = GUI.Affects.Rows or {}
   GUI.Affects.Modes = GUI.Affects.Modes or {}
-  --
-  GUI.init_gauges()
-  GUI.init_action_icons()
-  --GUI.init_header_icons()
-  GUI.tabbedInfoWindow.init()
-  GUI.init_player()
-  GUI.init_group()
-  GUI.Affects.init()
-  GUI.draw_frames()
-	GUI.buttonWindow.init()
-  GUI.init_castConsole()
-  GUI.styleScrollbar()
-	
-  -- Register all event handlers with error handling
-  GUI.registerEventHandlers()
-  
+
+  local initStages = {
+    {name = "GUI.init_gauges", callable = GUI.init_gauges},
+    {name = "GUI.init_action_icons", callable = GUI.init_action_icons},
+    {name = "GUI.tabbedInfoWindow.init", callable = GUI.tabbedInfoWindow.init},
+    {name = "GUI.init_player", callable = GUI.init_player},
+    {name = "GUI.init_group", callable = GUI.init_group},
+    {name = "GUI.Affects.init", callable = GUI.Affects.init},
+    {name = "GUI.draw_frames", callable = GUI.draw_frames},
+    {name = "GUI.buttonWindow.init", callable = GUI.buttonWindow.init},
+    {name = "GUI.init_castConsole", callable = GUI.init_castConsole},
+    {name = "GUI.styleScrollbar", callable = GUI.styleScrollbar},
+    {name = "GUI.registerEventHandlers", callable = GUI.registerEventHandlers},
+  }
+
+  GUI.initFailures = {}
+  for _, stage in ipairs(initStages) do
+    local ok, result = GUI.debugCall("GUI/INIT/" .. stage.name, stage.callable)
+    if not ok then
+      GUI.initFailures[#GUI.initFailures + 1] = {
+        stage = stage.name,
+        error = result,
+      }
+    end
+  end
+
   -- Ensure proper z-order of adjustable containers
-  tempTimer(0.5, function()
+  tempTimer(0.5, GUI.debugWrap("GUI/INIT/z-order timer", function()
     -- Bring containers to front in correct order
     -- Map should be at the back
     if map and map.container then
@@ -2118,10 +2255,16 @@ function GUI.init()
       GUI.actionIconsContainer:show()
       GUI.actionIconsContainer:raise()  -- Bring to front
     end
-  end)
-  
-  -- Mark GUI as initialized for the refresh system
-  GUI.initialized = true
+  end))
+
+  -- Preserve the old failure semantics: before diagnostic catching, an error
+  -- prevented this flag from ever being reached. A failed debug run therefore
+  -- remains retryable through "fix gui".
+  GUI.initialized = (#GUI.initFailures == 0)
+  GUI.debug("GUI/INIT", "initialization sequence complete", {
+    initialized = GUI.initialized,
+    failures = GUI.initFailures,
+  })
 end
 
 -- Robust event handler registration with error handling and verification
@@ -2191,29 +2334,72 @@ function GUI.registerEventHandlers()
     local handlerId = GUI.eventHandlerIds[event]
     if handlerId then
       local ok = pcall(killAnonymousEventHandler, handlerId)
+      GUI.debug("EVENT/REGISTER", "remove owned handler", {
+        event = event,
+        handlerId = handlerId,
+        success = ok,
+      })
       if ok then killed = killed + 1 end
     end
     GUI.eventHandlerIds[event] = nil
   end
-  if killed > 0 then
-    -- Uncomment when debugging handler lifetime:
-    -- print(string.format("[GUI] Cleared %d stale event handlers", killed))
-  end
+  GUI.debug("EVENT/REGISTER", "owned handler cleanup complete", {
+    killed = killed,
+  })
 
   -- Register GUI event handlers
   for event, handler in pairs(eventHandlers) do
-    local success, handlerId = pcall(registerAnonymousEventHandler, event, handler)
+    local eventName = event
+    local handlerName = handler
+    local callback = handler
+    if GUI.DEBUG == true then
+      callback = function(...)
+        local variableName = eventName:match("^msdp%.(.+)$")
+        GUI.debug("EVENT/FIRE", eventName .. " -&gt; " .. handlerName, {
+          arguments = {...},
+          msdpVariable = variableName,
+          msdpValue = variableName and msdp and msdp[variableName] or nil,
+        })
+        local callable = GUI.debugResolve(handlerName)
+        local ok, result = GUI.debugCall(
+          "EVENT/HANDLER/" .. eventName .. "/" .. handlerName,
+          callable,
+          ...
+        )
+        if not ok then
+          return nil, result
+        end
+        return result
+      end
+    end
+
+    local success, handlerId = pcall(
+      registerAnonymousEventHandler,
+      eventName,
+      callback
+    )
     if success then
-      GUI.eventHandlerIds[event] = handlerId
-      -- Optional: uncomment for debugging
-      -- print(string.format("✓ Registered GUI handler for %s", event))
+      GUI.eventHandlerIds[eventName] = handlerId
+      GUI.debug("EVENT/REGISTER", "registered GUI handler", {
+        event = eventName,
+        handler = handlerName,
+        handlerId = handlerId,
+        callbackType = type(callback),
+      })
     else
-      print(string.format("✗ Failed to register GUI handler for %s: %s", event, handlerId))
+      GUI.debugError(
+        "EVENT/REGISTER/" .. eventName,
+        "failed to register " .. handlerName .. ": " .. tostring(handlerId)
+      )
+      print(string.format("✗ Failed to register GUI handler for %s: %s", eventName, handlerId))
     end
   end
 
   -- Verify critical handlers are working and refresh displays
-  tempTimer(2, function()
+  tempTimer(2, GUI.debugWrap("EVENT/VERIFY/two-second refresh", function()
+    GUI.debug("EVENT/VERIFY", "checking current MSDP-backed displays", {
+      msdpCount = GUI.debugCountEntries(msdp),
+    })
     -- Group tab refresh
     if msdp.GROUP and #msdp.GROUP > 0 then
       GUI.updateGroup()
@@ -2252,14 +2438,20 @@ function GUI.registerEventHandlers()
     if msdp.ROOM then
       GUI.updateRoom()
     end
-  end)
+  end))
   
   -- Initialize chat system if it's enabled but not created
-  tempTimer(1, function()
+  tempTimer(1, GUI.debugWrap("EVENT/VERIFY/chat startup", function()
+    GUI.debug("EVENT/VERIFY", "chat startup check", {
+      demonnic = type(demonnic),
+      chat = type(demonnic and demonnic.chat),
+      use = demonnic and demonnic.chat and demonnic.chat.use,
+      container = type(demonnic and demonnic.chat and demonnic.chat.container),
+    })
     if demonnic.chat.use and not demonnic.chat.container then
       demonnicOnStart()
     end
-  end)
+  end))
 end
 
 -- =============================================================================
@@ -2284,6 +2476,12 @@ end
 -- =============================================================================
 function GUI.initializeOrRefresh(context)
   context = context or "unknown"
+  GUI.debug("GUI/REFRESH", "initializeOrRefresh requested", {
+    context = context,
+    initialized = GUI.initialized,
+    initFailures = GUI.initFailures,
+    msdpCount = GUI.debugCountEntries(msdp),
+  })
   
   -- Track if this is initial setup or refresh
   local isRefresh = (GUI.initialized == true)
@@ -2371,7 +2569,7 @@ function GUI.initializeOrRefresh(context)
     map.mapwindow:show()
     map.mapwindow:resize()
     -- Force refresh with delayed operations
-    tempTimer(0.1, function()
+    tempTimer(0.1, GUI.debugWrap("GUI/REFRESH/mapper delayed resize", function()
       if map.mapwindow then
         map.mapwindow:resize()
         if map.mapwindow.raise then
@@ -2382,7 +2580,7 @@ function GUI.initializeOrRefresh(context)
           centerview(map.currentRoom)
         end
       end
-    end)
+    end))
     table.insert(refreshed, "Mudlet mapper")
   end
   
@@ -2446,12 +2644,12 @@ function GUI.initializeOrRefresh(context)
   end
   
   -- Ensure proper z-order (delayed to allow all components to initialize)
-  tempTimer(0.5, function()
+  tempTimer(0.5, GUI.debugWrap("GUI/REFRESH/z-order timer", function()
     -- Let Adjustable Containers manage their own z-order
     -- Only raise containers that need to be on top of others
     if GUI.chatContainer then GUI.chatContainer:raise() end
     if GUI.actionIconsContainer then GUI.actionIconsContainer:raise() end
-  end)
+  end))
   
   -- Report results
   if #refreshed > 0 then
@@ -2459,6 +2657,11 @@ function GUI.initializeOrRefresh(context)
       isRefresh and "Refresh" or "Initialization",
       table.concat(refreshed, ", ")))
   end
+  GUI.debug("GUI/REFRESH", "initializeOrRefresh complete", {
+    context = context,
+    isRefresh = isRefresh,
+    refreshed = refreshed,
+  })
 end
 
 -- =============================================================================
@@ -2480,14 +2683,35 @@ end
 -- already negotiated, so sysProtocolEnabled will NOT fire again and the GUI
 -- would otherwise sit empty, never having sent its REPORT subscriptions.
 registerAnonymousEventHandler("sysLoadEvent", function(_, isNewLoad)
+  GUI.debug("LIFECYCLE", "sysLoadEvent fired", {
+    isNewLoad = isNewLoad,
+    initializedBefore = GUI.initialized,
+  })
   GUI.init()
+  if type(GUI.debugSnapshot) == "function" then
+    GUI.debugCall(
+      "SNAPSHOT/sysLoad immediate",
+      GUI.debugSnapshot,
+      "sysLoadEvent immediate"
+    )
+    tempTimer(2, GUI.debugWrap("LIFECYCLE/sysLoad delayed snapshot", function()
+      GUI.debugCall(
+        "SNAPSHOT/sysLoad delayed",
+        GUI.debugSnapshot,
+        "sysLoadEvent plus two seconds"
+      )
+    end))
+  end
 
   -- isNewLoad == false means we came from resetProfile(). Older Mudlet
   -- versions pass nil here, so only take this path on an explicit false.
   if isNewLoad == false then
-    tempTimer(0.5, function()
+    tempTimer(0.5, GUI.debugWrap("LIFECYCLE/profile reset recovery", function()
       if map and map.initialize then
-        local ok, initialized = pcall(map.initialize)
+        local ok, initialized = GUI.debugCall(
+          "LIFECYCLE/profile reset/map.initialize",
+          map.initialize
+        )
         if not ok or initialized == false then
           print("[GUI] Mapper initialization failed after profile reset: " .. tostring(initialized))
         end
@@ -2498,7 +2722,7 @@ registerAnonymousEventHandler("sysLoadEvent", function(_, isNewLoad)
         print("[GUI] Re-subscribed to MSDP after profile reset")
       end
       GUI.initializeOrRefresh("profile reset")
-    end)
+    end))
   end
 end)
 registerAnonymousEventHandler("sysInstall", "GUI.init")
@@ -2508,10 +2732,18 @@ registerAnonymousEventHandler("sysInstall", "GUI.init")
 registerAnonymousEventHandler("sysProtocolEnabled", "GUI.onProtocolEnabled")
 
 -- Add connection-based refresh
-registerAnonymousEventHandler("sysConnectionEvent", function()
-  tempTimer(1, function()
+registerAnonymousEventHandler("sysConnectionEvent", function(...)
+  GUI.debug("LIFECYCLE", "sysConnectionEvent fired", {...})
+  tempTimer(1, GUI.debugWrap("LIFECYCLE/connection refresh timer", function()
     GUI.initializeOrRefresh("connection established")
-  end)
+    if type(GUI.debugSnapshot) == "function" then
+      GUI.debugCall(
+        "SNAPSHOT/connection",
+        GUI.debugSnapshot,
+        "one second after connection"
+      )
+    end
+  end))
 end)</script>
 						<eventHandlerList />
 					</Script>
