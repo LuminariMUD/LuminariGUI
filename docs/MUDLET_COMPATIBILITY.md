@@ -44,6 +44,17 @@ Large release: ~46 new features, 91 improvements, 142 bug fixes, plus major infr
 | "Improved memory safety by using smart pointers"; several use-after-free fixes | Underlies the label/callback lifetime changes. |
 | Stopped scripted package installs from stealing window focus | Cosmetic. |
 
+Released 4.21 builds also contain a package-uninstall use-after-free introduced
+between 4.20.1 and 4.21.0. During this audit, the official portable 4.21.0
+AppImage reproducibly crashed while removing the preceding LuminariGUI package,
+including when uninstall and reinstall were separated. This matches Mudlet
+[#9337](https://github.com/Mudlet/Mudlet/issues/9337) and the 4.21/4.21.1 crash
+cluster fixed by [#9557](https://github.com/Mudlet/Mudlet/pull/9557). That fix
+merged on 2026-07-30, after the 4.22.0 release, so no released build contains
+the complete fix yet. Fresh installs, connections, MSDP updates, callbacks,
+and `resetProfile()` all passed in 4.21.0; use 4.22 for package replacement
+testing until a release containing #9557 is available.
+
 ### Mudlet 4.22.0 — mapper-focused, low risk
 Released 2026-07-06.
 
@@ -55,12 +66,13 @@ The Windows same-named-items fix is the only entry with plausible relevance — 
 
 ---
 
-## Known open Mudlet bugs relevant to this package
+## Known upstream Mudlet issues relevant to this package
 
 These are **unfixed upstream** as of 4.22.0. If symptoms match, the fix is a workaround here, not a code error.
 
 | Issue | Status | Relevance |
 |---|---|---|
+| [#9337 — crash when uninstalling/reinstalling a local package](https://github.com/Mudlet/Mudlet/issues/9337), completed by [#9557](https://github.com/Mudlet/Mudlet/pull/9557) | Fixed on `development`; unreleased as of 2026-07-31 | Affects the normal remove/install upgrade path in released 4.21 and potentially 4.22 builds. The crash happens in Mudlet while removing the old package, before replacement code can mitigate it. |
 | [#9262 — `sysWindowResize` events only triggering sometimes](https://github.com/Mudlet/Mudlet/issues/9262) | Open (2026-05-09) | Reported on tiling window managers: the main window stops emitting resize events when tiled (works when fullscreen/floating); user windows still fire. Result: **Geyser never repositions**, negative-offset containers vanish, word-wrap assumptions go stale. Consider `sysConsoleSizeChanged` as a supplementary signal. |
 | [#8856 — Miniconsole adds extra characters/columns at screen edge](https://github.com/Mudlet/Mudlet/issues/8856) | Open (2026-02-01) | Regression vs 4.19.1. Content past the defined width becomes scrollable into empty space. **YATCO uses 7 `Geyser.MiniConsole`s** — directly in scope. |
 | [#9446 — `setFontSize` affects styling on `hecho`'d labels](https://github.com/Mudlet/Mudlet/issues/9446) | Open (2026-07-15) | Relevant to any label that mixes font sizing with coloured echo. |
@@ -87,6 +99,17 @@ So after a handful of reconnects/refreshes, one MSDP update fanned out to ~10 du
 Separately, six event→handler pairs were registered **twice** — once at file scope in `00_msdpmapper.xml`, once again in the GUI tables — so `map.eventHandler` processed every room change twice even on a clean start.
 
 **Fixed:** the function now kills only the GUI-table handlers it owns before re-registering (verifiably idempotent), and the duplicate table entries were removed in favour of the file-scope registrations. Limiting cleanup to owned events also preserves file-scope handler IDs reused by Mudlet during an in-place upgrade.
+
+The focused-source migration later exposed a related lifecycle case: the old
+`sysLoadEvent` and `sysConnectionEvent` function-reference closures could
+survive an in-session package replacement because their IDs were never stored.
+That produced two identical connection refreshes after a `2.0.4.034` → split
+upgrade. **Fixed:** lifecycle registrations now own IDs in
+`GUI.lifecycleHandlerIds`, use stable global handlers, and replace only their
+own entries. Initialization, refresh, and REPORT entry points briefly coalesce
+the single unidentifiable legacy callback during the first upgrade. Mudlet 4.22
+runtime probes confirm one effective refresh, one REPORT batch after reset,
+and stable 26 GUI + 4 lifecycle registrations.
 
 ### 1. Legacy string-name callbacks with arguments — *high priority*
 ```lua

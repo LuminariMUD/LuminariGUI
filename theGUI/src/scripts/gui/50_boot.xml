@@ -60,6 +60,23 @@ function GUI.validateCoreLayout()
 end
 
 function GUI.init()
+  -- A pre-split lifecycle closure can survive an in-session package upgrade
+  -- because that release did not retain its anonymous-handler ID. Both the
+  -- legacy and current sysLoadEvent callbacks then reach this global function
+  -- in the same event turn. Run the initialization sequence only once.
+  if GUI.initCallPending then
+    GUI.debug("GUI/INIT", "duplicate initialization call coalesced")
+    return true
+  end
+  GUI.initCallPending = true
+  if type(tempTimer) == "function" then
+    tempTimer(0.5, function()
+      GUI.initCallPending = false
+    end)
+  else
+    GUI.initCallPending = false
+  end
+
   GUI.debug("GUI/INIT", "initialization sequence starting", {
     alreadyInitialized = GUI.initialized,
   })

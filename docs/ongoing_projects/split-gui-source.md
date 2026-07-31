@@ -1,6 +1,7 @@
 # Split the Main GUI Source Fragment
 
-- **Status:** Implemented; automated validation passes, manual Mudlet validation pending
+- **Status:** Complete — fully validated in Mudlet 4.22, with fresh/reset
+  coverage in Mudlet 4.21
 - **Created:** 2026-07-31
 - **Scope:** `theGUI/src/scripts/01_gui.xml` and the build/test support needed
   to split it safely
@@ -234,36 +235,61 @@ python3 tests/run_tests.py --skip-optional
 python3 scripts/validate_package.py
 ```
 
-Automated result for build `2.0.4.035` (2026-07-31): all four commands pass.
+Automated result for build `2.0.4.037` (2026-07-31): all four commands pass.
 The full runner reports 6/6 supported suites and the lifecycle suite reports
-26/26 cases. `luacheck` is not installed, so the documented `--skip-optional`
+29/29 cases. `luacheck` is not installed, so the documented `--skip-optional`
 path was used. The package contains 78 syntax-valid Lua scripts. The build
 directive leak check is empty, and the generated XML is synchronized with the
 sources.
 
-Mudlet is not installed in the implementation environment. The hands-on 4.22
-and 4.21 checks below therefore remain release-owner validation items and are
-not represented as complete by the automated mocks.
+Hands-on validation used checksum-verified official Linux AppImages in
+isolated portable directories: Mudlet 4.22.0 and 4.21.0, both with Qt 6.9. A
+local telnet fixture negotiated MSDP, captured every REPORT subscription, and
+sent scalar plus nested ROOM, GROUP, ACTIONS, opponent, and resource values.
+A temporary full `.mpackage` included the production XML, images, audio, and
+metadata so asset paths and QSS rendering were exercised as shipped.
 
 After phases that intentionally change the generated XML, run a normal build
 once, review the version/archive/output changes, and rerun the full suite.
 
 Manual Mudlet checks should cover:
 
-- [ ] Fresh package import.
-- [ ] In-place upgrade from the preceding package layout.
-- [ ] Fresh connection and reconnection.
-- [ ] `resetProfile()` recovery.
-- [ ] MSDP protocol activation and report subscriptions.
-- [ ] Repeated `fix gui`/refresh operations without handler growth.
-- [ ] Player, group, affects, gauges, opponent, and action updates.
-- [ ] ASCII/Mudlet map switching.
-- [ ] Chat initialization inside the GUI chat container.
-- [ ] Container save/load/profile behavior.
-- [ ] Widget parenting and z-order.
+- [x] Fresh package import, including bundled assets (4.22 and 4.21).
+- [x] In-place upgrade from monolithic `2.0.4.034` to split `2.0.4.037`
+  (4.22). Old `MSDP`/`Config` nodes disappeared, every replacement node
+  appeared once, and mapper/GUI room and protocol callbacks each fired once.
+- [x] Fresh connection and reconnection (4.22 and 4.21).
+- [x] `resetProfile()` recovery without reconnecting (4.22 and 4.21).
+- [x] MSDP protocol activation and all REPORT subscriptions.
+- [x] Repeated `fix gui`/refresh operations without handler growth: 26 owned
+  GUI handlers, 4 lifecycle handlers, and 5 mapper IDs remained stable.
+- [x] Player, group, affects, gauges, opponent, and action updates.
+- [x] ASCII/Mudlet map switching.
+- [x] Chat initialization inside `GUI.chatContainerInner`.
+- [x] Container save/load/profile behavior.
+- [x] Widget parenting through Adjustable.Container `.Inside` parents and
+  visual z-order with shipped textures.
 
-Test current Mudlet 4.22 and, when practical, 4.21 because lifecycle, callback,
-and handler-ID behavior changed across those releases.
+Mudlet 4.21 passed fresh install, connection, MSDP, component/callback,
+handler-balance, map-switching, container-profile, and reset tests. Its
+released package remover reproducibly crashes while uninstalling the preceding
+package, before the replacement can load; this is the upstream use-after-free
+tracked by Mudlet #9337 and completed by #9557 after the 4.22.0 release. An
+immediate replacement loaded far enough for the complete post-upgrade topology
+and callback probe to pass before Mudlet later crashed. The stable end-to-end
+upgrade result is therefore represented by 4.22, with the 4.21 client defect
+recorded in `docs/MUDLET_COMPATIBILITY.md` rather than misreported as a package
+failure.
+
+Manual testing found and fixed two issues before completion:
+
+- `resetProfile()` clears the global `msdp` table before the refresh callback;
+  `GUI.initializeOrRefresh()` now recreates it before reading fields.
+- A pre-split anonymous lifecycle closure can survive one live package
+  replacement and duplicate connection/reset work. Lifecycle registrations
+  now own and replace their IDs, while the public entry points coalesce that
+  one legacy overlap. A fresh 4.22 profile prints one connection refresh, and
+  the monolithic-to-split profile now does the same.
 
 ## Load-Order Invariants
 
@@ -326,11 +352,13 @@ The project is complete when:
   explicit justification.
 - [x] The builder validates included fragments and reports useful failures.
 - [x] Phase 2 produces an unchanged generated package.
-- [ ] Later intentional XML changes are reviewed and tested as upgrades.
-  Automated topology, handler-ownership, and reset-profile regressions pass;
-  the manual in-place upgrade remains pending.
+- [x] Later intentional XML changes are reviewed and tested as upgrades. The
+  full `2.0.4.034` → `2.0.4.037` path passes in Mudlet 4.22; released Mudlet
+  4.21 crashes in its old-package remover before a stable replacement run can
+  complete, as documented above.
 - [x] The complete automated test suite passes.
 - [x] Package validation passes.
-- [ ] Manual Mudlet lifecycle and UI checks pass.
+- [x] Manual Mudlet lifecycle and UI checks pass in 4.22, and all fresh,
+  connected, and reset checks pass in 4.21.
 - [x] Documentation and source-aware tests no longer assume one monolithic GUI
   file.

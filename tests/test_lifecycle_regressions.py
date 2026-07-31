@@ -307,19 +307,18 @@ assert(map.minimap == firstMinimap)
 
     def _test_profile_reset_initializes_mapper(self):
         source = self._gui_script("GUI Lifecycle")
-        reset_handler = self._extract(
-            source,
-            'registerAnonymousEventHandler("sysLoadEvent", function(_, isNewLoad)',
-            '\nregisterAnonymousEventHandler("sysInstall"',
-        )
 
         script = f'''
 calls = {{gui = 0, mapper = 0, reports = 0, refresh = 0}}
 handlers = {{}}
+nextHandlerId = 0
 
 function registerAnonymousEventHandler(event, handler)
   handlers[event] = handler
+  nextHandlerId = nextHandlerId + 1
+  return nextHandlerId
 end
+function killAnonymousEventHandler() return true end
 
 function tempTimer(_, callback)
   callback()
@@ -339,6 +338,7 @@ GUI = {{
     return true
   end,
   initializeOrRefresh = function() calls.refresh = calls.refresh + 1 end,
+  debugError = function() end,
 }}
 
 map = {{
@@ -348,17 +348,233 @@ map = {{
   end,
 }}
 
-{reset_handler}
+{source}
 
-handlers.sysLoadEvent("sysLoadEvent", false)
+assert(handlers.sysLoadEvent == "GUI.onSysLoadEvent")
+GUI.onSysLoadEvent("sysLoadEvent", false)
 assert(calls.gui == 1)
 assert(calls.mapper == 1, "mapper was not initialized after resetProfile()")
 assert(calls.reports == 1)
 assert(calls.refresh == 1)
 
-handlers.sysLoadEvent("sysLoadEvent", true)
+GUI.onSysLoadEvent("sysLoadEvent", true)
 assert(calls.gui == 2)
 assert(calls.mapper == 1, "reset recovery ran during a fresh profile load")
+'''
+        self._run_lua(script)
+
+    def _test_lifecycle_registration_is_idempotent(self):
+        source = self._gui_script("GUI Lifecycle")
+
+        script = f'''
+nextHandlerId = 0
+killed = 0
+activeHandlers = {{}}
+
+function registerAnonymousEventHandler(event, handler)
+  nextHandlerId = nextHandlerId + 1
+  activeHandlers[nextHandlerId] = {{event = event, handler = handler}}
+  return nextHandlerId
+end
+
+function killAnonymousEventHandler(handlerId)
+  assert(activeHandlers[handlerId], "attempted to kill an unknown lifecycle ID")
+  activeHandlers[handlerId] = nil
+  killed = killed + 1
+  return true
+end
+
+GUI = {{
+  debug = function() end,
+  debugError = function() end,
+}}
+
+do
+{source}
+end
+
+local function activeCount()
+  local count = 0
+  for _ in pairs(activeHandlers) do count = count + 1 end
+  return count
+end
+
+assert(activeCount() == 4, "initial lifecycle registration count is wrong")
+local firstIds = {{}}
+for event, handlerId in pairs(GUI.lifecycleHandlerIds) do
+  firstIds[event] = handlerId
+end
+
+do
+{source}
+end
+
+assert(activeCount() == 4, "lifecycle handlers stacked after recompilation")
+assert(killed == 4, "owned lifecycle handlers were not replaced")
+for event, oldId in pairs(firstIds) do
+  assert(GUI.lifecycleHandlerIds[event] ~= oldId,
+    "lifecycle handler ID was not replaced for " .. event)
+end
+'''
+        self._run_lua(script)
+
+    def _test_legacy_lifecycle_work_is_coalesced(self):
+        refresh_source = self._gui_script("GUI Refresh")
+        boot_source = self._gui_script("GUI Boot")
+        init_source = boot_source[boot_source.index("function GUI.init()") :]
+        protocol_source = self._gui_script("MSDP Protocol")
+
+        refresh_script = f'''
+queuedTimers = {{}}
+registrationCalls = 0
+msdp = {{}}
+map = {{}}
+demonnic = {{chat = {{use = false}}}}
+
+function tempTimer(_, callback)
+  queuedTimers[#queuedTimers + 1] = callback
+end
+function cecho() end
+
+GUI = {{
+  initialized = true,
+  debug = function() end,
+  debugCountEntries = function() return 0 end,
+  debugWrap = function(_, callable) return callable end,
+  registerEventHandlers = function()
+    registrationCalls = registrationCalls + 1
+  end,
+}}
+
+{refresh_source}
+
+GUI.initializeOrRefresh("connection established")
+GUI.initializeOrRefresh("connection established")
+assert(registrationCalls == 1,
+  "legacy and current connection callbacks both refreshed the GUI")
+
+local pending = queuedTimers
+queuedTimers = {{}}
+for _, callback in ipairs(pending) do callback() end
+GUI.initializeOrRefresh("connection established")
+assert(registrationCalls == 2,
+  "a later connection refresh remained incorrectly suppressed")
+'''
+        self._run_lua(refresh_script)
+
+        init_script = f'''
+queuedTimers = {{}}
+stageCalls = 0
+map = {{}}
+
+function tempTimer(_, callback)
+  queuedTimers[#queuedTimers + 1] = callback
+end
+
+local function stage()
+  stageCalls = stageCalls + 1
+end
+
+GUI = {{
+  debug = function() end,
+  debugError = function() end,
+  debugWrap = function(_, callable) return callable end,
+  debugCall = function(_, callable, ...)
+    return true, callable(...)
+  end,
+  validateCoreLayout = function() return true end,
+  init_gauges = stage,
+  init_action_icons = stage,
+  tabbedInfoWindow = {{init = stage}},
+  init_player = stage,
+  init_group = stage,
+  Affects = {{init = stage}},
+  draw_frames = stage,
+  buttonWindow = {{init = stage}},
+  init_castConsole = stage,
+  styleScrollbar = stage,
+  registerEventHandlers = stage,
+}}
+
+{init_source}
+
+GUI.init()
+local firstStageCount = stageCalls
+GUI.init()
+assert(stageCalls == firstStageCount,
+  "legacy and current load callbacks both initialized the GUI")
+
+local pending = queuedTimers
+queuedTimers = {{}}
+for _, callback in ipairs(pending) do callback() end
+GUI.init()
+assert(stageCalls == firstStageCount * 2,
+  "a later GUI initialization remained incorrectly suppressed")
+'''
+        self._run_lua(init_script)
+
+        protocol_script = f'''
+queuedTimers = {{}}
+reportCalls = 0
+
+function tempTimer(_, callback)
+  queuedTimers[#queuedTimers + 1] = callback
+end
+function sendMSDP()
+  reportCalls = reportCalls + 1
+end
+
+GUI = {{
+  debug = function() end,
+  debugError = function() end,
+  debugCall = function(_, callable, ...)
+    return true, callable(...)
+  end,
+}}
+
+{protocol_source}
+
+GUI.requestMSDPReports()
+GUI.requestMSDPReports()
+assert(reportCalls == #GUI.MSDP_REPORT_VARS,
+  "legacy and current reset callbacks both sent REPORT subscriptions")
+
+local pending = queuedTimers
+queuedTimers = {{}}
+for _, callback in ipairs(pending) do callback() end
+GUI.requestMSDPReports()
+assert(reportCalls == #GUI.MSDP_REPORT_VARS * 2,
+  "a later REPORT request remained incorrectly suppressed")
+'''
+        self._run_lua(protocol_script)
+
+    def _test_refresh_recovers_missing_msdp_table(self):
+        source = self._gui_script("GUI Refresh")
+
+        script = f'''
+GUI = {{
+  initialized = true,
+  debug = function() end,
+  debugCountEntries = function(value)
+    local count = 0
+    for _ in pairs(value or {{}}) do count = count + 1 end
+    return count
+  end,
+  debugWrap = function(_, callable) return callable end,
+  registerEventHandlers = function() end,
+}}
+
+map = {{}}
+demonnic = {{chat = {{use = false}}}}
+function cecho() end
+function tempTimer(_, callback) callback() end
+
+{source}
+
+msdp = nil
+GUI.initializeOrRefresh("profile reset without protocol values")
+assert(type(msdp) == "table",
+  "refresh did not recreate the MSDP table cleared by resetProfile()")
 '''
         self._run_lua(script)
 
@@ -632,9 +848,11 @@ assert(
   "core GUI bootstrap created root-level child widgets: "
     .. table.concat(rootWidgets, ", ")
 )
-assert(GUI.buttonWindow.container.container == GUI.buttonPanelContainer)
-assert(GUI.buttonWindow.roomInfo.container == GUI.roomInfoContainer)
-assert(GUI.buttonWindow.Legend.container == GUI.roomInfoContainer)
+local buttonParent = GUI.buttonPanelContainer.Inside or GUI.buttonPanelContainer
+local roomParent = GUI.roomInfoContainer.Inside or GUI.roomInfoContainer
+assert(GUI.buttonWindow.container.container == buttonParent)
+assert(GUI.buttonWindow.roomInfo.container == roomParent)
+assert(GUI.buttonWindow.Legend.container == roomParent)
 '''
         self._run_lua(healthy_bootstrap)
 
@@ -1670,6 +1888,18 @@ raise SystemExit(1)
             ("mapper_initializer_exported", self._test_mapper_initializer_is_exported),
             ("mapper_initializer_idempotent", self._test_mapper_initializer_is_idempotent),
             ("profile_reset_mapper", self._test_profile_reset_initializes_mapper),
+            (
+                "profile_reset_missing_msdp",
+                self._test_refresh_recovers_missing_msdp_table,
+            ),
+            (
+                "lifecycle_registration_idempotent",
+                self._test_lifecycle_registration_is_idempotent,
+            ),
+            (
+                "legacy_lifecycle_work_coalesced",
+                self._test_legacy_lifecycle_work_is_coalesced,
+            ),
             (
                 "guard_missing_output",
                 self._test_guard_fails_read_only_when_output_is_missing,

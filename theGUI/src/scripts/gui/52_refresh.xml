@@ -23,6 +23,30 @@
 -- =============================================================================
 function GUI.initializeOrRefresh(context)
   context = context or "unknown"
+  -- Coalesce matching callbacks from the legacy anonymous lifecycle handler
+  -- and its replacement during a live package upgrade. Calls with different
+  -- contexts still run independently (for example protocol enablement after
+  -- a connection refresh).
+  GUI.refreshCallsPending = GUI.refreshCallsPending or {}
+  if GUI.refreshCallsPending[context] then
+    GUI.debug("GUI/REFRESH", "duplicate refresh call coalesced", {
+      context = context,
+    })
+    return true
+  end
+  GUI.refreshCallsPending[context] = true
+  if type(tempTimer) == "function" then
+    tempTimer(0.5, function()
+      GUI.refreshCallsPending[context] = nil
+    end)
+  else
+    GUI.refreshCallsPending[context] = nil
+  end
+
+  -- resetProfile() clears Mudlet's protocol tables before sysLoadEvent fires.
+  -- Recreate the MSDP table so an in-place GUI refresh remains safe while the
+  -- renewed REPORT subscriptions are waiting for their first values.
+  msdp = msdp or {}
   GUI.debug("GUI/REFRESH", "initializeOrRefresh requested", {
     context = context,
     initialized = GUI.initialized,

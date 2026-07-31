@@ -15,6 +15,15 @@ Begin Changelog entries below
 
 ### Added
 
+- **Composite GUI source assembly.** `theGUI/src/scripts/01_gui.xml` is now a
+  small ordered wrapper over independently valid fragments in
+  `theGUI/src/scripts/gui/`. The builder resolves explicit nested includes,
+  rejects missing, invalid, cyclic, traversing, and out-of-root includes, and
+  reports included files in stats/watch mode without leaking build directives
+  into the Mudlet package.
+- **Focused GUI scripts.** The former `MSDP` and `Config` nodes are split into
+  protocol, gauge, action, boot, event-registry, refresh, and lifecycle nodes;
+  the wrapper is under 100 lines and every child remains under 300 Lua lines.
 - **End-to-end screen diagnostic mode.** A first-loaded debug bootstrap exposes
   one master `GUI.DEBUG` switch, currently set to `true`, and emits copyable
   `LGUI-DEBUG`, `LGUI-ERROR`, and `LGUI-TRACE` output in Mudlet's main
@@ -29,6 +38,18 @@ Begin Changelog entries below
 
 ### Fixed
 
+- **Live monolithic-to-split upgrade lifecycle overlap.** Pre-split releases
+  registered anonymous load/connection closures without retaining their IDs,
+  so one legacy callback can survive an in-session replacement and run beside
+  the new callback. Lifecycle registrations now have explicit ownership and
+  replacement, while initialization, refresh, and REPORT requests coalesce
+  that one unavoidable legacy overlap. Real Mudlet 4.22 validation confirms a
+  single connection refresh and stable handler counts after upgrading from
+  `2.0.4.034`.
+- **`resetProfile()` nil-MSDP error.** Mudlet clears the global `msdp` table
+  before emitting the reset-flavoured `sysLoadEvent`; the refresh path now
+  recreates it before reading resource fields. Verified in Mudlet 4.21 and
+  4.22 without a reconnect.
 - **Full-screen `Legend/Room` and `Mudlet/ASCII` controls.** The immediate GUI
   bootstrap called `GUI.init_boxes()` before the AdjustableContainers
   namespace existed. Diagnostic mode caught that failure and continued into
@@ -48,6 +69,10 @@ Begin Changelog entries below
 
 ### Changed
 
+- **Source-aware lifecycle tests.** Tests assemble the composite source in
+  memory, find Lua by Mudlet script name, enforce script order/size bounds,
+  and cover lifecycle ownership, legacy callback coalescing, reset recovery,
+  and real Adjustable.Container `.Inside` parenting semantics.
 - **Release now means published.** `python3 theGUI/package.py release`
   atomically pushes `master`, the release branch, and annotated tag to
   `origin`, verifies each remote ref, publishes the GitHub Release page,

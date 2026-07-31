@@ -13,13 +13,12 @@
 -- The main initialization handlers are registered at the bottom of this script
 -- along with the original GUI.init() registration to ensure proper order
 
--- Register the proper initialization sequence
 -- Since Mudlet 4.20, sysLoadEvent passes a boolean: true for a fresh profile
 -- load, false when it fires after resetProfile(). That distinction matters:
 -- after a resetProfile() the connection is usually still up and MSDP was
 -- already negotiated, so sysProtocolEnabled will NOT fire again and the GUI
 -- would otherwise sit empty, never having sent its REPORT subscriptions.
-registerAnonymousEventHandler("sysLoadEvent", function(_, isNewLoad)
+function GUI.onSysLoadEvent(_, isNewLoad)
   GUI.debug("LIFECYCLE", "sysLoadEvent fired", {
     isNewLoad = isNewLoad,
     initializedBefore = GUI.initialized,
@@ -61,15 +60,9 @@ registerAnonymousEventHandler("sysLoadEvent", function(_, isNewLoad)
       GUI.initializeOrRefresh("profile reset")
     end))
   end
-end)
-registerAnonymousEventHandler("sysInstall", "GUI.init")
+end
 
--- Register protocol handler early to ensure it catches MSDP enablement
--- This is critical because MSDP can be enabled before GUI.init() completes
-registerAnonymousEventHandler("sysProtocolEnabled", "GUI.onProtocolEnabled")
-
--- Add connection-based refresh
-registerAnonymousEventHandler("sysConnectionEvent", function(...)
+function GUI.onConnectionEvent(...)
   GUI.debug("LIFECYCLE", "sysConnectionEvent fired", {...})
   tempTimer(1, GUI.debugWrap("LIFECYCLE/connection refresh timer", function()
     GUI.initializeOrRefresh("connection established")
@@ -81,6 +74,39 @@ registerAnonymousEventHandler("sysConnectionEvent", function(...)
       )
     end
   end))
-end)</script>
+end
+
+-- Keep lifecycle registration idempotent when scripts are recompiled or a
+-- fixed release is upgraded again in the same Mudlet session. The legacy
+-- anonymous closures from pre-split releases did not expose IDs; the guarded
+-- GUI entry points above coalesce their one unavoidable migration overlap.
+GUI.lifecycleHandlerIds = GUI.lifecycleHandlerIds or {}
+local function registerLifecycleHandler(event, handler)
+  local previousId = GUI.lifecycleHandlerIds[event]
+  if previousId then
+    pcall(killAnonymousEventHandler, previousId)
+    GUI.lifecycleHandlerIds[event] = nil
+  end
+
+  local ok, handlerId = pcall(registerAnonymousEventHandler, event, handler)
+  if ok then
+    GUI.lifecycleHandlerIds[event] = handlerId
+  else
+    GUI.debugError(
+      "LIFECYCLE/register/" .. event,
+      "failed to register " .. tostring(handler) .. ": " .. tostring(handlerId)
+    )
+  end
+end
+
+registerLifecycleHandler("sysLoadEvent", "GUI.onSysLoadEvent")
+registerLifecycleHandler("sysInstall", "GUI.init")
+
+-- Register protocol handler early to ensure it catches MSDP enablement
+-- This is critical because MSDP can be enabled before GUI.init() completes
+registerLifecycleHandler("sysProtocolEnabled", "GUI.onProtocolEnabled")
+
+-- Add connection-based refresh
+registerLifecycleHandler("sysConnectionEvent", "GUI.onConnectionEvent")</script>
 						<eventHandlerList />
 					</Script>

@@ -227,9 +227,17 @@ local eventHandlers = {
 
 **Do not add an event to the table if it is already registered at file scope** — Mudlet allows multiple handlers per event, so duplicates silently double the work. `map.eventHandler` and `map.onProtocolEnabled` are registered at file scope in `00_msdpmapper.xml` (`msdp.ROOM`, `shiftRoom`, `sysConnectionEvent`, `sysDownloadDone`, `sysProtocolEnabled`) and must **not** be repeated in the GUI tables. Note `msdp.ROOM` legitimately has two *different* handlers: `GUI.updateRoom` (table) and `map.eventHandler` (file scope).
 
-Direct `registerAnonymousEventHandler` calls are used at file scope for lifecycle events (`sysLoadEvent`, `sysInstall`, `sysExitEvent`, `sysConnectionEvent`, `sysProtocolEnabled`).
+Lifecycle events are still registered at file scope, but
+`scripts/gui/53_lifecycle.xml` owns their IDs in
+`GUI.lifecycleHandlerIds` and replaces them through its
+`registerLifecycleHandler()` helper. Do not add an untracked lifecycle
+registration: Mudlet can retain function-reference handlers across an
+in-session package replacement, which otherwise duplicates load/connection
+work. `sysExitEvent` registrations outside that fragment remain direct.
 
 Since Mudlet 4.20, `sysLoadEvent` passes a boolean second argument (`true` = fresh load, `false` = after `resetProfile()`). The package uses this: after a reset, neither `sysConnectionEvent` nor `sysProtocolEnabled` fires again, so it calls `map.initialize()` to recreate both map views, then `GUI.requestMSDPReports()` and `GUI.initializeOrRefresh()`.
+Mudlet also clears the global `msdp` table during a reset, so the refresh path
+must recreate it before reading any fields.
 
 MSDP subscriptions live in `GUI.MSDP_REPORT_VARS` in
 `scripts/gui/40_msdp_protocol.xml`; add new variables there rather than writing

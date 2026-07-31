@@ -21,6 +21,24 @@ GUI.MSDP_REPORT_VARS = {
 -- simply refreshes it. Needed after resetProfile(), where sysProtocolEnabled
 -- does NOT fire again because MSDP was already negotiated on the connection.
 function GUI.requestMSDPReports()
+  -- Releases before the focused source split registered profile-reset
+  -- lifecycle closures without retaining their IDs. During an in-session
+  -- package upgrade Mudlet can keep that legacy closure alive, causing the
+  -- old and new reset callbacks to request the same REPORT set together.
+  -- Coalesce that migration overlap without changing later explicit calls.
+  if GUI.msdpReportRequestPending then
+    GUI.debug("MSDP/REPORT", "duplicate subscription request coalesced")
+    return true
+  end
+  GUI.msdpReportRequestPending = true
+  if type(tempTimer) == "function" then
+    tempTimer(0.5, function()
+      GUI.msdpReportRequestPending = false
+    end)
+  else
+    GUI.msdpReportRequestPending = false
+  end
+
   GUI.debug("MSDP/REPORT", "subscription request started", {
     sendMSDP = type(sendMSDP),
     variableCount = #GUI.MSDP_REPORT_VARS,

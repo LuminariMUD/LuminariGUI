@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE MudletPackage>
-<MudletPackage version="2.0.4.037">
+<MudletPackage version="2.0.4.035">
 	<TriggerPackage>
 		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 			<name>LuminariGUI</name>
@@ -3723,24 +3723,6 @@ GUI.MSDP_REPORT_VARS = {
 -- simply refreshes it. Needed after resetProfile(), where sysProtocolEnabled
 -- does NOT fire again because MSDP was already negotiated on the connection.
 function GUI.requestMSDPReports()
-  -- Releases before the focused source split registered profile-reset
-  -- lifecycle closures without retaining their IDs. During an in-session
-  -- package upgrade Mudlet can keep that legacy closure alive, causing the
-  -- old and new reset callbacks to request the same REPORT set together.
-  -- Coalesce that migration overlap without changing later explicit calls.
-  if GUI.msdpReportRequestPending then
-    GUI.debug("MSDP/REPORT", "duplicate subscription request coalesced")
-    return true
-  end
-  GUI.msdpReportRequestPending = true
-  if type(tempTimer) == "function" then
-    tempTimer(0.5, function()
-      GUI.msdpReportRequestPending = false
-    end)
-  else
-    GUI.msdpReportRequestPending = false
-  end
-
   GUI.debug("MSDP/REPORT", "subscription request started", {
     sendMSDP = type(sendMSDP),
     variableCount = #GUI.MSDP_REPORT_VARS,
@@ -4172,23 +4154,6 @@ function GUI.validateCoreLayout()
 end
 
 function GUI.init()
-  -- A pre-split lifecycle closure can survive an in-session package upgrade
-  -- because that release did not retain its anonymous-handler ID. Both the
-  -- legacy and current sysLoadEvent callbacks then reach this global function
-  -- in the same event turn. Run the initialization sequence only once.
-  if GUI.initCallPending then
-    GUI.debug("GUI/INIT", "duplicate initialization call coalesced")
-    return true
-  end
-  GUI.initCallPending = true
-  if type(tempTimer) == "function" then
-    tempTimer(0.5, function()
-      GUI.initCallPending = false
-    end)
-  else
-    GUI.initCallPending = false
-  end
-
   GUI.debug("GUI/INIT", "initialization sequence starting", {
     alreadyInitialized = GUI.initialized,
   })
@@ -4489,30 +4454,6 @@ end
 -- =============================================================================
 function GUI.initializeOrRefresh(context)
   context = context or "unknown"
-  -- Coalesce matching callbacks from the legacy anonymous lifecycle handler
-  -- and its replacement during a live package upgrade. Calls with different
-  -- contexts still run independently (for example protocol enablement after
-  -- a connection refresh).
-  GUI.refreshCallsPending = GUI.refreshCallsPending or {}
-  if GUI.refreshCallsPending[context] then
-    GUI.debug("GUI/REFRESH", "duplicate refresh call coalesced", {
-      context = context,
-    })
-    return true
-  end
-  GUI.refreshCallsPending[context] = true
-  if type(tempTimer) == "function" then
-    tempTimer(0.5, function()
-      GUI.refreshCallsPending[context] = nil
-    end)
-  else
-    GUI.refreshCallsPending[context] = nil
-  end
-
-  -- resetProfile() clears Mudlet's protocol tables before sysLoadEvent fires.
-  -- Recreate the MSDP table so an in-place GUI refresh remains safe while the
-  -- renewed REPORT subscriptions are waiting for their first values.
-  msdp = msdp or {}
   GUI.debug("GUI/REFRESH", "initializeOrRefresh requested", {
     context = context,
     initialized = GUI.initialized,
@@ -4719,12 +4660,13 @@ end
 -- The main initialization handlers are registered at the bottom of this script
 -- along with the original GUI.init() registration to ensure proper order
 
+-- Register the proper initialization sequence
 -- Since Mudlet 4.20, sysLoadEvent passes a boolean: true for a fresh profile
 -- load, false when it fires after resetProfile(). That distinction matters:
 -- after a resetProfile() the connection is usually still up and MSDP was
 -- already negotiated, so sysProtocolEnabled will NOT fire again and the GUI
 -- would otherwise sit empty, never having sent its REPORT subscriptions.
-function GUI.onSysLoadEvent(_, isNewLoad)
+registerAnonymousEventHandler("sysLoadEvent", function(_, isNewLoad)
   GUI.debug("LIFECYCLE", "sysLoadEvent fired", {
     isNewLoad = isNewLoad,
     initializedBefore = GUI.initialized,
@@ -4766,9 +4708,15 @@ function GUI.onSysLoadEvent(_, isNewLoad)
       GUI.initializeOrRefresh("profile reset")
     end))
   end
-end
+end)
+registerAnonymousEventHandler("sysInstall", "GUI.init")
 
-function GUI.onConnectionEvent(...)
+-- Register protocol handler early to ensure it catches MSDP enablement
+-- This is critical because MSDP can be enabled before GUI.init() completes
+registerAnonymousEventHandler("sysProtocolEnabled", "GUI.onProtocolEnabled")
+
+-- Add connection-based refresh
+registerAnonymousEventHandler("sysConnectionEvent", function(...)
   GUI.debug("LIFECYCLE", "sysConnectionEvent fired", {...})
   tempTimer(1, GUI.debugWrap("LIFECYCLE/connection refresh timer", function()
     GUI.initializeOrRefresh("connection established")
@@ -4780,40 +4728,7 @@ function GUI.onConnectionEvent(...)
       )
     end
   end))
-end
-
--- Keep lifecycle registration idempotent when scripts are recompiled or a
--- fixed release is upgraded again in the same Mudlet session. The legacy
--- anonymous closures from pre-split releases did not expose IDs; the guarded
--- GUI entry points above coalesce their one unavoidable migration overlap.
-GUI.lifecycleHandlerIds = GUI.lifecycleHandlerIds or {}
-local function registerLifecycleHandler(event, handler)
-  local previousId = GUI.lifecycleHandlerIds[event]
-  if previousId then
-    pcall(killAnonymousEventHandler, previousId)
-    GUI.lifecycleHandlerIds[event] = nil
-  end
-
-  local ok, handlerId = pcall(registerAnonymousEventHandler, event, handler)
-  if ok then
-    GUI.lifecycleHandlerIds[event] = handlerId
-  else
-    GUI.debugError(
-      "LIFECYCLE/register/" .. event,
-      "failed to register " .. tostring(handler) .. ": " .. tostring(handlerId)
-    )
-  end
-end
-
-registerLifecycleHandler("sysLoadEvent", "GUI.onSysLoadEvent")
-registerLifecycleHandler("sysInstall", "GUI.init")
-
--- Register protocol handler early to ensure it catches MSDP enablement
--- This is critical because MSDP can be enabled before GUI.init() completes
-registerLifecycleHandler("sysProtocolEnabled", "GUI.onProtocolEnabled")
-
--- Add connection-based refresh
-registerLifecycleHandler("sysConnectionEvent", "GUI.onConnectionEvent")</script>
+end)</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
