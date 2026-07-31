@@ -36,6 +36,15 @@ Begin Changelog entries below
   window at full size. The container foundation now loads before GUI
   construction, stale controls are removed during an in-place upgrade, and
   child initialization stops safely if any core parent is unavailable.
+- **Duplicate mapper construction on connection.** Mudlet emits both
+  `sysConnectionEvent` and `sysProtocolEnabled("MSDP")` during normal startup.
+  Both paths requested mapper initialization, replacing the live Map and ASCII
+  Map containers less than a second after creating them. Mapper setup is now
+  idempotent and reuses the complete runtime created by the first event.
+- **Misleading mapper diagnostics.** Runtime snapshots checked nonexistent
+  `map.window` and `map.asciiwindow` fields and therefore reported both map
+  views as `nil` after successful construction. They now inspect the actual
+  `map.mapwindow` and `map.minimap` objects.
 
 ### Changed
 

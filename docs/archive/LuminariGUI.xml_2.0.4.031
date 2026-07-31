@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE MudletPackage>
-<MudletPackage version="2.0.4.032">
+<MudletPackage version="2.0.4.031">
 	<TriggerPackage>
 		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 			<name>LuminariGUI</name>
@@ -1596,29 +1596,7 @@ end
 -- Public so GUI reset recovery can recreate the mapper while the current
 -- connection remains active (resetProfile() does not emit connection or
 -- protocol-enabled events).
-local function mapperRuntimeReady()
-    return map.container ~= nil
-      and GUI.asciiMapContainer ~= nil
-      and map.minimap ~= nil
-      and map.mapwindow ~= nil
-end
-
 function map.initialize()
-    -- A normal connection emits sysConnectionEvent and then
-    -- sysProtocolEnabled("MSDP"). Both paths legitimately request mapper
-    -- setup, but the views must only be created once. Replacing the two
-    -- adjustable containers during the second event briefly destroys their
-    -- live children and can leave stale Geyser windows behind.
-    if mapperRuntimeReady() then
-      GUI.debug("MAPPER/INIT", "mapper already initialized; reusing existing views", {
-        container = type(map.container),
-        mapwindow = type(map.mapwindow),
-        minimap = type(map.minimap),
-        asciiMapContainer = type(GUI.asciiMapContainer),
-      })
-      return true
-    end
-
     GUI.debug("MAPPER/INIT", "mapper initialization starting", {
       terrainCount = GUI.debugCountEntries(terrain_types),
       adjustableNamespace = type(GUI.AdjustableContainers),
@@ -6010,8 +5988,8 @@ function GUI.debugSnapshot(reason)
     buttonPanelContainer = type(GUI.buttonPanelContainer),
     actionIconsContainer = type(GUI.actionIconsContainer),
     mapContainer = type(map and map.container),
-    mapWindow = type(map and map.mapwindow),
-    asciiMapWindow = type(map and map.minimap),
+    mapWindow = type(map and map.window),
+    asciiMapWindow = type(map and map.asciiwindow),
   })
 
   GUI.debug("SNAPSHOT", "handler and container counts", {

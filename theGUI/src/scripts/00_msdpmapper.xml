@@ -320,7 +320,29 @@ end
 -- Public so GUI reset recovery can recreate the mapper while the current
 -- connection remains active (resetProfile() does not emit connection or
 -- protocol-enabled events).
+local function mapperRuntimeReady()
+    return map.container ~= nil
+      and GUI.asciiMapContainer ~= nil
+      and map.minimap ~= nil
+      and map.mapwindow ~= nil
+end
+
 function map.initialize()
+    -- A normal connection emits sysConnectionEvent and then
+    -- sysProtocolEnabled("MSDP"). Both paths legitimately request mapper
+    -- setup, but the views must only be created once. Replacing the two
+    -- adjustable containers during the second event briefly destroys their
+    -- live children and can leave stale Geyser windows behind.
+    if mapperRuntimeReady() then
+      GUI.debug("MAPPER/INIT", "mapper already initialized; reusing existing views", {
+        container = type(map.container),
+        mapwindow = type(map.mapwindow),
+        minimap = type(map.minimap),
+        asciiMapContainer = type(GUI.asciiMapContainer),
+      })
+      return true
+    end
+
     GUI.debug("MAPPER/INIT", "mapper initialization starting", {
       terrainCount = GUI.debugCountEntries(terrain_types),
       adjustableNamespace = type(GUI.AdjustableContainers),

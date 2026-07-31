@@ -150,6 +150,89 @@ assert(GUI.eventHandlerIds["msdp.HEALTH"] ~= 201)
             "mapper setup is still private to the mapper script",
         )
 
+    def _test_mapper_initializer_is_idempotent(self):
+        source = self.mapper_source_path.read_text(encoding="utf-8")
+        initializer = self._extract(
+            source,
+            "local function mapperRuntimeReady()",
+            "\nfunction map.get_default_map()",
+        )
+
+        script = f'''
+local createCalls = 0
+local aliasCalls = 0
+local fontCalls = 0
+local mapDownloadChecks = 0
+
+local function fakeWindow(name, parent)
+  local window = {{name = name, container = parent}}
+  function window:setColor() end
+  function window:hide() end
+  function window:show() end
+  function window:resize() end
+  return window
+end
+
+GUI = {{
+  debug = function() end,
+  debugCountEntries = function() return 0 end,
+  debugWrap = function(_, callable) return callable end,
+  AdjustableContainers = {{
+    defaultStyle = {{}},
+    saveDir = "/tmp/luminari-layouts/",
+    create = function(name)
+      createCalls = createCalls + 1
+      return fakeWindow(name)
+    end,
+  }},
+}}
+
+Geyser = {{MiniConsole = {{}}, Mapper = {{}}}}
+function Geyser.MiniConsole:new(config, parent)
+  return fakeWindow(config.name, parent)
+end
+function Geyser.Mapper:new(config, parent)
+  return fakeWindow(config.name, parent)
+end
+
+map = {{
+  adjustMinimapFontSize = function()
+    fontCalls = fontCalls + 1
+  end,
+  get_default_map = function()
+    mapDownloadChecks = mapDownloadChecks + 1
+  end,
+}}
+defaults = {{mapper = {{x = "75%", y = "0%", width = "25%", height = "50%"}}}}
+terrain_types = {{}}
+
+local function make_aliases()
+  aliasCalls = aliasCalls + 1
+end
+
+function setCustomEnvColor() end
+function tempTimer(_, callback) callback() end
+
+{initializer}
+
+assert(map.initialize() == true)
+local firstMapContainer = map.container
+local firstAsciiContainer = GUI.asciiMapContainer
+local firstMapWindow = map.mapwindow
+local firstMinimap = map.minimap
+
+assert(map.initialize() == true)
+assert(createCalls == 2, "second mapper initialization recreated containers")
+assert(aliasCalls == 1, "second mapper initialization recreated aliases")
+assert(fontCalls == 1, "second mapper initialization resized the ASCII map")
+assert(mapDownloadChecks == 1, "second mapper initialization repeated map setup")
+assert(map.container == firstMapContainer)
+assert(GUI.asciiMapContainer == firstAsciiContainer)
+assert(map.mapwindow == firstMapWindow)
+assert(map.minimap == firstMinimap)
+'''
+        self._run_lua(script)
+
     def _test_profile_reset_initializes_mapper(self):
         source = self.gui_source_path.read_text(encoding="utf-8")
         reset_handler = self._extract(
@@ -255,6 +338,14 @@ assert(calls.mapper == 1, "reset recovery ran during a fresh profile load")
         self._require(
             "wrapTableFunctions(GUI.AdjustableContainers" in instrumentation_source,
             "adjustable containers are not instrumented",
+        )
+        self._require(
+            "mapWindow = type(map and map.mapwindow)" in instrumentation_source,
+            "debug snapshot checks the wrong Mudlet mapper field",
+        )
+        self._require(
+            "asciiMapWindow = type(map and map.minimap)" in instrumentation_source,
+            "debug snapshot checks the wrong ASCII mapper field",
         )
 
     def _test_core_parent_load_order_and_orphan_guard(self):
@@ -1236,6 +1327,7 @@ raise SystemExit(1)
                 self._test_upgrade_preserves_file_scope_handler_ids,
             ),
             ("mapper_initializer_exported", self._test_mapper_initializer_is_exported),
+            ("mapper_initializer_idempotent", self._test_mapper_initializer_is_idempotent),
             ("profile_reset_mapper", self._test_profile_reset_initializes_mapper),
             (
                 "guard_missing_output",
