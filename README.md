@@ -14,6 +14,8 @@ LuminariGUI is a comprehensive graphical user interface package for [LuminariMUD
 
 ## Installation
 
+> **Mudlet version:** Mudlet 4.20 migrated to Qt6 and 4.21 changed label/callback internals and MSDP negotiation. If you have recently upgraded Mudlet and the GUI is misbehaving, see **[Mudlet Compatibility](docs/MUDLET_COMPATIBILITY.md)** — it includes a triage checklist. The most common cause is that **MSDP needs re-enabling**: since 4.20 the protocol settings live in a *dropdown* under Profile Preferences → Protocols, not the old checkbox list.
+
 1.  **Download**: Get the latest `LuminariGUI.xml` file from the [Releases](Releases/) folder or the latest release tag.
 2.  **Import into Mudlet**:
     *   Open Mudlet and connect to your profile.
@@ -34,6 +36,7 @@ Once installed, the GUI should automatically load when you connect to LuminariMU
 Detailed documentation is available in the `docs/` directory:
 
 *   **[Developer Guide](docs/MUDLET_DEVELOPMENT.md)**: Architecture, best practices, and workflow for contributing to the project.
+*   **[Mudlet Compatibility](docs/MUDLET_COMPATIBILITY.md)**: What changed in Mudlet 4.20–4.22, known upstream bugs, and a "the GUI broke after updating" triage checklist.
 *   **[Build System Guide](theGUI/README_theGUI.md)**: How to use the source-to-build system for modular XML development.
 *   **[Python Tools](docs/PYTHON_TOOLS.md)**: Guide to the automated build and testing tools (`validate_package.py`, `run_tests.py`, etc.).
 *   **[Protocol Reference](docs/PROTOCOL_REFERENCE.md)**: Details on MSDP variables and how they map to the GUI.

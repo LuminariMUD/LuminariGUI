@@ -1,0 +1,239 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project Overview
+
+LuminariGUI is a Mudlet GUI package for LuminariMUD providing real-time MSDP integration, tabbed chat (YATCO), interactive mapping, and status monitoring. The codebase uses embedded Lua scripts within XML files using Mudlet's package format.
+
+**Mudlet compatibility:** Mudlet 4.20 migrated to Qt6 and 4.21 changed label/callback internals and MSDP negotiation. Before diagnosing "the GUI is broken," read `docs/MUDLET_COMPATIBILITY.md` — it distinguishes upstream Mudlet regressions from package bugs and lists known issues in this codebase.
+
+## Build Commands
+
+Run all commands from the repository root unless noted.
+
+```bash
+# Build the package (auto-increments version, archives old version)
+python3 theGUI/build.py
+
+# Validate without making changes
+python3 theGUI/build.py --validate
+
+# Extract existing XML into source fragments (first-time setup)
+python3 theGUI/build.py --extract
+
+# Watch mode for active development
+python3 theGUI/build.py --watch
+
+# Show what would change
+python3 theGUI/build.py --diff
+
+# Show build statistics
+python3 theGUI/build.py --stats
+
+# Remove build artifacts
+python3 theGUI/build.py --clean
+
+# Exit non-zero if output would change (CI guard)
+python3 theGUI/build.py --diff --fail-on-diff
+```
+
+## Package Commands
+
+```bash
+# Create release package (builds XML, runs tests)
+python3 theGUI/package.py create
+
+# Create dev package with timestamp
+python3 theGUI/package.py create --dev
+
+# Full release workflow (build, test, branch, package, tag)
+python3 theGUI/package.py release
+
+# Preview release without changes
+python3 theGUI/package.py release --dry-run
+
+# Release and push to remote
+python3 theGUI/package.py release --push
+
+# List existing packages
+python3 theGUI/package.py list
+
+# Clean old dev packages (keeps 3 by default)
+python3 theGUI/package.py clean --keep 3
+```
+
+`create` and `release` both accept `--version <ver>` to override the version from `build.yaml`, and `--skip-build` / `--skip-tests` to bypass those stages. `release` also accepts `--skip-git-check`.
+
+`package.py` invokes the test suite itself with the correct working directory, so `create`/`release` handle testing correctly without the caveat described below.
+
+## Testing Commands
+
+⚠️ **The test scripts default to `--xml ../LuminariGUI.xml`, a path relative to the current working directory.** Running them from the repository root therefore fails to find the XML. Use one of the two forms below.
+
+```bash
+# Run full test suite — from the tests/ directory
+cd tests && python3 run_tests.py --skip-optional
+
+# ...or from the repo root, passing the XML explicitly
+python3 tests/run_tests.py --xml LuminariGUI.xml --skip-optional
+```
+
+**`--skip-optional` matters.** `luacheck` is an optional dependency; if it is missing and you omit the flag, the runner prints "Missing dependencies" and **exits 0 without running any tests** — a silent pass. Always pass `--skip-optional` (or install `luacheck`) so the run is meaningful.
+
+```bash
+# Validate XML and Lua syntax (works from repo root, no XML arg needed)
+python3 scripts/validate_package.py
+
+# Run one suite via the runner
+cd tests && python3 run_tests.py --skip-optional --test syntax
+#   valid: syntax, quality, functions, events, lifecycle, system, performance
+
+# Or invoke a suite directly (same cwd caveat)
+cd tests && python3 test_lua_syntax.py
+```
+
+Other runner flags: `--parallel` / `--sequential`, `--report <file>`, `--format text|json`, `--verbose`, `--quiet`.
+
+### Other scripts
+
+```bash
+python3 scripts/format_xml.py       # XML formatting
+python3 scripts/analyze_handlers.py # Event handler analysis
+```
+
+There is no `requirements.txt`; the Python tooling relies on the standard library. External tools `lua`/`luac` (and optionally `luacheck`) enable the Lua test suites.
+
+## Architecture
+
+### Source-to-Build System
+
+**Edit source files in `theGUI/src/`, NOT `LuminariGUI.xml` directly.**
+
+```
+theGUI/
+├── build.py          # Build script (XML assembly)
+├── package.py        # Package manager (mpackage creation, releases)
+├── build.yaml        # Manifest (fragment list, version)
+├── skeleton.xml      # Package structure template
+└── src/              # SOURCE OF TRUTH
+    ├── triggers/     # Trigger definitions
+    ├── aliases/      # Alias definitions
+    ├── scripts/      # Lua scripts
+    └── keys/         # Key bindings
+```
+
+The build system assembles `theGUI/src/` fragments into `LuminariGUI.xml`. Each build:
+1. Auto-increments version in `build.yaml`
+2. Archives previous `LuminariGUI.xml` to `docs/archive/`
+3. Assembles new package
+
+### Key Components (in `theGUI/src/scripts/`)
+
+- **MSDPMapper** (`00_msdpmapper.xml`): MSDP protocol handling and room mapping
+- **GUI** (`01_gui.xml`): Main UI framework using Geyser, gauges, boxes, affects display — by far the largest fragment
+- **YATCOConfig** (`02_yatcoconfig.xml`): Chat system configuration
+- **YATCO** (`03_yatco.xml`): Tabbed chat organization
+
+Other fragments: `triggers/` (`00_yatcoconfig.xml`, `01_gui.xml`), `aliases/` (`00_toggles.xml`, `01_yatco.xml`), `keys/` (`00_movement.xml`). The full assembly order is defined in `theGUI/build.yaml`.
+
+### Fragment File Naming
+
+```
+NN_descriptive_name.xml
+
+NN = 00-09 for core/init, 10-19 for major subsystems, 20+ for extensions
+```
+
+## Code Conventions
+
+### Lua Namespacing
+
+```lua
+-- Use GUI. prefix for GUI functions/variables
+GUI.Health = Geyser.Gauge:new({...})
+function GUI.updateHealthGauge() ... end
+
+-- Safe table initialization
+GUI.AffectIcons = GUI.AffectIcons or {}
+
+-- Always provide fallbacks for MSDP data
+local health = tonumber(msdp.HEALTH) or 0
+```
+
+### Event Registration
+
+Most handlers are **not** registered with scattered direct calls. `GUI.registerEventHandlers()` in `01_gui.xml` holds a central `eventHandlers` table and registers each entry through `pcall` so a bad handler logs instead of aborting the loop. **Add new MSDP-driven handlers to that table**, not as standalone calls:
+
+```lua
+local eventHandlers = {
+    ["msdp.HEALTH"]        = "GUI.updateHealthGauge",
+    ["msdp.HEALTH_MAX"]    = "GUI.updateHealthGauge",
+    ["sysProtocolEnabled"] = "GUI.onProtocolEnabled",
+    -- ...
+}
+```
+
+**`GUI.registerEventHandlers()` is called on every `GUI.init()` and every `GUI.initializeOrRefresh()`, so it must stay idempotent.** It kills only the table entries for events owned by its local `eventHandlers` table before re-registering. Do not sweep every ID in `GUI.eventHandlerIds`: older installations retain IDs for the file-scope mapper/protocol handlers, and Mudlet 4.21 can reuse those IDs during an in-place upgrade. Without cleanup of the owned entries, handlers stack on every refresh — this was a real bug (36 → 324 live handlers over ten refreshes). If you add an owned registration path, record its ID there too.
+
+**Do not add an event to the table if it is already registered at file scope** — Mudlet allows multiple handlers per event, so duplicates silently double the work. `map.eventHandler` and `map.onProtocolEnabled` are registered at file scope in `00_msdpmapper.xml` (`msdp.ROOM`, `shiftRoom`, `sysConnectionEvent`, `sysDownloadDone`, `sysProtocolEnabled`) and must **not** be repeated in the GUI tables. Note `msdp.ROOM` legitimately has two *different* handlers: `GUI.updateRoom` (table) and `map.eventHandler` (file scope).
+
+Direct `registerAnonymousEventHandler` calls are used at file scope for lifecycle events (`sysLoadEvent`, `sysInstall`, `sysExitEvent`, `sysConnectionEvent`, `sysProtocolEnabled`).
+
+Since Mudlet 4.20, `sysLoadEvent` passes a boolean second argument (`true` = fresh load, `false` = after `resetProfile()`). The package uses this: after a reset, neither `sysConnectionEvent` nor `sysProtocolEnabled` fires again, so it calls `map.initialize()` to recreate both map views, then `GUI.requestMSDPReports()` and `GUI.initializeOrRefresh()`.
+
+MSDP subscriptions live in `GUI.MSDP_REPORT_VARS`; add new variables there rather than writing bare `sendMSDP("REPORT", ...)` calls.
+
+### CSS Styling (CSSMan)
+
+```lua
+GUI.BoxCSS = CSSMan.new([[
+  background-image: url(]] .. getMudletHomeDir():gsub("\\", "/") ..
+  [[/LuminariGUI/images/ui_texture.png);
+]])
+component:setStyleSheet(GUI.BoxCSS:getCSS())
+```
+
+These are **Qt Style Sheets (QSS)**, not CSS. Unsupported properties are silently ignored — `box-shadow` in particular does not exist in QSS. Use `border-image` (not `background-image`) when an image must stretch to the widget. See `docs/MUDLET_COMPATIBILITY.md` for Qt6 specifics.
+
+### Path Handling
+
+Always use forward slashes for cross-platform compatibility:
+```lua
+local path = getMudletHomeDir():gsub("\\", "/") .. "/LuminariGUI/images/"
+```
+
+## Development Workflow
+
+1. Edit source fragments in `theGUI/src/`
+2. Validate: `python3 theGUI/build.py --validate`
+3. Build: `python3 theGUI/build.py`
+4. Test: `cd tests && python3 run_tests.py --skip-optional` (see the caveat in Testing Commands)
+5. Validate the built package: `python3 scripts/validate_package.py`
+6. Import `LuminariGUI.xml` into Mudlet for manual testing
+7. Commit both source files and built `LuminariGUI.xml`
+
+Note that step 3 auto-increments the version in `build.yaml` on every build, so avoid rebuilding gratuitously.
+
+## XML Structure
+
+Source fragments must be valid XML that inject into the skeleton:
+
+```xml
+<ScriptGroup isActive="yes" isFolder="yes">
+    <name>FeatureName</name>
+    <packageName></packageName>
+    <script></script>
+    <eventHandlerList />
+    <Script isActive="yes" isFolder="no">
+        <name>ScriptName</name>
+        <packageName></packageName>
+        <script>-- Lua code here</script>
+        <eventHandlerList />
+    </Script>
+</ScriptGroup>
+```
+
+Mudlet expects `<packageName>`, `<script>`, and `<eventHandlerList>` on both the group and the script elements — omitting them produces XML that validates but may not import cleanly. Match the structure of the existing fragments.
+
+Remember to escape XML special characters: `<` → `&lt;`, `>` → `&gt;`, `&` → `&amp;`

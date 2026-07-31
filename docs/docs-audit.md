@@ -61,8 +61,36 @@ This document outlines the multi-phase plan to audit, update, and complete the d
 - [x] **Contribution Guide**:
     - [x] Create or update guidelines for submitting PRs/Issues (can be part of README or separate `CONTRIBUTING.md`).
 
+## Phase 6: Mudlet Version Compatibility (2026-07-31)
+**Goal:** Document what changed in Mudlet 4.20–4.22 so the package can be audited and fixed against the current client.
+- [x] **Research upstream changes**:
+    - [x] Review Mudlet 4.20, 4.21, 4.22 release notes and relevant PRs.
+    - [x] Identify open upstream bugs affecting Geyser/miniconsole/resize behaviour.
+- [x] **Create `docs/MUDLET_COMPATIBILITY.md`**:
+    - [x] Version-by-version breakdown filtered to changes affecting this package.
+    - [x] Known open upstream bugs, LuminariGUI-specific audit findings, triage checklist, sources.
+- [x] **Correct `docs/MUDLET_DEVELOPMENT.md`**:
+    - [x] Replace the obsolete "single-file architecture" section with the source-to-build system.
+    - [x] Fix stale tool references (`scripts/create_package.py` → `theGUI/package.py`).
+    - [x] Add Qt stylesheet, label callback, resize handling, and `sysLoadEvent` flag guidance.
+    - [x] Add authoritative `config.lua` field list from Mudlet's exporter.
+- [x] **Cross-link**: README and `PROTOCOL_REFERENCE.md` MSDP troubleshooting.
+
+### Phase 6 follow-up (code) — completed 2026-07-31 in v2.0.4.028
+Tracked in the "Audit Findings" section of `MUDLET_COMPATIBILITY.md`:
+- [x] Replace legacy string-name `setClickCallback` calls with closures.
+- [x] Remove unsupported `box-shadow` declarations from stylesheets (also `text-shadow` in QSS).
+- [x] Fix `config.lua` `dependencies` to be a comma-separated string; add `helpURL`; drop non-standard `modified`.
+- [x] Raise the stale `mudlet_version = "4.0+"` declaration to a realistic minimum (`4.21+`).
+- [x] Use the `sysLoadEvent` fresh-load/reset boolean to re-subscribe to MSDP after `resetProfile()`.
+- [x] **Found during the fix pass:** eliminate the event-handler leak and six duplicate registrations.
+- [x] Remove obsolete `tests/test_state_validation.py`; it targeted a nonexistent "State Validator" subsystem and always failed standalone.
+
+Deliberately left open:
+- [ ] `icon` in `config.lua` — needs an actual 512x512 icon asset, which the repo does not have.
+- [ ] Visual re-verification under Qt6 of `background` (shorthand) and `vertical-align`, which have limited QSS support.
+
 ## Execution Strategy
 - Start with **Phase 1** to ensure the project is navigable.
 - Proceed sequentially.
 - Each phase includes a "Review & Verify" step before moving to the next.
-

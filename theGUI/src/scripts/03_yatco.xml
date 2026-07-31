@@ -184,7 +184,10 @@ function demonnic.chat:create()
     }, demonnic.chat.tabBox)
     demonnic.chat.tabs[tab]:echo(tab, demonnic.chat.config.inactiveTabText, "c")
     demonnic.chat.tabs[tab]:setColor(r,g,b)
-    demonnic.chat.tabs[tab]:setClickCallback("demonnicChatSwitch", tab)
+    -- Closure form: avoids the legacy string-name callback, which relies on
+    -- global name lookup plus stored argument refs in the Lua registry
+    -- (see Mudlet issue #9254 / docs/MUDLET_COMPATIBILITY.md).
+    demonnic.chat.tabs[tab]:setClickCallback(function() demonnicChatSwitch(tab) end)
 		
 		demonnic.chat.tabs[tab]:setStyleSheet(
 		 [[font-family: Tahoma, Geneva, sans-serif; 

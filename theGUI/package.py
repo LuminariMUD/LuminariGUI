@@ -51,7 +51,12 @@ class PackageMetadata:
     package_file: str
     file_size: int
     sha256: str
-    mudlet_version: str = "4.0+"
+    # Minimum Mudlet this package is developed and validated against.
+    # 4.21 is the floor because: Qt6 is universal from 4.20 (the stylesheets
+    # are tuned for QSS under Qt6), and 4.21 fixed the resetProfile() label
+    # regression that affects labels inside Adjustable/Geyser containers
+    # (Mudlet #9254 / #9255). See docs/MUDLET_COMPATIBILITY.md.
+    mudlet_version: str = "4.21+"
     description: str = "LuminariGUI package for LuminariMUD"
 
     def to_dict(self) -> dict:
@@ -218,7 +223,18 @@ class Packager:
         return self.releases_dir / filename
 
     def create_config_lua(self) -> str:
-        """Generate config.lua content"""
+        """Generate config.lua content.
+
+        Field names and types follow Mudlet's own package exporter
+        (src/dlgPackageExporter.cpp, writeConfigFile):
+            mpackage, author, icon, title, description,
+            version, helpURL, dependencies, created
+
+        Note: `dependencies` must be a comma-separated STRING, not a Lua
+        table. `icon` is omitted because no icon asset is bundled; since
+        Mudlet 4.20 an icon-less package simply gets no icon, whereas
+        naming a missing file would be worse.
+        """
         today = datetime.now().strftime('%Y-%m-%d')
         return f'''mpackage = "LuminariGUI"
 author = "LuminariMUD Team"
@@ -228,9 +244,9 @@ Enhanced MUD client interface for LuminariMUD with advanced features
 including chat management, mapping, status effects, and more.
 ]]
 version = "{self.version}"
+helpURL = "https://github.com/LuminariMUD/LuminariGUI"
 created = "{today}"
-modified = "{today}"
-dependencies = {{}}
+dependencies = ""
 '''
 
     def calculate_sha256(self, file_path: Path) -> str:

@@ -265,7 +265,10 @@ function map.calcAsciimapPadding()
 	return (characters - 19) / 4
 end
 
-local function config()        
+-- Public so GUI reset recovery can recreate the mapper while the current
+-- connection remains active (resetProfile() does not emit connection or
+-- protocol-enabled events).
+function map.initialize()
     -- setting terrain colors
     for k,v in pairs(terrain_types) do
         setCustomEnvColor(v.id + 16, v.r, v.g, v.b, 255)
@@ -333,7 +336,7 @@ local function config()
     -- Create mapper window within the adjustable container
     if not map.container then
       print("ERROR: Map container not created - cannot initialize mapper")
-      return
+      return false
     end
     
 		map.mapwindow = Geyser.Mapper:new({
@@ -346,7 +349,7 @@ local function config()
     
     if not map.mapwindow then
       print("ERROR: Failed to create Geyser.Mapper instance")
-      return
+      return false
     end
     
     -- Single initialization timer to ensure proper rendering
@@ -371,6 +374,7 @@ local function config()
 		make_aliases()		
 		
 		map.get_default_map()
+    return true
 end
 
 function map.get_default_map()
@@ -434,7 +438,7 @@ function map.eventHandler(event,...)
         map.downloading = false
         print("Map File Loaded.")				
     elseif event == "sysConnectionEvent" then
-        config()			 
+        map.initialize()
 		end
 		
 end
@@ -443,7 +447,7 @@ function map.onProtocolEnabled(_, protocol)
   if protocol == "MSDP" then
     print("MSDP enabled!")
 		sendMSDP("REPORT", "ROOM")
-		config()	
+		map.initialize()
   end
 end
 

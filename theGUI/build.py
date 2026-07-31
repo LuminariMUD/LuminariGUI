@@ -414,23 +414,26 @@ class Builder:
         print(f"  Done! {line_count} lines written.")
         return True, output
 
-    def diff(self) -> bool:
-        """Show differences between current output and what build would produce"""
+    def diff(self) -> tuple[bool, bool]:
+        """
+        Show differences between current output and what build would produce.
+        Returns (success, has_differences).
+        """
         success, new_content = self.build(validate_only=True)
         if not success:
-            return False
+            return False, False
 
         output_path = self.get_output_path()
         if not output_path.exists():
             print(f"Output file {output_path} does not exist. Build would create it.")
-            return True
+            return True, True
 
         with open(output_path, 'r', encoding='utf-8') as f:
             current_content = f.read()
 
         if current_content == new_content:
             print("No changes - output is up to date.")
-            return True
+            return True, False
 
         # Simple line-by-line diff
         current_lines = current_content.splitlines()
@@ -450,7 +453,7 @@ class Builder:
             if len(diff_output) > 5000:
                 print(f"... (truncated, {len(diff_output)} total characters)")
 
-        return True
+        return True, True
 
     def stats(self) -> None:
         """Show statistics about fragments and output"""
@@ -1014,7 +1017,7 @@ Examples:
     parser.add_argument('--stats', action='store_true',
                         help='Show line counts and fragment statistics')
     parser.add_argument('--fail-on-diff', action='store_true',
-                        help='Exit with error if output differs (for CI)')
+                        help='Compare without writing and exit with error if output differs (for CI; implies --diff)')
 
     args = parser.parse_args()
 
@@ -1036,19 +1039,14 @@ Examples:
         builder.stats()
         sys.exit(0)
 
-    if args.diff:
-        success = builder.diff()
-        if args.fail_on_diff:
-            # Check if there are differences
-            _, new_content = builder.build(validate_only=True)
-            output_path = builder.get_output_path()
-            if output_path.exists():
-                with open(output_path, 'r', encoding='utf-8') as f:
-                    current = f.read()
-                if current != new_content:
-                    print("ERROR: Output differs from source. Run 'python build.py' to rebuild.")
-                    sys.exit(1)
-        sys.exit(0 if success else 1)
+    if args.diff or args.fail_on_diff:
+        success, has_differences = builder.diff()
+        if not success:
+            sys.exit(1)
+        if args.fail_on_diff and has_differences:
+            print("ERROR: Output differs from source. Run 'python build.py' to rebuild.")
+            sys.exit(1)
+        sys.exit(0)
 
     if args.watch:
         watcher = Watcher(builder)

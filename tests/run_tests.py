@@ -19,6 +19,7 @@ try:
     from test_lua_quality import LuaQualityAnalyzer
     from test_functions import LuaFunctionTester
     from test_events import EventSystemTester
+    from test_lifecycle_regressions import LifecycleRegressionTester
     from test_system import SystemTester
     from test_performance import PerformanceTester
 except ImportError as e:
@@ -139,6 +140,7 @@ class TestRunner:
             ('Lua Quality', LuaQualityAnalyzer),
             ('Function Tests', LuaFunctionTester),
             ('Event System', EventSystemTester),
+            ('Lifecycle Regressions', LifecycleRegressionTester),
             ('System Tests', SystemTester),
             ('Performance', PerformanceTester)
         ]
@@ -352,6 +354,7 @@ class TestRunner:
             'quality': ('Lua Quality', LuaQualityAnalyzer),
             'functions': ('Function Tests', LuaFunctionTester),
             'events': ('Event System', EventSystemTester),
+            'lifecycle': ('Lifecycle Regressions', LifecycleRegressionTester),
             'system': ('System Tests', SystemTester),
             'performance': ('Performance', PerformanceTester)
         }
@@ -391,7 +394,7 @@ def main():
     parser.add_argument('--parallel', action='store_true', help='Run tests in parallel')
     parser.add_argument('--sequential', action='store_true', help='Run tests sequentially')
     parser.add_argument('--skip-optional', action='store_true', help='Skip tests with missing dependencies')
-    parser.add_argument('--test', help='Run specific test suite (syntax, quality, functions, events, system, performance)')
+    parser.add_argument('--test', help='Run specific test suite (syntax, quality, functions, events, lifecycle, system, performance)')
     parser.add_argument('--report', help='Generate report file')
     parser.add_argument('--format', choices=['text', 'json'], default='text', help='Report format')
     parser.add_argument('--verbose', '-v', action='store_true', help='Verbose output')

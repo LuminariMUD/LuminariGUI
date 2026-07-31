@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE MudletPackage>
-<MudletPackage version="2.0.4.024">
+<MudletPackage version="2.0.4.028">
 	<TriggerPackage>
 		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 			<name>LuminariGUI</name>
@@ -1058,7 +1058,10 @@ function map.calcAsciimapPadding()
 	return (characters - 19) / 4
 end
 
-local function config()        
+-- Public so GUI reset recovery can recreate the mapper while the current
+-- connection remains active (resetProfile() does not emit connection or
+-- protocol-enabled events).
+function map.initialize()
     -- setting terrain colors
     for k,v in pairs(terrain_types) do
         setCustomEnvColor(v.id + 16, v.r, v.g, v.b, 255)
@@ -1126,7 +1129,7 @@ local function config()
     -- Create mapper window within the adjustable container
     if not map.container then
       print("ERROR: Map container not created - cannot initialize mapper")
-      return
+      return false
     end
     
 		map.mapwindow = Geyser.Mapper:new({
@@ -1139,7 +1142,7 @@ local function config()
     
     if not map.mapwindow then
       print("ERROR: Failed to create Geyser.Mapper instance")
-      return
+      return false
     end
     
     -- Single initialization timer to ensure proper rendering
@@ -1164,6 +1167,7 @@ local function config()
 		make_aliases()		
 		
 		map.get_default_map()
+    return true
 end
 
 function map.get_default_map()
@@ -1227,7 +1231,7 @@ function map.eventHandler(event,...)
         map.downloading = false
         print("Map File Loaded.")				
     elseif event == "sysConnectionEvent" then
-        config()			 
+        map.initialize()
 		end
 		
 end
@@ -1236,7 +1240,7 @@ function map.onProtocolEnabled(_, protocol)
   if protocol == "MSDP" then
     print("MSDP enabled!")
 		sendMSDP("REPORT", "ROOM")
-		config()	
+		map.initialize()
   end
 end
 
@@ -1517,7 +1521,6 @@ end)</script>
   border: 1px solid rgba(184, 115, 27, 0.5);
   border-radius: 5px;
   padding: 5px;
-  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
 ]])
   -- Left
   GUI.Left = Geyser.Label:new({name = "GUI.Left", x = 0, y = 0, width = "25%", height = "100%"})
@@ -1562,7 +1565,6 @@ end</script>
 	border: 1px solid rgba(184, 115, 27, 0.5);
 	border-radius: 5px;
 	padding: 5px;
-	box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
 	font-family: Tahoma, Geneva, sans-serif;
 ]]
     )
@@ -1753,7 +1755,6 @@ end</script>
   font-family: BitstreamVeraSans;
   font-weight: bold;
   font-size: 14px;
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.5), 0 1px 2px rgba(184, 115, 27, 0.3);
   padding: 2px;
 ]]
     )
@@ -1769,8 +1770,6 @@ end</script>
   width: 100%;
   font-family: BitstreamVeraSans;
   font-weight: bold;
-  text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
-  box-shadow: 0 0 5px rgba(255,255,255,0.3), inset 0 1px 3px rgba(255,255,255,0.2);
 ]]
     )
   GUI.Health =
@@ -1866,7 +1865,6 @@ function GUI.init_action_icons()
 	vertical-align: top;
 	border: 1px solid rgba(184, 115, 27, 0.5);
 	border-radius: 3px;
-	box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 ]])
   
   -- Create standard action icon
@@ -2147,7 +2145,8 @@ function GUI.tabbedInfoWindow.init()
       Geyser.Label:new({name = "GUI.tabbedInfoWindow." .. v .. "tab"}, GUI.tabbedInfoWindow.header)
     GUI.tabbedInfoWindow[v .. "tab"]:setStyleSheet(GUI.tabbedInfoWindowTabCSS:getCSS())
     GUI.tabbedInfoWindow[v .. "tab"]:echo("&lt;center&gt;" .. v)
-    GUI.tabbedInfoWindow[v .. "tab"]:setClickCallback("GUI.tabbedInfoWindow.click", v)
+    -- Closure form: see docs/MUDLET_COMPATIBILITY.md (Mudlet issue #9254)
+    GUI.tabbedInfoWindow[v .. "tab"]:setClickCallback(function() GUI.tabbedInfoWindow.click(v) end)
     GUI.tabbedInfoWindow[v] =
       Geyser.Label:new(
         {name = "GUI.tabbedInfoWindow." .. v, x = 0, y = 0, width = "100%", height = "100%"},
@@ -2819,7 +2818,6 @@ function GUI.buttonWindow.init()
 			font-weight: bold;
 			color: white;
 			background-color: rgba(255, 255, 255, 0.1);
-			box-shadow: 0px 0px 4px rgba(184, 115, 27, 0.6);
 		]]
     )
 		
@@ -2887,9 +2885,9 @@ function GUI.buttonWindow.init()
   end
 
 --Legend Call Back
-  GUI.buttonWindow.Legendbutton:setClickCallback("GUI.buttonWindow.legendClick")
+  GUI.buttonWindow.Legendbutton:setClickCallback(function() GUI.buttonWindow.legendClick() end)
 --Map (Mudlet/ASCII) Callback
-  GUI.buttonWindow.Mapbutton:setClickCallback("GUI.buttonWindow.mapClick")
+  GUI.buttonWindow.Mapbutton:setClickCallback(function() GUI.buttonWindow.mapClick() end)
 
 --Show Room Info on Startup
 	GUI.buttonWindow.roomInfo:show()
@@ -2988,46 +2986,41 @@ end</script>
 					<Script isActive="yes" isFolder="no">
 						<name>MSDP</name>
 						<packageName></packageName>
-						<script>function GUI.onProtocolEnabled(_, protocol)
+						<script>-- All MSDP variables the GUI subscribes to.
+GUI.MSDP_REPORT_VARS = {
+  "CHARACTER_NAME", "RACE", "CLASS", "ALIGNMENT", "LEVEL",
+  "STR", "DEX", "CON", "INT", "WIS", "CHA", "AC", "MONEY",
+  "HEALTH", "HEALTH_MAX",
+  "OPPONENT_HEALTH", "OPPONENT_HEALTH_MAX", "OPPONENT_NAME",
+  "MOVEMENT", "MOVEMENT_MAX",
+  "PSP", "PSP_MAX",
+  "EXPERIENCE", "EXPERIENCE_TNL",
+  "ACTIONS", "GROUP", "AFFECTS",
+  -- "INVENTORY",
+  "ROOM", "AREA_NAME", "ROOM_EXITS", "ROOM_NAME", "ROOM_VNUM",
+  "WORLD_TIME",
+}
+
+-- Subscribe to every MSDP variable the GUI needs.
+-- Safe to call more than once; re-REPORTing an already-reported variable
+-- simply refreshes it. Needed after resetProfile(), where sysProtocolEnabled
+-- does NOT fire again because MSDP was already negotiated on the connection.
+function GUI.requestMSDPReports()
+  if not sendMSDP then
+    return false
+  end
+  for _, var in ipairs(GUI.MSDP_REPORT_VARS) do
+    sendMSDP("REPORT", var)
+  end
+  return true
+end
+
+function GUI.onProtocolEnabled(_, protocol)
   if protocol == "MSDP" then
     print("[GUI] MSDP Protocol enabled - initializing variables")
-    
-    -- Send REPORT requests for all MSDP variables
-    sendMSDP("REPORT", "CHARACTER_NAME")
-		sendMSDP("REPORT", "RACE")
-		sendMSDP("REPORT", "CLASS")
-		sendMSDP("REPORT", "ALIGNMENT")
-		sendMSDP("REPORT", "LEVEL")
-		sendMSDP("REPORT", "STR")
-		sendMSDP("REPORT", "DEX")
-		sendMSDP("REPORT", "CON")
-		sendMSDP("REPORT", "INT")
-		sendMSDP("REPORT", "WIS")
-		sendMSDP("REPORT", "CHA")
-		sendMSDP("REPORT", "AC")
-		sendMSDP("REPORT", "MONEY")
-		sendMSDP("REPORT", "HEALTH")
-    sendMSDP("REPORT", "HEALTH_MAX")
-    sendMSDP("REPORT", "OPPONENT_HEALTH")
-    sendMSDP("REPORT", "OPPONENT_HEALTH_MAX")
-    sendMSDP("REPORT", "OPPONENT_NAME")
-    sendMSDP("REPORT", "MOVEMENT")
-    sendMSDP("REPORT", "MOVEMENT_MAX")
-    sendMSDP("REPORT", "PSP")
-    sendMSDP("REPORT", "PSP_MAX")
-    sendMSDP("REPORT", "EXPERIENCE")
-    sendMSDP("REPORT", "EXPERIENCE_TNL")
-    sendMSDP("REPORT", "ACTIONS")
-		sendMSDP("REPORT", "GROUP")
-		--sendMSDP("REPORT", "INVENTORY")
-		sendMSDP("REPORT", "AFFECTS")
-		sendMSDP("REPORT", "ROOM")
-		sendMSDP("REPORT", "AREA_NAME")
-		sendMSDP("REPORT", "ROOM_EXITS")
-		sendMSDP("REPORT", "ROOM_NAME")
-		sendMSDP("REPORT", "ROOM_VNUM")
-		sendMSDP("REPORT", "WORLD_TIME")
-    
+
+    GUI.requestMSDPReports()
+
     -- Debug: Show what variables are available after a short delay
     tempTimer(2, function()
       print("[GUI] MSDP variables received:")
@@ -3392,7 +3385,6 @@ function GUI.registerEventHandlers()
     -- GUI event handlers
     ["msdp.GROUP"] = "GUI.updateGroup",
     ["msdp.AFFECTS"] = "GUI.updateAffectIcons",
-    ["sysProtocolEnabled"] = "GUI.onProtocolEnabled",
     ["msdp.HEALTH"] = "GUI.updateHealthGauge",
     ["msdp.HEALTH_MAX"] = "GUI.updateHealthGauge",
     ["msdp.OPPONENT_HEALTH"] = "GUI.updateEnemyGauge",
@@ -3418,27 +3410,50 @@ function GUI.registerEventHandlers()
     ["msdp.CHA"] = "GUI.updatePlayer",
     ["msdp.AC"] = "GUI.updatePlayer",
     ["msdp.MONEY"] = "GUI.updatePlayer",
-    -- Room update for GUI display
-    ["msdp.ROOM"] = "GUI.updateRoom",
-    -- Map event handlers (non-MSDP)
-    ["shiftRoom"] = "map.eventHandler",
-    ["sysConnectionEvent"] = "map.eventHandler",
-    ["sysDownloadDone"] = "map.eventHandler"
+    -- Room update for GUI display.
+    -- NOTE: map.eventHandler ALSO handles msdp.ROOM, but it is registered at
+    -- file scope in 00_msdpmapper.xml. Do not add it here as well -- Mudlet
+    -- allows multiple handlers per event, so listing it twice made the mapper
+    -- process every room change twice.
+    ["msdp.ROOM"] = "GUI.updateRoom"
   }
-  
-  -- Register MSDP.ROOM for map separately
-  -- NOTE: Both GUI.updateRoom and map.eventHandler need to handle msdp.ROOM events:
-  -- - GUI.updateRoom: Updates the room info display in the GUI
-  -- - map.eventHandler: Updates mapper position and handles environment transitions
-  -- Mudlet allows multiple handlers for the same event, so both will fire
-  local mapEventHandlers = {
-    ["msdp.ROOM"] = "map.eventHandler",
-    ["sysProtocolEnabled"] = "map.onProtocolEnabled"
-  }
-  
-  -- Store handler IDs for potential cleanup
+
+  -- Events deliberately NOT listed above, because 00_msdpmapper.xml already
+  -- registers them at file scope (which runs at script-compile time, earlier
+  -- and more reliably than GUI.init()):
+  --   msdp.ROOM / shiftRoom / sysConnectionEvent / sysDownloadDone
+  --       -> map.eventHandler
+  --   sysProtocolEnabled  -> map.onProtocolEnabled
+  -- And sysProtocolEnabled -> GUI.onProtocolEnabled is registered at file
+  -- scope further down in this script, for the same reason.
+
+  -- Store handler IDs so repeat calls can clean up after themselves.
   GUI.eventHandlerIds = GUI.eventHandlerIds or {}
-  
+
+  -- This function runs on every GUI.init() AND every GUI.initializeOrRefresh().
+  -- Without this cleanup each call stacked another copy of every handler, so
+  -- after a few reconnects a single MSDP update fanned out to N duplicate
+  -- handlers (duplicate REPORT storms, redundant redraws, growing latency).
+  --
+  -- Only clean up events owned by eventHandlers. Older releases also stored
+  -- the five mapper handlers and the file-scope GUI protocol handler in this
+  -- table. Mudlet 4.21 can reuse those handler IDs when the same string handler
+  -- is registered during an in-place upgrade; sweeping every legacy entry here
+  -- would therefore kill the newly compiled file-scope handlers.
+  local killed = 0
+  for event in pairs(eventHandlers) do
+    local handlerId = GUI.eventHandlerIds[event]
+    if handlerId then
+      local ok = pcall(killAnonymousEventHandler, handlerId)
+      if ok then killed = killed + 1 end
+    end
+    GUI.eventHandlerIds[event] = nil
+  end
+  if killed > 0 then
+    -- Uncomment when debugging handler lifetime:
+    -- print(string.format("[GUI] Cleared %d stale event handlers", killed))
+  end
+
   -- Register GUI event handlers
   for event, handler in pairs(eventHandlers) do
     local success, handlerId = pcall(registerAnonymousEventHandler, event, handler)
@@ -3450,19 +3465,7 @@ function GUI.registerEventHandlers()
       print(string.format("✗ Failed to register GUI handler for %s: %s", event, handlerId))
     end
   end
-  
-  -- Register map event handlers separately
-  for event, handler in pairs(mapEventHandlers) do
-    local success, handlerId = pcall(registerAnonymousEventHandler, event, handler)
-    if success then
-      GUI.eventHandlerIds[event .. "_map"] = handlerId
-      -- Optional: uncomment for debugging
-      -- print(string.format("✓ Registered map handler for %s", event))
-    else
-      print(string.format("✗ Failed to register map handler for %s: %s", event, handlerId))
-    end
-  end
-  
+
   -- Verify critical handlers are working and refresh displays
   tempTimer(2, function()
     -- Group tab refresh
@@ -3725,7 +3728,33 @@ end
 -- along with the original GUI.init() registration to ensure proper order
 
 -- Register the proper initialization sequence
-registerAnonymousEventHandler("sysLoadEvent", "GUI.init")
+-- Since Mudlet 4.20, sysLoadEvent passes a boolean: true for a fresh profile
+-- load, false when it fires after resetProfile(). That distinction matters:
+-- after a resetProfile() the connection is usually still up and MSDP was
+-- already negotiated, so sysProtocolEnabled will NOT fire again and the GUI
+-- would otherwise sit empty, never having sent its REPORT subscriptions.
+registerAnonymousEventHandler("sysLoadEvent", function(_, isNewLoad)
+  GUI.init()
+
+  -- isNewLoad == false means we came from resetProfile(). Older Mudlet
+  -- versions pass nil here, so only take this path on an explicit false.
+  if isNewLoad == false then
+    tempTimer(0.5, function()
+      if map and map.initialize then
+        local ok, initialized = pcall(map.initialize)
+        if not ok or initialized == false then
+          print("[GUI] Mapper initialization failed after profile reset: " .. tostring(initialized))
+        end
+      else
+        print("[GUI] Mapper initialization is unavailable after profile reset")
+      end
+      if GUI.requestMSDPReports() then
+        print("[GUI] Re-subscribed to MSDP after profile reset")
+      end
+      GUI.initializeOrRefresh("profile reset")
+    end)
+  end
+end)
 registerAnonymousEventHandler("sysInstall", "GUI.init")
 
 -- Register protocol handler early to ensure it catches MSDP enablement
@@ -3765,7 +3794,6 @@ GUI.AdjustableContainers.defaultStyle = {
     border: 2px solid rgba(184, 115, 27, 0.8);
     border-radius: 5px;
     padding: 5px;
-    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
     font-family: Tahoma, Geneva, sans-serif;
   ]],
   buttonstyle = [[
@@ -3777,7 +3805,6 @@ GUI.AdjustableContainers.defaultStyle = {
     QLabel::hover { 
       background-color: rgba(120,120,120,100%); 
       border: 1px solid rgba(184, 115, 27, 0.8);
-      box-shadow: 0px 0px 3px rgba(184, 115, 27, 0.5);
     }
     QLabel::pressed {
       background-color: rgba(0, 0, 0, 0.3);
@@ -4614,7 +4641,10 @@ function demonnic.chat:create()
     }, demonnic.chat.tabBox)
     demonnic.chat.tabs[tab]:echo(tab, demonnic.chat.config.inactiveTabText, "c")
     demonnic.chat.tabs[tab]:setColor(r,g,b)
-    demonnic.chat.tabs[tab]:setClickCallback("demonnicChatSwitch", tab)
+    -- Closure form: avoids the legacy string-name callback, which relies on
+    -- global name lookup plus stored argument refs in the Lua registry
+    -- (see Mudlet issue #9254 / docs/MUDLET_COMPATIBILITY.md).
+    demonnic.chat.tabs[tab]:setClickCallback(function() demonnicChatSwitch(tab) end)
 		
 		demonnic.chat.tabs[tab]:setStyleSheet(
 		 [[font-family: Tahoma, Geneva, sans-serif; 

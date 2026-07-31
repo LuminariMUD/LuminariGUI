@@ -103,6 +103,12 @@ Updates happen automatically when MSDP data changes, but manual refresh is possi
 - Send explicit REPORT command for missing variables
 - Check server supports the variable (see variable list below)
 
+**Mudlet client-side gotchas (4.20+):**
+- **MSDP may simply be off.** Since Mudlet 4.20 the protocol toggles were consolidated from checkboxes into a **dropdown** under Profile Preferences → Protocols ([#7744](https://github.com/Mudlet/Mudlet/pull/7744)). The same release also fixed incorrect initialisation of Mudlet's internal MSDP-enabled flag ([#7762](https://github.com/Mudlet/Mudlet/pull/7762)). After a Mudlet upgrade, **verify MSDP is still enabled** — if it is not, `sysProtocolEnabled` never fires and the entire GUI stays dark.
+- **Client identification variable names changed.** Mudlet 4.21 aligned its MSDP negotiation to the [specification](https://mudhalla.net/tintin/protocols/msdp/), reporting **`CLIENT_NAME`** and **`CLIENT_VERSION`** where it previously sent `CLIENT` and `VERSION` ([#8905](https://github.com/Mudlet/Mudlet/pull/8905)). This affects only what Mudlet reports *about itself* to the server — it does **not** change `sendMSDP("REPORT", ...)`. It matters only if LuminariMUD branches on the old names server-side.
+
+See [MUDLET_COMPATIBILITY.md](MUDLET_COMPATIBILITY.md) for the full version-by-version breakdown.
+
 ---
 
 

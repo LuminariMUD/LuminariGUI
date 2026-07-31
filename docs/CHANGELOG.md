@@ -11,6 +11,78 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Begin Changelog entries below
 ---
 
+## [2.0.4.028] - 2026-07-31
+
+Mudlet 4.20–4.22 compatibility pass. Mudlet 4.20 moved to Qt6 and 4.21 changed
+label/callback internals; this release adapts the package and fixes a
+long-standing event-handler leak found during the audit.
+
+### Fixed
+
+- **Event handler leak (major).** `GUI.registerEventHandlers()` runs on every
+  `GUI.init()` *and* every `GUI.initializeOrRefresh()`, but never removed the
+  handlers it had previously registered. Handlers accumulated without bound:
+  measured at 36 → 68 → 324 live handlers over ten refresh cycles, meaning a
+  single MSDP update eventually fanned out to ~10 duplicate handlers
+  (duplicate REPORT storms, redundant redraws, growing latency). The function
+  now kills only the GUI handlers it owns before re-registering and is
+  verifiably idempotent (flat 30 handlers across repeated calls). This
+  ownership boundary preserves the reused file-scope mapper/protocol handler
+  IDs during an in-place upgrade.
+- **Duplicate event registrations.** `msdp.ROOM`, `shiftRoom`,
+  `sysConnectionEvent`, `sysDownloadDone` (→ `map.eventHandler`) and
+  `sysProtocolEnabled` (→ `map.onProtocolEnabled` and `GUI.onProtocolEnabled`)
+  were registered both at file scope and again in the GUI handler tables, so
+  the mapper processed every room change twice. The file-scope registrations
+  are now the single source; the duplicates were removed from the tables.
+- **Blank GUI after `resetProfile()`.** `sysProtocolEnabled` does not fire
+  again after a profile reset (MSDP is already negotiated), so the GUI never
+  re-sent its MSDP `REPORT` subscriptions and sat empty. `sysLoadEvent` now
+  uses the boolean flag added in Mudlet 4.20 (`true` = fresh load,
+  `false` = post-`resetProfile()`) to recreate both mapper views, re-subscribe,
+  and refresh.
+- **Read-only build drift guard.** `--fail-on-diff` now implies `--diff`,
+  treats a missing output file as drift, and never invokes the version-bumping,
+  archiving build path.
+- **Obsolete standalone test removed.** `tests/test_state_validation.py`
+  targeted a "State Validator" subsystem that does not exist in the package
+  and therefore failed every direct invocation.
+
+### Changed
+
+- **Label click callbacks converted to closures.** Replaced the legacy
+  string-function-name form (`setClickCallback("demonnicChatSwitch", tab)`)
+  with closures in YATCO chat tabs, the tabbed info window, and the
+  Legend/Map buttons. The legacy form depends on global name lookup plus
+  argument references held in the Lua registry — the surface affected by the
+  Mudlet 4.20/4.21 label callback lifetime changes (Mudlet #9254 / #9255).
+- **MSDP subscriptions refactored** into `GUI.MSDP_REPORT_VARS` +
+  `GUI.requestMSDPReports()`, callable from both the protocol-enabled path and
+  the post-reset path. Verified byte-for-byte identical variable coverage
+  (33 active variables, unchanged).
+- **Removed unsupported stylesheet properties.** Deleted 8 `box-shadow` and 1
+  `text-shadow` declarations from Geyser stylesheets. Qt Style Sheets have
+  never supported either property; Qt6 parses stylesheets more strictly, where
+  an invalid declaration risks the surrounding rule being dropped. (The
+  `text-shadow` uses inside `echo()` HTML were left alone — that is Qt's
+  rich-text engine, a different parser.)
+- **`config.lua` manifest corrected** to match Mudlet's own exporter
+  (`src/dlgPackageExporter.cpp`): `dependencies` is now a comma-separated
+  string rather than a Lua table, `helpURL` added, and the non-standard
+  `modified` field removed.
+- **Declared minimum Mudlet raised** from `4.0+` to `4.21+`.
+
+### Documentation
+
+- Added `docs/MUDLET_COMPATIBILITY.md` — Mudlet 4.20–4.22 changes affecting
+  this package, known open upstream bugs, and a triage checklist.
+- Corrected `docs/MUDLET_DEVELOPMENT.md`, `CONTRIBUTING.md`, and `CLAUDE.md`,
+  which described an obsolete "single-file architecture" and a deleted
+  `scripts/create_package.py`.
+- Documented that `tests/run_tests.py` must be run from `tests/` (or with an
+  explicit `--xml`), and that omitting `--skip-optional` without `luacheck`
+  installed exits 0 having run **no tests**.
+
 ## [Unreleased] - 2025-11-29
 
 ### Added - Package Manager (theGUI/package.py)

@@ -2,20 +2,43 @@
 
 This document outlines the development workflow, architecture, and best practices for the LuminariGUI project.
 
+> **Mudlet version compatibility:** Mudlet 4.20 migrated to Qt6 and 4.21 changed label/callback internals and MSDP negotiation. If the package worked on an older Mudlet and misbehaves on a newer one, read **[MUDLET_COMPATIBILITY.md](MUDLET_COMPATIBILITY.md)** first — it has a version-by-version breakdown and a triage checklist.
+
 ## Project Architecture
 
-### Single-File Architecture
-Unlike many modern Mudlet projects that use build tools like Muddler to compile Lua files into a package, **LuminariGUI uses a single-file architecture**.
+### Source-to-Build Architecture
+**LuminariGUI is assembled from modular XML fragments.** Edit source files in `theGUI/src/`, **not** `LuminariGUI.xml` directly — the latter is a build output and will be overwritten.
 
--   **Source of Truth**: `LuminariGUI.xml` is the primary source file. All triggers, aliases, scripts, and UI definitions are contained within this file.
--   **Embedded Lua**: Lua scripts are embedded directly in the XML.
--   **Python Toolchain**: We use custom Python scripts (see [PYTHON_TOOLS.md](PYTHON_TOOLS.md)) to validate, format, and release the package, but **not to compile it**.
+```
+theGUI/
+├── build.py          # Build script (XML assembly)
+├── package.py        # Package manager (.mpackage creation, releases)
+├── build.yaml        # Manifest (fragment list, version)
+├── skeleton.xml      # Package structure template
+└── src/              # SOURCE OF TRUTH
+    ├── triggers/     # Trigger definitions
+    ├── aliases/      # Alias definitions
+    ├── scripts/      # Lua scripts
+    └── keys/         # Key bindings
+```
+
+-   **Source of Truth**: the fragments under `theGUI/src/`, listed in `theGUI/build.yaml`.
+-   **Build Output**: `LuminariGUI.xml`, assembled by `build.py`. Each build auto-increments the version in `build.yaml` and archives the previous XML to `docs/archive/`.
+-   **Embedded Lua**: Lua scripts are embedded inside the XML fragments.
+-   **Python Toolchain**: custom Python scripts (see [PYTHON_TOOLS.md](PYTHON_TOOLS.md)) assemble, validate, test, and release the package.
+
+Fragments are named `NN_descriptive_name.xml`, where `NN` is `00`–`09` for core/init, `10`–`19` for major subsystems, and `20+` for extensions.
 
 ### Workflow
-1.  **Edit**: Make changes directly to `LuminariGUI.xml` (or import into Mudlet, edit, and export).
-2.  **Validate**: Run `python3 scripts/validate_package.py` to ensure XML structure and Lua syntax are correct.
-3.  **Test**: Run `python3 tests/run_tests.py` to execute the test suite.
-4.  **Release**: Use `python3 scripts/create_package.py --release` to package and tag a new version.
+1.  **Edit**: Change fragments in `theGUI/src/`.
+2.  **Validate**: `python3 theGUI/build.py --validate` (no changes written) and `python3 scripts/validate_package.py`.
+3.  **Build**: `python3 theGUI/build.py` to assemble `LuminariGUI.xml`.
+4.  **Test**: `python3 tests/run_tests.py`.
+5.  **Manual test**: import `LuminariGUI.xml` into Mudlet.
+6.  **Release**: `python3 theGUI/package.py release` (use `--dry-run` to preview).
+7.  **Commit** both the source fragments and the built `LuminariGUI.xml`.
+
+Additional build modes: `--extract` (first-time split of an existing XML), `--watch` (rebuild on change), `--diff` (show pending changes).
 
 ---
 
@@ -48,6 +71,8 @@ A Mudlet package is a **collection of triggers, aliases, timers, scripts, keybin
 
 ## Development Methods: Choosing Your Approach {#development-methods}
 
+> **Note:** LuminariGUI uses **neither** of the two methods below — it uses its own Python source-to-build toolchain (`theGUI/build.py` + `theGUI/package.py`), described above. The following is background on the ecosystem's standard options, useful context when reading other packages' source or Mudlet's own documentation.
+
 ### Method 1: Mudlet's Built-in Package Exporter (Beginner-Friendly)
 
 The **Package Exporter** is accessible from Mudlet's toolbar and provides a graphical interface . This method is ideal for simple packages and quick prototypes.
@@ -66,6 +91,33 @@ The **Package Exporter** is accessible from Mudlet's toolbar and provides a grap
 -- Reference bundled assets correctly
 setBackgroundImage("my health label", getMudletHomeDir().."/sipper/health.png")
 ```
+
+**The `.mpackage` format and `config.lua`:**
+
+An `.mpackage` is a ZIP archive containing the package XML, a `config.lua` manifest, and any bundled assets. The authoritative field list — taken from Mudlet's own exporter (`src/dlgPackageExporter.cpp`, `writeConfigFile`) — is:
+
+| Field | Notes |
+|---|---|
+| `mpackage` | Package name (the internal identifier) |
+| `author` | |
+| `icon` | Icon *filename* as bundled in the archive |
+| `title` | |
+| `description` | Supports GitHub-flavored markdown |
+| `version` | |
+| `helpURL` | Normalized to `https://` if no scheme given |
+| `dependencies` | **A comma-separated string**, not a Lua table |
+| `created` | ISO-8601 timestamp |
+
+```lua
+mpackage = "MyMudPackage"
+author = "YourName"
+title = "My MUD Enhancement Package"
+version = "1.0.0"
+dependencies = "generic_mapper"
+created = "2026-07-31"
+```
+
+Since Mudlet 4.20 the exporter no longer enforces required fields, and packages without an icon no longer get a default one.
 
 ### Method 2: Muddler Build Tool (Professional Development)
 
@@ -295,6 +347,38 @@ local fontPath = getMudletHomeDir() .. "/MyMudPackage/fonts/custom.ttf"
 setFont("MyMudPackage_Display", fontPath)
 ```
 
+### Stylesheets are Qt, not CSS {#qt-stylesheets}
+
+Mudlet styles widgets with **Qt Style Sheets (QSS)**, which resemble CSS but are a distinct, smaller language. Since **Mudlet 4.20 all platforms build against Qt6** (Qt 6.9), so styling behaviour shifted for anyone upgrading from an older release.
+
+Practical rules:
+
+-   **Only QSS-supported properties work.** Notably, **`box-shadow` does not exist in QSS** and is silently ignored — as are most modern CSS features (flexbox, grid, transforms, transitions, custom properties). Layout is Geyser's job, not the stylesheet's.
+-   Prefer explicit longhand properties (`border-width`, `border-color`, `border-style`) over shorthands where behaviour is ambiguous.
+-   `background-image` does not scale; use **`border-image`** when you need the image to stretch to the widget.
+-   Qt6 parses stylesheets more strictly than Qt5. A malformed declaration can cause the surrounding rule to be dropped, which typically shows up as a **silently unstyled widget** rather than an error.
+-   Verify texture/image paths resolve at runtime — a missing file also yields a silently unstyled widget.
+
+### Label callbacks: prefer closures {#label-callbacks}
+
+The legacy form passes a **function name as a string plus trailing arguments**:
+
+```lua
+-- LEGACY: fragile, relies on global lookup + stored argument references
+tab:setClickCallback("demonnicChatSwitch", tab)
+```
+
+This surface was directly affected by the callback-lifetime and registry-index work in Mudlet 4.20/4.21 (see [#9254](https://github.com/Mudlet/Mudlet/issues/9254)). Prefer a closure, which captures the value lexically and does not depend on a global name:
+
+```lua
+-- PREFERRED
+tab:setClickCallback(function() demonnicChatSwitch(tab) end)
+```
+
+### Resize handling {#resize-handling}
+
+`sysWindowResize` is the traditional signal, but it is **not reliable on all window managers** — see the open upstream bug [#9262](https://github.com/Mudlet/Mudlet/issues/9262), where tiled windows stop emitting it. Mudlet 4.20 added **`sysConsoleSizeChanged`**, which fires on resize and on toggling timestamps; use it as a supplementary signal when layout must track the console size.
+
 ## Advanced Features & Integration {#advanced-features}
 
 ### GMCP Integration 
@@ -334,6 +418,20 @@ end)
 ```
 
 ### Package Lifecycle Management 
+
+**`sysLoadEvent` carries a flag since Mudlet 4.20:**
+
+`sysLoadEvent` now passes a boolean — `true` for a fresh profile load, `false` when it fires after `resetProfile()` ([#7726](https://github.com/Mudlet/Mudlet/pull/7726)). Handlers that ignore it still work, but they cannot tell the two cases apart, which matters when the package is already connected and holds live state:
+
+```lua
+registerAnonymousEventHandler("sysLoadEvent", function(_, isNewLoad)
+    if isNewLoad then
+        MyMudPackage.Core.initialize()      -- cold start
+    else
+        MyMudPackage.Core.reacquireState()  -- after resetProfile(), likely still connected
+    end
+end)
+```
 
 **Installation Hook:**
 ```lua
