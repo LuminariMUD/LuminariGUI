@@ -35,6 +35,16 @@ SCRIPT_DIR = Path(__file__).parent.resolve()
 PROJECT_ROOT = SCRIPT_DIR.parent
 
 VERSION_PATTERN = re.compile(r"^[0-9A-Za-z]+(?:[._+-][0-9A-Za-z]+)*$")
+BUILD_INCLUDE_PATTERN = re.compile(
+    r"(?m)^(?P<indent>[ \t]*)"
+    r"<!--\s*BUILD_INCLUDE:\s*(?P<path>[^\r\n]+?)\s*-->"
+    r"[ \t]*(?P<newline>\r?\n|$)"
+)
+BUILD_INCLUDE_TOKEN = "BUILD_INCLUDE:"
+
+
+class FragmentBuildError(Exception):
+    """Raised when a source fragment cannot be safely assembled."""
 
 
 def parse_version_argument(value: str) -> str:
@@ -220,23 +230,202 @@ class FragmentValidator:
         return len(errors) == 0, errors
 
 
+class CompositeFragmentResolver:
+    """Expand explicit XML include directives within the source tree."""
+
+    def __init__(
+        self,
+        source_root: Path,
+        validator: FragmentValidator,
+        validate_fragments: bool = True,
+        strip_dev_comments: bool = True,
+    ):
+        self.source_root = source_root.resolve()
+        self.display_root = self.source_root.parent
+        self.validator = validator
+        self.validate_fragments = validate_fragments
+        self.strip_dev_comments = strip_dev_comments
+
+    def display_path(self, path: Path) -> str:
+        """Return a stable source-relative path for output and diagnostics."""
+        try:
+            return path.relative_to(self.display_root).as_posix()
+        except ValueError:
+            return str(path)
+
+    def resolve(self, path: Path) -> tuple[str, list[tuple[str, str, int]]]:
+        """Return expanded XML and ordered physical sources used to build it."""
+        sources = []
+        resolved_path = self._require_source_path(path, included_from=None)
+        content = self._expand(resolved_path, [], sources, 0)
+        return content, sources
+
+    def _require_source_path(
+        self,
+        path: Path,
+        included_from: Path | None,
+    ) -> Path:
+        """Resolve a path and ensure it remains inside ``theGUI/src``."""
+        resolved = path.resolve()
+        try:
+            resolved.relative_to(self.source_root)
+        except ValueError as error:
+            if included_from is None:
+                detail = self.display_path(path)
+            else:
+                detail = (
+                    f"{path} (included from {self.display_path(included_from)})"
+                )
+            raise FragmentBuildError(
+                f"Fragment path escapes the source tree: {detail}"
+            ) from error
+
+        if not resolved.exists():
+            if included_from is None:
+                raise FragmentBuildError(
+                    f"Fragment not found: {self.display_path(resolved)}"
+                )
+            raise FragmentBuildError(
+                "Included fragment not found: "
+                f"{self.display_path(resolved)} "
+                f"(included from {self.display_path(included_from)})"
+            )
+        if not resolved.is_file():
+            raise FragmentBuildError(
+                f"Fragment is not a file: {self.display_path(resolved)}"
+            )
+        return resolved
+
+    def _read_source(self, path: Path) -> str:
+        try:
+            content = path.read_text(encoding="utf-8")
+        except UnicodeDecodeError as error:
+            raise FragmentBuildError(
+                f"Fragment is not valid UTF-8: {self.display_path(path)}"
+            ) from error
+
+        if self.strip_dev_comments:
+            content = re.sub(
+                r"<!--\s*DEV:.*?-->\n?",
+                "",
+                content,
+                flags=re.DOTALL,
+            )
+        return content
+
+    def _validate(self, content: str, path: Path, stage: str) -> None:
+        if not self.validate_fragments:
+            return
+        display = self.display_path(path)
+        is_valid, errors = self.validator.validate_fragment(content, display)
+        if not is_valid:
+            details = "; ".join(errors)
+            raise FragmentBuildError(
+                f"Invalid {stage} fragment {display}: {details}"
+            )
+
+    def _expand(
+        self,
+        path: Path,
+        stack: list[Path],
+        sources: list[tuple[str, str, int]],
+        depth: int,
+    ) -> str:
+        if path in stack:
+            cycle_start = stack.index(path)
+            cycle = stack[cycle_start:] + [path]
+            chain = " -> ".join(self.display_path(item) for item in cycle)
+            raise FragmentBuildError(f"Build include cycle detected: {chain}")
+
+        raw_content = self._read_source(path)
+        self._validate(raw_content, path, "source")
+        sources.append((self.display_path(path), raw_content, depth))
+
+        matches = list(BUILD_INCLUDE_PATTERN.finditer(raw_content))
+        content_without_directives = BUILD_INCLUDE_PATTERN.sub("", raw_content)
+        if BUILD_INCLUDE_TOKEN in content_without_directives:
+            raise FragmentBuildError(
+                "Malformed build include directive in "
+                f"{self.display_path(path)}; directives must occupy a full XML comment line"
+            )
+
+        if not matches:
+            return raw_content
+
+        active_stack = stack + [path]
+        parts = []
+        cursor = 0
+        for match in matches:
+            include_ref = match.group("path").strip()
+            if not include_ref:
+                raise FragmentBuildError(
+                    f"Empty build include in {self.display_path(path)}"
+                )
+            if Path(include_ref).is_absolute():
+                raise FragmentBuildError(
+                    "Build include paths must be relative: "
+                    f"{include_ref} (in {self.display_path(path)})"
+                )
+            if any(character in include_ref for character in "*?["):
+                raise FragmentBuildError(
+                    "Build include paths must be explicit and cannot use globs: "
+                    f"{include_ref} (in {self.display_path(path)})"
+                )
+
+            child_path = self._require_source_path(
+                path.parent / include_ref,
+                included_from=path,
+            )
+            child_content = self._expand(
+                child_path,
+                active_stack,
+                sources,
+                depth + 1,
+            )
+            newline = match.group("newline")
+            if newline and child_content and not child_content.endswith(("\n", "\r")):
+                child_content += newline
+
+            parts.append(raw_content[cursor:match.start()])
+            parts.append(child_content)
+            cursor = match.end()
+
+        parts.append(raw_content[cursor:])
+        expanded = "".join(parts)
+        if BUILD_INCLUDE_TOKEN in expanded:
+            raise FragmentBuildError(
+                f"Build include directive leaked from {self.display_path(path)}"
+            )
+        self._validate(expanded, path, "expanded")
+        return expanded
+
+
 class Builder:
     """Main build class - assembles fragments into final XML"""
 
     def __init__(self, config: BuildConfig = None):
         self.config = config or BuildConfig()
         self.validator = FragmentValidator()
+        self.script_dir = self.config.config_path.parent.resolve()
+        self.project_root = self.script_dir.parent
+        self.source_root = self.script_dir / "src"
+        self.fragment_resolver = CompositeFragmentResolver(
+            self.source_root,
+            self.validator,
+            validate_fragments=self.config.validate_fragments,
+            strip_dev_comments=self.config.strip_dev_comments,
+        )
 
     def get_output_path(self) -> Path:
         """Get absolute path to output file"""
         output_path = Path(self.config.output_file)
         if not output_path.is_absolute():
-            output_path = SCRIPT_DIR / output_path
+            output_path = self.script_dir / output_path
         return output_path.resolve()
 
     def get_archive_dir(self) -> Path:
         """Get absolute path to archive directory"""
-        return PROJECT_ROOT / "docs" / "archive"
+        return self.project_root / "docs" / "archive"
 
     def get_existing_version(self, xml_path: Path) -> str | None:
         """Extract version number from existing XML file"""
@@ -297,21 +486,22 @@ class Builder:
 
     def read_skeleton(self) -> str:
         """Read skeleton.xml template"""
-        skeleton_path = SCRIPT_DIR / "skeleton.xml"
+        skeleton_path = self.script_dir / "skeleton.xml"
         with open(skeleton_path, 'r', encoding='utf-8') as f:
             return f.read()
 
     def read_fragment(self, rel_path: str) -> str:
-        """Read a single fragment file"""
-        fragment_path = SCRIPT_DIR / rel_path
-        with open(fragment_path, 'r', encoding='utf-8') as f:
-            content = f.read()
-
-        # Strip dev comments if configured
-        if self.config.strip_dev_comments:
-            content = re.sub(r'<!--\s*DEV:.*?-->\n?', '', content, flags=re.DOTALL)
-
+        """Read and recursively expand a single fragment file."""
+        content, _ = self.read_fragment_details(rel_path)
         return content
+
+    def read_fragment_details(
+        self,
+        rel_path: str,
+    ) -> tuple[str, list[tuple[str, str, int]]]:
+        """Return expanded XML plus its ordered physical source files."""
+        fragment_path = self.script_dir / rel_path
+        return self.fragment_resolver.resolve(fragment_path)
 
     def assemble_fragments(self, fragment_list: list[str], indent: str = "\t\t\t") -> str:
         """
@@ -321,19 +511,7 @@ class Builder:
         parts = []
 
         for rel_path in fragment_list:
-            try:
-                content = self.read_fragment(rel_path)
-            except FileNotFoundError:
-                print(f"  WARNING: Fragment not found: {rel_path}")
-                continue
-
-            # Validate fragment if configured
-            if self.config.validate_fragments:
-                is_valid, errors = self.validator.validate_fragment(content, rel_path)
-                if not is_valid:
-                    for err in errors:
-                        print(f"  ERROR: {err}")
-                    continue
+            content = self.read_fragment(rel_path)
 
             # Add source markers if configured
             if self.config.embed_markers:
@@ -388,18 +566,24 @@ class Builder:
             print("ERROR: skeleton.xml not found")
             return False, ""
 
-        # Assemble each section
-        print("  Assembling triggers...")
-        triggers_content = self.assemble_fragments(self.config.triggers)
+        # Assemble each section. Include errors are fatal: silently omitting a
+        # missing or invalid child would create an importable but incomplete
+        # Mudlet package.
+        try:
+            print("  Assembling triggers...")
+            triggers_content = self.assemble_fragments(self.config.triggers)
 
-        print("  Assembling aliases...")
-        aliases_content = self.assemble_fragments(self.config.aliases)
+            print("  Assembling aliases...")
+            aliases_content = self.assemble_fragments(self.config.aliases)
 
-        print("  Assembling scripts...")
-        scripts_content = self.assemble_fragments(self.config.scripts)
+            print("  Assembling scripts...")
+            scripts_content = self.assemble_fragments(self.config.scripts)
 
-        print("  Assembling keys...")
-        keys_content = self.assemble_fragments(self.config.keys)
+            print("  Assembling keys...")
+            keys_content = self.assemble_fragments(self.config.keys)
+        except FragmentBuildError as error:
+            print(f"  ERROR: {error}")
+            return False, ""
 
         # Replace placeholders
         output = skeleton
@@ -481,12 +665,13 @@ class Builder:
 
         return True, True
 
-    def stats(self) -> None:
+    def stats(self) -> bool:
         """Show statistics about fragments and output"""
         print(f"Build Statistics for {self.config.package_name}")
         print("=" * 50)
 
         total_lines = 0
+        success = True
         sections = [
             ("Triggers", self.config.triggers),
             ("Aliases", self.config.aliases),
@@ -499,12 +684,16 @@ class Builder:
             print(f"\n{section_name}:")
             for rel_path in fragments:
                 try:
-                    content = self.read_fragment(rel_path)
-                    lines = content.count('\n') + 1
-                    section_lines += lines
-                    print(f"  {rel_path}: {lines} lines")
-                except FileNotFoundError:
-                    print(f"  {rel_path}: NOT FOUND")
+                    _, sources = self.read_fragment_details(rel_path)
+                    for source_path, source_content, depth in sources:
+                        lines = source_content.count('\n') + 1
+                        section_lines += lines
+                        label = "include " if depth else ""
+                        prefix = "  " + ("  " * depth)
+                        print(f"{prefix}{label}{source_path}: {lines} lines")
+                except FragmentBuildError as error:
+                    print(f"  ERROR: {error}")
+                    success = False
             print(f"  Subtotal: {section_lines} lines")
             total_lines += section_lines
 
@@ -517,6 +706,7 @@ class Builder:
             with open(output_path, 'r', encoding='utf-8') as f:
                 output_lines = f.read().count('\n') + 1
             print(f"Output file lines: {output_lines}")
+        return success
 
     def clean(self) -> None:
         """Remove generated output file"""
@@ -533,6 +723,7 @@ class Extractor:
 
     def __init__(self, config: BuildConfig = None):
         self.config = config or BuildConfig()
+        self.script_dir = self.config.config_path.parent.resolve()
         self.lines = []
         self.generated_files = []
 
@@ -540,14 +731,51 @@ class Extractor:
         """Get path to existing XML file"""
         output_path = Path(self.config.output_file)
         if not output_path.is_absolute():
-            output_path = SCRIPT_DIR / output_path
+            output_path = self.script_dir / output_path
         return output_path.resolve()
+
+    def _composite_fragments(self) -> list[str]:
+        """Return configured fragments that contain build include directives."""
+        composite = []
+        fragment_lists = (
+            self.config.triggers,
+            self.config.aliases,
+            self.config.scripts,
+            self.config.keys,
+        )
+        for fragment_list in fragment_lists:
+            for rel_path in fragment_list:
+                path = self.script_dir / rel_path
+                try:
+                    content = path.read_text(encoding="utf-8")
+                except (FileNotFoundError, UnicodeDecodeError):
+                    continue
+                if BUILD_INCLUDE_TOKEN in content:
+                    composite.append(rel_path)
+        return composite
 
     def extract(self) -> bool:
         """
         Extract fragments from existing LuminariGUI.xml
         Uses raw text parsing to preserve original formatting
         """
+        composite = self._composite_fragments()
+        if composite:
+            print(
+                "ERROR: --extract refuses to overwrite composite source fragments."
+            )
+            print(
+                "  Reverse extraction would collapse BUILD_INCLUDE layouts back "
+                "into monolithic files."
+            )
+            for rel_path in composite:
+                print(f"  Composite fragment: {rel_path}")
+            print(
+                "  Remove the include directives intentionally before extracting, "
+                "or preserve the modular sources manually."
+            )
+            return False
+
         input_path = self.get_input_path()
 
         if not input_path.exists():
@@ -622,7 +850,7 @@ class Extractor:
 
     def _write_fragment(self, rel_path: str, content: str):
         """Write a fragment file"""
-        fragment_path = SCRIPT_DIR / rel_path
+        fragment_path = self.script_dir / rel_path
         fragment_path.parent.mkdir(parents=True, exist_ok=True)
 
         # Ensure content ends with newline
@@ -966,7 +1194,7 @@ triggers:
         for f in keys:
             yaml_content += f'  - {f}\n'
 
-        yaml_path = SCRIPT_DIR / 'build.yaml'
+        yaml_path = self.script_dir / 'build.yaml'
         with open(yaml_path, 'w', encoding='utf-8') as f:
             f.write(yaml_content)
 
@@ -981,28 +1209,29 @@ class Watcher:
         self.config = builder.config
         self.version_override = version_override
 
+    def latest_mtime(self) -> float:
+        """Return the newest source/config mtime, including nested XML files."""
+        latest_mtime = 0.0
+        for path in self.builder.source_root.rglob("*.xml"):
+            latest_mtime = max(latest_mtime, path.stat().st_mtime)
+
+        for config_file in (
+            self.builder.script_dir / "skeleton.xml",
+            self.builder.script_dir / "build.yaml",
+        ):
+            if config_file.exists():
+                latest_mtime = max(latest_mtime, config_file.stat().st_mtime)
+        return latest_mtime
+
     def watch(self):
         """Watch source files and rebuild on changes"""
         print("Watching for changes... (Ctrl+C to stop)")
 
-        src_dir = SCRIPT_DIR / "src"
         last_build = 0
 
         try:
             while True:
-                # Get latest modification time of any source file
-                latest_mtime = 0
-                for path in src_dir.rglob("*.xml"):
-                    mtime = path.stat().st_mtime
-                    if mtime > latest_mtime:
-                        latest_mtime = mtime
-
-                # Also check skeleton and build.yaml
-                for config_file in [SCRIPT_DIR / "skeleton.xml", SCRIPT_DIR / "build.yaml"]:
-                    if config_file.exists():
-                        mtime = config_file.stat().st_mtime
-                        if mtime > latest_mtime:
-                            latest_mtime = mtime
+                latest_mtime = self.latest_mtime()
 
                 # Rebuild if changed
                 if latest_mtime > last_build:
@@ -1068,8 +1297,8 @@ Examples:
         sys.exit(0)
 
     if args.stats:
-        builder.stats()
-        sys.exit(0)
+        success = builder.stats()
+        sys.exit(0 if success else 1)
 
     if args.diff or args.fail_on_diff:
         success, has_differences = builder.diff(version_override=args.version)

@@ -9,6 +9,7 @@ working tree.
 """
 
 import html
+import importlib.util
 import json
 import os
 import re
@@ -691,6 +692,202 @@ assert(calls.room == 1, "ROOM callback lost its loop-local handler")
         return project_root
 
     @staticmethod
+    def _configure_composite_fixture(
+        project_root,
+        wrapper_include="parts/child.xml",
+        child_include="grandchild.xml",
+        grandchild_content=None,
+    ):
+        fixture_dir = (
+            project_root / "theGUI" / "src" / "scripts" / "include_test"
+        )
+        parts_dir = fixture_dir / "parts"
+        parts_dir.mkdir(parents=True, exist_ok=True)
+
+        wrapper_path = fixture_dir / "wrapper.xml"
+        child_path = parts_dir / "child.xml"
+        grandchild_path = parts_dir / "grandchild.xml"
+        wrapper_path.write_text(
+            """<ScriptGroup isActive="yes" isFolder="yes">
+\t<name>Include Test</name>
+\t<packageName></packageName>
+\t<script></script>
+\t<eventHandlerList />
+\t<!-- BUILD_INCLUDE: """
+            + wrapper_include
+            + """ -->
+</ScriptGroup>
+""",
+            encoding="utf-8",
+        )
+        child_path.write_text(
+            "<!-- BUILD_INCLUDE: " + child_include + " -->\n",
+            encoding="utf-8",
+        )
+        if grandchild_content is None:
+            grandchild_content = """<Script isActive="yes" isFolder="no">
+\t<name>Included Grandchild</name>
+\t<packageName></packageName>
+\t<script>includedProbe = true</script>
+\t<eventHandlerList />
+</Script>
+"""
+        grandchild_path.write_text(grandchild_content, encoding="utf-8")
+
+        config_path = project_root / "theGUI" / "build.yaml"
+        config = config_path.read_text(encoding="utf-8")
+        config = config.replace(
+            "  - src/scripts/01_gui.xml\n",
+            "  - src/scripts/include_test/wrapper.xml\n",
+        )
+        config_path.write_text(config, encoding="utf-8")
+        return wrapper_path, child_path, grandchild_path
+
+    @staticmethod
+    def _load_build_module(project_root):
+        module_path = project_root / "theGUI" / "build.py"
+        module_name = f"luminari_build_include_probe_{id(project_root)}"
+        spec = importlib.util.spec_from_file_location(module_name, module_path)
+        if spec is None or spec.loader is None:
+            raise AssertionError("could not load build.py for include probe")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
+
+    def _test_composite_includes_build_stats_fallback_and_watch(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_root = self._copy_build_tree(Path(temp_dir))
+            _, _, grandchild_path = self._configure_composite_fixture(project_root)
+            version = self._manifest_version(project_root)
+
+            build = self._run_build_check(
+                project_root,
+                "--version",
+                version,
+            )
+            self._require(build.returncode == 0, build.stdout + build.stderr)
+            output = (project_root / "LuminariGUI.xml").read_text(encoding="utf-8")
+            self._require(
+                "<name>Included Grandchild</name>" in output,
+                "nested relative include was not expanded",
+            )
+            self._require(
+                "BUILD_INCLUDE:" not in output,
+                "build include directive leaked into assembled XML",
+            )
+
+            stats = self._run_build_check(project_root, "--stats")
+            self._require(stats.returncode == 0, stats.stdout + stats.stderr)
+            self._require(
+                "include src/scripts/include_test/parts/child.xml" in stats.stdout,
+                "stats did not report the included child separately",
+            )
+            self._require(
+                "include src/scripts/include_test/parts/grandchild.xml"
+                in stats.stdout,
+                "stats did not report the nested include separately",
+            )
+
+            fallback = subprocess.run(
+                [
+                    sys.executable,
+                    "-S",
+                    str(project_root / "theGUI" / "build.py"),
+                    "--validate",
+                ],
+                cwd=project_root,
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+            self._require(
+                fallback.returncode == 0,
+                "include expansion failed without PyYAML:\n"
+                + fallback.stdout
+                + fallback.stderr,
+            )
+
+            build_module = self._load_build_module(project_root)
+            config = build_module.BuildConfig(
+                project_root / "theGUI" / "build.yaml"
+            )
+            watcher = build_module.Watcher(build_module.Builder(config))
+            baseline = watcher.latest_mtime()
+            os.utime(grandchild_path, (baseline + 5, baseline + 5))
+            self._require(
+                watcher.latest_mtime() > baseline,
+                "watch mode did not discover a nested included XML change",
+            )
+
+    def _test_composite_include_diagnostics(self):
+        cases = (
+            (
+                {"wrapper_include": "parts/missing.xml"},
+                "Included fragment not found",
+            ),
+            (
+                {"wrapper_include": "../../../skeleton.xml"},
+                "escapes the source tree",
+            ),
+            (
+                {"wrapper_include": "parts/*.xml"},
+                "cannot use globs",
+            ),
+            (
+                {"grandchild_content": "<Script>\n"},
+                "Invalid source fragment",
+            ),
+            (
+                {"child_include": "../wrapper.xml"},
+                "include cycle detected",
+            ),
+        )
+
+        for fixture_options, expected_message in cases:
+            with tempfile.TemporaryDirectory() as temp_dir:
+                project_root = self._copy_build_tree(Path(temp_dir))
+                self._configure_composite_fixture(project_root, **fixture_options)
+                result = self._run_build_check(project_root, "--validate")
+                combined = result.stdout + result.stderr
+                self._require(
+                    result.returncode != 0,
+                    f"invalid include unexpectedly passed: {fixture_options}",
+                )
+                self._require(
+                    expected_message in combined,
+                    f"missing diagnostic {expected_message!r}: {combined}",
+                )
+
+    def _test_extract_refuses_composite_sources(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_root = self._copy_build_tree(Path(temp_dir))
+            wrapper_path, child_path, _ = self._configure_composite_fixture(
+                project_root
+            )
+            shutil.copy2(
+                self.repo_root / "LuminariGUI.xml",
+                project_root / "LuminariGUI.xml",
+            )
+            config_path = project_root / "theGUI" / "build.yaml"
+            before = {
+                path: path.read_bytes()
+                for path in (config_path, wrapper_path, child_path)
+            }
+
+            result = self._run_build_check(project_root, "--extract")
+            combined = result.stdout + result.stderr
+            self._require(result.returncode != 0, combined)
+            self._require(
+                "refuses to overwrite composite source fragments" in combined,
+                "--extract did not explain the composite-layout refusal",
+            )
+            for path, content in before.items():
+                self._require(
+                    path.read_bytes() == content,
+                    f"--extract modified {path.name} before refusing",
+                )
+
+    @staticmethod
     def _run_build_check(project_root, *arguments):
         return subprocess.run(
             [sys.executable, str(project_root / "theGUI" / "build.py"), *arguments],
@@ -1342,6 +1539,18 @@ raise SystemExit(1)
             (
                 "guard_synced_output",
                 self._test_guard_accepts_synced_output_without_mutation,
+            ),
+            (
+                "composite_include_build_stats_fallback_watch",
+                self._test_composite_includes_build_stats_fallback_and_watch,
+            ),
+            (
+                "composite_include_diagnostics",
+                self._test_composite_include_diagnostics,
+            ),
+            (
+                "extract_refuses_composite_sources",
+                self._test_extract_refuses_composite_sources,
             ),
             (
                 "create_version_override",
