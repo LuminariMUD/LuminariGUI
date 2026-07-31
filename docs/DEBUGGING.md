@@ -30,6 +30,9 @@ Coverage includes:
 Errors are caught only while `GUI.DEBUG` is `true`, allowing later diagnostic
 code to load and report state even if an early stage fails. With the switch
 `false`, functions are called directly and errors propagate normally.
+Dependent GUI stages now stop before creating widgets when their core parent
+containers are unavailable, so a diagnostic failure cannot create full-screen
+orphan controls on Mudlet's root window.
 
 The existing in-game `debug` alias toggles the same `GUI.DEBUG` value for the
 current session. It does not create a second setting and does not edit the XML.

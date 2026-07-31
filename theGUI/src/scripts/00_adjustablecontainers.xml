@@ -1,0 +1,198 @@
+			<ScriptGroup isActive="yes" isFolder="yes">
+				<name>AdjustableContainersFoundation</name>
+				<packageName>LuminariGUI</packageName>
+				<script></script>
+				<eventHandlerList />
+				<Script isActive="yes" isFolder="no">
+					<name>Adjustable Container Foundation</name>
+					<packageName></packageName>
+					<script>-- GUI.AdjustableContainers - early foundation
+--
+-- This fragment must load before 01_gui.xml. The GUI Config script creates
+-- its core boxes immediately while Mudlet imports the package, so delaying
+-- this namespace until the end of 01_gui.xml leaves those boxes without
+-- parents and causes later labels to be created on the root window.
+
+GUI = GUI or {}
+GUI.AdjustableContainers = GUI.AdjustableContainers or {}
+
+-- Preserve the registry across an in-place package upgrade so stale objects
+-- can be removed before replacements are created.
+GUI.AdjustableContainers.containers =
+  GUI.AdjustableContainers.containers or {}
+
+GUI.AdjustableContainers.currentProfile =
+  GUI.AdjustableContainers.currentProfile or "default"
+
+GUI.AdjustableContainers.saveDir =
+  string.format("%s/LuminariGUI/layouts/", getMudletHomeDir())
+
+GUI.AdjustableContainers.defaultStyle = {
+  adjLabelstyle = [[
+    background-image: url(]] .. getMudletHomeDir():gsub("\\", "/") .. [[/LuminariGUI/images/ui_texture.jpg);
+    background-color: rgba(38, 25, 47, 0.9);
+    border: 2px solid rgba(184, 115, 27, 0.8);
+    border-radius: 5px;
+    padding: 5px;
+    font-family: Tahoma, Geneva, sans-serif;
+  ]],
+  buttonstyle = [[
+    QLabel {
+      border-radius: 7px;
+      background-color: rgba(100,100,100,100%);
+      border: 1px solid rgba(184, 115, 27, 0.5);
+    }
+    QLabel::hover {
+      background-color: rgba(120,120,120,100%);
+      border: 1px solid rgba(184, 115, 27, 0.8);
+    }
+    QLabel::pressed {
+      background-color: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(184, 115, 27, 1.0);
+    }
+  ]],
+  titleTxtColor = "#FFD700",
+  buttonFontSize = 10,
+  buttonsize = 20,
+  padding = 5,
+  autoSave = true,
+  autoLoad = true,
+  noClose = true,
+  defaultDir = GUI.AdjustableContainers.saveDir
+}
+
+function GUI.AdjustableContainers.generateName(baseName)
+  return "LuminariGUI_" .. baseName
+end
+
+function GUI.AdjustableContainers.register(container, name, componentType)
+  if not container then
+    print("ERROR: Cannot register nil container: " .. (name or "unknown"))
+    return false
+  end
+
+  GUI.AdjustableContainers.containers[name] = {
+    container = container,
+    name = name,
+    componentType = componentType,
+    created = os.time(),
+    profile = GUI.AdjustableContainers.currentProfile
+  }
+
+  print("✓ Registered container: " .. name .. " (" .. componentType .. ")")
+  return true
+end
+
+local function disposeExistingContainer(fullName)
+  local registered = GUI.AdjustableContainers.containers[fullName]
+  local existing = registered and registered.container
+
+  if not existing
+    and Adjustable
+    and Adjustable.Container
+    and Adjustable.Container.all
+  then
+    existing = Adjustable.Container.all[fullName]
+  end
+
+  if not existing then
+    return
+  end
+
+  GUI.debug("GUI/CONTAINER", "replacing existing adjustable container", {
+    name = fullName,
+    existing = type(existing),
+  })
+
+  if type(existing.disableAutoSave) == "function" then
+    pcall(existing.disableAutoSave, existing)
+  end
+  if type(existing.detach) == "function" then
+    pcall(existing.detach, existing)
+  end
+  if type(existing.delete) == "function" then
+    local deleted = pcall(existing.delete, existing)
+    if not deleted and type(existing.hide) == "function" then
+      pcall(existing.hide, existing)
+    end
+  elseif type(existing.hide) == "function" then
+    pcall(existing.hide, existing)
+  end
+
+  GUI.AdjustableContainers.containers[fullName] = nil
+  if Adjustable
+    and Adjustable.Container
+    and Adjustable.Container.all
+  then
+    Adjustable.Container.all[fullName] = nil
+  end
+end
+
+function GUI.AdjustableContainers.create(name, componentType, config)
+  local fullName = GUI.AdjustableContainers.generateName(name)
+
+  -- In-place package upgrades retain Lua/Geyser objects. Remove the prior
+  -- object before reusing its globally unique Mudlet window names.
+  disposeExistingContainer(fullName)
+
+  local containerConfig = {}
+  for key, value in pairs(GUI.AdjustableContainers.defaultStyle) do
+    containerConfig[key] = value
+  end
+  if config then
+    for key, value in pairs(config) do
+      containerConfig[key] = value
+    end
+  end
+  containerConfig.name = fullName
+
+  local container = Adjustable.Container:new(containerConfig)
+  if not container then
+    print("ERROR: Failed to create container: " .. fullName)
+    return nil
+  end
+
+  GUI.AdjustableContainers.register(container, fullName, componentType)
+  return container
+end
+
+function GUI.AdjustableContainers.show(name)
+  local containerInfo = GUI.AdjustableContainers.containers[name]
+  if containerInfo and containerInfo.container then
+    containerInfo.container:show()
+    return true
+  end
+  return false
+end
+
+function GUI.AdjustableContainers.hide(name)
+  local containerInfo = GUI.AdjustableContainers.containers[name]
+  if containerInfo and containerInfo.container then
+    containerInfo.container:hide()
+    return true
+  end
+  return false
+end
+
+function GUI.AdjustableContainers.destroy(name)
+  local containerInfo = GUI.AdjustableContainers.containers[name]
+  if containerInfo and containerInfo.container then
+    if type(containerInfo.container.delete) == "function" then
+      pcall(containerInfo.container.delete, containerInfo.container)
+    else
+      containerInfo.container:hide()
+    end
+    GUI.AdjustableContainers.containers[name] = nil
+    print("✓ Destroyed container: " .. name)
+    return true
+  end
+  return false
+end
+
+GUI.debug("BOOT/FOUNDATION", "AdjustableContainers foundation loaded", {
+  create = type(GUI.AdjustableContainers.create),
+  saveDir = GUI.AdjustableContainers.saveDir,
+})</script>
+					<eventHandlerList />
+				</Script>
+			</ScriptGroup>

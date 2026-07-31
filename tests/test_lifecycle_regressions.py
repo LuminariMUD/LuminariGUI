@@ -31,6 +31,13 @@ class LifecycleRegressionTester:
         self.debug_source_path = (
             self.repo_root / "theGUI" / "src" / "scripts" / "00_debug.xml"
         )
+        self.adjustable_source_path = (
+            self.repo_root
+            / "theGUI"
+            / "src"
+            / "scripts"
+            / "00_adjustablecontainers.xml"
+        )
         self.instrumentation_source_path = (
             self.repo_root
             / "theGUI"
@@ -220,6 +227,11 @@ assert(calls.mapper == 1, "reset recovery ran during a fresh profile load")
             scripts[-1] == "src/scripts/99_debug_instrumentation.xml",
             "debug instrumentation is not the last script fragment",
         )
+        self._require(
+            scripts.index("src/scripts/00_adjustablecontainers.xml")
+            < scripts.index("src/scripts/01_gui.xml"),
+            "AdjustableContainers foundation does not load before GUI Config",
+        )
 
         source_text = "\n".join(
             path.read_text(encoding="utf-8")
@@ -244,6 +256,157 @@ assert(calls.mapper == 1, "reset recovery ran during a fresh profile load")
             "wrapTableFunctions(GUI.AdjustableContainers" in instrumentation_source,
             "adjustable containers are not instrumented",
         )
+
+    def _test_core_parent_load_order_and_orphan_guard(self):
+        foundation_root = ET.parse(self.adjustable_source_path).getroot()
+        foundation_script = foundation_root.find(".//Script/script").text
+        self._require(
+            foundation_script,
+            "AdjustableContainers foundation has no Lua script",
+        )
+
+        gui_root = ET.parse(self.gui_source_path).getroot()
+        buttons_script = None
+        boxes_script = None
+        for script_node in gui_root.findall(".//Script"):
+            if script_node.findtext("name") == "Buttons":
+                buttons_script = script_node.findtext("script")
+            elif script_node.findtext("name") == "Boxes":
+                boxes_script = script_node.findtext("script")
+        self._require(buttons_script, "Buttons script was not found")
+        self._require(boxes_script, "Boxes script was not found")
+
+        gui_source = self.gui_source_path.read_text(encoding="utf-8")
+        self._require(
+            "function GUI.AdjustableContainers.create" not in gui_source,
+            "AdjustableContainers foundation is duplicated inside late GUI scripts",
+        )
+        button_init = gui_source.index("function GUI.buttonWindow.init()")
+        parent_guard = gui_source.index(
+            'type(GUI.buttonPanelContainer) ~= "table"',
+            button_init,
+        )
+        first_widget_creation = gui_source.index("CSSMan.new(", button_init)
+        self._require(
+            parent_guard < first_widget_creation,
+            "button parent guard runs after widget creation",
+        )
+
+        script = f'''
+GUI = {{debug = function() end}}
+function getMudletHomeDir()
+  return "/tmp/luminari-test-profile"
+end
+
+{foundation_script}
+
+assert(type(GUI.AdjustableContainers) == "table")
+assert(type(GUI.AdjustableContainers.create) == "function")
+
+map = {{}}
+{buttons_script}
+
+local ok, failure = pcall(GUI.buttonWindow.init)
+assert(ok == false, "button initialization accepted missing parents")
+assert(
+  tostring(failure):find("refusing to create root-level controls", 1, true),
+  "button initialization failed without the orphan-control explanation"
+)
+'''
+        self._run_lua(script)
+
+        healthy_bootstrap = f'''
+local rootWidgets = {{}}
+
+local function newWindow(config, parent)
+  if parent == nil then
+    rootWidgets[#rootWidgets + 1] = config.name
+  end
+  local window = {{
+    name = config.name,
+    container = parent,
+    windowList = {{}},
+  }}
+  function window:setStyleSheet() end
+  function window:setClickCallback() end
+  function window:setColor() end
+  function window:echo() end
+  function window:show() end
+  function window:hide() end
+  function window:raise() end
+  function window:get_width() return 250 end
+  function window:get_height() return 150 end
+  function window:delete() self.deleted = true end
+  return window
+end
+
+GUI = {{debug = function() end}}
+function getMudletHomeDir()
+  return "/tmp/luminari-test-profile"
+end
+
+Adjustable = {{Container = {{all = {{}}}}}}
+function Adjustable.Container:new(config)
+  local window = newWindow(config, {{name = "GeyserRoot"}})
+  function window:disableAutoSave() end
+  function window:detach() end
+  Adjustable.Container.all[config.name] = window
+  return window
+end
+
+Geyser = {{Label = {{}}, Container = {{}}, HBox = {{}}, MiniConsole = {{}}}}
+function Geyser.Label:new(config, parent)
+  return newWindow(config, parent)
+end
+function Geyser.Container:new(config, parent)
+  return newWindow(config, parent)
+end
+function Geyser.HBox:new(config, parent)
+  return newWindow(config, parent)
+end
+function Geyser.MiniConsole:new(config, parent)
+  return newWindow(config, parent)
+end
+
+CSSMan = {{}}
+function CSSMan.new()
+  return {{
+    getCSS = function() return "" end,
+    set = function() end,
+  }}
+end
+
+function calcFontSize(fontSize)
+  return fontSize, fontSize
+end
+function setMiniConsoleFontSize() end
+
+{foundation_script}
+
+GUI.Bottom = newWindow({{name = "GUI.Bottom"}}, {{name = "GeyserRoot"}})
+GUI.Right = newWindow({{name = "GUI.Right"}}, {{name = "GeyserRoot"}})
+
+{boxes_script}
+GUI.init_boxes()
+
+assert(type(GUI.buttonPanelContainer) == "table")
+assert(type(GUI.roomInfoContainer) == "table")
+
+map = {{}}
+GUI.updateLegend = function() end
+{buttons_script}
+GUI.buttonWindow.init()
+
+assert(
+  #rootWidgets == 0,
+  "core GUI bootstrap created root-level child widgets: "
+    .. table.concat(rootWidgets, ", ")
+)
+assert(GUI.buttonWindow.container.container == GUI.buttonPanelContainer)
+assert(GUI.buttonWindow.roomInfo.container == GUI.roomInfoContainer)
+assert(GUI.buttonWindow.Legend.container == GUI.roomInfoContainer)
+'''
+        self._run_lua(healthy_bootstrap)
 
     def _test_debug_runtime_output_and_error_semantics(self):
         root = ET.parse(self.debug_source_path).getroot()
@@ -1055,6 +1218,10 @@ raise SystemExit(1)
             (
                 "debug_runtime_output_and_errors",
                 self._test_debug_runtime_output_and_error_semantics,
+            ),
+            (
+                "core_parent_load_order_and_orphan_guard",
+                self._test_core_parent_load_order_and_orphan_guard,
             ),
             (
                 "debug_startup_boundary_and_coverage",

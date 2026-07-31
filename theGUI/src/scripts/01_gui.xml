@@ -1580,6 +1580,44 @@ end
 
 --Button Init
 function GUI.buttonWindow.init()
+  if type(GUI.buttonPanelContainer) ~= "table"
+    or type(GUI.roomInfoContainer) ~= "table"
+  then
+    error(
+      "GUI.buttonWindow.init: core parent containers are missing; "
+      .. "refusing to create root-level controls"
+    )
+  end
+
+  -- Package upgrades can leave the failed build's root-level controls alive
+  -- in the current profile. Delete (or at minimum hide) those objects before
+  -- reusing their globally unique Mudlet names under the correct parents.
+  local staleRoots = {"container", "roomInfo", "Legend"}
+  for _, key in ipairs(staleRoots) do
+    local window = GUI.buttonWindow[key]
+    if type(window) == "table" then
+      local removed = false
+      if type(window.delete) == "function" then
+        removed = pcall(window.delete, window)
+      end
+      if not removed and type(window.hide) == "function" then
+        pcall(window.hide, window)
+      end
+    end
+  end
+  for _, key in ipairs({
+    "container",
+    "buttonContainer",
+    "Legendbutton",
+    "Mapbutton",
+    "Mudletbutton",
+    "ASCIIbutton",
+    "roomInfo",
+    "Legend",
+  }) do
+    GUI.buttonWindow[key] = nil
+  end
+
   GUI.buttonWindowCSS =
     CSSMan.new(
       [[font-family: Tahoma, Geneva, sans-serif; 
@@ -2198,7 +2236,29 @@ end
       result = result,
     })
   end
-	
+
+function GUI.validateCoreLayout()
+  local requiredParents = {
+    Bottom = GUI.Bottom,
+    chatContainer = GUI.chatContainer,
+    chatContainerInner = GUI.chatContainerInner,
+    buttonPanelContainer = GUI.buttonPanelContainer,
+    roomInfoContainer = GUI.roomInfoContainer,
+    statusGaugesContainer = GUI.Box7,
+  }
+  local missing = {}
+  for name, value in pairs(requiredParents) do
+    if type(value) ~= "table" then
+      missing[#missing + 1] = name
+    end
+  end
+  table.sort(missing)
+  if #missing > 0 then
+    return false, "missing core GUI parents: " .. table.concat(missing, ", ")
+  end
+  return true
+end
+
 function GUI.init()
   GUI.debug("GUI/INIT", "initialization sequence starting", {
     alreadyInitialized = GUI.initialized,
@@ -2207,6 +2267,19 @@ function GUI.init()
   GUI.Affects = GUI.Affects or {}
   GUI.Affects.Rows = GUI.Affects.Rows or {}
   GUI.Affects.Modes = GUI.Affects.Modes or {}
+
+  GUI.initFailures = {}
+  local coreReady, coreError = GUI.validateCoreLayout()
+  if not coreReady then
+    GUI.initFailures[1] = {
+      stage = "GUI.validateCoreLayout",
+      error = coreError,
+    }
+    GUI.initialized = false
+    GUI.debugError("GUI/INIT/CORE", coreError)
+    print("[GUI] Initialization stopped safely: " .. coreError)
+    return false, coreError
+  end
 
   local initStages = {
     {name = "GUI.init_gauges", callable = GUI.init_gauges},
@@ -2222,7 +2295,6 @@ function GUI.init()
     {name = "GUI.registerEventHandlers", callable = GUI.registerEventHandlers},
   }
 
-  GUI.initFailures = {}
   for _, stage in ipairs(initStages) do
     local ok, result = GUI.debugCall("GUI/INIT/" .. stage.name, stage.callable)
     if not ok then
@@ -2750,138 +2822,15 @@ end)</script>
 					<Script isActive="yes" isFolder="no">
 						<name>AdjustableContainers</name>
 						<packageName></packageName>
-						<script>-- GUI.AdjustableContainers - Foundation for Adjustable Container System
--- This namespace manages all adjustable containers in the LuminariGUI
-
-GUI.AdjustableContainers = GUI.AdjustableContainers or {}
-
--- Container registry for lifecycle management
-GUI.AdjustableContainers.containers = GUI.AdjustableContainers.containers or {}
-
--- Current active layout profile
-GUI.AdjustableContainers.currentProfile = GUI.AdjustableContainers.currentProfile or "default"
-
--- Save/Load directory configuration
-GUI.AdjustableContainers.saveDir = string.format("%s/LuminariGUI/layouts/", getMudletHomeDir())
-
--- Default container styles matching current theme
-GUI.AdjustableContainers.defaultStyle = {
-  adjLabelstyle = [[
-    background-image: url(]] .. getMudletHomeDir():gsub("\\", "/") .. [[/LuminariGUI/images/ui_texture.jpg);
-    background-color: rgba(38, 25, 47, 0.9);
-    border: 2px solid rgba(184, 115, 27, 0.8);
-    border-radius: 5px;
-    padding: 5px;
-    font-family: Tahoma, Geneva, sans-serif;
-  ]],
-  buttonstyle = [[
-    QLabel { 
-      border-radius: 7px; 
-      background-color: rgba(100,100,100,100%); 
-      border: 1px solid rgba(184, 115, 27, 0.5);
-    }
-    QLabel::hover { 
-      background-color: rgba(120,120,120,100%); 
-      border: 1px solid rgba(184, 115, 27, 0.8);
-    }
-    QLabel::pressed {
-      background-color: rgba(0, 0, 0, 0.3);
-      border: 1px solid rgba(184, 115, 27, 1.0);
-    }
-  ]],
-  titleTxtColor = "#FFD700",  -- Golden color for better contrast
-  buttonFontSize = 10,
-  buttonsize = 20,
-  padding = 5,
-  autoSave = true,
-  autoLoad = true,
-  noClose = true,
-  defaultDir = GUI.AdjustableContainers.saveDir
-}
-
--- Container naming convention
-function GUI.AdjustableContainers.generateName(baseName)
-  return "LuminariGUI_" .. baseName
-end
-
--- Container registration system
-function GUI.AdjustableContainers.register(container, name, componentType)
-  if not container then
-    print("ERROR: Cannot register nil container: " .. (name or "unknown"))
-    return false
-  end
-  
-  local containerInfo = {
-    container = container,
-    name = name,
-    componentType = componentType,
-    created = os.time(),
-    profile = GUI.AdjustableContainers.currentProfile
-  }
-  
-  GUI.AdjustableContainers.containers[name] = containerInfo
-  print("✓ Registered container: " .. name .. " (" .. componentType .. ")")
-  return true
-end
-
--- Container lifecycle management
-function GUI.AdjustableContainers.create(name, componentType, config)
-  local fullName = GUI.AdjustableContainers.generateName(name)
-  
-  -- Merge default style with custom config
-  local containerConfig = {}
-  for k, v in pairs(GUI.AdjustableContainers.defaultStyle) do
-    containerConfig[k] = v
-  end
-  if config then
-    for k, v in pairs(config) do
-      containerConfig[k] = v
-    end
-  end
-  
-  -- Set the container name
-  containerConfig.name = fullName
-  
-  -- Create the adjustable container
-  local container = Adjustable.Container:new(containerConfig)
-  
-  if container then
-    GUI.AdjustableContainers.register(container, fullName, componentType)
-    return container
-  else
-    print("ERROR: Failed to create container: " .. fullName)
-    return nil
-  end
-end
-
-function GUI.AdjustableContainers.show(name)
-  local containerInfo = GUI.AdjustableContainers.containers[name]
-  if containerInfo and containerInfo.container then
-    containerInfo.container:show()
-    return true
-  end
-  return false
-end
-
-function GUI.AdjustableContainers.hide(name)
-  local containerInfo = GUI.AdjustableContainers.containers[name]
-  if containerInfo and containerInfo.container then
-    containerInfo.container:hide()
-    return true
-  end
-  return false
-end
-
-function GUI.AdjustableContainers.destroy(name)
-  local containerInfo = GUI.AdjustableContainers.containers[name]
-  if containerInfo and containerInfo.container then
-    containerInfo.container:hide()
-    -- Note: Adjustable containers handle their own cleanup
-    GUI.AdjustableContainers.containers[name] = nil
-    print("✓ Destroyed container: " .. name)
-    return true
-  end
-  return false
+						<script>-- Layout profiles and lifecycle support.
+-- The core AdjustableContainers namespace is loaded by the earlier
+-- 00_adjustablecontainers.xml fragment before GUI Config creates any boxes.
+if not (
+  GUI
+  and GUI.AdjustableContainers
+  and type(GUI.AdjustableContainers.create) == "function"
+) then
+  error("LuminariGUI AdjustableContainers foundation did not load")
 end
 
 -- Layout Profile System

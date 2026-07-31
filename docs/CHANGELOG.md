@@ -27,6 +27,16 @@ Begin Changelog entries below
   full stack traces and allow later diagnostics to load while debug mode is
   enabled. With debugging disabled, original error propagation is preserved.
 
+### Fixed
+
+- **Full-screen `Legend/Room` and `Mudlet/ASCII` controls.** The immediate GUI
+  bootstrap called `GUI.init_boxes()` before the AdjustableContainers
+  namespace existed. Diagnostic mode caught that failure and continued into
+  `GUI.buttonWindow.init()`, causing Mudlet to parent both controls to the root
+  window at full size. The container foundation now loads before GUI
+  construction, stale controls are removed during an in-place upgrade, and
+  child initialization stops safely if any core parent is unavailable.
+
 ### Changed
 
 - **Release now means published.** `python3 theGUI/package.py release`
