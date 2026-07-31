@@ -1,0 +1,621 @@
+					<Script isActive="yes" isFolder="no">
+						<name>Config</name>
+						<packageName></packageName>
+						<script>  -- CRITICAL: These initialization calls MUST remain outside any function!
+  -- Mudlet requires GUI elements to be created immediately when the script loads.
+  -- Moving these inside GUI.init() or any other function will cause complete failure.
+  -- The GUI background, borders, and boxes must exist before any other initialization.
+  -- This needs to be outside the config, since YATCO needs to have the boxes set.
+	GUI.image_location = getMudletHomeDir():gsub("\\", "/") .. "/LuminariGUI/images/"
+  GUI.debug("BOOT/CONFIG", "Config script reached", {
+    imageLocation = GUI.image_location,
+    initBackground = type(GUI.init_background),
+    setBorders = type(GUI.set_borders),
+    initBoxes = type(GUI.init_boxes),
+  })
+
+  -- These calls used to run unguarded before GUI.initializeOrRefresh was
+  -- defined. Any one error aborted this entire script and produced the
+  -- misleading "GUI system not fully loaded" message. In debug mode each
+  -- stage now prints its entry, result, and stack trace, then allows the rest
+  -- of the diagnostic/lifecycle functions to load.
+  local bootStages = {
+    {name = "GUI.init_background", callable = GUI.init_background},
+    {name = "GUI.set_borders", callable = GUI.set_borders},
+    {name = "GUI.init_boxes", callable = GUI.init_boxes},
+  }
+  for _, stage in ipairs(bootStages) do
+    local ok, result = GUI.debugCall("BOOT/CONFIG/" .. stage.name, stage.callable)
+    GUI.debugBootResults[stage.name] = {
+      ok = ok,
+      result = result,
+    }
+    GUI.debug("BOOT/CONFIG", "stage complete", {
+      stage = stage.name,
+      ok = ok,
+      result = result,
+    })
+  end
+
+function GUI.validateCoreLayout()
+  local requiredParents = {
+    Bottom = GUI.Bottom,
+    chatContainer = GUI.chatContainer,
+    chatContainerInner = GUI.chatContainerInner,
+    buttonPanelContainer = GUI.buttonPanelContainer,
+    roomInfoContainer = GUI.roomInfoContainer,
+    statusGaugesContainer = GUI.Box7,
+  }
+  local missing = {}
+  for name, value in pairs(requiredParents) do
+    if type(value) ~= "table" then
+      missing[#missing + 1] = name
+    end
+  end
+  table.sort(missing)
+  if #missing > 0 then
+    return false, "missing core GUI parents: " .. table.concat(missing, ", ")
+  end
+  return true
+end
+
+function GUI.init()
+  GUI.debug("GUI/INIT", "initialization sequence starting", {
+    alreadyInitialized = GUI.initialized,
+  })
+  GUI.AffectIcons = GUI.AffectIcons or {}
+  GUI.Affects = GUI.Affects or {}
+  GUI.Affects.Rows = GUI.Affects.Rows or {}
+  GUI.Affects.Modes = GUI.Affects.Modes or {}
+
+  GUI.initFailures = {}
+  local coreReady, coreError = GUI.validateCoreLayout()
+  if not coreReady then
+    GUI.initFailures[1] = {
+      stage = "GUI.validateCoreLayout",
+      error = coreError,
+    }
+    GUI.initialized = false
+    GUI.debugError("GUI/INIT/CORE", coreError)
+    print("[GUI] Initialization stopped safely: " .. coreError)
+    return false, coreError
+  end
+
+  local initStages = {
+    {name = "GUI.init_gauges", callable = GUI.init_gauges},
+    {name = "GUI.init_action_icons", callable = GUI.init_action_icons},
+    {name = "GUI.tabbedInfoWindow.init", callable = GUI.tabbedInfoWindow.init},
+    {name = "GUI.init_player", callable = GUI.init_player},
+    {name = "GUI.init_group", callable = GUI.init_group},
+    {name = "GUI.Affects.init", callable = GUI.Affects.init},
+    {name = "GUI.draw_frames", callable = GUI.draw_frames},
+    {name = "GUI.buttonWindow.init", callable = GUI.buttonWindow.init},
+    {name = "GUI.init_castConsole", callable = GUI.init_castConsole},
+    {name = "GUI.styleScrollbar", callable = GUI.styleScrollbar},
+    {name = "GUI.registerEventHandlers", callable = GUI.registerEventHandlers},
+  }
+
+  for _, stage in ipairs(initStages) do
+    local ok, result = GUI.debugCall("GUI/INIT/" .. stage.name, stage.callable)
+    if not ok then
+      GUI.initFailures[#GUI.initFailures + 1] = {
+        stage = stage.name,
+        error = result,
+      }
+    end
+  end
+
+  -- Ensure proper z-order of adjustable containers
+  tempTimer(0.5, GUI.debugWrap("GUI/INIT/z-order timer", function()
+    -- Bring containers to front in correct order
+    -- Map should be at the back
+    if map and map.container then
+      map.container:show()
+    end
+    if GUI.chatContainer then
+      GUI.chatContainer:show()
+    end
+    if GUI.roomInfoContainer then
+      GUI.roomInfoContainer:show()
+      GUI.roomInfoContainer:raise()  -- Bring above map
+    end
+    if GUI.buttonPanelContainer then
+      GUI.buttonPanelContainer:show()
+      GUI.buttonPanelContainer:raise()  -- Bring to front
+    end
+    if GUI.actionIconsContainer then
+      GUI.actionIconsContainer:show()
+      GUI.actionIconsContainer:raise()  -- Bring to front
+    end
+  end))
+
+  -- Preserve the old failure semantics: before diagnostic catching, an error
+  -- prevented this flag from ever being reached. A failed debug run therefore
+  -- remains retryable through "fix gui".
+  GUI.initialized = (#GUI.initFailures == 0)
+  GUI.debug("GUI/INIT", "initialization sequence complete", {
+    initialized = GUI.initialized,
+    failures = GUI.initFailures,
+  })
+end
+
+-- Robust event handler registration with error handling and verification
+function GUI.registerEventHandlers()
+  -- Define all event handlers in a table for easy management
+  local eventHandlers = {
+    -- GUI event handlers
+    ["msdp.GROUP"] = "GUI.updateGroup",
+    ["msdp.AFFECTS"] = "GUI.updateAffectIcons",
+    ["msdp.HEALTH"] = "GUI.updateHealthGauge",
+    ["msdp.HEALTH_MAX"] = "GUI.updateHealthGauge",
+    ["msdp.OPPONENT_HEALTH"] = "GUI.updateEnemyGauge",
+    ["msdp.OPPONENT_HEALTH_MAX"] = "GUI.updateEnemyGauge",
+    ["msdp.OPPONENT_NAME"] = "GUI.updateEnemyGauge",
+    ["msdp.MOVEMENT"] = "GUI.updateMovesGauge",
+    ["msdp.MOVEMENT_MAX"] = "GUI.updateMovesGauge",
+    -- ["msdp.EXPERIENCE"] = "GUI.updateExperienceGauge",
+    -- ["msdp.EXPERIENCE_TNL"] = "GUI.updateExperienceGauge",
+    ["msdp.PSP"] = "GUI.updatePSPGauge",
+    ["msdp.PSP_MAX"] = "GUI.updatePSPGauge",
+    ["msdp.ACTIONS"] = "GUI.updateActionIcons",
+    ["msdp.CHARACTER_NAME"] = "GUI.updatePlayer",
+    ["msdp.RACE"] = "GUI.updatePlayer",
+    ["msdp.CLASS"] = "GUI.updatePlayer",
+    ["msdp.ALIGNMENT"] = "GUI.updatePlayer",
+    ["msdp.LEVEL"] = "GUI.updatePlayer",
+    ["msdp.STR"] = "GUI.updatePlayer",
+    ["msdp.DEX"] = "GUI.updatePlayer",
+    ["msdp.CON"] = "GUI.updatePlayer",
+    ["msdp.INT"] = "GUI.updatePlayer",
+    ["msdp.WIS"] = "GUI.updatePlayer",
+    ["msdp.CHA"] = "GUI.updatePlayer",
+    ["msdp.AC"] = "GUI.updatePlayer",
+    ["msdp.MONEY"] = "GUI.updatePlayer",
+    -- Room update for GUI display.
+    -- NOTE: map.eventHandler ALSO handles msdp.ROOM, but it is registered at
+    -- file scope in 00_msdpmapper.xml. Do not add it here as well -- Mudlet
+    -- allows multiple handlers per event, so listing it twice made the mapper
+    -- process every room change twice.
+    ["msdp.ROOM"] = "GUI.updateRoom"
+  }
+
+  -- Events deliberately NOT listed above, because 00_msdpmapper.xml already
+  -- registers them at file scope (which runs at script-compile time, earlier
+  -- and more reliably than GUI.init()):
+  --   msdp.ROOM / shiftRoom / sysConnectionEvent / sysDownloadDone
+  --       -> map.eventHandler
+  --   sysProtocolEnabled  -> map.onProtocolEnabled
+  -- And sysProtocolEnabled -> GUI.onProtocolEnabled is registered at file
+  -- scope further down in this script, for the same reason.
+
+  -- Store handler IDs so repeat calls can clean up after themselves.
+  GUI.eventHandlerIds = GUI.eventHandlerIds or {}
+
+  -- This function runs on every GUI.init() AND every GUI.initializeOrRefresh().
+  -- Without this cleanup each call stacked another copy of every handler, so
+  -- after a few reconnects a single MSDP update fanned out to N duplicate
+  -- handlers (duplicate REPORT storms, redundant redraws, growing latency).
+  --
+  -- Only clean up events owned by eventHandlers. Older releases also stored
+  -- the five mapper handlers and the file-scope GUI protocol handler in this
+  -- table. Mudlet 4.21 can reuse those handler IDs when the same string handler
+  -- is registered during an in-place upgrade; sweeping every legacy entry here
+  -- would therefore kill the newly compiled file-scope handlers.
+  local killed = 0
+  for event in pairs(eventHandlers) do
+    local handlerId = GUI.eventHandlerIds[event]
+    if handlerId then
+      local ok = pcall(killAnonymousEventHandler, handlerId)
+      GUI.debug("EVENT/REGISTER", "remove owned handler", {
+        event = event,
+        handlerId = handlerId,
+        success = ok,
+      })
+      if ok then killed = killed + 1 end
+    end
+    GUI.eventHandlerIds[event] = nil
+  end
+  GUI.debug("EVENT/REGISTER", "owned handler cleanup complete", {
+    killed = killed,
+  })
+
+  -- Register GUI event handlers
+  for event, handler in pairs(eventHandlers) do
+    local eventName = event
+    local handlerName = handler
+    local callback = handler
+    if GUI.DEBUG == true then
+      callback = function(...)
+        local variableName = eventName:match("^msdp%.(.+)$")
+        GUI.debug("EVENT/FIRE", eventName .. " -&gt; " .. handlerName, {
+          arguments = {...},
+          msdpVariable = variableName,
+          msdpValue = variableName and msdp and msdp[variableName] or nil,
+        })
+        local callable = GUI.debugResolve(handlerName)
+        local ok, result = GUI.debugCall(
+          "EVENT/HANDLER/" .. eventName .. "/" .. handlerName,
+          callable,
+          ...
+        )
+        if not ok then
+          return nil, result
+        end
+        return result
+      end
+    end
+
+    local success, handlerId = pcall(
+      registerAnonymousEventHandler,
+      eventName,
+      callback
+    )
+    if success then
+      GUI.eventHandlerIds[eventName] = handlerId
+      GUI.debug("EVENT/REGISTER", "registered GUI handler", {
+        event = eventName,
+        handler = handlerName,
+        handlerId = handlerId,
+        callbackType = type(callback),
+      })
+    else
+      GUI.debugError(
+        "EVENT/REGISTER/" .. eventName,
+        "failed to register " .. handlerName .. ": " .. tostring(handlerId)
+      )
+      print(string.format("✗ Failed to register GUI handler for %s: %s", eventName, handlerId))
+    end
+  end
+
+  -- Verify critical handlers are working and refresh displays
+  tempTimer(2, GUI.debugWrap("EVENT/VERIFY/two-second refresh", function()
+    GUI.debug("EVENT/VERIFY", "checking current MSDP-backed displays", {
+      msdpCount = GUI.debugCountEntries(msdp),
+    })
+    -- Group tab refresh
+    if msdp.GROUP and #msdp.GROUP > 0 then
+      GUI.updateGroup()
+    end
+    
+    -- Gauge refreshes
+    if msdp.HEALTH and msdp.HEALTH_MAX then
+      GUI.updateHealthGauge()
+    end
+    if msdp.MOVEMENT and msdp.MOVEMENT_MAX then
+      GUI.updateMovesGauge()
+    end
+    -- if msdp.EXPERIENCE and msdp.EXPERIENCE_TNL then
+    --   GUI.updateExperienceGauge()
+    -- end
+    if msdp.PSP and msdp.PSP_MAX then
+      GUI.updatePSPGauge()
+    end
+    
+    -- Enemy gauge refresh (only if opponent data exists)
+    if msdp.OPPONENT_NAME and msdp.OPPONENT_NAME ~= "" then
+      GUI.updateEnemyGauge()
+    else
+      -- Hide enemy gauge if not in combat
+      if GUI.Enemy then
+        GUI.Enemy:hide()
+      end
+    end
+    
+    -- Player tab refresh
+    if msdp.CHARACTER_NAME then
+      GUI.updatePlayer()
+    end
+    
+    -- Room info refresh
+    if msdp.ROOM then
+      GUI.updateRoom()
+    end
+  end))
+  
+  -- Initialize chat system if it's enabled but not created
+  tempTimer(1, GUI.debugWrap("EVENT/VERIFY/chat startup", function()
+    GUI.debug("EVENT/VERIFY", "chat startup check", {
+      demonnic = type(demonnic),
+      chat = type(demonnic and demonnic.chat),
+      use = demonnic and demonnic.chat and demonnic.chat.use,
+      container = type(demonnic and demonnic.chat and demonnic.chat.container),
+    })
+    if demonnic.chat.use and not demonnic.chat.container then
+      demonnicOnStart()
+    end
+  end))
+end
+
+-- =============================================================================
+-- CENTRALIZED GUI INITIALIZATION SYSTEM
+-- =============================================================================
+-- This function provides a single point of control for all GUI initialization
+-- and refresh operations. It should be called from ALL relevant entry points.
+--
+-- WHEN TO CALL THIS FUNCTION:
+-- 1. Package load/install (sysLoadEvent, sysInstall) 
+-- 2. Connection established (sysConnectionEvent)
+-- 3. MSDP protocol enabled (sysProtocolEnabled)
+-- 4. Manual refresh commands (fix gui, fix chat)
+-- 5. After login/reconnect (when MSDP data starts flowing)
+--
+-- WHAT IT DOES:
+-- - Initializes or refreshes all GUI components
+-- - Re-registers event handlers that may have failed
+-- - Refreshes all displays with current MSDP data
+-- - Ensures proper container visibility and z-order
+-- - Handles both initial setup and runtime refresh
+-- =============================================================================
+function GUI.initializeOrRefresh(context)
+  context = context or "unknown"
+  GUI.debug("GUI/REFRESH", "initializeOrRefresh requested", {
+    context = context,
+    initialized = GUI.initialized,
+    initFailures = GUI.initFailures,
+    msdpCount = GUI.debugCountEntries(msdp),
+  })
+  
+  -- Track if this is initial setup or refresh
+  local isRefresh = (GUI.initialized == true)
+  
+  if not isRefresh then
+    -- GUI not initialized yet - initialize it now
+    cecho(string.format("\n&lt;yellow&gt;Initializing GUI components (%s)...", context))
+    GUI.init()
+    return
+  else
+    -- Refresh existing GUI
+    cecho(string.format("\n&lt;yellow&gt;Refreshing GUI components (%s)...", context))
+  end
+  
+  -- Always ensure event handlers are registered
+  GUI.registerEventHandlers()
+  
+  -- Refresh all adjustable containers
+  local refreshed = {}
+  
+  -- Status Gauges
+  if GUI.Box7 then
+    GUI.Box7:show()
+    GUI.Box7:raise()
+    if msdp.HEALTH then GUI.updateHealthGauge() end
+    if msdp.MOVEMENT then GUI.updateMovesGauge() end
+    -- if msdp.EXPERIENCE then GUI.updateExperienceGauge() end
+    if msdp.PSP then GUI.updatePSPGauge() end
+    table.insert(refreshed, "status gauges")
+  end
+  
+  -- TabbedInfo Window
+  if GUI.tabbedInfoWindowContainer then
+    GUI.tabbedInfoWindowContainer:show()
+    GUI.tabbedInfoWindowContainer:raise()
+    -- Ensure Player tab is visible and updated
+    if GUI.tabbedInfoWindow and GUI.tabbedInfoWindow.Player then
+      GUI.tabbedInfoWindow.click("Player")
+      if msdp.CHARACTER_NAME then GUI.updatePlayer() end
+    end
+    table.insert(refreshed, "tabbed info window")
+  end
+  
+  -- Action Icons
+  if GUI.actionIconsContainer then
+    GUI.actionIconsContainer:show()
+    GUI.actionIconsContainer:raise()
+    if msdp.ACTIONS then GUI.updateActionIcons() end
+    table.insert(refreshed, "action icons")
+  end
+  
+  -- Enemy gauge (combat only)
+  if msdp.OPPONENT_NAME and msdp.OPPONENT_NAME ~= "" then
+    GUI.updateEnemyGauge()
+  elseif GUI.Enemy then
+    GUI.Enemy:hide()
+  end
+  
+  -- Group tab
+  if GUI.groupWindow and msdp.GROUP then
+    GUI.updateGroup()
+    table.insert(refreshed, "Group tab")
+  end
+  
+  -- Player tab
+  if GUI.playerWindow and msdp.CHARACTER_NAME then
+    GUI.updatePlayer()
+    table.insert(refreshed, "Player tab")
+  end
+  
+  -- Room info
+  if GUI.Box5 and msdp.ROOM then
+    GUI.updateRoom()
+    table.insert(refreshed, "room info")
+  end
+  
+  -- ASCII map
+  if map.minimap and msdp.ROOM then
+    map.eventHandler("msdp.ROOM")
+    table.insert(refreshed, "ASCII map")
+  end
+  
+  -- Mudlet mapper
+  if map.mapwindow then
+    map.mapwindow:show()
+    map.mapwindow:resize()
+    -- Force refresh with delayed operations
+    tempTimer(0.1, GUI.debugWrap("GUI/REFRESH/mapper delayed resize", function()
+      if map.mapwindow then
+        map.mapwindow:resize()
+        if map.mapwindow.raise then
+          map.mapwindow:raise()
+        end
+        -- Try to center on current room
+        if map.currentRoom and map.currentRoom > 0 then
+          centerview(map.currentRoom)
+        end
+      end
+    end))
+    table.insert(refreshed, "Mudlet mapper")
+  end
+  
+  -- Chat system
+  if GUI.chatContainer then
+    GUI.chatContainer:show()
+    -- Initialize chat if needed
+    if demonnic.chat.use and not demonnic.chat.container then
+      demonnicOnStart()
+      table.insert(refreshed, "chat system (initialized)")
+    else
+      table.insert(refreshed, "chat container")
+    end
+  end
+  
+  -- Button Panel (Controls)
+  if GUI.buttonPanelContainer then
+    GUI.buttonPanelContainer:show()
+    GUI.buttonPanelContainer:raise()
+    table.insert(refreshed, "button panel")
+  end
+  
+  -- Room Info Container
+  if GUI.roomInfoContainer then
+    GUI.roomInfoContainer:show()
+    GUI.roomInfoContainer:raise()
+    -- Update room data if available
+    if msdp.ROOM then
+      GUI.updateRoom()
+    end
+    table.insert(refreshed, "room info container")
+  end
+  
+  -- Cast Console
+  if GUI.castConsoleContainer then
+    GUI.castConsoleContainer:show()
+    GUI.castConsoleContainer:raise()
+    table.insert(refreshed, "cast console")
+  end
+  
+  -- ASCII Map Container (ensure it exists before mode check)
+  if GUI.asciiMapContainer then
+    GUI.asciiMapContainer:show()
+    table.insert(refreshed, "ASCII map container")
+  end
+  
+  -- Handle map container visibility based on mode
+  if GUI.buttonWindow and GUI.buttonWindow.mudletOrAscii then
+    if GUI.buttonWindow.mudletOrAscii == "ASCII" then
+      if map.container then map.container:hide() end
+      if GUI.asciiMapContainer then
+        GUI.asciiMapContainer:raise()
+      end
+    else
+      if GUI.asciiMapContainer then GUI.asciiMapContainer:hide() end
+      if map.container then
+        map.container:show()
+        map.container:raise()
+      end
+    end
+  end
+  
+  -- Ensure proper z-order (delayed to allow all components to initialize)
+  tempTimer(0.5, GUI.debugWrap("GUI/REFRESH/z-order timer", function()
+    -- Let Adjustable Containers manage their own z-order
+    -- Only raise containers that need to be on top of others
+    if GUI.chatContainer then GUI.chatContainer:raise() end
+    if GUI.actionIconsContainer then GUI.actionIconsContainer:raise() end
+  end))
+  
+  -- Report results
+  if #refreshed > 0 then
+    cecho(string.format("\n&lt;green&gt;%s complete: %s", 
+      isRefresh and "Refresh" or "Initialization",
+      table.concat(refreshed, ", ")))
+  end
+  GUI.debug("GUI/REFRESH", "initializeOrRefresh complete", {
+    context = context,
+    isRefresh = isRefresh,
+    refreshed = refreshed,
+  })
+end
+
+-- =============================================================================
+-- ENTRY POINT HANDLERS
+-- These ensure GUI.initializeOrRefresh is called at the right times
+-- while preserving other initialization functions
+-- =============================================================================
+
+-- The onProtocolEnabled handler is defined in the MSDP script section
+-- It handles MSDP variable registration and GUI initialization
+
+-- The main initialization handlers are registered at the bottom of this script
+-- along with the original GUI.init() registration to ensure proper order
+
+-- Register the proper initialization sequence
+-- Since Mudlet 4.20, sysLoadEvent passes a boolean: true for a fresh profile
+-- load, false when it fires after resetProfile(). That distinction matters:
+-- after a resetProfile() the connection is usually still up and MSDP was
+-- already negotiated, so sysProtocolEnabled will NOT fire again and the GUI
+-- would otherwise sit empty, never having sent its REPORT subscriptions.
+registerAnonymousEventHandler("sysLoadEvent", function(_, isNewLoad)
+  GUI.debug("LIFECYCLE", "sysLoadEvent fired", {
+    isNewLoad = isNewLoad,
+    initializedBefore = GUI.initialized,
+  })
+  GUI.init()
+  if type(GUI.debugSnapshot) == "function" then
+    GUI.debugCall(
+      "SNAPSHOT/sysLoad immediate",
+      GUI.debugSnapshot,
+      "sysLoadEvent immediate"
+    )
+    tempTimer(2, GUI.debugWrap("LIFECYCLE/sysLoad delayed snapshot", function()
+      GUI.debugCall(
+        "SNAPSHOT/sysLoad delayed",
+        GUI.debugSnapshot,
+        "sysLoadEvent plus two seconds"
+      )
+    end))
+  end
+
+  -- isNewLoad == false means we came from resetProfile(). Older Mudlet
+  -- versions pass nil here, so only take this path on an explicit false.
+  if isNewLoad == false then
+    tempTimer(0.5, GUI.debugWrap("LIFECYCLE/profile reset recovery", function()
+      if map and map.initialize then
+        local ok, initialized = GUI.debugCall(
+          "LIFECYCLE/profile reset/map.initialize",
+          map.initialize
+        )
+        if not ok or initialized == false then
+          print("[GUI] Mapper initialization failed after profile reset: " .. tostring(initialized))
+        end
+      else
+        print("[GUI] Mapper initialization is unavailable after profile reset")
+      end
+      if GUI.requestMSDPReports() then
+        print("[GUI] Re-subscribed to MSDP after profile reset")
+      end
+      GUI.initializeOrRefresh("profile reset")
+    end))
+  end
+end)
+registerAnonymousEventHandler("sysInstall", "GUI.init")
+
+-- Register protocol handler early to ensure it catches MSDP enablement
+-- This is critical because MSDP can be enabled before GUI.init() completes
+registerAnonymousEventHandler("sysProtocolEnabled", "GUI.onProtocolEnabled")
+
+-- Add connection-based refresh
+registerAnonymousEventHandler("sysConnectionEvent", function(...)
+  GUI.debug("LIFECYCLE", "sysConnectionEvent fired", {...})
+  tempTimer(1, GUI.debugWrap("LIFECYCLE/connection refresh timer", function()
+    GUI.initializeOrRefresh("connection established")
+    if type(GUI.debugSnapshot) == "function" then
+      GUI.debugCall(
+        "SNAPSHOT/connection",
+        GUI.debugSnapshot,
+        "one second after connection"
+      )
+    end
+  end))
+end)</script>
+						<eventHandlerList />
+					</Script>

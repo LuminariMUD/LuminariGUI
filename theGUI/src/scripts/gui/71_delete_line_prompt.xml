@@ -1,0 +1,9 @@
+					<Script isActive="yes" isFolder="no">
+						<name>Delete Line and  Prompt</name>
+						<packageName></packageName>
+						<script>function deleteLineP()
+  deleteLine()
+  tempLineTrigger(1, 1, [[if isPrompt() then deleteLine() end]])
+end</script>
+						<eventHandlerList />
+					</Script>

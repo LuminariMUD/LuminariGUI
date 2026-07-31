@@ -1,0 +1,155 @@
+					<Script isActive="yes" isFolder="no">
+						<name>TabbedInfoWindow</name>
+						<packageName></packageName>
+						<script>GUI.tabbedInfoWindow =
+  GUI.tabbedInfoWindow or
+  {
+    tabs = {"Player", "Affects", "Group"},
+    color1 = "rgba(0,0,0,0)",
+    color2 = "rgba(0,0,0,0)",
+    width = "100%",
+    height = "100%",
+    current = "Player",
+  }
+
+-- createFrame function removed - frame images are incompatible with adjustable containers
+
+function GUI.tabbedInfoWindow.click(tab)
+  GUI.tabbedInfoWindow[GUI.tabbedInfoWindow.current]:hide()
+  GUI.tabbedInfoWindow[GUI.tabbedInfoWindow.current .. "tab"]:echo(
+    GUI.tabbedInfoWindow.current, "white", "c"
+  )
+  GUI.tabbedInfoWindow.current = tab
+  GUI.tabbedInfoWindow[GUI.tabbedInfoWindow.current]:show()
+  GUI.tabbedInfoWindow[tab .. "tab"]:echo(tab, "yellow", "c")
+end
+
+function GUI.tabbedInfoWindow.init()
+  GUI.tabbedInfoWindowTabCSS =
+    CSSMan.new(
+      [[font-family: Tahoma, Geneva, sans-serif; 
+			border-image: url(]] ..
+      getMudletHomeDir():gsub("\\", "/") ..
+      [[/LuminariGUI/images/buttons/button.png) 0 0 0 0 stretch stretch;
+			border: 1px solid rgba(184, 115, 27, 0.8);
+			border-radius: 3px;
+			padding: 3px;
+		]]
+    )
+  
+  -- Create Adjustable Container for tabbed info window
+  local containerConfig = {
+    x = "50%",  -- Column 2 position
+    y = "15%",  -- Below Controls
+    width = "25%",
+    height = "45%",  -- Adjusted to fit: 15% to 60%
+    name = "character_stats",
+    titleText = "Character Stats",
+    titleTxtColor = "green",
+    adjLabelstyle = GUI.AdjustableContainers.defaultStyle.adjLabelstyle,
+    buttonstyle = GUI.AdjustableContainers.defaultStyle.buttonstyle,
+    tabstyle = GUI.AdjustableContainers.defaultStyle.tabstyle,
+    padding = 9,
+    lockStyle = "border",
+    autoSave = true,
+    autoLoad = true,
+    attached = "tr",  -- Changed from "tl" to "tr" - now attaches to top-right since it's on right side
+    defaultDir = GUI.AdjustableContainers.saveDir
+  }
+  
+  -- Add noClose to containerConfig
+  containerConfig.noClose = true
+  
+  -- Create adjustable container
+  GUI.tabbedInfoWindowContainer = GUI.AdjustableContainers.create("TabbedInfo", "tabbed_info", containerConfig)
+  
+  -- Store reference to old Box4 for compatibility
+  GUI.Box4 = GUI.tabbedInfoWindowContainer
+  
+  -- Create inner container for backwards compatibility
+  GUI.tabbedInfoWindow.container =
+    Geyser.Container:new(
+      {
+        name = "GUI.tabbedInfoWindow.back",
+        x = 9,
+        y = 25,
+        width = "-18",
+        height = "-34",
+      },
+      GUI.tabbedInfoWindowContainer
+    )
+  GUI.tabbedInfoWindow.header =
+    Geyser.HBox:new(
+      {name = "GUI.tabbedInfoWindow.header", x = 0, y = 0, width = "100%", height = "8%"},
+      GUI.tabbedInfoWindow.container
+    )
+  GUI.tabbedInfoWindow.footer =
+    Geyser.Label:new(
+      {name = "GUI.tabbedInfoWindow.footer", x = 0, y = "8%", width = "100%", height = "92%"},
+      GUI.tabbedInfoWindow.container
+    )
+  GUI.tabbedInfoWindow.footer:setStyleSheet([[font-family: Tahoma, Geneva, sans-serif;
+]])
+  GUI.tabbedInfoWindow.center =
+    Geyser.Label:new(
+      {name = "GUI.tabbedInfoWindow.center", x = 0, y = 0, width = "100%", height = "100%"},
+      GUI.tabbedInfoWindow.footer
+    )
+  GUI.tabbedInfoWindow.center:setStyleSheet(
+    [[
+  background-color: ]] ..
+    GUI.tabbedInfoWindow.color2 ..
+    [[
+	font-family: Tahoma, Geneva, sans-serif;
+	]]
+  )
+  for k, v in pairs(GUI.tabbedInfoWindow.tabs) do
+    GUI.tabbedInfoWindow[v .. "tab"] =
+      Geyser.Label:new({name = "GUI.tabbedInfoWindow." .. v .. "tab"}, GUI.tabbedInfoWindow.header)
+    GUI.tabbedInfoWindow[v .. "tab"]:setStyleSheet(GUI.tabbedInfoWindowTabCSS:getCSS())
+    GUI.tabbedInfoWindow[v .. "tab"]:echo("&lt;center&gt;" .. v)
+    -- Closure form: see docs/MUDLET_COMPATIBILITY.md (Mudlet issue #9254)
+    GUI.tabbedInfoWindow[v .. "tab"]:setClickCallback(function() GUI.tabbedInfoWindow.click(v) end)
+    GUI.tabbedInfoWindow[v] =
+      Geyser.Label:new(
+        {name = "GUI.tabbedInfoWindow." .. v, x = 0, y = 0, width = "100%", height = "100%"},
+        GUI.tabbedInfoWindow.footer
+      )
+    GUI.tabbedInfoWindow[v]:setStyleSheet(
+      [[
+    background-color: ]] ..
+      GUI.tabbedInfoWindow.color1 ..
+      [[;    
+	  font-family: Tahoma, Geneva, sans-serif;
+	]]
+    )
+    GUI.tabbedInfoWindow[v .. "center"] =
+      Geyser.Label:new(
+        {
+          name = "GUI.tabbedInfoWindow." .. v .. "center",
+          x = 0,
+          y = 0,
+          width = "100%",
+          height = "100%",
+        },
+        GUI.tabbedInfoWindow[v]
+      )
+    GUI.tabbedInfoWindow[v .. "center"]:setStyleSheet(
+      [[
+    background-color: ]] ..
+      GUI.tabbedInfoWindow.color2 ..
+      [[;
+		border-image: url(]] ..
+      getMudletHomeDir():gsub("\\", "/") ..
+      [[/LuminariGUI/images/ui_texture.jpg) 0 0 0 0 stretch stretch;
+		font-family: Tahoma, Geneva, sans-serif;
+  ]]
+    )
+    GUI.tabbedInfoWindow[v]:hide()
+    GUI.tabbedInfoWindow.current = v
+  end
+  -- Init to player tab
+  GUI.tabbedInfoWindow.click("Player")
+end</script>
+						<eventHandlerList />
+					</Script>

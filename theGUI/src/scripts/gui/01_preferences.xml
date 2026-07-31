@@ -1,0 +1,153 @@
+					<Script isActive="yes" isFolder="no">
+						<name>Toggles</name>
+						<packageName></packageName>
+						<script>--Toggle the gagging of chat from main buffer.
+function GUI.gagChatToggle()
+  if GUI.toggles.gagChat == false then
+	  GUI.toggles.gagChat = true
+		cecho("\n&lt;b&gt;&lt;white&gt;[CHAT]&lt;/b&gt; &lt;green&gt;Now gagging chat from main buffer.&lt;reset&gt;")
+	elseif GUI.toggles.gagChat == true then
+	  GUI.toggles.gagChat = false
+		cecho("\n&lt;b&gt;&lt;white&gt;[CHAT]&lt;/b&gt; &lt;red&gt;No longer gagging chat from main buffer.&lt;reset&gt;")
+	else
+	  GUI.toggles = {
+		       gagChat = true,
+	  includeInGroup = true,
+	  horizontalScroll = false,
+	  chatSound = false,
+		}
+		table.save(getMudletHomeDir():gsub("\\", "/") .. "/GUI.toggles.lua", GUI.toggles)
+	end
+end
+
+--Toggles whether or not you are shown in the group tab.
+function GUI.showSelfToggle()
+  if GUI.toggles.includeInGroup == false then
+	  GUI.toggles.includeInGroup = true
+		GUI.updateGroup()
+		cecho("\n&lt;b&gt;&lt;cyan&gt;[GROUP]&lt;/b&gt; &lt;green&gt;Now showing self in group display.&lt;reset&gt;")
+	elseif GUI.toggles.includeInGroup == true then
+	  GUI.toggles.includeInGroup = false
+		GUI.updateGroup()
+		cecho("\n&lt;b&gt;&lt;cyan&gt;[GROUP]&lt;/b&gt; &lt;red&gt;No longer showing self in group display.&lt;reset&gt;")
+	else
+	  GUI.toggles = {
+		       gagChat = true,
+	  includeInGroup = true,
+	  horizontalScroll = false,
+	  chatSound = false,
+		}
+		table.save(getMudletHomeDir():gsub("\\", "/") .. "/GUI.toggles.lua", GUI.toggles)
+		cecho("\n&lt;b&gt;&lt;cyan&gt;[GROUP]&lt;/b&gt; &lt;green&gt;Now showing self in group display.&lt;reset&gt;")
+	end
+end
+
+--Toggle horizontal scroll bar on main window
+function GUI.horizontalScrollToggle()
+  if GUI.toggles.horizontalScroll == false then
+    GUI.toggles.horizontalScroll = true
+    -- Disable word wrap and enable horizontal scrollbar
+    setWindowWrap("main", 999)
+    if enableHorizontalScrollBar then
+      enableHorizontalScrollBar("main")
+    end
+    cecho("\n&lt;white&gt;Horizontal scrolling enabled on main window.")
+  elseif GUI.toggles.horizontalScroll == true then
+    GUI.toggles.horizontalScroll = false
+    -- Re-enable word wrap and disable horizontal scrollbar
+    setWindowWrap("main", 100)
+    if disableHorizontalScrollBar then
+      disableHorizontalScrollBar("main")
+    end
+    cecho("\n&lt;white&gt;Horizontal scrolling disabled on main window (word wrap enabled).")
+  else
+    GUI.toggles = {
+           gagChat = true,
+      includeInGroup = true,
+      horizontalScroll = false,
+    }
+    table.save(getMudletHomeDir():gsub("\\", "/") .. "/GUI.toggles.lua", GUI.toggles)
+    -- Re-enable word wrap and disable horizontal scrollbar
+    setWindowWrap("main", 100)
+    if disableHorizontalScrollBar then
+      disableHorizontalScrollBar("main")
+    end
+    cecho("\n&lt;white&gt;Horizontal scrolling disabled on main window (word wrap enabled).")
+  end
+
+  -- Save the toggle state
+  GUI.saveToggles()
+end
+
+function GUI.loadToggles()
+--Check for saved .lua. Create if not.
+  GUI.toggles = {}
+  if not io.exists(getMudletHomeDir():gsub("\\", "/") .. "/GUI.toggles.lua") then
+	  GUI.toggles = {
+		       gagChat = true,
+	  includeInGroup = true,
+	  horizontalScroll = false,
+	  chatSound = false,
+		}
+		table.save(getMudletHomeDir():gsub("\\", "/") .. "/GUI.toggles.lua", GUI.toggles)
+	else
+		table.load(getMudletHomeDir():gsub("\\", "/") .. "/GUI.toggles.lua", GUI.toggles)
+  end
+  
+  -- Sync chat sound setting with demonnic.chat.config
+  if GUI.toggles.chatSound and demonnic and demonnic.chat and demonnic.chat.config then
+    demonnic.chat.config.soundEnabled = true
+  end
+end
+
+--Save Toggle Preferences
+function GUI.saveToggles()
+  table.save(getMudletHomeDir():gsub("\\", "/") .. "/GUI.toggles.lua", GUI.toggles)
+end
+
+--Apply horizontal scroll setting to main window
+function GUI.applyHorizontalScrollSetting()
+  local enabled = GUI.toggles.horizontalScroll or false
+  
+  if enabled then
+    -- Disable word wrap and enable horizontal scrollbar
+    setWindowWrap("main", 999)
+    if enableHorizontalScrollBar then
+      enableHorizontalScrollBar("main")
+    end
+  else
+    -- Re-enable word wrap and disable horizontal scrollbar
+    setWindowWrap("main", 100)
+    if disableHorizontalScrollBar then
+      disableHorizontalScrollBar("main")
+    end
+  end
+end
+
+-- Basic resource cleanup function
+function GUI.cleanup()
+  -- Clean up any temporary triggers
+  if maplineTrig and exists(maplineTrig, "trigger") ~= 0 then
+    killTrigger(maplineTrig)
+    maplineTrig = nil
+  end
+  -- Save current toggle preferences
+  GUI.saveToggles()
+end
+
+registerAnonymousEventHandler("sysLoadEvent", "GUI.loadToggles")
+registerAnonymousEventHandler("sysExitEvent", "GUI.saveToggles")
+registerAnonymousEventHandler("sysExitEvent", "GUI.cleanup")
+
+-- Apply horizontal scroll settings after chat system loads
+registerAnonymousEventHandler("sysLoadEvent", function()
+  tempTimer(2, function()
+    GUI.applyHorizontalScrollSetting()
+    -- Also sync chat sound setting after chat system loads
+    if GUI.toggles.chatSound and demonnic and demonnic.chat and demonnic.chat.config then
+      demonnic.chat.config.soundEnabled = true
+    end
+  end)
+end)</script>
+						<eventHandlerList />
+					</Script>

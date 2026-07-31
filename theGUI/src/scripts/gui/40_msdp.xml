@@ -1,0 +1,380 @@
+					<Script isActive="yes" isFolder="no">
+						<name>MSDP</name>
+						<packageName></packageName>
+						<script>-- All MSDP variables the GUI subscribes to.
+GUI.MSDP_REPORT_VARS = {
+  "CHARACTER_NAME", "RACE", "CLASS", "ALIGNMENT", "LEVEL",
+  "STR", "DEX", "CON", "INT", "WIS", "CHA", "AC", "MONEY",
+  "HEALTH", "HEALTH_MAX",
+  "OPPONENT_HEALTH", "OPPONENT_HEALTH_MAX", "OPPONENT_NAME",
+  "MOVEMENT", "MOVEMENT_MAX",
+  "PSP", "PSP_MAX",
+  "EXPERIENCE", "EXPERIENCE_TNL",
+  "ACTIONS", "GROUP", "AFFECTS",
+  -- "INVENTORY",
+  "ROOM", "AREA_NAME", "ROOM_EXITS", "ROOM_NAME", "ROOM_VNUM",
+  "WORLD_TIME",
+}
+
+-- Subscribe to every MSDP variable the GUI needs.
+-- Safe to call more than once; re-REPORTing an already-reported variable
+-- simply refreshes it. Needed after resetProfile(), where sysProtocolEnabled
+-- does NOT fire again because MSDP was already negotiated on the connection.
+function GUI.requestMSDPReports()
+  GUI.debug("MSDP/REPORT", "subscription request started", {
+    sendMSDP = type(sendMSDP),
+    variableCount = #GUI.MSDP_REPORT_VARS,
+  })
+  if not sendMSDP then
+    GUI.debugError("MSDP/REPORT", "sendMSDP is unavailable")
+    return false
+  end
+  for _, var in ipairs(GUI.MSDP_REPORT_VARS) do
+    GUI.debug("MSDP/REPORT", "sending REPORT", var)
+    local ok, result = GUI.debugCall(
+      "MSDP/REPORT/" .. var,
+      sendMSDP,
+      "REPORT",
+      var
+    )
+    if not ok then
+      GUI.debug("MSDP/REPORT", "REPORT failed", {
+        variable = var,
+        error = result,
+      })
+    end
+  end
+  GUI.debug("MSDP/REPORT", "subscription request complete")
+  return true
+end
+
+function GUI.onProtocolEnabled(_, protocol)
+  GUI.debug("MSDP/PROTOCOL", "sysProtocolEnabled received", {
+    protocol = protocol,
+    enableMSDP = type(getConfig) == "function" and getConfig("enableMSDP") or "unavailable",
+  })
+  if protocol == "MSDP" then
+    print("[GUI] MSDP Protocol enabled - initializing variables")
+
+    GUI.requestMSDPReports()
+
+    -- Debug: Show what variables are available after a short delay
+    tempTimer(2, GUI.debugWrap("MSDP/PROTOCOL/two-second inventory", function()
+      GUI.debug("MSDP/PROTOCOL", "MSDP variables received")
+      local count = 0
+      for k, v in pairs(msdp) do
+        if type(v) ~= "function" then
+          count = count + 1
+          GUI.debug("MSDP/VALUE", "msdp." .. tostring(k), v)
+        end
+      end
+      GUI.debug("MSDP/PROTOCOL", "MSDP variable inventory complete", {
+        count = count,
+      })
+      if type(GUI.debugSnapshot) == "function" then
+        GUI.debugCall(
+          "SNAPSHOT/MSDP protocol",
+          GUI.debugSnapshot,
+          "two seconds after MSDP protocol enabled"
+        )
+      end
+    end))
+    
+    -- Initialize or refresh GUI after a short delay to ensure MSDP data arrives
+    tempTimer(0.5, GUI.debugWrap("MSDP/PROTOCOL/GUI refresh", function()
+      GUI.initializeOrRefresh("MSDP protocol enabled")
+    end))
+  end
+end
+
+function GUI.updateHealthGauge()
+  GUI.debug("GUI/GAUGE/HEALTH", "update requested", {
+    health = msdp and msdp.HEALTH,
+    maximum = msdp and msdp.HEALTH_MAX,
+    gauge = type(GUI.Health),
+  })
+  -- This function handles the following events:
+  --   msdp.HEALTH
+  --   msdp.HEALTH_MAX
+  
+  -- Check if gauge exists
+  if not GUI.Health then
+    return
+  end
+  
+  -- Get values with defaults
+  local health = tonumber(msdp.HEALTH) or 0
+  local max_health = tonumber(msdp.HEALTH_MAX) or 1
+  
+  -- Calculate percentage
+  local pct_health
+  if health &gt; max_health then
+    health = max_health
+  end
+  
+  if max_health &gt; 0 then
+    pct_health = (health / max_health) * 100
+  else
+    pct_health = 0
+  end
+  
+  -- Update display
+  local displayText = "&lt;b&gt;HEALTH: " .. health .. "/" .. max_health .. "&lt;/b&gt;"
+  GUI.Health.front:echo([[&lt;span style = "color: black; text-shadow: 1px 1px 1px rgba(255,255,255,0.5);"&gt;]] .. displayText .. [[&lt;/span&gt;]])
+  GUI.Health.back:echo([[&lt;span&gt;]] .. displayText .. [[&lt;/span&gt;]])
+  
+  -- Set gauge value
+  if pct_health &gt; 100 then
+    GUI.Health:setValue(100, 100)
+  else
+    GUI.Health:setValue(pct_health, 100)
+  end
+end
+
+function GUI.updateMovesGauge()
+  GUI.debug("GUI/GAUGE/MOVEMENT", "update requested", {
+    movement = msdp and msdp.MOVEMENT,
+    maximum = msdp and msdp.MOVEMENT_MAX,
+    gauge = type(GUI.Moves),
+  })
+  -- This function handles the following events:
+  --   msdp.MOVEMENT
+  --   msdp.MOVEMENT_MAX
+  
+  -- Check if gauge exists
+  if not GUI.Moves then
+    return
+  end
+  
+  -- Get values with defaults
+  local moves = tonumber(msdp.MOVEMENT) or 0
+  local max_moves = tonumber(msdp.MOVEMENT_MAX) or 1
+  
+  -- Calculate percentage
+  local pct_moves
+  if max_moves &gt; 0 then
+    pct_moves = (moves / max_moves) * 100
+  else
+    pct_moves = 0
+  end
+  
+  -- Update display
+  local displayText = "&lt;b&gt;MOVES: " .. moves .. "/" .. max_moves .. "&lt;/b&gt;"
+  GUI.Moves.front:echo([[&lt;span style = "color: black; text-shadow: 1px 1px 1px rgba(255,255,255,0.5);"&gt;]] .. displayText .. [[&lt;/span&gt;]])
+  GUI.Moves.back:echo([[&lt;span&gt;]] .. displayText .. [[&lt;/span&gt;]])
+  
+  -- Set gauge value
+  if pct_moves &gt; 100 then
+    GUI.Moves:setValue(100, 100)
+  else
+    GUI.Moves:setValue(pct_moves, 100)
+  end
+end
+
+-- function GUI.updateExperienceGauge()
+--   -- This function handles the following events:
+--   --   msdp.EXPERIENCE
+--   --   msdp.EXPERIENCE_TNL
+--   
+--   -- Check if gauge exists
+--   if not GUI.Experience then
+--     return
+--   end
+--   
+--   -- Get values with defaults
+--   local xp = tonumber(msdp.EXPERIENCE) or 0
+--   local xp_tnl = tonumber(msdp.EXPERIENCE_TNL) or 0
+--   
+--   -- Calculate percentage
+--   local pct_xp
+--   local total_xp = xp + xp_tnl
+--   if total_xp &gt; 0 then
+--     pct_xp = (xp / total_xp) * 100
+--   else
+--     pct_xp = 0
+--   end
+--   
+--   -- Update display with dynamic font sizes
+--   local gaugeHeight = GUI.Experience:get_height()
+--   local fontSize1 = math.max(8, math.floor(gaugeHeight * 0.4))
+--   local fontSize2 = math.max(6, math.floor(gaugeHeight * 0.3))
+--   local displayText = "&lt;b&gt;EXP: &lt;span style='font-size:" .. fontSize1 .. "px;'&gt;" .. xp .. "&lt;/span&gt;&lt;span style='color:#4B0082;'&gt;/&lt;/span&gt;&lt;span style='font-size:" .. fontSize2 .. "px;'&gt;" .. total_xp .. "&lt;/span&gt;&lt;/b&gt;"
+--   GUI.Experience.front:echo([[&lt;span style = "color: black; text-shadow: 1px 1px 1px rgba(255,255,255,0.5);"&gt;]] .. displayText .. [[&lt;/span&gt;]])
+--   GUI.Experience.back:echo([[&lt;span&gt;]] .. displayText .. [[&lt;/span&gt;]])
+--   
+--   -- Set gauge value
+--   if pct_xp &gt; 100 then
+--     GUI.Experience:setValue(100, 100)
+--   else
+--     GUI.Experience:setValue(pct_xp, 100)
+--   end
+-- end
+
+function GUI.updatePSPGauge()
+  GUI.debug("GUI/GAUGE/PSP", "update requested", {
+    psp = msdp and msdp.PSP,
+    maximum = msdp and msdp.PSP_MAX,
+    gauge = type(GUI.PSP),
+  })
+  -- This function handles the following events:
+  --   msdp.PSP
+  --   msdp.PSP_MAX
+  
+  -- Check if gauge exists
+  if not GUI.PSP then
+    return
+  end
+  
+  -- Get values with defaults
+  local psp = tonumber(msdp.PSP) or 0
+  local max_psp = tonumber(msdp.PSP_MAX) or 1
+  
+  -- Calculate percentage
+  local pct_psp
+  if max_psp &gt; 0 then
+    pct_psp = (psp / max_psp) * 100
+  else
+    pct_psp = 0
+  end
+  
+  -- Update display
+  local displayText = "&lt;b&gt;PSP: " .. psp .. "/" .. max_psp .. "&lt;/b&gt;"
+  GUI.PSP.front:echo([[&lt;span style = "color: black; text-shadow: 1px 1px 1px rgba(255,255,255,0.5);"&gt;]] .. displayText .. [[&lt;/span&gt;]])
+  GUI.PSP.back:echo([[&lt;span&gt;]] .. displayText .. [[&lt;/span&gt;]])
+  
+  -- Set gauge value
+  if pct_psp &gt; 100 then
+    GUI.PSP:setValue(100, 100)
+  else
+    GUI.PSP:setValue(pct_psp, 100)
+  end
+end
+
+function GUI.updateEnemyGauge()
+  GUI.debug("GUI/GAUGE/ENEMY", "update requested", {
+    opponentName = msdp and msdp.OPPONENT_NAME,
+    health = msdp and msdp.OPPONENT_HEALTH,
+    maximum = msdp and msdp.OPPONENT_HEALTH_MAX,
+    gauge = type(GUI.Enemy),
+  })
+  -- This function handles the following events:
+  --   msdp.OPPONENT_HEALTH
+  --   msdp.OPPONENT_HEALTH_MAX
+  --   msdp.OPPONENT_NAME
+  
+  -- Check if gauge exists
+  if not GUI.Enemy then
+    return
+  end
+  
+  -- Get opponent name
+  local opponent_name = msdp.OPPONENT_NAME or ""
+  
+  -- Show/Hide the gauge based on opponent presence
+  if opponent_name == "" then
+    GUI.Enemy:hide()
+    return
+  else
+    GUI.Enemy:show()
+  end
+  
+  -- Get values with defaults
+  local health = tonumber(msdp.OPPONENT_HEALTH) or 0
+  local max_health = tonumber(msdp.OPPONENT_HEALTH_MAX) or 1
+  
+  -- Calculate percentage
+  local pct_health
+  if max_health &gt; 0 then
+    pct_health = (health / max_health) * 100
+  else
+    pct_health = 0
+  end
+  
+  -- Update display
+  local displayText = "&lt;b&gt;" .. opponent_name:upper() .. ": &lt;span style='color:#FF0000;'&gt;" .. health .. "&lt;/span&gt;&lt;span style='color:#9370DB;'&gt;/&lt;/span&gt;&lt;span style='color:#FFFFFF;'&gt;" .. max_health .. "&lt;/span&gt;&lt;/b&gt;"
+  GUI.Enemy.front:echo(displayText)
+  GUI.Enemy.back:echo(displayText)
+  
+  -- Set gauge value
+  if pct_health &gt; 100 then
+    GUI.Enemy:setValue(100, 100)
+  else
+    GUI.Enemy:setValue(pct_health, 100)
+  end
+end
+
+function GUI.updateActionIcons()
+  GUI.debug("GUI/ACTIONS", "updating action icons", {
+    actions = msdp and msdp.ACTIONS,
+    standardIcon = type(GUI.StandardActionIcon),
+    moveIcon = type(GUI.MoveActionIcon),
+    swiftIcon = type(GUI.SwiftActionIcon),
+  })
+  -- Check if ACTIONS data exists
+  if not msdp.ACTIONS then
+    -- No ACTIONS data yet, skip update
+    return
+  end
+  
+  -- Ensure action icons exist before updating
+  if not GUI.StandardActionIcon or not GUI.MoveActionIcon or not GUI.SwiftActionIcon then
+    print("[GUI] Action icons not initialized yet")
+    return
+  end
+  
+  -- Update Standard Action icon
+  if msdp.ACTIONS.STANDARD_ACTION == "1" then
+    GUI.ActionIconCSS:set(
+      "border-image",
+      [[url("]] ..
+      getMudletHomeDir():gsub("\\", "/") ..
+      [[/LuminariGUI/images/action-standard.png");]]
+    )
+    GUI.StandardActionIcon:setStyleSheet(GUI.ActionIconCSS:getCSS())
+  elseif msdp.ACTIONS.STANDARD_ACTION == "0" then
+    GUI.ActionIconCSS:set(
+      "border-image",
+      [[url("]] ..
+      getMudletHomeDir():gsub("\\", "/") ..
+      [[/LuminariGUI/images/action-standard-50.png");]]
+    )
+    GUI.StandardActionIcon:setStyleSheet(GUI.ActionIconCSS:getCSS())
+  end
+  
+  -- Update Move Action icon
+  if msdp.ACTIONS.MOVE_ACTION == "1" then
+    GUI.ActionIconCSS:set(
+      "border-image",
+      [[url("]] .. getMudletHomeDir():gsub("\\", "/") .. [[/LuminariGUI/images/action-move.png");]]
+    )
+    GUI.MoveActionIcon:setStyleSheet(GUI.ActionIconCSS:getCSS())
+  elseif msdp.ACTIONS.MOVE_ACTION == "0" then
+    GUI.ActionIconCSS:set(
+      "border-image",
+      [[url("]] ..
+      getMudletHomeDir():gsub("\\", "/") ..
+      [[/LuminariGUI/images/action-move-50.png");]]
+    )
+    GUI.MoveActionIcon:setStyleSheet(GUI.ActionIconCSS:getCSS())
+  end
+  
+  -- Update Swift Action icon
+  if msdp.ACTIONS.SWIFT_ACTION == "1" then
+    GUI.ActionIconCSS:set(
+      "border-image",
+      [[url("]] .. getMudletHomeDir():gsub("\\", "/") .. [[/LuminariGUI/images/action-swift.png");]]
+    )
+    GUI.SwiftActionIcon:setStyleSheet(GUI.ActionIconCSS:getCSS())
+  elseif msdp.ACTIONS.SWIFT_ACTION == "0" then
+    GUI.ActionIconCSS:set(
+      "border-image",
+      [[url("]] ..
+      getMudletHomeDir():gsub("\\", "/") ..
+      [[/LuminariGUI/images/action-swift-50.png");]]
+    )
+    GUI.SwiftActionIcon:setStyleSheet(GUI.ActionIconCSS:getCSS())
+  end
+end
+</script>
+						<eventHandlerList />
+					</Script>

@@ -1,0 +1,274 @@
+					<Script isActive="yes" isFolder="no">
+						<name>Buttons</name>
+						<packageName></packageName>
+						<script>GUI.buttonWindow =
+  GUI.buttonWindow or
+  {
+    button = {"Legend", "Map"},
+    color1 = "rgba(0,0,0,0)",
+    color2 = "rgba(0,0,0,0)",
+    width = "100%",
+    height = "100%",
+		roomOrLegend = "Room",
+		mudletOrAscii = "Mudlet",
+		--# of chars wide text needs to be
+		legendWidth = 50,
+		--# of lines needed to display text
+		legendHeight = 11,
+  }
+
+--Determine font size for Legend
+function GUI.buttonWindow.adjustLegendFont()
+  local w = GUI.buttonWindow.Legend.get_width()
+  local h = GUI.buttonWindow.Legend.get_height()
+  local font_size = 8
+  repeat
+    font_size = font_size + 1
+    local width, height = calcFontSize(font_size)
+    width = width * GUI.buttonWindow.legendWidth
+    height = height * GUI.buttonWindow.legendHeight
+  until (w &lt; width) or (h &lt; height)
+	GUI.buttonWindow.Legend_font_size = font_size - 1
+  setMiniConsoleFontSize("GUI.buttonWindow.Legend", GUI.buttonWindow.Legend_font_size)
+end
+
+--Button callback for Legend
+function GUI.buttonWindow.legendClick()	
+  --Toggle For Room Info/Legend
+	if GUI.buttonWindow.roomOrLegend == "Room" then
+		GUI.buttonWindow.roomInfo:hide()
+    GUI.buttonWindow.Legend:show()
+		GUI.buttonWindow.roomOrLegend = "Legend"
+		GUI.updateRoom()
+		GUI.buttonWindow.Legendbutton:echo("Legend/Room", "yellow", "c")
+	elseif GUI.buttonWindow.roomOrLegend == "Legend" then
+		GUI.updateLegend()
+		GUI.buttonWindow.roomInfo:show()
+    GUI.buttonWindow.Legend:hide()
+		GUI.buttonWindow.roomOrLegend = "Room"
+		GUI.buttonWindow.Legendbutton:echo("Legend/Room", "white", "c")
+	end
+end
+
+--Button callback for Map toggle (Mudlet/ASCII)
+function GUI.buttonWindow.mapClick()
+	-- Ensure containers exist before toggling
+	if not map.container or not GUI.asciiMapContainer then
+		print("ERROR: Map containers not initialized")
+		return
+	end
+
+	if GUI.buttonWindow.mudletOrAscii == "Mudlet" then
+		-- Switch TO ASCII view
+		map.container:hide()
+		GUI.asciiMapContainer:show()
+		GUI.buttonWindow.mudletOrAscii = "ASCII"
+		GUI.buttonWindow.Mapbutton:echo("Mudlet/ASCII", "yellow", "c")
+		GUI.asciiMapContainer:raise()
+	elseif GUI.buttonWindow.mudletOrAscii == "ASCII" then
+		-- Switch TO Mudlet view
+		GUI.asciiMapContainer:hide()
+		map.container:show()
+		GUI.buttonWindow.mudletOrAscii = "Mudlet"
+		GUI.buttonWindow.Mapbutton:echo("Mudlet/ASCII", "white", "c")
+
+		-- Ensure mapper is visible and properly refreshed with a small delay
+		tempTimer(0.1, function()
+			if map.mapwindow then
+				map.mapwindow:show()
+				map.mapwindow:resize()
+			end
+		end)
+	end
+end
+
+--Button callback for Mudlet map.
+function GUI.buttonWindow.mudletClick()
+    -- Ensure containers exist before toggling
+    if not map.container or not GUI.asciiMapContainer then
+      print("ERROR: Map containers not initialized")
+      return
+    end
+    
+    GUI.asciiMapContainer:hide()
+    map.container:show()
+	  GUI.buttonWindow.mudletOrAscii = "Mudlet"
+		GUI.buttonWindow.Mudletbutton:echo("Mudlet", "yellow", "c")
+		GUI.buttonWindow.ASCIIbutton:echo("ASCII", "white", "c")
+		
+		-- Ensure mapper is visible and properly refreshed with a small delay
+		tempTimer(0.1, function()
+		  if map.mapwindow then
+		    map.mapwindow:show()
+		    map.mapwindow:resize()
+		  end
+		end)
+end
+
+--Button callback for ASCII map.
+function GUI.buttonWindow.asciiClick()
+    -- Ensure containers exist before toggling
+    if not map.container or not GUI.asciiMapContainer then
+      print("ERROR: Map containers not initialized")
+      return
+    end
+    
+    map.container:hide()
+    GUI.asciiMapContainer:show()
+		GUI.buttonWindow.mudletOrAscii = "ASCII"
+		GUI.buttonWindow.ASCIIbutton:echo("ASCII", "yellow", "c")
+		GUI.buttonWindow.Mudletbutton:echo("Mudlet", "white", "c")
+		GUI.asciiMapContainer:raise()
+end
+
+--Button Init
+function GUI.buttonWindow.init()
+  if type(GUI.buttonPanelContainer) ~= "table"
+    or type(GUI.roomInfoContainer) ~= "table"
+  then
+    error(
+      "GUI.buttonWindow.init: core parent containers are missing; "
+      .. "refusing to create root-level controls"
+    )
+  end
+
+  -- Package upgrades can leave the failed build's root-level controls alive
+  -- in the current profile. Delete (or at minimum hide) those objects before
+  -- reusing their globally unique Mudlet names under the correct parents.
+  local staleRoots = {"container", "roomInfo", "Legend"}
+  for _, key in ipairs(staleRoots) do
+    local window = GUI.buttonWindow[key]
+    if type(window) == "table" then
+      local removed = false
+      if type(window.delete) == "function" then
+        removed = pcall(window.delete, window)
+      end
+      if not removed and type(window.hide) == "function" then
+        pcall(window.hide, window)
+      end
+    end
+  end
+  for _, key in ipairs({
+    "container",
+    "buttonContainer",
+    "Legendbutton",
+    "Mapbutton",
+    "Mudletbutton",
+    "ASCIIbutton",
+    "roomInfo",
+    "Legend",
+  }) do
+    GUI.buttonWindow[key] = nil
+  end
+
+  GUI.buttonWindowCSS =
+    CSSMan.new(
+      [[font-family: Tahoma, Geneva, sans-serif; 
+			border-image: url(]] ..
+      getMudletHomeDir():gsub("\\", "/") ..
+      [[/LuminariGUI/images/buttons/button.png) 0 0 0 0 stretch stretch;
+			border: 1px solid rgba(184, 115, 27, 0.6);
+			border-radius: 4px;
+			padding: 4px;
+			font-weight: bold;
+			color: white;
+		]]
+    )
+  
+  -- Add hover and pressed effects CSS
+  GUI.buttonWindowHoverCSS =
+    CSSMan.new(
+      [[font-family: Tahoma, Geneva, sans-serif; 
+			border-image: url(]] ..
+      getMudletHomeDir():gsub("\\", "/") ..
+      [[/LuminariGUI/images/buttons/button.png) 0 0 0 0 stretch stretch;
+			border: 1px solid rgba(184, 115, 27, 1.0);
+			border-radius: 4px;
+			padding: 4px;
+			font-weight: bold;
+			color: white;
+			background-color: rgba(255, 255, 255, 0.1);
+		]]
+    )
+		
+--Entire Box3 Container for Buttons
+  GUI.buttonWindow.container =
+    Geyser.Container:new(
+      {
+        name = "GUI.buttonWindow.container",
+        x = 9,
+        y = 25,
+        width = "-18",
+        height = "-34",
+      },
+      GUI.buttonPanelContainer
+    )
+
+--Room Info
+  GUI.buttonWindow.roomInfo = 
+	Geyser.Label:new(
+		{
+		  name = "GUI.buttonWindow.roomInfo",
+			x = 9,
+			y = 25,
+			width = "-18",
+			height = "-34",
+			},
+			GUI.roomInfoContainer
+		)
+
+--Map Legend
+  GUI.buttonWindow.Legend = 
+	Geyser.MiniConsole:new(
+		{
+		  name = "GUI.buttonWindow.Legend",
+			x = 9,
+			y = 25,
+			width = "-18",
+			height = "-34",
+			color = "black",
+			},
+			GUI.roomInfoContainer
+		)
+		GUI.buttonWindow.adjustLegendFont()
+		
+--Button Container
+  GUI.buttonWindow.buttonContainer =
+    Geyser.HBox:new(
+      {name = "GUI.buttonWindow.buttonContainer", x = 0, y = 0, width = "100%", height = "100%"},
+      GUI.buttonWindow.container
+    )
+
+--Draw Buttons
+  for k, v in pairs(GUI.buttonWindow.button) do
+    GUI.buttonWindow[v .. "button"] =
+      Geyser.Label:new({name = "GUI.buttonWindow." .. v .. "button"}, GUI.buttonWindow.buttonContainer)
+    GUI.buttonWindow[v .. "button"]:setStyleSheet(GUI.buttonWindowCSS:getCSS())
+    -- Set appropriate display text for each button
+    local displayText = v
+    if v == "Legend" then
+      displayText = "Legend/Room"
+    elseif v == "Map" then
+      displayText = "Mudlet/ASCII"
+    end
+    GUI.buttonWindow[v .. "button"]:echo("&lt;center&gt;" .. displayText)
+  end
+
+--Legend Call Back
+  GUI.buttonWindow.Legendbutton:setClickCallback(function() GUI.buttonWindow.legendClick() end)
+--Map (Mudlet/ASCII) Callback
+  GUI.buttonWindow.Mapbutton:setClickCallback(function() GUI.buttonWindow.mapClick() end)
+
+--Show Room Info on Startup
+	GUI.buttonWindow.roomInfo:show()
+  GUI.buttonWindow.Legend:hide()
+
+--Populating Legend
+	GUI.updateLegend()
+
+--Set initial Map button state (Mudlet is default/active)
+	GUI.buttonWindow.Mapbutton:echo("Mudlet/ASCII", "white", "c")
+	
+end </script>
+						<eventHandlerList />
+					</Script>

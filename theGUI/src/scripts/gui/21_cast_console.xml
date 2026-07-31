@@ -1,0 +1,71 @@
+					<Script isActive="yes" isFolder="no">
+						<name>Cast Console</name>
+						<packageName></packageName>
+						<script>function GUI.init_castConsole()
+  -- Convert Cast Console to Adjustable Container
+  GUI.castConsoleContainer = GUI.AdjustableContainers.create("CastConsole", "cast_console", {
+    x = "50%",
+    y = "60%",
+    width = "25%",
+    height = "15%",
+    padding = 9,
+    name = "LuminariGUI_CastConsole",
+    titleText = "Cast Console",
+    titleTxtColor = "green",
+    attached = "br",  -- Bottom-right attachment
+    adjLabelstyle = "background-color: rgba(0,0,0,0%); border: 9px groove #444444;",
+    locked = false,
+    lockStyle = "standard",
+    noClose = true
+  })
+  
+  -- Create internal MiniConsole for spell casting display
+  -- Position below title bar (approximately 20-25 pixels) and respect padding
+  GUI.castConsole = Geyser.MiniConsole:new({
+    name = "GUI.castConsole",
+    x = 10,  -- Slight offset from left to respect container padding
+    y = 25,  -- Position below title bar
+    width = -20,  -- Use negative value to respect padding on both sides
+    height = -35,  -- Use negative value to account for title bar and bottom padding
+    color = "black"
+  }, GUI.castConsoleContainer)
+  
+  -- Set font size to match main window
+  setMiniConsoleFontSize("GUI.castConsole", getFontSize("main"))
+  
+  -- Ensure proper z-order
+  GUI.castConsoleContainer:raise()
+end
+
+
+function GUI.castConsole_startCast(spellName, spellLength)
+  GUI.currentlyCasting = spellName
+	GUI.castingNow = true
+  clearUserWindow("GUI.castConsole")
+  GUI.castConsole:cecho("\n&lt;b&gt;&lt;white&gt;Spell:&lt;/b&gt; &lt;b&gt;&lt;yellow&gt;"..spellName:title().."&lt;/b&gt; &lt;white&gt;- &lt;cyan&gt;&lt;b&gt;"..spellLength.."&lt;/b&gt;")
+	if GUI.castConsoleTimer then
+	  killTimer(GUI.castConsoleTimer)
+	end
+end
+
+function GUI.castConsole_completeCast()
+  GUI.castConsole:cecho("\n&lt;b&gt;&lt;white&gt;Spell:&lt;/b&gt; &lt;b&gt;&lt;yellow&gt;"..GUI.currentlyCasting:title().."&lt;/b&gt; &lt;white&gt;- &lt;b&gt;&lt;green&gt;✓ CAST COMPLETE&lt;/b&gt;")
+	GUI.castConsoleTimer = tempTimer(10, [[clearUserWindow("GUI.castConsole")]])
+end
+
+function GUI.castConsole_abortedCast()
+  GUI.castConsole:cecho("\n&lt;b&gt;&lt;white&gt;Spell:&lt;/b&gt; &lt;b&gt;&lt;yellow&gt;"..GUI.currentlyCasting:title().."&lt;/b&gt; &lt;white&gt;- &lt;b&gt;&lt;red&gt;✗ ABORTED&lt;/b&gt;")
+	GUI.castingNow = false
+	GUI.castConsoleTimer = tempTimer(10, [[clearUserWindow("GUI.castConsole")]])
+end
+
+
+function GUI.castConsole_canceledCast()
+  GUI.castConsole:cecho("\n&lt;b&gt;&lt;white&gt;Spell:&lt;/b&gt; &lt;b&gt;&lt;yellow&gt;"..GUI.currentlyCasting:title().."&lt;/b&gt; &lt;white&gt;- &lt;b&gt;&lt;red&gt;✗ CANCELED&lt;/b&gt;")
+	GUI.castingNow = false
+	GUI.castConsoleTimer = tempTimer(10, [[clearUserWindow("GUI.castConsole")]])
+end
+
+</script>
+						<eventHandlerList />
+					</Script>

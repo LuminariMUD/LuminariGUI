@@ -1,0 +1,9 @@
+					<Script isActive="yes" isFolder="no">
+						<name>DrawFrames</name>
+						<packageName></packageName>
+						<script>function GUI.draw_frames()
+  -- Frame drawing removed - frame images are incompatible with adjustable containers
+  -- Adjustable containers have their own border styling through the adjLabelstyle property
+end</script>
+						<eventHandlerList />
+					</Script>

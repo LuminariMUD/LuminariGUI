@@ -1,0 +1,26 @@
+					<Script isActive="yes" isFolder="no">
+						<name>Create Background</name>
+						<packageName></packageName>
+						<script>function GUI.init_background()
+  GUI.BackgroundCSS = CSSMan.new([[
+  background-color: rgba(38, 25, 47, 0.9);
+  border: 1px solid rgba(184, 115, 27, 0.5);
+  border-radius: 5px;
+  padding: 5px;
+]])
+  -- Left
+  GUI.Left = Geyser.Label:new({name = "GUI.Left", x = 0, y = 0, width = "25%", height = "100%"})
+  GUI.Left:setStyleSheet(GUI.BackgroundCSS:getCSS())
+  GUI.Left:hide() -- Hidden: No longer needed with Adjustable Containers
+  --Right
+	GUI.Right =
+    Geyser.Label:new({name = "GUI.Right", x = "-25%", y = "-50%", width = "25%", height = "50%"})
+  GUI.Right:setStyleSheet(GUI.BackgroundCSS:getCSS())
+  GUI.Right:hide() -- Hidden: No longer needed with Adjustable Containers
+	--Bottom
+	GUI.Bottom = Geyser.Label:new({name = "GUI.Bottom", x = "25%", y = "-25%", width = "50%", height = "25%"})
+  GUI.Bottom:setStyleSheet(GUI.BackgroundCSS:getCSS())
+  GUI.Bottom:hide() -- Hidden: No longer needed with Adjustable Containers
+end</script>
+						<eventHandlerList />
+					</Script>

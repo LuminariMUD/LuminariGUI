@@ -1,0 +1,274 @@
+					<Script isActive="yes" isFolder="no">
+						<name>Affects</name>
+						<packageName></packageName>
+						<script>-- Affects
+-- -------
+-- There are several types of affects in Luminari - Affected By (Status), Spell-Like Affects, Resistances and Damage Reduction
+-- 'Affected By' also includes 'Modes' which change the character's behavior in some way, for example 'Flurry-of-Blows' or
+-- 'Rapid-Shot'.  Modes are displayed in the box with the health bars, as this is important information even if you are not
+-- Interested in the other types of affects.
+--
+-- Spell-like affects can create 'Affected By' status flags.
+--
+-- All other affects are displayed in the 'Affects' tab in the upper left.
+--
+-- Container: GUI.tabbedInfoWindow["Affectscenter"]
+--
+
+-- Initialize tables
+GUI.AffectIcons = GUI.AffectIcons or {}
+GUI.SLAffects = GUI.SLAffects or {}
+GUI.SLAffects.Labels = GUI.SLAffects.Labels or {}
+GUI.Affects = GUI.Affects or {}
+GUI.Affects.Rows = GUI.Affects.Rows or {}
+GUI.Affects.Modes = GUI.Affects.Modes or {}
+
+function GUI.Affects.init()
+  GUI.debug("GUI/AFFECTS", "initializing affects display")
+  -- Initialize all the labels and such	
+  -- Don't overwrite GUI.Affects itself - preserve the init function!
+  GUI.Affects.Labels = {}
+  GUI.Affects.Modes = {}
+  GUI.Affects.Modes.Labels = {}
+  GUI.Affects.Rows = {}
+  -- CSS
+  GUI.Affects.IconCSS = CSSMan.new([[
+	  margin: 0px;	
+  ]])
+  GUI.Affects.Modes.IconCSS = CSSMan.new([[
+	  margin: 0px;
+  ]])  
+  -- Calculate how many labels will fit into the container
+  GUI.Affects.icon_width = 48
+  GUI.Affects.icon_height = 48
+  GUI.Affects.Modes.icon_width = 48
+  GUI.Affects.Modes.icon_height = 48
+  GUI.Affects.num_icons_row =
+    (GUI.tabbedInfoWindow["Affectscenter"]:get_width()) / GUI.Affects.icon_width
+  GUI.Affects.num_rows = 3 -- This is so we have room below for the other affect types.	
+    --(GUI.tabbedInfoWindow["Affectscenter"]:get_height()) / GUI.Affects.icon_height
+  
+	-- Create the VBox
+  GUI.Affects.container =
+    Geyser.VBox:new(
+      {
+        name = "GUI.Affects.container",
+        x = 0,
+        y = 0,
+        width = "100%",
+        height = GUI.Affects.num_rows * GUI.Affects.icon_height,
+        h_policy = Geyser.Fixed,
+        v_policy = Geyser.Fixed,
+      },
+      GUI.tabbedInfoWindow["Affectscenter"]
+    )
+	-- Create the Affect Labels
+  for i = 1, GUI.Affects.num_rows do
+    --GUI.Affects.icon_width * GUI.Affects.num_icons_row,
+    GUI.Affects.Rows[i] = {}
+    GUI.Affects.Rows[i].Labels = {}
+    GUI.Affects.Rows[i].container =
+      Geyser.HBox:new(
+        {
+          name = "GUI.Affects.Row" .. i,
+          x = 0,
+          y = 0,
+          height = GUI.Affects.icon_height,
+          width = "100%",
+          h_policy = Geyser.Fixed,
+          v_policy = Geyser.Fixed,
+        },
+        GUI.Affects.container
+      )
+    for j = 1, GUI.Affects.num_icons_row do
+      GUI.Affects.Rows[i].Labels[j] =
+        Geyser.Label:new(
+          {
+            name = "GUI.Affects.Label" .. tostring(i) .. '_' .. tostring(j),
+            width = GUI.Affects.icon_width,
+            height = GUI.Affects.icon_height,
+            h_policy = Geyser.Fixed,
+            v_policy = Geyser.Fixed,
+          },
+          GUI.Affects.Rows[i].container
+        )
+      GUI.Affects.Rows[i].Labels[j]:setStyleSheet(GUI.Affects.IconCSS:getCSS())
+      GUI.Affects.Rows[i].Labels[j]:setColor(0, 0, 0, 0)
+    end
+    GUI.Affects.current_row = 1
+    GUI.Affects.current_column = 1
+  end
+  -- Initialize Modes - These will display along with the health bars.
+  GUI.Affects.Modes.num_icons_row =
+    GUI.AffectedByIconsBox:get_width() / GUI.Affects.Modes.icon_width
+  GUI.Affects.Modes.ModeList =
+    {
+      ["Mode-RapidShot"] = true,
+      ["Flurry-of-Blows"] = true,
+      ["Sneaking"] = true,
+      ["Hiding"] = true,
+      ["Mode-PowerAttack"] = true,
+      ["Mode-Expertise"] = true,
+      ["Mode-Total-Defense"] = true,
+      ["Spot-Mode"] = true,
+      ["Listen-Mode"] = true,
+      ["Mode-Spellbattle"] = true,
+      ["Counterspell"] = true,
+      ["Defensive-Casting"] = true,
+      ["Charging"] = true,
+      ["WildShape"] = true,
+    }
+  -- Create the Mode Labels
+  for i = 1, GUI.Affects.Modes.num_icons_row do
+    GUI.Affects.Modes.Labels[i] =
+      Geyser.Label:new(
+        {
+          name = "GUI.AffectIcon" .. tostring(i),
+          width = GUI.Affects.Modes.icon_width,
+          height = GUI.Affects.Modes.icon_height,
+          h_policy = Geyser.Dynamic,
+          v_policy = Geyser.Dynamic,
+        },
+        GUI.AffectedByIconsBox
+      )
+    GUI.Affects.Modes.Labels[i]:setStyleSheet(GUI.Affects.Modes.IconCSS:getCSS())
+  end
+	GUI.tabbedInfoWindow["Affects"]:hide()
+	
+	-- Initialize the area for the Spell Like Affects - GUI.Affects.SLAffects
+	GUI.SLAffects.row_height = 20
+	-- Calculate how many rows we can have:
+	GUI.SLAffects.num_rows = (GUI.tabbedInfoWindow["Affectscenter"]:get_height() - (GUI.Affects.icon_height*GUI.Affects.num_rows)) / GUI.SLAffects.row_height
+	-- Set up the VBox
+	GUI.SLAffects.container = 
+	Geyser.VBox:new(
+      {
+        name = "GUI.SLAffects.container",
+        x = 0,
+        y = GUI.Affects.icon_height*GUI.Affects.num_rows,
+        width = "100%",
+        height = GUI.tabbedInfoWindow["Affectscenter"].get_height() - (GUI.Affects.icon_height*GUI.Affects.num_rows),        
+        v_policy = Geyser.Fixed,
+      },
+      GUI.tabbedInfoWindow["Affectscenter"]
+  )
+
+	for i = 1, GUI.SLAffects.num_rows do
+		GUI.SLAffects.Labels[i] = 
+			Geyser.Label:new(
+				{
+					name = "GUI.SLAffect" .. tostring(i),
+					width = "100%",
+					height = GUI.SLAffects.row_height,
+					h_policy = Geyser.Fixed,
+				}, GUI.SLAffects.container
+			)
+		GUI.SLAffects.Labels[i]:setStyleSheet([[
+        background-color: rgba(0,0,0,0%);
+      ]])
+    GUI.SLAffects.Labels[i]:hide()
+	end 
+end
+
+function GUI.updateSLAffects()
+  GUI.debug("GUI/AFFECTS", "updating spell-like affects", {
+    affects = msdp and msdp.AFFECTS,
+  })
+	if msdp.AFFECTS and msdp.AFFECTS.SPELL_LIKE_AFFECTS and #msdp.AFFECTS.SPELL_LIKE_AFFECTS &gt; 0 then
+		-- We have spell like affects to process!		
+		for i = 1, GUI.SLAffects.num_rows do
+			GUI.SLAffects.Labels[i]:echo("")
+			GUI.SLAffects.Labels[i]:hide()
+			if i &lt;= #msdp.AFFECTS.SPELL_LIKE_AFFECTS then
+			  if (msdp.AFFECTS.SPELL_LIKE_AFFECTS[i].LOCATION == "Damage-Reduction") then
+					affect_string = string.format("&lt;pre&gt;[ %s ] %s %s (%s)&lt;/pre&gt;", msdp.AFFECTS.SPELL_LIKE_AFFECTS[i].DURATION, msdp.AFFECTS.SPELL_LIKE_AFFECTS[i].NAME, 
+					msdp.AFFECTS.SPELL_LIKE_AFFECTS[i].LOCATION, msdp.AFFECTS.SPELL_LIKE_AFFECTS[i].TYPE)
+				else
+				  affect_string = string.format("&lt;pre&gt;[ %s ] %s %s to %s (%s)&lt;/pre&gt;", msdp.AFFECTS.SPELL_LIKE_AFFECTS[i].DURATION, msdp.AFFECTS.SPELL_LIKE_AFFECTS[i].NAME, 
+					msdp.AFFECTS.SPELL_LIKE_AFFECTS[i].MODIFIER, msdp.AFFECTS.SPELL_LIKE_AFFECTS[i].LOCATION, msdp.AFFECTS.SPELL_LIKE_AFFECTS[i].TYPE)
+				end
+				GUI.SLAffects.Labels[i]:echo(affect_string)
+				GUI.SLAffects.Labels[i]:show()
+			end
+		end		 
+	end
+end
+
+function GUI.updateAffectIcons()
+  GUI.debug("GUI/AFFECTS", "updating affect icons", {
+    affects = msdp and msdp.AFFECTS,
+  })
+  -- Also update spell-like affects display
+  GUI.updateSLAffects()
+  
+  if msdp.AFFECTS and msdp.AFFECTS.AFFECTED_BY and #msdp.AFFECTS.AFFECTED_BY &gt; 0 then
+    -- We have a status to process!  Do MODES first.
+    affected_by = msdp.AFFECTS.AFFECTED_BY
+    for k, _ in ipairs(GUI.Affects.Modes.Labels) do
+      GUI.Affects.Modes.Labels[k]:hide()
+    end
+    for k, _ in ipairs(GUI.Affects.Rows) do
+      for l, _ in ipairs(GUI.Affects.Rows[k].Labels) do
+        GUI.Affects.Rows[k].Labels[l]:hide()
+      end
+    end
+    GUI.Affects.Modes.current_icon = 1
+    GUI.Affects.current_row = 1
+    GUI.Affects.current_column = 1
+    for i = 1, #affected_by do
+      -- Is this a Mode?
+      if
+        (
+          (GUI.Affects.Modes.current_icon &lt;= GUI.Affects.Modes.num_icons_row) and
+          (GUI.Affects.Modes.ModeList[affected_by[i].NAME] == true)
+        )
+      then
+        -- Create the Icon!				
+        GUI.Affects.Modes.Labels[GUI.Affects.Modes.current_icon]:setStyleSheet([[
+          QLabel { 
+            border-image: url("]] ..
+            getMudletHomeDir():gsub("\\", "/") ..
+            [[/LuminariGUI/images/affected_by/]] ..
+            affected_by[i].NAME ..
+            [[.png"); 
+            margin: 0px; 
+          }
+        ]])
+        -- Add tooltip for mode icons
+        GUI.Affects.Modes.Labels[GUI.Affects.Modes.current_icon]:setToolTip(affected_by[i].NAME:gsub("_", " "), "10")
+        GUI.Affects.Modes.Labels[GUI.Affects.Modes.current_icon]:show()
+        GUI.Affects.Modes.current_icon = GUI.Affects.Modes.current_icon + 1
+      else
+        -- This is just an Affected By status flag
+        if
+          (
+            (GUI.Affects.current_column &lt;= GUI.Affects.num_icons_row) and
+            (GUI.Affects.current_row &lt;= GUI.Affects.num_rows)
+          )
+        then
+          -- Create the Icon!				
+          GUI.Affects.Rows[GUI.Affects.current_row].Labels[GUI.Affects.current_column]:setStyleSheet([[
+            QLabel { 
+              border-image: url("]] ..
+              getMudletHomeDir():gsub("\\", "/") ..
+              [[/LuminariGUI/images/affected_by/]] ..
+              affected_by[i].NAME ..
+              [[.png"); 
+              margin: 0px; 
+            }
+          ]])
+          -- Add tooltip for status effect icons
+          GUI.Affects.Rows[GUI.Affects.current_row].Labels[GUI.Affects.current_column]:setToolTip(affected_by[i].NAME:gsub("_", " "), "10")
+          GUI.Affects.Rows[GUI.Affects.current_row].Labels[GUI.Affects.current_column]:show()
+          GUI.Affects.current_column = GUI.Affects.current_column + 1
+          if GUI.Affects.current_column &gt; GUI.Affects.num_icons_row then
+            GUI.Affects.current_column = 1
+            GUI.Affects.current_row = GUI.Affects.current_row + 1
+          end
+        end
+      end
+    end
+  end
+end</script>
+						<eventHandlerList />
+					</Script>

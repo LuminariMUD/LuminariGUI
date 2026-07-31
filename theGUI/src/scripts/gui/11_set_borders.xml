@@ -1,0 +1,12 @@
+					<Script isActive="yes" isFolder="no">
+						<name>Set Borders</name>
+						<packageName></packageName>
+						<script>function GUI.set_borders()
+  local w, h = getMainWindowSize()
+  setBorderLeft(0)  -- Changed from w/4 to 0 - main window now starts at left edge
+  setBorderTop(0)
+  setBorderBottom(h / 4)
+  setBorderRight(w / 2)  -- Changed from w/4 to w/2 - main window ends at 50%
+end</script>
+						<eventHandlerList />
+					</Script>

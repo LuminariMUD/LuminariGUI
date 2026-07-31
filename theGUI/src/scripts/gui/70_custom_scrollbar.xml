@@ -1,0 +1,128 @@
+					<Script isActive="yes" isFolder="no">
+						<name>Custom Scrollbar</name>
+						<packageName></packageName>
+						<script>function GUI.styleScrollbar()
+  local background_color = "#202020"
+  local handle_color = "#d0d0d0"     -- Light gray for visible handles
+  local border_color = "#a0a0a0"     -- Light border for handle outline
+  setProfileStyleSheet(
+    [[
+  QScrollBar:vertical {
+     background: ]] ..
+    background_color ..
+    [[;
+     width: 15px;
+     margin: 22px 0 22px 0;
+  }
+  QScrollBar:horizontal {
+     background: ]] ..
+    background_color ..
+    [[;
+     height: 15px;
+     margin: 0 22px 0 22px;
+  }
+  QScrollBar::handle:vertical {
+     background-color: ]] ..
+    handle_color ..
+    [[;
+     min-height: 20px;
+     border-width: 2px;
+     border-style: solid;
+     border-color: ]] ..
+    border_color ..
+    [[;
+     border-radius: 7px;
+  }
+  QScrollBar::handle:horizontal {
+     background-color: ]] ..
+    handle_color ..
+    [[;
+     min-width: 20px;
+     border-width: 2px;
+     border-style: solid;
+     border-color: ]] ..
+    border_color ..
+    [[;
+     border-radius: 7px;
+  }
+  QScrollBar::add-line:vertical {
+   background-color: ]] ..
+    background_color ..
+    [[;
+   border-width: 2px;
+   border-style: solid;
+   border-color: ]] ..
+    border_color ..
+    [[;
+   border-bottom-left-radius: 7px;
+   border-bottom-right-radius: 7px;
+        height: 15px;
+        subcontrol-position: bottom;
+        subcontrol-origin: margin;
+  }
+  QScrollBar::add-line:horizontal {
+   background-color: ]] ..
+    background_color ..
+    [[;
+   border-width: 2px;
+   border-style: solid;
+   border-color: ]] ..
+    border_color ..
+    [[;
+   border-bottom-right-radius: 7px;
+   border-top-right-radius: 7px;
+        width: 15px;
+        subcontrol-position: right;
+        subcontrol-origin: margin;
+  }
+  QScrollBar::sub-line:vertical {
+   background-color: ]] ..
+    background_color ..
+    [[;
+   border-width: 2px;
+   border-style: solid;
+   border-color: ]] ..
+    border_color ..
+    [[;
+   border-top-left-radius: 7px;
+   border-top-right-radius: 7px;
+        height: 15px;
+        subcontrol-position: top;
+        subcontrol-origin: margin;
+  }
+  QScrollBar::sub-line:horizontal {
+   background-color: ]] ..
+    background_color ..
+    [[;
+   border-width: 2px;
+   border-style: solid;
+   border-color: ]] ..
+    border_color ..
+    [[;
+   border-bottom-left-radius: 7px;
+   border-top-left-radius: 7px;
+        width: 15px;
+        subcontrol-position: left;
+        subcontrol-origin: margin;
+  }
+  QScrollBar::up-arrow:vertical, QScrollBar::down-arrow:vertical {
+     background: #404040;
+     width: 4px;
+     height: 3px;
+  }
+  QScrollBar::left-arrow:horizontal, QScrollBar::right-arrow:horizontal {
+     background: #404040;
+     width: 3px;
+     height: 4px;
+  }
+  QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+     background: none;
+  }
+  QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {
+     background: none;
+  }
+]]
+  )
+end</script>
+						<eventHandlerList />
+					</Script>

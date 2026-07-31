@@ -1,0 +1,141 @@
+					<Script isActive="yes" isFolder="no">
+						<name>Group</name>
+						<packageName></packageName>
+						<script>function GUI.init_group()
+  GUI.GroupConsole =
+    Geyser.MiniConsole:new(
+      {name = "GUI.GroupConsole", x = 0, y = 0, width = "100%", height = "100%"},
+      GUI.tabbedInfoWindow["Groupcenter"]
+    )
+  GUI.GroupConsole:setColor({r=0, b=0, g=0, a=0})
+	GUI.tabbedInfoWindow["Group"]:hide()
+end
+
+function GUI.updateGroup()
+  GUI.debug("GUI/GROUP", "updating group display", {
+    group = msdp and msdp.GROUP,
+    characterName = msdp and msdp.CHARACTER_NAME,
+    includeSelf = GUI.toggles and GUI.toggles.includeInGroup,
+  })
+  GUI.group_data = {}
+  -- Remove the player from the group data if toggled off.
+  local j = 1
+  local status_msg
+  for i = 1, #msdp.GROUP do
+    if GUI.toggles.includeInGroup == false and msdp.GROUP[i].NAME ~= msdp.CHARACTER_NAME then
+      while GUI.group_data[j] ~= nil do
+        j = j + 1
+      end
+      GUI.group_data[j] = {}
+      GUI.group_data[j].IS_LEADER = msdp.GROUP[i].IS_LEADER
+      GUI.group_data[j].NAME = msdp.GROUP[i].NAME
+      GUI.group_data[j].HEALTH = msdp.GROUP[i].HEALTH
+      GUI.group_data[j].HEALTH_MAX = msdp.GROUP[i].HEALTH_MAX
+      GUI.group_data[j].MOVEMENT = msdp.GROUP[i].MOVEMENT
+      GUI.group_data[j].MOVEMENT_MAX = msdp.GROUP[i].MOVEMENT_MAX
+      GUI.group_data[j].LEVEL = msdp.GROUP[i].LEVEL
+      GUI.group_data[j].CLASS_STRING = msdp.GROUP[i].CLASS_STRING
+  -- Add the player from the group data if toggled on.
+		elseif GUI.toggles.includeInGroup == true then
+      while GUI.group_data[j] ~= nil do
+        j = j + 1
+      end
+      GUI.group_data[j] = {}
+      GUI.group_data[j].IS_LEADER = msdp.GROUP[i].IS_LEADER
+      GUI.group_data[j].NAME = msdp.GROUP[i].NAME
+      GUI.group_data[j].HEALTH = msdp.GROUP[i].HEALTH
+      GUI.group_data[j].HEALTH_MAX = msdp.GROUP[i].HEALTH_MAX
+      GUI.group_data[j].MOVEMENT = msdp.GROUP[i].MOVEMENT
+      GUI.group_data[j].MOVEMENT_MAX = msdp.GROUP[i].MOVEMENT_MAX
+      GUI.group_data[j].LEVEL = msdp.GROUP[i].LEVEL
+      GUI.group_data[j].CLASS_STRING = msdp.GROUP[i].CLASS_STRING	
+    end -- if/elseif
+  end -- for
+	clearUserWindow("GUI.GroupConsole")
+  num_grouped = #GUI.group_data
+  for i = 1, num_grouped do
+    -- Build the group member data and send it.
+    --	+----------------------------------+
+    --  | [level] Name                     |
+    --  | hp: 90%  |=================    | |
+    --  | Crown (leader), Shield (Tank)    |
+    --  +----------------------------------+		
+    if GUI.group_data[i].IS_LEADER == "1" then
+      status_msg = "&lt;green&gt;LEADER"
+    else
+      status_msg = ""
+    end
+    local pct_health
+    local health = tonumber(GUI.group_data[i].HEALTH)
+    local max_health = tonumber(GUI.group_data[i].HEALTH_MAX)
+    if health &gt; 0 then
+      pct_health = (health / max_health) * 100
+    else
+      pct_health = 0
+    end
+    if pct_health &gt; 60 then
+      hp_color = "&lt;green&gt;"
+    elseif pct_health &gt; 15 then
+        hp_color = "&lt;yellow&gt;"
+      else
+        hp_color = "&lt;red&gt;"
+      end
+			
+			-- Format leader indicator
+			local leader_icon = ""
+			if GUI.group_data[i].IS_LEADER == "1" then
+			  leader_icon = "&lt;gold&gt;♔ "  -- Crown symbol for leader
+			else
+			  leader_icon = "  "
+			end
+			
+			-- Format name with class abbreviation
+			local class_abbr = GUI.group_data[i].CLASS_STRING or ""
+			if #class_abbr > 3 then
+			  class_abbr = string.sub(class_abbr, 1, 3):upper()
+			end
+			
+			-- Enhanced member display with better formatting
+			local member = string.format("%s&lt;cyan&gt;[&lt;b&gt;%2s&lt;/b&gt;] &lt;white&gt;&lt;b&gt;%-20s&lt;/b&gt; &lt;light_gray&gt;%-3s\n", 
+			                            leader_icon,
+			                            GUI.group_data[i].LEVEL,
+			                            GUI.group_data[i].NAME,
+			                            class_abbr)
+			                            
+			-- Health bar visualization
+			local health_pct = math.floor(pct_health)
+			local bar_length = 20
+			local filled = math.floor((health_pct / 100) * bar_length)
+			local empty = bar_length - filled
+			
+			member = member .. string.format("   &lt;light_gray&gt;HP: %s%3d%%&lt;light_gray&gt; [%s%s&lt;light_gray&gt;%s&lt;light_gray&gt;] &lt;dim_gray&gt;%s/%s\n",
+			                                hp_color,
+			                                health_pct,
+			                                hp_color,
+			                                string.rep("=", filled),
+			                                string.rep("-", empty),
+			                                GUI.group_data[i].HEALTH,
+			                                GUI.group_data[i].HEALTH_MAX)
+			                                
+			-- Movement display
+			local move_pct = tonumber(GUI.group_data[i].MOVEMENT) / tonumber(GUI.group_data[i].MOVEMENT_MAX) * 100
+			local move_color = move_pct > 50 and "&lt;cyan&gt;" or (move_pct > 20 and "&lt;yellow&gt;" or "&lt;red&gt;")
+			member = member .. string.format("   &lt;light_gray&gt;MV: %s%3d%%&lt;light_gray&gt; &lt;dim_gray&gt;(%s/%s)\n",
+			                                move_color,
+			                                math.floor(move_pct),
+			                                GUI.group_data[i].MOVEMENT,
+			                                GUI.group_data[i].MOVEMENT_MAX)
+			
+			-- Add separator between members
+			if i &lt; num_grouped then
+			  member = member .. "&lt;dim_gray&gt;   ─────────────────────────────\n"
+			end
+			
+      GUI.GroupConsole:cecho(member)
+    end
+  end
+
+
+</script>
+						<eventHandlerList />
+					</Script>

@@ -1,0 +1,160 @@
+					<Script isActive="yes" isFolder="no">
+						<name>Boxes</name>
+						<packageName></packageName>
+						<script>function GUI.init_boxes()
+
+  GUI.BoxCSS =
+    CSSMan.new(
+      [[    
+	background-image: url(]] ..
+      getMudletHomeDir():gsub("\\", "/") ..
+      [[/LuminariGUI/images/ui_texture.jpg);
+	background-color: rgba(38, 25, 47, 0.8);
+	border: 1px solid rgba(184, 115, 27, 0.5);
+	border-radius: 5px;
+	padding: 5px;
+	font-family: Tahoma, Geneva, sans-serif;
+]]
+    )
+  --GUI.Box1 = Geyser.Label:new({
+  --  name = "GUI.Box1",
+  --  x = 0, y = 0,
+  --  width = "100%",
+  --  height = "50%",
+  --},GUI.Right)
+  --GUI.Box1:setStyleSheet(GUI.BoxCSS:getCSS())
+  --GUI.Box1:echo("&lt;center&gt;GUI.Box1")
+	
+	--Box2
+  GUI.Box2 =
+    Geyser.Label:new({name = "GUI.Box2", x = 0, y = 0, width = "100%", height = "100%", color = "black"}, GUI.Bottom)
+  GUI.Box2:setStyleSheet(GUI.BoxCSS:getCSS())
+  GUI.Box2:hide() -- Hidden: No longer needed with Adjustable Containers
+  -- GUI.Box2:echo("&lt;center&gt;GUI.Box2") -- Removed: No longer needed with Adjustable Containers
+  -- Create chat container using Adjustable.Container
+  GUI.chatContainer = GUI.AdjustableContainers.create("Chat", "chat", {
+    x = "0%",
+    y = "75%", 
+    width = "50%",
+    height = "25%",
+    name = "LuminariGUI_Chat",
+    titleText = "Chat",
+    adjLabelstyle = GUI.AdjustableContainers.defaultStyle.adjLabelstyle,
+    buttonstyle = GUI.AdjustableContainers.defaultStyle.buttonstyle,
+    tabstyle = GUI.AdjustableContainers.defaultStyle.tabstyle,
+    titleTxtColor = "green",
+    padding = 9,
+    lockStyle = "border",
+    autoSave = true,
+    autoLoad = true,
+    attached = "b",  -- Bottom attachment
+    defaultDir = GUI.AdjustableContainers.saveDir,
+    noClose = true
+  })
+  
+  -- Create inner wrapper for YATCO to account for title bar and padding
+  GUI.chatContainerInner = Geyser.Container:new({
+    name = "GUI.chatContainerInner",
+    x = 9,        -- Respect padding
+    y = 25,       -- Below title bar  
+    width = "-18", -- Account for padding on both sides
+    height = "-34" -- Account for title bar + bottom padding
+  }, GUI.chatContainer)
+  
+  -- Show the chat container
+  if GUI.chatContainer then
+    GUI.chatContainer:show()
+    print("✓ Chat container created successfully")
+  else
+    print("✗ Failed to create chat container")
+  end
+
+  --Box3 - Now created as Adjustable Container
+  -- Create as Adjustable Container for button panel
+  GUI.buttonPanelContainer = GUI.AdjustableContainers.create("ButtonPanel", "button_panel", {
+    x = "50%",
+    y = "0%",
+    width = "25%",
+    height = "15%",
+    name = "LuminariGUI_ButtonPanel",
+    adjLabelstyle = GUI.AdjustableContainers.defaultStyle.adjLabelstyle,
+    buttonstyle = GUI.AdjustableContainers.defaultStyle.buttonstyle,
+    tabstyle = GUI.AdjustableContainers.defaultStyle.tabstyle,
+    titleText = "Controls",
+    titleTxtColor = "green",
+    padding = 9,
+    lockStyle = "border",
+    autoSave = true,
+    autoLoad = true,
+    attached = "tr",  -- Top-right attachment
+    defaultDir = GUI.AdjustableContainers.saveDir,
+    noClose = true
+  })
+  
+  -- Store reference to old Box3 for compatibility
+  GUI.Box3 = GUI.buttonPanelContainer
+  GUI.Box3CSS = CSSMan.new(GUI.BoxCSS:getCSS())
+  GUI.Box3CSS:set("border-width", "0px")
+
+  --Box4 - Now created as Adjustable Container in GUI.tabbedInfoWindow.init()
+  -- Placeholder will be set when tabbedInfoWindow initializes
+
+  --Box5 - Now created as Adjustable Container in GUI.init_boxes()
+  -- Create as Adjustable Container for room info and map legend
+  GUI.roomInfoContainer = GUI.AdjustableContainers.create("RoomInfo", "room_info", {
+    x = "75%",
+    y = "50%",
+    width = "25%",
+    height = "39%",
+    name = "LuminariGUI_RoomInfo",
+    adjLabelstyle = GUI.AdjustableContainers.defaultStyle.adjLabelstyle,
+    buttonstyle = GUI.AdjustableContainers.defaultStyle.buttonstyle,
+    tabstyle = GUI.AdjustableContainers.defaultStyle.tabstyle,
+    titleText = "Room Info / Legend",
+    titleTxtColor = "green",
+    padding = 9,
+    lockStyle = "border",
+    autoSave = true,
+    autoLoad = true,
+    attached = "tr",  -- Top-right attachment
+    defaultDir = GUI.AdjustableContainers.saveDir,
+    noClose = true
+  })
+  
+  -- Store reference to old Box5 for compatibility
+  GUI.Box5 = GUI.roomInfoContainer
+  GUI.Box5CSS = CSSMan.new(GUI.BoxCSS:getCSS())
+  GUI.Box5CSS:set("border-width", "0px")
+ 
+ --Commenting out Box 6 echo until skill Icons are finished. 
+	GUI.Box6 =
+    Geyser.Label:new(
+      {name = "GUI.Box6", x = "0%", y = "65%", width = "100%", height = "35%"}, GUI.Right
+    )
+  GUI.Box6CSS = CSSMan.new(GUI.BoxCSS:getCSS())
+  GUI.Box6CSS:set("border-width", "0px")
+  GUI.Box6:setStyleSheet(GUI.Box6CSS:getCSS())
+  GUI.Box6:hide() -- Hidden: No longer needed with Adjustable Containers
+  --GUI.Box6:echo("&lt;center&gt;Skill Icons")
+
+  -- Create status gauges container using Adjustable.Container
+  GUI.Box7 = GUI.AdjustableContainers.create("StatusGauges", "gauges", {
+    titleText = "Status",
+    titleTxtColor = "green",
+    x = "50%",
+    y = "75%",
+    width = "25%",
+    height = "25%",
+    noClose = true
+  })
+  
+  -- Show the status gauges container
+  if GUI.Box7 then
+    GUI.Box7:show()
+    print("✓ Status gauges container created successfully")
+  else
+    print("✗ Failed to create status gauges container")
+  end
+end</script>
+						<eventHandlerList />
+					</Script>

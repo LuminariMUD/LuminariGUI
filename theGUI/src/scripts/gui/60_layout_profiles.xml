@@ -1,0 +1,186 @@
+					<Script isActive="yes" isFolder="no">
+						<name>AdjustableContainers</name>
+						<packageName></packageName>
+						<script>-- Layout profiles and lifecycle support.
+-- The core AdjustableContainers namespace is loaded by the earlier
+-- 00_adjustablecontainers.xml fragment before GUI Config creates any boxes.
+if not (
+  GUI
+  and GUI.AdjustableContainers
+  and type(GUI.AdjustableContainers.create) == "function"
+) then
+  error("LuminariGUI AdjustableContainers foundation did not load")
+end
+
+-- Layout Profile System
+GUI.AdjustableContainers.profiles = {
+  default = {
+    name = "Default Layout",
+    description = "Standard layout for general gameplay",
+    containers = {
+      chat = { x = "25%", y = "-25%", width = "50%", height = "25%" },
+      gauges = { x = "0%", y = "75%", width = "25%", height = "25%" },
+      tabinfo = { x = "0%", y = "0%", width = "25%", height = "75%" },
+      room = { x = "-25%", y = "15%", width = "25%", height = "35%" },
+      buttons = { x = "-25%", y = "0%", width = "25%", height = "15%" },
+      actions = { x = "-25%", y = "50%", width = "25%", height = "35%" },
+      cast = { x = "30%", y = "10%", width = "40%", height = "20%" }
+    }
+  },
+  combat = {
+    name = "Combat Layout",
+    description = "Optimized for combat situations",
+    containers = {
+      chat = { x = "25%", y = "-25%", width = "50%", height = "25%" },
+      gauges = { x = "0%", y = "75%", width = "25%", height = "25%" },
+      tabinfo = { x = "0%", y = "0%", width = "25%", height = "75%" },
+      room = { x = "-25%", y = "15%", width = "25%", height = "35%" },
+      buttons = { x = "-25%", y = "0%", width = "25%", height = "15%" },
+      actions = { x = "-25%", y = "50%", width = "25%", height = "35%" },
+      cast = { x = "30%", y = "10%", width = "40%", height = "20%" }
+    }
+  },
+  social = {
+    name = "Social Layout", 
+    description = "Emphasizes chat and communication",
+    containers = {
+      chat = { x = "25%", y = "-40%", width = "50%", height = "40%" },
+      gauges = { x = "0%", y = "85%", width = "25%", height = "15%" },
+      tabinfo = { x = "0%", y = "0%", width = "25%", height = "85%" },
+      room = { x = "-25%", y = "15%", width = "25%", height = "35%" },
+      buttons = { x = "-25%", y = "0%", width = "25%", height = "15%" },
+      actions = { x = "-25%", y = "50%", width = "25%", height = "35%" },
+      cast = { x = "30%", y = "10%", width = "40%", height = "20%" }
+    }
+  },
+  minimal = {
+    name = "Minimal Layout",
+    description = "Minimalist layout for maximum game text visibility",
+    containers = {
+      chat = { x = "20%", y = "-20%", width = "60%", height = "20%" },
+      gauges = { x = "0%", y = "80%", width = "20%", height = "20%" },
+      tabinfo = { x = "0%", y = "0%", width = "20%", height = "80%" },
+      room = { x = "-20%", y = "10%", width = "20%", height = "30%" },
+      buttons = { x = "-20%", y = "0%", width = "20%", height = "10%" },
+      actions = { x = "-20%", y = "40%", width = "20%", height = "30%" },
+      cast = { x = "30%", y = "10%", width = "40%", height = "20%" }
+    }
+  }
+}
+
+-- Profile management functions
+function GUI.AdjustableContainers.switchProfile(profileName)
+  if not GUI.AdjustableContainers.profiles[profileName] then
+    print("ERROR: Profile '" .. profileName .. "' does not exist")
+    return false
+  end
+  
+  print("Switching to profile: " .. GUI.AdjustableContainers.profiles[profileName].name)
+  GUI.AdjustableContainers.currentProfile = profileName
+  
+  -- Apply profile to all containers
+  local profile = GUI.AdjustableContainers.profiles[profileName]
+  for containerName, containerInfo in pairs(GUI.AdjustableContainers.containers) do
+    local componentType = containerInfo.componentType
+    local profileConfig = profile.containers[componentType]
+    
+    if profileConfig and containerInfo.container then
+      containerInfo.container:move(profileConfig.x, profileConfig.y)
+      containerInfo.container:resize(profileConfig.width, profileConfig.height)
+    end
+  end
+  
+  print("✓ Applied profile: " .. profileName)
+  return true
+end
+
+function GUI.AdjustableContainers.saveProfile(profileName)
+  if not profileName then
+    profileName = GUI.AdjustableContainers.currentProfile
+  end
+  
+  print("Saving profile: " .. profileName)
+  Adjustable.Container:saveAll(profileName)
+  print("✓ Profile saved: " .. profileName)
+end
+
+function GUI.AdjustableContainers.loadProfile(profileName)
+  if not profileName then
+    profileName = GUI.AdjustableContainers.currentProfile
+  end
+  
+  print("Loading profile: " .. profileName)
+  Adjustable.Container:loadAll(profileName)
+  GUI.AdjustableContainers.currentProfile = profileName
+  print("✓ Profile loaded: " .. profileName)
+end
+
+function GUI.AdjustableContainers.resetProfile(profileName)
+  if not profileName then
+    profileName = GUI.AdjustableContainers.currentProfile
+  end
+  
+  print("Resetting profile: " .. profileName)
+  GUI.AdjustableContainers.switchProfile(profileName)
+  GUI.AdjustableContainers.saveProfile(profileName)
+  print("✓ Profile reset: " .. profileName)
+end
+
+-- Container utility functions
+function GUI.AdjustableContainers.showAll()
+  for name, containerInfo in pairs(GUI.AdjustableContainers.containers) do
+    if containerInfo.container then
+      containerInfo.container:show()
+    end
+  end
+  print("✓ All containers shown")
+end
+
+function GUI.AdjustableContainers.hideAll()
+  for name, containerInfo in pairs(GUI.AdjustableContainers.containers) do
+    if containerInfo.container then
+      containerInfo.container:hide()
+    end
+  end
+  print("✓ All containers hidden")
+end
+
+function GUI.AdjustableContainers.listContainers()
+  print("=== LuminariGUI Container Registry ===")
+  print("Current Profile: " .. GUI.AdjustableContainers.currentProfile)
+  print("Save Directory: " .. GUI.AdjustableContainers.saveDir)
+  print("")
+  
+  for name, containerInfo in pairs(GUI.AdjustableContainers.containers) do
+    local status = containerInfo.container and "✓" or "✗"
+    print(string.format("%s %s (%s)", status, name, containerInfo.componentType))
+  end
+  
+  print("")
+  print("Available Profiles:")
+  for profileName, profile in pairs(GUI.AdjustableContainers.profiles) do
+    local marker = (profileName == GUI.AdjustableContainers.currentProfile) and "* " or "  "
+    print(string.format("%s%s - %s", marker, profile.name, profile.description))
+  end
+end
+
+-- Initialize the directory structure
+function GUI.AdjustableContainers.init()
+  -- Create save directory if it doesn't exist
+  lfs.mkdir(GUI.AdjustableContainers.saveDir)
+  
+  -- Save default profile on first run
+  if not io.exists(GUI.AdjustableContainers.saveDir .. "default.json") then
+    GUI.AdjustableContainers.saveProfile("default")
+  end
+  
+  print("✓ AdjustableContainers initialized")
+  print("  Save Directory: " .. GUI.AdjustableContainers.saveDir)
+  print("  Current Profile: " .. GUI.AdjustableContainers.currentProfile)
+end
+
+-- Register initialization
+registerAnonymousEventHandler("sysLoadEvent", "GUI.AdjustableContainers.init")
+registerAnonymousEventHandler("sysInstall", "GUI.AdjustableContainers.init")</script>
+						<eventHandlerList />
+					</Script>

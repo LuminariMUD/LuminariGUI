@@ -1,0 +1,90 @@
+					<Script isActive="yes" isFolder="no">
+						<name>Player</name>
+						<packageName></packageName>
+						<script>function GUI.init_player()
+  -- Check if tabbedInfoWindow is initialized
+  if not GUI.tabbedInfoWindow or not GUI.tabbedInfoWindow["Playercenter"] then
+    print("[GUI] Player tab not initialized yet")
+    return
+  end
+  
+  -- Add alignment to existing stylesheet without overwriting background and other styles
+  local existingStyle = [[
+    background-color: ]] .. GUI.tabbedInfoWindow.color2 .. [[;
+    border-image: url(]] .. getMudletHomeDir():gsub("\\", "/") .. [[/LuminariGUI/images/ui_texture.jpg) 0 0 0 0 stretch stretch;
+    font-family: Tahoma, Geneva, sans-serif;
+    qproperty-alignment: 'AlignLeft | AlignTop';
+  ]]
+  
+  GUI.tabbedInfoWindow["Playercenter"]:setStyleSheet(existingStyle)
+end
+
+function GUI.updatePlayer()
+  GUI.debug("GUI/PLAYER", "updating player display", {
+    characterName = msdp and msdp.CHARACTER_NAME,
+    level = msdp and msdp.LEVEL,
+    class = msdp and msdp.CLASS,
+    race = msdp and msdp.RACE,
+    alignment = msdp and msdp.ALIGNMENT,
+    stats = {
+      STR = msdp and msdp.STR,
+      DEX = msdp and msdp.DEX,
+      CON = msdp and msdp.CON,
+      INT = msdp and msdp.INT,
+      WIS = msdp and msdp.WIS,
+      CHA = msdp and msdp.CHA,
+      AC = msdp and msdp.AC,
+      MONEY = msdp and msdp.MONEY,
+    },
+  })
+  -- Check if tabbedInfoWindow is initialized
+  if not GUI.tabbedInfoWindow or not GUI.tabbedInfoWindow["Playercenter"] then
+    print("[GUI] Player tab not ready for update")
+    return
+  end
+  
+  -- Build the player info display with proper null checks and enhanced styling
+  local playerInfo = [[&lt;div style="padding: 5px;"&gt;]]
+  
+  -- Character name and level (larger, bold)
+  playerInfo = playerInfo .. [[&lt;p style="font-size:18px;font-weight:bold;color:#FFD700;font-family:'Bitstream Vera Sans Mono';margin:0;text-shadow:1px 1px 2px #000;"&gt;]]
+  playerInfo = playerInfo .. (msdp.CHARACTER_NAME or "Unknown") .. [[&lt;/p&gt;]]
+  
+  -- Level and Class
+  playerInfo = playerInfo .. [[&lt;p style="font-size:16px;color:#C0C0C0;font-family:'Bitstream Vera Sans Mono';margin:2px 0;"&gt;Level &lt;span style="color:#00FF00;font-weight:bold;"&gt;]]
+  playerInfo = playerInfo .. (msdp.LEVEL or "?") .. [[&lt;/span&gt; ]]
+  playerInfo = playerInfo .. [[&lt;span style="color:#4169E1;font-weight:bold;"&gt;]] .. (msdp.CLASS or "Unknown") .. [[&lt;/span&gt;&lt;/p&gt;]]
+  
+  -- Race
+  playerInfo = playerInfo .. [[&lt;p style="font-size:14px;color:#DDA0DD;font-family:'Bitstream Vera Sans Mono';margin:2px 0;"&gt;]]
+  playerInfo = playerInfo .. (msdp.RACE or "Unknown") .. [[&lt;/p&gt;]]
+  
+  -- Stats section with color coding
+  playerInfo = playerInfo .. [[&lt;hr style="border:1px solid #B8731B;margin:8px 0;"&gt;]]
+  playerInfo = playerInfo .. [[&lt;p style="font-size:15px;color:#FFD700;font-weight:bold;font-family:'Bitstream Vera Sans Mono';margin:5px 0;"&gt;Attributes&lt;/p&gt;]]
+  
+  -- Stats in two columns with proper spacing
+  playerInfo = playerInfo .. [[&lt;table style="width:100%;font-size:14px;font-family:'Bitstream Vera Sans Mono';border-spacing:15px 0;"&gt;]]
+  playerInfo = playerInfo .. [[&lt;tr&gt;]]
+  playerInfo = playerInfo .. [[&lt;td style="color:#FF6B6B;padding-right:20px;width:50%;"&gt;STR: &lt;span style="color:#FFFFFF;font-weight:bold;"&gt;]] .. (msdp.STR or "?") .. [[&lt;/span&gt;&lt;/td&gt;]]
+  playerInfo = playerInfo .. [[&lt;td style="color:#4169E1;padding-left:10px;width:50%;"&gt;INT: &lt;span style="color:#FFFFFF;font-weight:bold;"&gt;]] .. (msdp.INT or "?") .. [[&lt;/span&gt;&lt;/td&gt;]]
+  playerInfo = playerInfo .. [[&lt;/tr&gt;&lt;tr&gt;]]
+  playerInfo = playerInfo .. [[&lt;td style="color:#90EE90;padding-right:20px;"&gt;DEX: &lt;span style="color:#FFFFFF;font-weight:bold;"&gt;]] .. (msdp.DEX or "?") .. [[&lt;/span&gt;&lt;/td&gt;]]
+  playerInfo = playerInfo .. [[&lt;td style="color:#87CEEB;padding-left:10px;"&gt;WIS: &lt;span style="color:#FFFFFF;font-weight:bold;"&gt;]] .. (msdp.WIS or "?") .. [[&lt;/span&gt;&lt;/td&gt;]]
+  playerInfo = playerInfo .. [[&lt;/tr&gt;&lt;tr&gt;]]
+  playerInfo = playerInfo .. [[&lt;td style="color:#FFA500;padding-right:20px;"&gt;CON: &lt;span style="color:#FFFFFF;font-weight:bold;"&gt;]] .. (msdp.CON or "?") .. [[&lt;/span&gt;&lt;/td&gt;]]
+  playerInfo = playerInfo .. [[&lt;td style="color:#DDA0DD;padding-left:10px;"&gt;CHA: &lt;span style="color:#FFFFFF;font-weight:bold;"&gt;]] .. (msdp.CHA or "?") .. [[&lt;/span&gt;&lt;/td&gt;]]
+  playerInfo = playerInfo .. [[&lt;/tr&gt;&lt;/table&gt;]]
+  
+  -- AC and Gold
+  playerInfo = playerInfo .. [[&lt;hr style="border:1px solid #B8731B;margin:8px 0;"&gt;]]
+  playerInfo = playerInfo .. [[&lt;p style="font-size:14px;font-family:'Bitstream Vera Sans Mono';margin:3px 0;"&gt;&lt;span style="color:#C0C0C0;"&gt;AC:&lt;/span&gt; &lt;span style="color:#00CED1;font-weight:bold;font-size:16px;"&gt;]] .. (msdp.AC or "?") .. [[&lt;/span&gt;&lt;/p&gt;]]
+  playerInfo = playerInfo .. [[&lt;p style="font-size:14px;font-family:'Bitstream Vera Sans Mono';margin:3px 0;"&gt;&lt;span style="color:#C0C0C0;"&gt;Gold:&lt;/span&gt; &lt;span style="color:#FFD700;font-weight:bold;font-size:16px;"&gt;]] .. (msdp.MONEY or "0") .. [[&lt;/span&gt;&lt;/p&gt;]]
+  
+  playerInfo = playerInfo .. [[&lt;/div&gt;]]
+  
+  -- Update the display
+  GUI.tabbedInfoWindow["Playercenter"]:echo(playerInfo)
+end</script>
+						<eventHandlerList />
+					</Script>

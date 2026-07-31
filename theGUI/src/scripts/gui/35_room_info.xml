@@ -1,0 +1,80 @@
+					<Script isActive="yes" isFolder="no">
+						<name>Room Info/Legend</name>
+						<packageName></packageName>
+						<script>
+function GUI.updateRoom()
+  GUI.debug("GUI/ROOM", "updating room display", {
+    room = msdp and msdp.ROOM,
+    roomName = msdp and msdp.ROOM_NAME,
+    roomVnum = msdp and msdp.ROOM_VNUM,
+    areaName = msdp and msdp.AREA_NAME,
+    roomExits = msdp and msdp.ROOM_EXITS,
+  })
+  local roomInfo = [[&lt;div style="padding: 5px;"&gt;]]
+  
+  if msdp.ROOM.ENVIRONMENT == "Wilderness" then
+    -- Wilderness display
+    roomInfo = roomInfo .. [[&lt;p style="font-size:16px;font-weight:bold;color:#90EE90;font-family:'Bitstream Vera Sans Mono';margin:0;text-shadow:1px 1px 2px #000;"&gt;]]
+    roomInfo = roomInfo .. [[&lt;center&gt;🌲 WILDERNESS 🌲&lt;/center&gt;&lt;/p&gt;]]
+    
+    roomInfo = roomInfo .. [[&lt;hr style="border:1px solid #B8731B;margin:5px 0;"&gt;]]
+    
+    -- Coordinates
+    roomInfo = roomInfo .. [[&lt;p style="font-size:14px;font-family:'Bitstream Vera Sans Mono';margin:3px 0;"&gt;]]
+    roomInfo = roomInfo .. [[&lt;span style="color:#C0C0C0;"&gt;Coords:&lt;/span&gt; &lt;span style="color:#00CED1;font-weight:bold;"&gt;(]]
+    roomInfo = roomInfo .. (msdp.ROOM.COORDS.X or "?") .. ", " .. (msdp.ROOM.COORDS.Y or "?")
+    roomInfo = roomInfo .. [[)&lt;/span&gt;&lt;/p&gt;]]
+    
+    -- Terrain
+    roomInfo = roomInfo .. [[&lt;p style="font-size:14px;font-family:'Bitstream Vera Sans Mono';margin:3px 0;"&gt;]]
+    roomInfo = roomInfo .. [[&lt;span style="color:#C0C0C0;"&gt;Terrain:&lt;/span&gt; &lt;span style="color:#FFA500;font-weight:bold;"&gt;]]
+    roomInfo = roomInfo .. (msdp.ROOM.TERRAIN or "Unknown") .. [[&lt;/span&gt;&lt;/p&gt;]]
+    
+  else
+    -- Regular room display
+    -- Room name
+    roomInfo = roomInfo .. [[&lt;p style="font-size:16px;font-weight:bold;color:#FFD700;font-family:'Bitstream Vera Sans Mono';margin:0;text-align:center;text-shadow:1px 1px 2px #000;"&gt;]]
+    roomInfo = roomInfo .. (msdp.ROOM.NAME or "Unknown") .. [[&lt;/p&gt;]]
+    
+    roomInfo = roomInfo .. [[&lt;hr style="border:1px solid #B8731B;margin:5px 0;"&gt;]]
+    
+    -- Room VNUM
+    roomInfo = roomInfo .. [[&lt;p style="font-size:14px;font-family:'Bitstream Vera Sans Mono';margin:3px 0;"&gt;]]
+    roomInfo = roomInfo .. [[&lt;span style="color:#C0C0C0;"&gt;Room #:&lt;/span&gt; &lt;span style="color:#87CEEB;font-weight:bold;"&gt;]]
+    roomInfo = roomInfo .. (msdp.ROOM.VNUM or "Unknown") .. [[&lt;/span&gt;&lt;/p&gt;]]
+    
+    -- Terrain
+    roomInfo = roomInfo .. [[&lt;p style="font-size:14px;font-family:'Bitstream Vera Sans Mono';margin:3px 0;"&gt;]]
+    roomInfo = roomInfo .. [[&lt;span style="color:#C0C0C0;"&gt;Terrain:&lt;/span&gt; &lt;span style="color:#FFA500;font-weight:bold;"&gt;]]
+    roomInfo = roomInfo .. (msdp.ROOM.TERRAIN or "Unknown") .. [[&lt;/span&gt;&lt;/p&gt;]]
+    
+    -- Area
+    roomInfo = roomInfo .. [[&lt;p style="font-size:14px;font-family:'Bitstream Vera Sans Mono';margin:3px 0;"&gt;]]
+    roomInfo = roomInfo .. [[&lt;span style="color:#C0C0C0;"&gt;Area:&lt;/span&gt; &lt;span style="color:#DDA0DD;font-weight:bold;"&gt;]]
+    roomInfo = roomInfo .. (msdp.ROOM.AREA or "Unknown") .. [[&lt;/span&gt;&lt;/p&gt;]]
+  end
+  
+  roomInfo = roomInfo .. [[&lt;/div&gt;]]
+  GUI.buttonWindow.roomInfo:echo(roomInfo)
+end
+		
+--Whattt to be replaced with MSDP or GMCP once coded in
+
+
+function GUI.updateLegend()
+  GUI.debug("GUI/ROOM", "updating legend display")
+  clearUserWindow("GUI.buttonWindow.Legend")
+	GUI.buttonWindow.Legend:decho("\n &lt;102,0,0&gt; + &lt;255,255,255&gt; Up           &lt;0,102,102&gt;[&lt;0,255,255&gt;^&lt;0,102,102&gt;] &lt;255,255,255&gt;Air           &lt;0,102,102&gt;[&lt;255,0,255&gt;Y&lt;0,102,102&gt;] &lt;255,255,255&gt;UD Wild")
+	GUI.buttonWindow.Legend:decho("\n &lt;102,0,0&gt; - &lt;255,255,255&gt; Down         &lt;0,102,102&gt;[&lt;0,0,102&gt;U&lt;0,102,102&gt;] &lt;255,255,255&gt;Underwater    &lt;0,102,102&gt;[&lt;102,0,102&gt;C&lt;0,102,102&gt;] &lt;255,255,255&gt;UD City")
+	GUI.buttonWindow.Legend:decho("\n &lt;0,102,102&gt;[&lt;255,255,255&gt;&amp;&lt;0,102,102&gt;] &lt;255,255,255&gt;You          &lt;0,102,102&gt;[&lt;255,0,0&gt;X&lt;0,102,102&gt;] &lt;255,255,255&gt;Zone Entry    &lt;0,102,102&gt;[&lt;102,0,102&gt;.&lt;0,102,102&gt;] &lt;255,255,255&gt;UD Inside")  
+	GUI.buttonWindow.Legend:decho("\n &lt;0,102,102&gt;[&lt;192,192,192&gt;.&lt;0,102,102&gt;] &lt;255,255,255&gt;Inside       &lt;0,102,102&gt;[&lt;51,51,51&gt;|&lt;0,102,102&gt;] &lt;255,255,255&gt;Road N-S      &lt;0,102,102&gt;[&lt;102,0,102&gt;~&lt;0,102,102&gt;] &lt;255,255,255&gt;UD Water") 
+	GUI.buttonWindow.Legend:decho("\n &lt;0,102,102&gt;[&lt;102,102,102&gt;C&lt;0,102,102&gt;] &lt;255,255,255&gt;City         &lt;0,102,102&gt;[&lt;51,51,51&gt;-&lt;0,102,102&gt;] &lt;255,255,255&gt;Road E-W      &lt;0,102,102&gt;[&lt;255,0,255&gt;=&lt;0,102,102&gt;] &lt;255,255,255&gt;UD D Water")  
+	GUI.buttonWindow.Legend:decho("\n &lt;0,102,102&gt;[&lt;0,102,0&gt;,&lt;0,102,102&gt;] &lt;255,255,255&gt;Field        &lt;0,102,102&gt;[&lt;51,51,51&gt;+&lt;0,102,102&gt;] &lt;255,255,255&gt;Intersect     &lt;0,102,102&gt;[&lt;102,0,102&gt;^&lt;0,102,102&gt;] &lt;255,255,255&gt;UD Air")  
+	GUI.buttonWindow.Legend:decho("\n &lt;0,102,102&gt;[&lt;0,255,0&gt;Y&lt;0,102,102&gt;] &lt;255,255,255&gt;Forest       &lt;0,102,102&gt;[&lt;255,255,0&gt;.&lt;0,102,102&gt;] &lt;255,255,255&gt;Desert        &lt;0,102,102&gt;[&lt;255,0,0&gt;.&lt;0,102,102&gt;] &lt;255,255,255&gt;Lava")  
+	GUI.buttonWindow.Legend:decho("\n &lt;0,102,102&gt;[&lt;102,102,0&gt;^&lt;0,102,102&gt;] &lt;255,255,255&gt;Hills        &lt;0,102,102&gt;[&lt;0,0,255&gt;o&lt;0,102,102&gt;] &lt;255,255,255&gt;Ocean         &lt;0,102,102&gt;[&lt;102,102,0&gt;|&lt;0,102,102&gt;] &lt;255,255,255&gt;D Rd N-S")  
+	GUI.buttonWindow.Legend:decho("\n &lt;0,102,102&gt;[&lt;102,0,0&gt;m&lt;0,102,102&gt;] &lt;255,255,255&gt;Mountain     &lt;0,102,102&gt;[&lt;255,0,255&gt;,&lt;0,102,102&gt;] &lt;255,255,255&gt;Marsh         &lt;0,102,102&gt;[&lt;102,102,0&gt;-&lt;0,102,102&gt;] &lt;255,255,255&gt;D Rd E-W")  
+	GUI.buttonWindow.Legend:decho("\n &lt;0,102,102&gt;[&lt;0,102,102&gt;~&lt;0,102,102&gt;] &lt;255,255,255&gt;Water        &lt;0,102,102&gt;[&lt;255,0,0&gt;M&lt;0,102,102&gt;] &lt;255,255,255&gt;High Mount    &lt;0,102,102&gt;[&lt;102,102,0&gt;+&lt;0,102,102&gt;] &lt;255,255,255&gt;D Inters") 
+	GUI.buttonWindow.Legend:decho("\n &lt;0,102,102&gt;[&lt;0,0,102&gt;=&lt;0,102,102&gt;] &lt;255,255,255&gt;Deep Water   &lt;0,102,102&gt;[&lt;51,51,51&gt;.&lt;0,102,102&gt;] &lt;255,255,255&gt;Planes        &lt;0,102,102&gt;[&lt;51,51,51&gt;C&lt;0,102,102&gt;] &lt;255,255,255&gt;Cave") 
+end</script>
+						<eventHandlerList />
+					</Script>
