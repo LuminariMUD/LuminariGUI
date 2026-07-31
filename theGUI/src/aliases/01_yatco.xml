@@ -18,7 +18,8 @@
 						<regex></regex>
 						<Alias isActive="yes" isFolder="no">
 							<name>Reset chasing</name>
-							<script>demonnic.chaser:reset()</script>
+							<script>GUI.debug("ALIAS", "chaseres matched", matches)
+demonnic.chaser:reset()</script>
 							<command></command>
 							<packageName></packageName>
 							<regex>^chaseres$</regex>
@@ -30,9 +31,24 @@
 -- This command uses the centralized initialization system to refresh all
 -- GUI components. It's the user-facing command for manual refresh.
 -- =============================================================================
+GUI.debug("ALIAS", "fix gui matched", {
+    matches = matches,
+    GUI = type(GUI),
+    initializeOrRefresh = type(GUI and GUI.initializeOrRefresh),
+    initialized = GUI and GUI.initialized,
+    initFailures = GUI and GUI.initFailures,
+    bootResults = GUI and GUI.debugBootResults,
+})
 if GUI and GUI.initializeOrRefresh then
     GUI.initializeOrRefresh("fix gui command")
 else
+    if GUI and type(GUI.debugSnapshot) == "function" then
+        GUI.debugCall(
+            "SNAPSHOT/fix gui unavailable",
+            GUI.debugSnapshot,
+            "fix gui found initializeOrRefresh unavailable"
+        )
+    end
     cecho("\n&lt;yellow&gt;GUI system not fully loaded. Please close and reopen your profile, then try again.")
 end</script>
 							<command></command>
@@ -41,7 +57,8 @@ end</script>
 						</Alias>
 						<Alias isActive="yes" isFolder="no">
 							<name>Debug</name>
-							<script>if matches[2] then
+							<script>GUI.debug("ALIAS", "debug matched", matches)
+if matches[2] then
   demonnic:listCategories()
 else
   demonnic:toggleDebug()
@@ -52,7 +69,8 @@ end</script>
 						</Alias>
 						<Alias isActive="yes" isFolder="no">
 							<name>debug categories</name>
-							<script>if matches[2] then
+							<script>GUI.debug("ALIAS", "debugc matched", matches)
+if matches[2] then
   demonnic:watchCategory( matches[2] )
 else
   demonnic:listCategories()
@@ -70,7 +88,8 @@ end</script>
 						<regex></regex>
 						<Alias isActive="yes" isFolder="no">
 							<name>Toggle blinking (temporary change)</name>
-							<script>if demonnic.chat.config.blink then
+							<script>GUI.debug("ALIAS", "dblink matched", matches)
+if demonnic.chat.config.blink then
   demonnic.chat.config.blink = false
   demonnic.chat.tabsToBlink = {}
   demonnic:echo("Blinking temporarily turned &lt;red&gt;off&lt;grey&gt;. It will reset if you edit your tabbed chat configuration, or close and reopen mudlet. To make it permanent, change demonnic.chat.config.blink to false in \"Demonnic-&gt;Tabbed Chat-&gt;Configuration options\" under scripts\n")
@@ -86,6 +105,7 @@ end</script>
 						<Alias isActive="yes" isFolder="no">
 							<name>dsound</name>
 							<script>-- Toggle chat sound notifications
+GUI.debug("ALIAS", "dsound matched", matches)
 if demonnic and demonnic.chat and demonnic.chat.config then
     demonnic.chat.config.soundEnabled = not demonnic.chat.config.soundEnabled
     
@@ -127,7 +147,8 @@ end</script>
 						</Alias>
 						<Alias isActive="yes" isFolder="no">
 							<name>set chat sound</name>
-							<script>local args = matches[2]:split(" ")
+							<script>GUI.debug("ALIAS", "set chat sound matched", matches)
+local args = matches[2]:split(" ")
 local command = args[1]
 local value = args[2]
 
@@ -210,6 +231,7 @@ end</script>
 -- This command uses the centralized initialization system with focus on chat.
 -- It ensures the chat system is properly initialized and visible.
 -- =============================================================================
+GUI.debug("ALIAS", "fix chat matched", matches)
 GUI.initializeOrRefresh("fix chat command")
 
 -- Additional chat-specific actions

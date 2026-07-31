@@ -21,6 +21,12 @@ map.minimap_font_size = 8
 map.minimap_width = 21
 map.minimap_height = 21
 
+GUI.debug("MAPPER/BOOT", "MSDPMapper fragment loaded", {
+    map = type(map),
+    msdp = type(msdp),
+    Geyser = type(Geyser),
+    AdjustableContainers = type(GUI.AdjustableContainers),
+})
 
 local defaults = {
     -- using Geyser to handle the mapper in this, since this is a totally new script
@@ -93,10 +99,15 @@ local exitmap = {
 local function make_room()
     local info = map.room_info
     local coords = {0,0,0}
+    GUI.debug("MAPPER/ROOM", "creating room", {
+        room = info,
+        previousRoom = map.prev_info,
+    })
     addRoom(info.VNUM)
     local areas = getAreaTable()
     local areaID = areas[info.AREA]
     if not areaID then
+        GUI.debug("MAPPER/ROOM", "creating map area", info.AREA)
         areaID = addAreaName(info.AREA)
     else
         coords = {getRoomCoordinates(map.prev_info.VNUM)}								
@@ -114,6 +125,12 @@ local function make_room()
 											
         -- map stretching
         local overlap = getRoomsByPosition(areaID,coords[1],coords[2],coords[3])				
+        GUI.debug("MAPPER/ROOM", "calculated room coordinates", {
+            areaID = areaID,
+            coordinates = coords,
+            shift = shift,
+            overlap = overlap,
+        })
 				
         if not table.is_empty(overlap) then
             local rooms = getAreaRooms(areaID)
@@ -155,22 +172,43 @@ local function make_room()
             setExitStub(info.VNUM, exitmap[dir], true)
         end
     end
+    GUI.debug("MAPPER/ROOM", "room creation complete", {
+        vnum = info.VNUM,
+        areaID = areaID,
+        coordinates = coords,
+        exits = info.EXITS,
+    })
 end
 
 local function shift_room(dir)
     local ID = map.room_info.VNUM
     local x,y,z = getRoomCoordinates(ID)
     local x1,y1,z1 = move_vectors[dir]
+    GUI.debug("MAPPER/SHIFT", "shifting room", {
+        direction = dir,
+        vnum = ID,
+        before = {x, y, z},
+        vector = {x1, y1, z1},
+    })
     x = x + x1
     y = y + y1
     z = z + z1
     setRoomCoordinates(ID,x,y,z)
     updateMap()
+    GUI.debug("MAPPER/SHIFT", "room shifted", {
+        vnum = ID,
+        after = {x, y, z},
+    })
 end
 
 local function handle_move()
+  GUI.debug("MAPPER/MOVE", "handling room movement", {
+    enabled = map.enabled,
+    room = map.room_info,
+  })
 	if map.enabled == true and map.room_info.ENVIRONMENT ~= "Wilderness" then
     if not getRoomName(map.room_info.VNUM) then
+        GUI.debug("MAPPER/MOVE", "room absent from map; creating it", map.room_info.VNUM)
         make_room()
     else		
 			if terrain_types[map.room_info.TERRAIN] then
@@ -189,6 +227,7 @@ local function handle_move()
 			end
     end
 	end
+  GUI.debug("MAPPER/MOVE", "centering mapper", map.room_info.VNUM)
   centerview(map.room_info.VNUM)
 end
 
@@ -204,16 +243,29 @@ local function make_aliases()
         ["Shift Room Alias"] = {[[^shift (\w+)$]], [[raiseEvent("shiftRoom",matches[2])]]},
     }
     for k, v in pairs(tbl) do
+        GUI.debug("MAPPER/ALIAS", "preparing mapping alias", {
+            name = k,
+            pattern = v[1],
+            existingId = map.aliases[k],
+        })
         if map.aliases[k] and exists(map.aliases[k], "alias") ~= 0 then
             killAlias(map.aliases[k])
         end
         id = tempAlias(v[1], v[2])
         map.aliases[k] = id
+        GUI.debug("MAPPER/ALIAS", "mapping alias registered", {
+            name = k,
+            handlerId = id,
+        })
     end
 end
 
 function map.load_map(use_local)
     local path = getMudletHomeDir() .. "/map.dat"		
+    GUI.debug("MAPPER/DOWNLOAD", "load_map requested", {
+        useLocal = use_local,
+        path = path,
+    })
     if use_local then
         loadMap(path)
         print("Map reloaded from local copy.")
@@ -268,7 +320,36 @@ end
 -- Public so GUI reset recovery can recreate the mapper while the current
 -- connection remains active (resetProfile() does not emit connection or
 -- protocol-enabled events).
+local function mapperRuntimeReady()
+    return map.container ~= nil
+      and GUI.asciiMapContainer ~= nil
+      and map.minimap ~= nil
+      and map.mapwindow ~= nil
+end
+
 function map.initialize()
+    -- A normal connection emits sysConnectionEvent and then
+    -- sysProtocolEnabled("MSDP"). Both paths legitimately request mapper
+    -- setup, but the views must only be created once. Replacing the two
+    -- adjustable containers during the second event briefly destroys their
+    -- live children and can leave stale Geyser windows behind.
+    if mapperRuntimeReady() then
+      GUI.debug("MAPPER/INIT", "mapper already initialized; reusing existing views", {
+        container = type(map.container),
+        mapwindow = type(map.mapwindow),
+        minimap = type(map.minimap),
+        asciiMapContainer = type(GUI.asciiMapContainer),
+      })
+      return true
+    end
+
+    GUI.debug("MAPPER/INIT", "mapper initialization starting", {
+      terrainCount = GUI.debugCountEntries(terrain_types),
+      adjustableNamespace = type(GUI.AdjustableContainers),
+      createFunction = type(GUI.AdjustableContainers and GUI.AdjustableContainers.create),
+      GeyserMapper = type(Geyser and Geyser.Mapper),
+      GeyserMiniConsole = type(Geyser and Geyser.MiniConsole),
+    })
     -- setting terrain colors
     for k,v in pairs(terrain_types) do
         setCustomEnvColor(v.id + 16, v.r, v.g, v.b, 255)
@@ -296,6 +377,9 @@ function map.initialize()
       defaultDir = GUI.AdjustableContainers.saveDir,
       noClose = true
     })
+    GUI.debug("MAPPER/INIT", "map adjustable container result", {
+      container = type(map.container),
+    })
     
     -- Create separate Adjustable Container for ASCII map
     GUI.asciiMapContainer = GUI.AdjustableContainers.create("ASCIIMap", "ascii_map", {
@@ -317,6 +401,9 @@ function map.initialize()
       defaultDir = GUI.AdjustableContainers.saveDir,
       noClose = true
     })
+    GUI.debug("MAPPER/INIT", "ASCII map adjustable container result", {
+      container = type(GUI.asciiMapContainer),
+    })
     
     -- Create ASCII minimap MiniConsole inside the new container
 		map.minimap = Geyser.MiniConsole:new({
@@ -324,6 +411,9 @@ function map.initialize()
   		x=9, y= 25,
   		width="-18", height="-34",
 		}, GUI.asciiMapContainer)
+    GUI.debug("MAPPER/INIT", "ASCII minimap MiniConsole created", {
+      minimap = type(map.minimap),
+    })
 		
 		map.minimap:setColor("black")
 		
@@ -346,6 +436,9 @@ function map.initialize()
       width = "100%", 
       height = "100%"
     }, map.container)
+    GUI.debug("MAPPER/INIT", "Geyser.Mapper creation returned", {
+      mapwindow = type(map.mapwindow),
+    })
     
     if not map.mapwindow then
       print("ERROR: Failed to create Geyser.Mapper instance")
@@ -353,7 +446,7 @@ function map.initialize()
     end
     
     -- Single initialization timer to ensure proper rendering
-    tempTimer(0.2, function()
+    tempTimer(0.2, GUI.debugWrap("MAPPER/INIT/render timer", function()
       if map.mapwindow then
         map.mapwindow:show()
         map.mapwindow:resize()
@@ -362,7 +455,7 @@ function map.initialize()
       else
         print("ERROR: Failed to initialize map window")
       end
-    end)
+    end))
     
     -- Show the map container
     if map.container then
@@ -374,6 +467,12 @@ function map.initialize()
 		make_aliases()		
 		
 		map.get_default_map()
+    GUI.debug("MAPPER/INIT", "mapper initialization complete", {
+      container = type(map.container),
+      mapwindow = type(map.mapwindow),
+      minimap = type(map.minimap),
+      asciiMapContainer = type(GUI.asciiMapContainer),
+    })
     return true
 end
 
@@ -381,6 +480,10 @@ function map.get_default_map()
 	-- If the user has no map, download the default map from the server!
 	local areas = getAreaTable()
 	local path = getMudletHomeDir() .. "/map.dat"
+  GUI.debug("MAPPER/DOWNLOAD", "checking for default map", {
+    mosswoodArea = areas["Mosswood"],
+    path = path,
+  })
 	 
 	
 	if (areas["Mosswood"] == nil) then
@@ -393,69 +496,111 @@ end
 
 function map.start_mapping()
   map.enabled=true
+  GUI.debug("MAPPER", "mapping enabled")
 	print("Mapping enabled.")
 end
 
 function map.stop_mapping()
 	map.enabled=false
+  GUI.debug("MAPPER", "mapping disabled")
 	print("Mapping disabled.")
 end
 
 function map.eventHandler(event,...)     
+    local arguments = {...}
+    GUI.debug("MAPPER/EVENT", "event received", {
+        event = event,
+        arguments = arguments,
+        downloading = map.downloading,
+        room = msdp and msdp.ROOM,
+    })
     if event == "msdp.ROOM" then
         map.prev_info = map.room_info
         map.room_info = table.update({},msdp.ROOM)
+        GUI.debug("MAPPER/EVENT", "room state copied", {
+            previousRoom = map.prev_info,
+            currentRoom = map.room_info,
+        })
 				-- Check if we have moved between regular and wilderness areas
 
 				if map.prev_info.ENVIRONMENT == "Wilderness" and map.room_info.ENVIRONMENT == "Room" then
+           GUI.debug("MAPPER/EVENT", "transition Wilderness -&gt; Room")
 					 -- re-enable the mapper!
 					 if GUI.asciiMapContainer then GUI.asciiMapContainer:hide() end
 					 if map.container then 
 					   map.container:show()
 					   -- Delay mapper refresh to ensure container is visible
-					   tempTimer(0.1, function()
+					   tempTimer(0.1, GUI.debugWrap("MAPPER/EVENT/room transition resize", function()
 					     if map.mapwindow then
 					       map.mapwindow:show()
 					       map.mapwindow:resize()
 					     end
-					   end)
+					   end))
 					 end
 				elseif map.prev_info.ENVIRONMENT == "Room" and map.room_info.ENVIRONMENT == "Wilderness" then
+           GUI.debug("MAPPER/EVENT", "transition Room -&gt; Wilderness")
 					 -- disable the mapper!
 					 if map.container then map.container:hide() end
 					 if GUI.asciiMapContainer then GUI.asciiMapContainer:show() end
 				end
         handle_move()
     elseif event == "shiftRoom" then
-        local dir = exits[arg[1]] or arg[1]
+        local requestedDirection = arguments[1]
+        local dir = exits[requestedDirection] or requestedDirection
+        GUI.debug("MAPPER/EVENT", "shiftRoom requested", {
+            requested = requestedDirection,
+            normalized = dir,
+        })
         if not table.contains(exits, dir) then
             echo("Error: Invalid direction '" .. dir .. "'.")
         else
             shift_room(dir)
         end
 		elseif event == "sysDownloadDone" and map.downloading then
+        GUI.debug("MAPPER/DOWNLOAD", "download finished; loading map")
         loadMap(getMudletHomeDir() .. "/map.dat")
         map.downloading = false
         print("Map File Loaded.")				
     elseif event == "sysConnectionEvent" then
+        GUI.debug("MAPPER/EVENT", "connection event initializing mapper")
         map.initialize()
 		end
 		
 end
 
 function map.onProtocolEnabled(_, protocol)
+  GUI.debug("MAPPER/PROTOCOL", "sysProtocolEnabled received", {
+    protocol = protocol,
+  })
   if protocol == "MSDP" then
     print("MSDP enabled!")
+    GUI.debug("MAPPER/PROTOCOL", "requesting ROOM and initializing mapper")
 		sendMSDP("REPORT", "ROOM")
 		map.initialize()
   end
 end
 
-registerAnonymousEventHandler("msdp.ROOM","map.eventHandler")
-registerAnonymousEventHandler("shiftRoom","map.eventHandler")
-registerAnonymousEventHandler("sysConnectionEvent", "map.eventHandler")
-registerAnonymousEventHandler("sysProtocolEnabled", "map.onProtocolEnabled")
-registerAnonymousEventHandler("sysDownloadDone", "map.eventHandler")</script>
+map.fileScopeHandlerIds = map.fileScopeHandlerIds or {}
+local function registerFileScopeHandler(event, handler)
+  local ok, handlerId = GUI.debugCall(
+    "MAPPER/EVENT/register/" .. event,
+    registerAnonymousEventHandler,
+    event,
+    handler
+  )
+  if ok then
+    map.fileScopeHandlerIds[event] = handlerId
+  else
+    map.fileScopeHandlerIds[event] = nil
+  end
+end
+
+registerFileScopeHandler("msdp.ROOM", "map.eventHandler")
+registerFileScopeHandler("shiftRoom", "map.eventHandler")
+registerFileScopeHandler("sysConnectionEvent", "map.eventHandler")
+registerFileScopeHandler("sysProtocolEnabled", "map.onProtocolEnabled")
+registerFileScopeHandler("sysDownloadDone", "map.eventHandler")
+GUI.debug("MAPPER/EVENT", "file-scope handlers registered", map.fileScopeHandlerIds)</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>

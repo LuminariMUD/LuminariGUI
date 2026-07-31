@@ -1,0 +1,229 @@
+			<ScriptGroup isActive="yes" isFolder="yes">
+				<name>LuminariDebug</name>
+				<packageName>LuminariGUI</packageName>
+				<script></script>
+				<eventHandlerList />
+				<Script isActive="yes" isFolder="no">
+					<name>Debug Bootstrap</name>
+					<packageName></packageName>
+					<script>-- =============================================================================
+-- LUMINARIGUI MASTER DEBUG TOGGLE
+-- =============================================================================
+-- This is the ONE switch for all LuminariGUI diagnostic output.
+-- Set it to true temporarily when collecting startup diagnostics.
+GUI = GUI or {}
+GUI.DEBUG = false
+
+-- Everything below this point is infrastructure. Do not add another debug
+-- enable/disable flag elsewhere; all package diagnostics must use GUI.DEBUG.
+GUI.debugSequence = 0
+GUI.debugBootResults = GUI.debugBootResults or {}
+
+local luaDebugLibrary = debug
+local unpackValues = table.unpack or unpack
+
+local function packValues(...)
+  return {n = select("#", ...), ...}
+end
+
+local function cleanString(value)
+  local rendered = tostring(value)
+  rendered = rendered:gsub("\r", "\\r"):gsub("\n", "\\n")
+  if #rendered &gt; 600 then
+    rendered = rendered:sub(1, 600) .. "...&lt;truncated&gt;"
+  end
+  return rendered
+end
+
+local function summarize(value, depth, seen)
+  local valueType = type(value)
+  if valueType ~= "table" then
+    return cleanString(value)
+  end
+
+  depth = depth or 0
+  seen = seen or {}
+  if seen[value] then
+    return "{&lt;cycle&gt;}"
+  end
+  if depth &gt;= 2 then
+    return "{...}"
+  end
+
+  seen[value] = true
+  local entries = {}
+  local keys = {}
+  for key in pairs(value) do
+    keys[#keys + 1] = key
+  end
+  table.sort(keys, function(left, right)
+    return tostring(left) &lt; tostring(right)
+  end)
+
+  for index, key in ipairs(keys) do
+    if index &gt; 20 then
+      entries[#entries + 1] = "...(" .. tostring(#keys - 20) .. " more)"
+      break
+    end
+    entries[#entries + 1] =
+      cleanString(key) .. "=" .. summarize(value[key], depth + 1, seen)
+  end
+  seen[value] = nil
+  return "{" .. table.concat(entries, ", ") .. "}"
+end
+
+local function writeToMainConsole(line)
+  if type(echo) == "function" then
+    echo("\n" .. line)
+  elseif type(cecho) == "function" then
+    cecho("\n" .. line)
+  else
+    print(line)
+  end
+end
+
+local function tracebackMessage(errorValue)
+  local rendered = tostring(errorValue)
+  if luaDebugLibrary and type(luaDebugLibrary.traceback) == "function" then
+    return luaDebugLibrary.traceback(rendered, 2)
+  end
+  return rendered
+end
+
+function GUI.debugValue(value)
+  return summarize(value, 0, {})
+end
+
+function GUI.debug(scope, message, details)
+  if GUI.DEBUG ~= true then
+    return
+  end
+
+  GUI.debugSequence = (GUI.debugSequence or 0) + 1
+  local timestamp = os.date("%H:%M:%S")
+  local line = string.format(
+    "[LGUI-DEBUG #%05d %s][%s] %s",
+    GUI.debugSequence,
+    timestamp,
+    tostring(scope or "GENERAL"),
+    tostring(message or "")
+  )
+  if details ~= nil then
+    line = line .. " | " .. GUI.debugValue(details)
+  end
+  writeToMainConsole(line)
+end
+
+function GUI.debugError(scope, errorValue)
+  if GUI.DEBUG ~= true then
+    return
+  end
+  local rendered = tostring(errorValue)
+  if not rendered:find("stack traceback", 1, true) then
+    rendered = tracebackMessage(errorValue)
+  end
+
+  GUI.debugSequence = (GUI.debugSequence or 0) + 1
+  writeToMainConsole(string.format(
+    "[LGUI-ERROR #%05d %s][%s] ERROR + STACK TRACE",
+    GUI.debugSequence,
+    os.date("%H:%M:%S"),
+    tostring(scope or "ERROR")
+  ))
+  for traceLine in rendered:gmatch("[^\r\n]+") do
+    writeToMainConsole("[LGUI-TRACE] " .. traceLine)
+  end
+end
+
+-- Execute a function with entry/exit/error tracing while debug mode is on.
+-- With debug mode off this deliberately calls the function directly, so
+-- production error propagation remains exactly as it was before debugging.
+function GUI.debugCall(scope, callable, ...)
+  if type(callable) ~= "function" then
+    local message = "attempted to call " .. type(callable) .. " instead of function"
+    if GUI.DEBUG == true then
+      GUI.debugError(scope, message)
+      return false, message
+    end
+    error(message)
+  end
+
+  if GUI.DEBUG ~= true then
+    return true, callable(...)
+  end
+
+  local arguments = packValues(...)
+  GUI.debug(scope, "ENTER", arguments)
+  local results = packValues(xpcall(function()
+    return callable(unpackValues(arguments, 1, arguments.n))
+  end, tracebackMessage))
+
+  if not results[1] then
+    GUI.debugError(scope, results[2])
+    return false, results[2]
+  end
+
+  local returned = {n = results.n - 1}
+  for index = 2, results.n do
+    returned[index - 1] = results[index]
+  end
+  GUI.debug(scope, "EXIT", returned)
+  return true, unpackValues(returned, 1, returned.n)
+end
+
+function GUI.debugWrap(scope, callable)
+  return function(...)
+    local results = packValues(GUI.debugCall(scope, callable, ...))
+    if not results[1] then
+      return nil, results[2]
+    end
+    return unpackValues(results, 2, results.n)
+  end
+end
+
+function GUI.debugWrapFunction(owner, functionName, scope)
+  if type(owner) ~= "table" or type(owner[functionName]) ~= "function" then
+    GUI.debug("INSTRUMENT", "function unavailable", {
+      scope = scope,
+      functionName = functionName,
+      ownerType = type(owner),
+    })
+    return false
+  end
+  owner[functionName] = GUI.debugWrap(scope or functionName, owner[functionName])
+  GUI.debug("INSTRUMENT", "wrapped function", scope or functionName)
+  return true
+end
+
+function GUI.debugResolve(functionPath)
+  local current = _G
+  for segment in tostring(functionPath):gmatch("[^%.]+") do
+    if type(current) ~= "table" then
+      return nil
+    end
+    current = current[segment]
+  end
+  return current
+end
+
+function GUI.debugCountEntries(value)
+  local count = 0
+  if type(value) == "table" then
+    for _ in pairs(value) do
+      count = count + 1
+    end
+  end
+  return count
+end
+
+GUI.debug("BOOT", "debug bootstrap loaded; GUI.DEBUG is TRUE")
+GUI.debug("BOOT", "early environment", {
+  GUI = type(GUI),
+  Geyser = type(Geyser),
+  Adjustable = type(Adjustable),
+  msdp = type(msdp),
+  registerAnonymousEventHandler = type(registerAnonymousEventHandler),
+})</script>
+					<eventHandlerList />
+				</Script>
+			</ScriptGroup>

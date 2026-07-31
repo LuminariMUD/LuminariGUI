@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE MudletPackage>
-<MudletPackage version="2.0.4.033">
+<MudletPackage version="2.0.4.032">
 	<TriggerPackage>
 		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 			<name>LuminariGUI</name>
@@ -859,9 +859,9 @@ end</script>
 -- LUMINARIGUI MASTER DEBUG TOGGLE
 -- =============================================================================
 -- This is the ONE switch for all LuminariGUI diagnostic output.
--- Set it to true temporarily when collecting startup diagnostics.
+-- Set it to false after the startup problem has been found.
 GUI = GUI or {}
-GUI.DEBUG = false
+GUI.DEBUG = true
 
 -- Everything below this point is infrastructure. Do not add another debug
 -- enable/disable flag elsewhere; all package diagnostics must use GUI.DEBUG.

@@ -8,7 +8,12 @@
 					<packageName></packageName>
 					<script>demonnic = demonnic or {}
 demonnic.chat = demonnic.chat or {}
-demonnic.chat.config = demonnic.chat.config or {}</script>
+demonnic.chat.config = demonnic.chat.config or {}
+GUI.debug("YATCO/CONFIG", "YATCOConfig namespace loaded", {
+  demonnic = type(demonnic),
+  chat = type(demonnic.chat),
+  config = type(demonnic.chat.config),
+})</script>
 					<eventHandlerList />
 					<Script isActive="yes" isFolder="no">
 						<name>Configuration Options</name>
@@ -18,6 +23,9 @@ This is where all of the configuration options can be set.
 Anything I've put in this script object can be changed, but please do pay attention to what you're doing.
 If you change one of the values to something it shouldn't be, you could break it. 
 ]]
+
+local function configureYATCO()
+GUI.debug("YATCO/CONFIG", "configuration assignment starting")
 
 --This is where you tell it to use tabbed chat.
 demonnic.chat.use = true
@@ -231,6 +239,26 @@ so we'll use the one for the bucket, or the first one in the channels table
 Or, you know... what it's currently set to, if it's already set.
 ]]
 demonnic.chat.currentTab = demonnic.chat.currentTab or demonnic.chat.config.Alltab or demonnic.chat.config.channels[1]
+GUI.debug("YATCO/CONFIG", "configuration assignment complete", {
+  use = demonnic.chat.use,
+  useContainer = type(demonnic.chat.useContainer),
+  channels = demonnic.chat.config.channels,
+  currentTab = demonnic.chat.currentTab,
+  fontSize = demonnic.chat.config.fontSize,
+  width = demonnic.chat.config.width,
+  lines = demonnic.chat.config.lines,
+  gag = demonnic.chat.config.gag,
+  blink = demonnic.chat.config.blink,
+  soundEnabled = demonnic.chat.config.soundEnabled,
+})
+end
+
+local yatcoConfigOK, yatcoConfigResult =
+  GUI.debugCall("YATCO/CONFIG/configureYATCO", configureYATCO)
+GUI.debugBootResults["YATCO.configure"] = {
+  ok = yatcoConfigOK,
+  result = yatcoConfigResult,
+}
 </script>
 						<eventHandlerList />
 					</Script>

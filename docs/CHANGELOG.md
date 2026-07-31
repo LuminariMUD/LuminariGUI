@@ -13,6 +13,39 @@ Begin Changelog entries below
 
 ## [Unreleased]
 
+### Added
+
+- **End-to-end screen diagnostic mode.** A first-loaded debug bootstrap exposes
+  one master `GUI.DEBUG` switch, currently set to `true`, and emits copyable
+  `LGUI-DEBUG`, `LGUI-ERROR`, and `LGUI-TRACE` output in Mudlet's main
+  console. Instrumentation covers boot stages, lifecycle events, MSDP
+  subscriptions and values, handler registration/invocation, GUI components,
+  mapper activity, adjustable containers, YATCO/chat, triggers, aliases, keys,
+  assets, and runtime snapshots.
+- **Fault-safe startup tracing.** The three GUI calls that run before
+  `GUI.initializeOrRefresh` and the YATCO configuration boundary now report
+  full stack traces and allow later diagnostics to load while debug mode is
+  enabled. With debugging disabled, original error propagation is preserved.
+
+### Fixed
+
+- **Full-screen `Legend/Room` and `Mudlet/ASCII` controls.** The immediate GUI
+  bootstrap called `GUI.init_boxes()` before the AdjustableContainers
+  namespace existed. Diagnostic mode caught that failure and continued into
+  `GUI.buttonWindow.init()`, causing Mudlet to parent both controls to the root
+  window at full size. The container foundation now loads before GUI
+  construction, stale controls are removed during an in-place upgrade, and
+  child initialization stops safely if any core parent is unavailable.
+- **Duplicate mapper construction on connection.** Mudlet emits both
+  `sysConnectionEvent` and `sysProtocolEnabled("MSDP")` during normal startup.
+  Both paths requested mapper initialization, replacing the live Map and ASCII
+  Map containers less than a second after creating them. Mapper setup is now
+  idempotent and reuses the complete runtime created by the first event.
+- **Misleading mapper diagnostics.** Runtime snapshots checked nonexistent
+  `map.window` and `map.asciiwindow` fields and therefore reported both map
+  views as `nil` after successful construction. They now inspect the actual
+  `map.mapwindow` and `map.minimap` objects.
+
 ### Changed
 
 - **Release now means published.** `python3 theGUI/package.py release`

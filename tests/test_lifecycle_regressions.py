@@ -28,6 +28,23 @@ class LifecycleRegressionTester:
         self.mapper_source_path = (
             self.repo_root / "theGUI" / "src" / "scripts" / "00_msdpmapper.xml"
         )
+        self.debug_source_path = (
+            self.repo_root / "theGUI" / "src" / "scripts" / "00_debug.xml"
+        )
+        self.adjustable_source_path = (
+            self.repo_root
+            / "theGUI"
+            / "src"
+            / "scripts"
+            / "00_adjustablecontainers.xml"
+        )
+        self.instrumentation_source_path = (
+            self.repo_root
+            / "theGUI"
+            / "src"
+            / "scripts"
+            / "99_debug_instrumentation.xml"
+        )
         self.lua_path = self._find_lua()
         self.test_results = []
         self.errors = []
@@ -75,6 +92,11 @@ class LifecycleRegressionTester:
 
         script = f'''
 GUI = {{
+  DEBUG = false,
+  debug = function() end,
+  debugError = function() end,
+  debugCountEntries = function() return 0 end,
+  debugWrap = function(_, callable) return callable end,
   eventHandlerIds = {{
     shiftRoom = 101,
     sysConnectionEvent = 102,
@@ -128,6 +150,89 @@ assert(GUI.eventHandlerIds["msdp.HEALTH"] ~= 201)
             "mapper setup is still private to the mapper script",
         )
 
+    def _test_mapper_initializer_is_idempotent(self):
+        source = self.mapper_source_path.read_text(encoding="utf-8")
+        initializer = self._extract(
+            source,
+            "local function mapperRuntimeReady()",
+            "\nfunction map.get_default_map()",
+        )
+
+        script = f'''
+local createCalls = 0
+local aliasCalls = 0
+local fontCalls = 0
+local mapDownloadChecks = 0
+
+local function fakeWindow(name, parent)
+  local window = {{name = name, container = parent}}
+  function window:setColor() end
+  function window:hide() end
+  function window:show() end
+  function window:resize() end
+  return window
+end
+
+GUI = {{
+  debug = function() end,
+  debugCountEntries = function() return 0 end,
+  debugWrap = function(_, callable) return callable end,
+  AdjustableContainers = {{
+    defaultStyle = {{}},
+    saveDir = "/tmp/luminari-layouts/",
+    create = function(name)
+      createCalls = createCalls + 1
+      return fakeWindow(name)
+    end,
+  }},
+}}
+
+Geyser = {{MiniConsole = {{}}, Mapper = {{}}}}
+function Geyser.MiniConsole:new(config, parent)
+  return fakeWindow(config.name, parent)
+end
+function Geyser.Mapper:new(config, parent)
+  return fakeWindow(config.name, parent)
+end
+
+map = {{
+  adjustMinimapFontSize = function()
+    fontCalls = fontCalls + 1
+  end,
+  get_default_map = function()
+    mapDownloadChecks = mapDownloadChecks + 1
+  end,
+}}
+defaults = {{mapper = {{x = "75%", y = "0%", width = "25%", height = "50%"}}}}
+terrain_types = {{}}
+
+local function make_aliases()
+  aliasCalls = aliasCalls + 1
+end
+
+function setCustomEnvColor() end
+function tempTimer(_, callback) callback() end
+
+{initializer}
+
+assert(map.initialize() == true)
+local firstMapContainer = map.container
+local firstAsciiContainer = GUI.asciiMapContainer
+local firstMapWindow = map.mapwindow
+local firstMinimap = map.minimap
+
+assert(map.initialize() == true)
+assert(createCalls == 2, "second mapper initialization recreated containers")
+assert(aliasCalls == 1, "second mapper initialization recreated aliases")
+assert(fontCalls == 1, "second mapper initialization resized the ASCII map")
+assert(mapDownloadChecks == 1, "second mapper initialization repeated map setup")
+assert(map.container == firstMapContainer)
+assert(GUI.asciiMapContainer == firstAsciiContainer)
+assert(map.mapwindow == firstMapWindow)
+assert(map.minimap == firstMinimap)
+'''
+        self._run_lua(script)
+
     def _test_profile_reset_initializes_mapper(self):
         source = self.gui_source_path.read_text(encoding="utf-8")
         reset_handler = self._extract(
@@ -149,6 +254,13 @@ function tempTimer(_, callback)
 end
 
 GUI = {{
+  debug = function() end,
+  debugCall = function(_, callable, ...)
+    return true, callable(...)
+  end,
+  debugWrap = function(_, callable)
+    return callable
+  end,
   init = function() calls.gui = calls.gui + 1 end,
   requestMSDPReports = function()
     calls.reports = calls.reports + 1
@@ -175,6 +287,401 @@ assert(calls.refresh == 1)
 handlers.sysLoadEvent("sysLoadEvent", true)
 assert(calls.gui == 2)
 assert(calls.mapper == 1, "reset recovery ran during a fresh profile load")
+'''
+        self._run_lua(script)
+
+    def _test_debug_master_toggle_and_load_order(self):
+        debug_source = self.debug_source_path.read_text(encoding="utf-8")
+        instrumentation_source = self.instrumentation_source_path.read_text(
+            encoding="utf-8"
+        )
+        manifest = (self.repo_root / "theGUI" / "build.yaml").read_text(
+            encoding="utf-8"
+        )
+
+        script_block = manifest.split("scripts:", 1)[1].split("keys:", 1)[0]
+        scripts = re.findall(r"-\s+(src/scripts/[^\s]+)", script_block)
+        self._require(scripts, "build manifest has no script fragments")
+        self._require(
+            scripts[0] == "src/scripts/00_debug.xml",
+            "debug bootstrap is not the first script fragment",
+        )
+        self._require(
+            scripts[-1] == "src/scripts/99_debug_instrumentation.xml",
+            "debug instrumentation is not the last script fragment",
+        )
+        self._require(
+            scripts.index("src/scripts/00_adjustablecontainers.xml")
+            < scripts.index("src/scripts/01_gui.xml"),
+            "AdjustableContainers foundation does not load before GUI Config",
+        )
+
+        source_text = "\n".join(
+            path.read_text(encoding="utf-8")
+            for path in (self.repo_root / "theGUI" / "src").rglob("*.xml")
+        )
+        explicit_boolean_assignments = re.findall(
+            r"\bGUI\.DEBUG\s*=\s*(?:true|false)\b", source_text
+        )
+        self._require(
+            explicit_boolean_assignments == ["GUI.DEBUG = false"],
+            "GUI.DEBUG must have exactly one explicit boolean assignment set to false",
+        )
+        self._require(
+            "This is the ONE switch" in debug_source,
+            "master debug toggle is not documented as the single switch",
+        )
+        self._require(
+            "demonnic.debug.active = (GUI.DEBUG == true)" in source_text,
+            "legacy YATCO debug state does not mirror the master switch",
+        )
+        self._require(
+            "wrapTableFunctions(GUI.AdjustableContainers" in instrumentation_source,
+            "adjustable containers are not instrumented",
+        )
+        self._require(
+            "mapWindow = type(map and map.mapwindow)" in instrumentation_source,
+            "debug snapshot checks the wrong Mudlet mapper field",
+        )
+        self._require(
+            "asciiMapWindow = type(map and map.minimap)" in instrumentation_source,
+            "debug snapshot checks the wrong ASCII mapper field",
+        )
+
+    def _test_core_parent_load_order_and_orphan_guard(self):
+        foundation_root = ET.parse(self.adjustable_source_path).getroot()
+        foundation_script = foundation_root.find(".//Script/script").text
+        self._require(
+            foundation_script,
+            "AdjustableContainers foundation has no Lua script",
+        )
+
+        gui_root = ET.parse(self.gui_source_path).getroot()
+        buttons_script = None
+        boxes_script = None
+        for script_node in gui_root.findall(".//Script"):
+            if script_node.findtext("name") == "Buttons":
+                buttons_script = script_node.findtext("script")
+            elif script_node.findtext("name") == "Boxes":
+                boxes_script = script_node.findtext("script")
+        self._require(buttons_script, "Buttons script was not found")
+        self._require(boxes_script, "Boxes script was not found")
+
+        gui_source = self.gui_source_path.read_text(encoding="utf-8")
+        self._require(
+            "function GUI.AdjustableContainers.create" not in gui_source,
+            "AdjustableContainers foundation is duplicated inside late GUI scripts",
+        )
+        button_init = gui_source.index("function GUI.buttonWindow.init()")
+        parent_guard = gui_source.index(
+            'type(GUI.buttonPanelContainer) ~= "table"',
+            button_init,
+        )
+        first_widget_creation = gui_source.index("CSSMan.new(", button_init)
+        self._require(
+            parent_guard < first_widget_creation,
+            "button parent guard runs after widget creation",
+        )
+
+        script = f'''
+GUI = {{debug = function() end}}
+function getMudletHomeDir()
+  return "/tmp/luminari-test-profile"
+end
+
+{foundation_script}
+
+assert(type(GUI.AdjustableContainers) == "table")
+assert(type(GUI.AdjustableContainers.create) == "function")
+
+map = {{}}
+{buttons_script}
+
+local ok, failure = pcall(GUI.buttonWindow.init)
+assert(ok == false, "button initialization accepted missing parents")
+assert(
+  tostring(failure):find("refusing to create root-level controls", 1, true),
+  "button initialization failed without the orphan-control explanation"
+)
+'''
+        self._run_lua(script)
+
+        healthy_bootstrap = f'''
+local rootWidgets = {{}}
+
+local function newWindow(config, parent)
+  if parent == nil then
+    rootWidgets[#rootWidgets + 1] = config.name
+  end
+  local window = {{
+    name = config.name,
+    container = parent,
+    windowList = {{}},
+  }}
+  function window:setStyleSheet() end
+  function window:setClickCallback() end
+  function window:setColor() end
+  function window:echo() end
+  function window:show() end
+  function window:hide() end
+  function window:raise() end
+  function window:get_width() return 250 end
+  function window:get_height() return 150 end
+  function window:delete() self.deleted = true end
+  return window
+end
+
+GUI = {{debug = function() end}}
+function getMudletHomeDir()
+  return "/tmp/luminari-test-profile"
+end
+
+Adjustable = {{Container = {{all = {{}}}}}}
+function Adjustable.Container:new(config)
+  local window = newWindow(config, {{name = "GeyserRoot"}})
+  function window:disableAutoSave() end
+  function window:detach() end
+  Adjustable.Container.all[config.name] = window
+  return window
+end
+
+Geyser = {{Label = {{}}, Container = {{}}, HBox = {{}}, MiniConsole = {{}}}}
+function Geyser.Label:new(config, parent)
+  return newWindow(config, parent)
+end
+function Geyser.Container:new(config, parent)
+  return newWindow(config, parent)
+end
+function Geyser.HBox:new(config, parent)
+  return newWindow(config, parent)
+end
+function Geyser.MiniConsole:new(config, parent)
+  return newWindow(config, parent)
+end
+
+CSSMan = {{}}
+function CSSMan.new()
+  return {{
+    getCSS = function() return "" end,
+    set = function() end,
+  }}
+end
+
+function calcFontSize(fontSize)
+  return fontSize, fontSize
+end
+function setMiniConsoleFontSize() end
+
+{foundation_script}
+
+GUI.Bottom = newWindow({{name = "GUI.Bottom"}}, {{name = "GeyserRoot"}})
+GUI.Right = newWindow({{name = "GUI.Right"}}, {{name = "GeyserRoot"}})
+
+{boxes_script}
+GUI.init_boxes()
+
+assert(type(GUI.buttonPanelContainer) == "table")
+assert(type(GUI.roomInfoContainer) == "table")
+
+map = {{}}
+GUI.updateLegend = function() end
+{buttons_script}
+GUI.buttonWindow.init()
+
+assert(
+  #rootWidgets == 0,
+  "core GUI bootstrap created root-level child widgets: "
+    .. table.concat(rootWidgets, ", ")
+)
+assert(GUI.buttonWindow.container.container == GUI.buttonPanelContainer)
+assert(GUI.buttonWindow.roomInfo.container == GUI.roomInfoContainer)
+assert(GUI.buttonWindow.Legend.container == GUI.roomInfoContainer)
+'''
+        self._run_lua(healthy_bootstrap)
+
+    def _test_debug_runtime_output_and_error_semantics(self):
+        root = ET.parse(self.debug_source_path).getroot()
+        debug_script = root.find(".//Script/script").text
+        self._require(debug_script, "debug bootstrap has no Lua script")
+
+        script = f'''
+captured = {{}}
+function echo(value)
+  captured[#captured + 1] = value
+end
+function cecho(value)
+  captured[#captured + 1] = value
+end
+
+{debug_script}
+
+assert(GUI.DEBUG == false, "debug mode is not disabled by default")
+GUI.DEBUG = true
+GUI.debug("TEST", "visible message", {{answer = 42}})
+local joined = table.concat(captured, "\\n")
+assert(joined:find("LGUI%-DEBUG"), "debug prefix was not written")
+assert(joined:find("visible message", 1, true), "debug message was not written")
+assert(joined:find("answer=42", 1, true), "debug details were not written")
+
+local ok, failure = GUI.debugCall("TEST/failure", function()
+  error("intentional debug failure")
+end)
+assert(ok == false, "debug mode did not catch the test error")
+assert(tostring(failure):find("intentional debug failure", 1, true))
+joined = table.concat(captured, "\\n")
+assert(joined:find("LGUI%-ERROR"), "error prefix was not written")
+assert(joined:find("LGUI%-TRACE"), "stack trace lines were not written")
+assert(joined:find("intentional debug failure", 1, true))
+
+local wrapped = GUI.debugWrap("TEST/multiple returns", function()
+  return "first", nil, "third"
+end)
+local first, second, third = wrapped()
+assert(first == "first" and second == nil and third == "third",
+  "debug wrapper changed multiple return values")
+
+local beforeDisabledCall = #captured
+GUI.DEBUG = false
+GUI.debug("TEST", "must stay hidden")
+assert(#captured == beforeDisabledCall, "debug output continued while disabled")
+local propagated = pcall(function()
+  GUI.debugCall("TEST/disabled failure", function()
+    error("must propagate")
+  end)
+end)
+assert(propagated == false,
+  "disabled debug mode swallowed an error instead of preserving production behavior")
+'''
+        self._run_lua(script)
+
+    def _test_debug_startup_boundary_and_system_coverage(self):
+        gui_source = self.gui_source_path.read_text(encoding="utf-8")
+        mapper_source = self.mapper_source_path.read_text(encoding="utf-8")
+        yatco_source = (
+            self.repo_root / "theGUI" / "src" / "scripts" / "03_yatco.xml"
+        ).read_text(encoding="utf-8")
+        trigger_source = (
+            self.repo_root / "theGUI" / "src" / "triggers" / "01_gui.xml"
+        ).read_text(encoding="utf-8")
+        alias_source = "\n".join(
+            path.read_text(encoding="utf-8")
+            for path in (self.repo_root / "theGUI" / "src" / "aliases").glob("*.xml")
+        )
+        key_path = self.repo_root / "theGUI" / "src" / "keys" / "00_movement.xml"
+
+        config_start = gui_source.index('<name>Config</name>')
+        initializer = gui_source.index(
+            "function GUI.initializeOrRefresh(context)", config_start
+        )
+        for stage in (
+            "GUI.init_background",
+            "GUI.set_borders",
+            "GUI.init_boxes",
+        ):
+            stage_position = gui_source.index(
+                f'{{name = "{stage}", callable = {stage}}}', config_start
+            )
+            self._require(
+                stage_position < initializer,
+                f"{stage} is not guarded before initializeOrRefresh is defined",
+            )
+        self._require(
+            gui_source.index('"BOOT/CONFIG/" .. stage.name', config_start)
+            < initializer,
+            "startup stages do not run through the debug error boundary",
+        )
+
+        coverage_markers = {
+            "GUI initialization": (gui_source, "GUI/INIT"),
+            "GUI lifecycle": (gui_source, "LIFECYCLE"),
+            "event registration": (gui_source, "EVENT/REGISTER"),
+            "event firing": (gui_source, "EVENT/FIRE"),
+            "MSDP reports": (gui_source, "MSDP/REPORT"),
+            "MSDP values": (gui_source, "MSDP/VALUE"),
+            "mapper events": (mapper_source, "MAPPER/EVENT"),
+            "mapper initialization": (mapper_source, "MAPPER/INIT"),
+            "map triggers": (trigger_source, "TRIGGER/MAP"),
+            "chat creation": (yatco_source, "YATCO/CREATE"),
+            "chat capture": (yatco_source, "YATCO/APPEND"),
+            "aliases": (alias_source, 'GUI.debug("ALIAS"'),
+        }
+        for area, (source, marker) in coverage_markers.items():
+            self._require(marker in source, f"missing debug coverage for {area}")
+
+        key_root = ET.fromstring(
+            "<root>" + key_path.read_text(encoding="utf-8") + "</root>"
+        )
+        keys = key_root.findall(".//Key")
+        self._require(keys, "movement key fragment has no keys")
+        for key in keys:
+            name = key.findtext("name")
+            script = key.findtext("script") or ""
+            self._require(
+                'GUI.debug("KEY"' in script,
+                f"key {name} does not emit debug details",
+            )
+
+    def _test_debug_event_callbacks_keep_their_event_and_handler(self):
+        source = self.gui_source_path.read_text(encoding="utf-8")
+        register_function = self._extract(
+            source,
+            "function GUI.registerEventHandlers()",
+            "\n-- =============================================================================\n"
+            "-- CENTRALIZED GUI INITIALIZATION SYSTEM",
+        )
+
+        script = f'''
+handlers = {{}}
+next_id = 0
+calls = {{health = 0, room = 0}}
+msdp = {{HEALTH = 17, ROOM = {{VNUM = 99}}}}
+demonnic = {{chat = {{use = false}}}}
+
+local resolved = {{
+  ["GUI.updateHealthGauge"] = function(event)
+    assert(event == "msdp.HEALTH")
+    calls.health = calls.health + 1
+  end,
+  ["GUI.updateRoom"] = function(event)
+    assert(event == "msdp.ROOM")
+    calls.room = calls.room + 1
+  end,
+}}
+
+GUI = {{
+  DEBUG = true,
+  eventHandlerIds = {{}},
+  debug = function() end,
+  debugError = function(_, message) error(message) end,
+  debugCountEntries = function() return 0 end,
+  debugResolve = function(path)
+    return resolved[path] or function() end
+  end,
+  debugCall = function(_, callable, ...)
+    return true, callable(...)
+  end,
+  debugWrap = function(_, callable)
+    return callable
+  end,
+}}
+
+function registerAnonymousEventHandler(event, callback)
+  next_id = next_id + 1
+  handlers[event] = callback
+  return next_id
+end
+function killAnonymousEventHandler() return true end
+function tempTimer() end
+
+{register_function}
+
+GUI.registerEventHandlers()
+assert(type(handlers["msdp.HEALTH"]) == "function")
+assert(type(handlers["msdp.ROOM"]) == "function")
+handlers["msdp.HEALTH"]("msdp.HEALTH")
+handlers["msdp.ROOM"]("msdp.ROOM")
+assert(calls.health == 1, "HEALTH callback lost its loop-local handler")
+assert(calls.room == 1, "ROOM callback lost its loop-local handler")
 '''
         self._run_lua(script)
 
@@ -797,10 +1304,31 @@ raise SystemExit(1)
 
         tests = [
             (
+                "debug_master_toggle_and_load_order",
+                self._test_debug_master_toggle_and_load_order,
+            ),
+            (
+                "debug_runtime_output_and_errors",
+                self._test_debug_runtime_output_and_error_semantics,
+            ),
+            (
+                "core_parent_load_order_and_orphan_guard",
+                self._test_core_parent_load_order_and_orphan_guard,
+            ),
+            (
+                "debug_startup_boundary_and_coverage",
+                self._test_debug_startup_boundary_and_system_coverage,
+            ),
+            (
+                "debug_event_callback_mapping",
+                self._test_debug_event_callbacks_keep_their_event_and_handler,
+            ),
+            (
                 "upgrade_handler_ownership",
                 self._test_upgrade_preserves_file_scope_handler_ids,
             ),
             ("mapper_initializer_exported", self._test_mapper_initializer_is_exported),
+            ("mapper_initializer_idempotent", self._test_mapper_initializer_is_idempotent),
             ("profile_reset_mapper", self._test_profile_reset_initializes_mapper),
             (
                 "guard_missing_output",

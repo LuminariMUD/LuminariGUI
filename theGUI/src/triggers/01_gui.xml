@@ -16,6 +16,11 @@
 				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 					<name>Capture Wilderness Map</name>
 					<script>deleteLine()
+GUI.debug("TRIGGER/MAP", "Capture Wilderness Map matched", {
+  minimap = type(map and map.minimap),
+  mapContainer = type(map and map.container),
+  asciiMapContainer = type(GUI.asciiMapContainer),
+})
 clearUserWindow("map.minimap")
 
 map.container:hide()
@@ -31,6 +36,7 @@ function onMapLine()
   -- Validate that we have a valid line to process
   if not line or line == "" then
     print("Warning: Empty or invalid map line received")
+    GUI.debugError("TRIGGER/MAP/WILDERNESS", "empty or invalid map line")
     return
   end
   -- Check for map completion marker
@@ -42,10 +48,11 @@ function onMapLine()
       killTrigger(map.maplineTrig)
     end
     map.maplineTrig = nil
+    GUI.debug("TRIGGER/MAP/WILDERNESS", "map completion marker received")
     return
   end
   -- Process map line with error handling
-  pcall(function()
+  local success, failure = xpcall(function()
     selectCurrentLine()
     copy()
     if map.minimap and map.minimap.echo then
@@ -58,7 +65,15 @@ function onMapLine()
       print("Warning: map.minimap not available for line processing")
     end
     deleteLine()
-  end)
+  end, debug.traceback)
+  if success then
+    GUI.debug("TRIGGER/MAP/WILDERNESS", "map line appended", {
+      line = line,
+      padding = map.padding,
+    })
+  else
+    GUI.debugError("TRIGGER/MAP/WILDERNESS", failure)
+  end
 end</script>
 					<triggerType>0</triggerType>
 					<conditonLineDelta>0</conditonLineDelta>
@@ -80,6 +95,12 @@ end</script>
 				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 					<name>Capture Room Map</name>
 					<script>deleteLine()
+GUI.debug("TRIGGER/MAP", "Capture Room Map matched", {
+  mode = GUI.buttonWindow and GUI.buttonWindow.mudletOrAscii,
+  minimap = type(map and map.minimap),
+  mapContainer = type(map and map.container),
+  asciiMapContainer = type(GUI.asciiMapContainer),
+})
 clearUserWindow("map.minimap")
 
 if GUI.buttonWindow.mudletOrAscii == "ASCII" then
@@ -100,6 +121,7 @@ function onRoomMapLine()
   -- Validate that we have a valid line to process
   if not line or line == "" then
     print("Warning: Empty or invalid room map line received")
+    GUI.debugError("TRIGGER/MAP/ROOM", "empty or invalid room map line")
     return
   end
   -- Check for room map completion marker
@@ -111,10 +133,11 @@ function onRoomMapLine()
       killTrigger(map.maplineTrig)
     end
     map.maplineTrig = nil
+    GUI.debug("TRIGGER/MAP/ROOM", "room map completion marker received")
     return
   end
   -- Process room map line with error handling
-  pcall(function()
+  local success, failure = xpcall(function()
     selectCurrentLine()
     copy()
     if map.minimap and map.minimap.echo then
@@ -125,7 +148,15 @@ function onRoomMapLine()
       print("Warning: map.minimap not available for room map line processing")
     end
     deleteLine()
-  end)
+  end, debug.traceback)
+  if success then
+    GUI.debug("TRIGGER/MAP/ROOM", "room map line appended", {
+      line = line,
+      padding = map.padding,
+    })
+  else
+    GUI.debugError("TRIGGER/MAP/ROOM", failure)
+  end
 end</script>
 					<triggerType>0</triggerType>
 					<conditonLineDelta>0</conditonLineDelta>

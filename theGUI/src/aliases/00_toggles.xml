@@ -8,6 +8,7 @@
 					<name>Gag Chat</name>
 					<script>--[[Toggling this will determine if the line and follow up
     prompt are removed from the main buffer for chat.]]
+GUI.debug("ALIAS", "gag chat matched", matches)
 GUI.gagChatToggle()</script>
 					<command></command>
 					<packageName></packageName>
@@ -16,6 +17,7 @@ GUI.gagChatToggle()</script>
 				<Alias isActive="yes" isFolder="no">
 					<name>Show Self</name>
 					<script>--Toggles whether or not you are shown in the group tab.
+GUI.debug("ALIAS", "show self matched", matches)
 GUI.showSelfToggle()</script>
 					<command></command>
 					<packageName></packageName>
@@ -24,6 +26,7 @@ GUI.showSelfToggle()</script>
 				<Alias isActive="yes" isFolder="no">
 					<name>Horizontal Scroll</name>
 					<script>--Toggles horizontal scroll bar on main window
+GUI.debug("ALIAS", "hscroll matched", matches)
 GUI.horizontalScrollToggle()</script>
 					<command></command>
 					<packageName></packageName>
