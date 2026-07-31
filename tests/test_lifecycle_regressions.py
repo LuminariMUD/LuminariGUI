@@ -9,6 +9,7 @@ working tree.
 """
 
 import html
+import json
 import os
 import re
 import shutil
@@ -193,10 +194,11 @@ assert(calls.mapper == 1, "reset recovery ran during a fresh profile load")
         )
 
     @staticmethod
-    def _run_package(project_root, *arguments):
+    def _run_package(project_root, *arguments, environment=None):
         return subprocess.run(
             [sys.executable, str(project_root / "theGUI" / "package.py"), *arguments],
             cwd=project_root,
+            env=environment,
             capture_output=True,
             text=True,
             timeout=60,
@@ -372,13 +374,18 @@ spec.loader.exec_module(module)
 calls = []
 workflow = module.ReleaseWorkflow("2.0.4.028")
 workflow.check_git_status = lambda: calls.append("git") or True
+workflow.check_github_access = lambda: calls.append("github_access") or True
 workflow.run_build = lambda: calls.append("build") or True
 workflow.run_tests = lambda: calls.append("tests") or True
 workflow.create_release_branch = lambda: calls.append("branch") or True
 workflow.create_package = lambda: calls.append("package") or True
-workflow.create_tag_and_merge = lambda push=False: calls.append("tag") or True
+workflow.create_tag_merge_and_publish = lambda: calls.append("publish") or True
+workflow.publish_github_release = lambda: calls.append("github") or True
 assert workflow.execute()
-assert calls == ["git", "build", "tests", "branch", "package", "tag"], calls
+assert calls == [
+    "git", "github_access", "build", "tests", "branch", "package", "publish",
+    "github"
+], calls
 '''
         result = subprocess.run(
             [
@@ -429,18 +436,121 @@ assert calls == ["git", "build", "tests", "branch", "package", "tag"], calls
                     setup.stdout + setup.stderr,
                 )
 
+            remote_path = Path(temp_dir) / "origin.git"
+            remote_init = self._run_git(
+                project_root,
+                "init",
+                "--bare",
+                str(remote_path),
+            )
+            self._require(
+                remote_init.returncode == 0,
+                remote_init.stdout + remote_init.stderr,
+            )
+            remote_add = self._run_git(
+                project_root,
+                "remote",
+                "add",
+                "origin",
+                str(remote_path),
+            )
+            self._require(
+                remote_add.returncode == 0,
+                remote_add.stdout + remote_add.stderr,
+            )
+
+            fake_bin = Path(temp_dir) / "bin"
+            fake_bin.mkdir()
+            gh_log = Path(temp_dir) / "gh.log"
+            fake_gh = fake_bin / "gh"
+            fake_gh.write_text(
+                f"""#!/usr/bin/env python3
+import json
+import sys
+from pathlib import Path
+
+arguments = sys.argv[1:]
+with Path({str(gh_log)!r}).open("a", encoding="utf-8") as log:
+    log.write(json.dumps(arguments) + "\\n")
+
+if arguments[:2] == ["auth", "status"]:
+    raise SystemExit(0)
+
+if arguments[:2] == ["release", "create"]:
+    tag = arguments[2]
+    print(f"https://example.invalid/releases/tag/{{tag}}")
+    raise SystemExit(0)
+
+if arguments[:2] == ["release", "view"]:
+    tag = arguments[2]
+    version = tag.removeprefix("v")
+    print(json.dumps({{
+        "url": f"https://example.invalid/releases/tag/{{tag}}",
+        "isDraft": False,
+        "isPrerelease": False,
+        "tagName": tag,
+        "assets": [
+            {{
+                "name": f"LuminariGUI-v{{version}}.mpackage",
+                "state": "uploaded",
+            }},
+            {{
+                "name": f"LuminariGUI-v{{version}}.json",
+                "state": "uploaded",
+            }},
+        ],
+    }}))
+    raise SystemExit(0)
+
+print("unexpected gh invocation", file=sys.stderr)
+raise SystemExit(1)
+""",
+                encoding="utf-8",
+            )
+            fake_gh.chmod(0o755)
+            environment = os.environ.copy()
+            environment["PATH"] = (
+                str(fake_bin)
+                + os.pathsep
+                + environment.get("PATH", "")
+            )
+
             result = self._run_package(
                 project_root,
                 "release",
                 "--skip-tests",
+                environment=environment,
             )
             self._require(result.returncode == 0, result.stdout + result.stderr)
+            self._require(
+                "Published master, "
+                f"release/v{expected_version}, and v{expected_version} to origin"
+                in result.stdout,
+                "release did not report verified publication",
+            )
+            self._require(
+                f"Release v{expected_version} fully published and verified!"
+                in result.stdout,
+                "release did not report publication as its terminal state",
+            )
+            gh_calls = [
+                json.loads(line)
+                for line in gh_log.read_text(encoding="utf-8").splitlines()
+            ]
+            self._require(
+                any(call[:2] == ["release", "create"] for call in gh_calls),
+                "release did not create the GitHub Release",
+            )
+            self._require(
+                any(call[:2] == ["release", "view"] for call in gh_calls),
+                "release did not verify the GitHub Release",
+            )
             self._assert_package_versions(project_root, expected_version)
 
             branch = self._run_git(project_root, "branch", "--show-current")
             self._require(branch.returncode == 0, branch.stdout + branch.stderr)
             self._require(
-                branch.stdout.strip() == f"release/v{expected_version}",
+                branch.stdout.strip() == "master",
                 f"release finished on unexpected branch: {branch.stdout!r}",
             )
 
@@ -451,6 +561,34 @@ assert calls == ["git", "build", "tests", "branch", "package", "tag"], calls
                 f"refs/tags/v{expected_version}",
             )
             self._require(tag.returncode == 0, tag.stdout + tag.stderr)
+
+            refs = (
+                ("refs/heads/master", "refs/heads/master"),
+                (
+                    f"refs/heads/release/v{expected_version}",
+                    f"refs/heads/release/v{expected_version}",
+                ),
+                (
+                    f"refs/tags/v{expected_version}",
+                    f"refs/tags/v{expected_version}",
+                ),
+            )
+            for local_ref, remote_ref in refs:
+                local = self._run_git(project_root, "rev-parse", local_ref)
+                self._require(local.returncode == 0, local.stdout + local.stderr)
+                remote = self._run_git(
+                    project_root,
+                    "ls-remote",
+                    "--exit-code",
+                    "origin",
+                    remote_ref,
+                )
+                self._require(remote.returncode == 0, remote.stdout + remote.stderr)
+                remote_sha = remote.stdout.split()[0] if remote.stdout else ""
+                self._require(
+                    remote_sha == local.stdout.strip(),
+                    f"{remote_ref} was not pushed at the local release SHA",
+                )
 
             master_tree = self._run_git(
                 project_root,

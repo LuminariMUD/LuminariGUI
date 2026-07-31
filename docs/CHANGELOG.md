@@ -11,6 +11,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Begin Changelog entries below
 ---
 
+## [Unreleased]
+
+### Changed
+
+- **Release now means published.** `python3 theGUI/package.py release`
+  atomically pushes `master`, the release branch, and annotated tag to
+  `origin`, verifies each remote ref, publishes the GitHub Release page,
+  uploads and verifies both release assets, and remains on `master`. Local
+  artifact creation is explicitly the responsibility of `package.py create`;
+  there is no commit-without-push release mode.
+- **Release guidance hardened.** Agent and developer documentation now requires
+  a published GitHub Release page with both the `.mpackage` and JSON metadata,
+  plus remote verification, before reporting a requested release complete.
+
 ## [2.0.4.028] - 2026-07-31
 
 Mudlet 4.20–4.22 compatibility pass. Mudlet 4.20 moved to Qt6 and 4.21 changed
@@ -51,8 +65,9 @@ long-standing event-handler leak found during the audit.
   version exactly, and default releases adopt the version selected by the
   auto-incrementing build. Packaging refuses an XML/metadata version mismatch.
 - **Release preflight ordering.** The clean-tree check now runs before the
-  release build creates expected changes; tag, merge, checkout, and push
-  failures now stop the workflow instead of reporting false success.
+  release build creates expected changes; tag, merge, atomic push, and remote
+  verification failures now stop the workflow instead of reporting false
+  success.
 - **Test runner output flags.** `--verbose` now prints runner configuration and
   `--quiet` emits a single status line instead of both flags being no-ops.
 - **Test path resolution.** The runner and standalone Python suites now locate
@@ -105,11 +120,10 @@ long-standing event-handler leak found during the audit.
   - Modern Python: pathlib, dataclasses, type hints
 
 - **Package Commands**:
-  - `python3 theGUI/package.py create` - Create release .mpackage (runs build & tests)
+  - `python3 theGUI/package.py create` - Create a local distributable .mpackage (runs build & tests)
   - `python3 theGUI/package.py create --dev` - Create dev package with timestamp
-  - `python3 theGUI/package.py release` - Full workflow (build, test, branch, package, tag)
-  - `python3 theGUI/package.py release --dry-run` - Preview release without changes
-  - `python3 theGUI/package.py release --push` - Release and push to remote
+  - `python3 theGUI/package.py release` - Publish refs, GitHub Release page, and both assets
+  - `python3 theGUI/package.py release --dry-run` - Preview publication without changes
   - `python3 theGUI/package.py list` - List packages in Releases/
   - `python3 theGUI/package.py clean` - Remove old dev packages
 

@@ -49,8 +49,8 @@ Detailed documentation is available in the `docs/` directory:
 This project uses a modular source-to-build system (`theGUI/`) that assembles XML fragments into the final `LuminariGUI.xml` package. Each build automatically increments the version and archives the previous release.
 
 *   **Build**: Run `python3 theGUI/build.py` to assemble the XML package.
-*   **Package**: Run `python3 theGUI/package.py create` to create a distributable `.mpackage`.
-*   **Release**: Run `python3 theGUI/package.py release` for full release workflow.
+*   **Package**: Run `python3 theGUI/package.py create` to create a local distributable `.mpackage`.
+*   **Release**: Run `python3 theGUI/package.py release` to build, commit, tag, merge, atomically publish and verify all release refs, and create the GitHub Release with the `.mpackage` and JSON metadata attached. A release never stops at local commits.
 *   **Testing**: Run `python3 tests/run_tests.py` to execute the test suite.
 *   **Validation**: Run `python3 scripts/validate_package.py` to check for errors.
 
@@ -59,4 +59,3 @@ See [theGUI/README_theGUI.md](theGUI/README_theGUI.md) for build system details 
 ## License
 
 This project is released into the public domain under the [The Unlicense](LICENSE).
-

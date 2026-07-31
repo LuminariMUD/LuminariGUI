@@ -76,14 +76,13 @@ After building the XML, use `package.py` to create distributable `.mpackage` fil
 
 | Command | Description |
 |---------|-------------|
-| `python package.py create` | Create release package (runs build & tests) |
+| `python package.py create` | Create a local distributable package (runs build & tests) |
 | `python package.py create --dev` | Create dev package with timestamp |
 | `python package.py create --skip-build` | Package existing XML without rebuilding |
 | `python package.py create --version VERSION` | Build and package one exact version |
-| `python package.py release` | Full release workflow (build, test, branch, tag) |
-| `python package.py release --version VERSION` | Use one exact build/package/branch/tag version |
-| `python package.py release --dry-run` | Preview release without changes |
-| `python package.py release --push` | Release and push to remote |
+| `python package.py release` | Publish and verify refs, GitHub Release, and both assets |
+| `python package.py release --version VERSION` | Build and publish one exact version |
+| `python package.py release --dry-run` | Preview publication without changes |
 | `python package.py list` | List existing packages |
 | `python package.py clean` | **Destructive:** remove old dev packages |
 
@@ -93,9 +92,15 @@ After building the XML, use `package.py` to create distributable `.mpackage` fil
 # Build XML and create package for testing
 python build.py && python package.py create --dev
 
-# Full release
-python package.py release --push
+# Publish the complete release
+python package.py release
 ```
+
+`release` has no local-only completion mode: it verifies that `master`, the
+release branch, and the tag reached `origin`, creates the GitHub Release page,
+uploads the `.mpackage` and JSON metadata, and verifies both assets. Use
+`create` when only a local artifact is wanted. See
+[`docs/PYTHON_TOOLS.md`](../docs/PYTHON_TOOLS.md).
 
 ## Configuration (build.yaml)
 

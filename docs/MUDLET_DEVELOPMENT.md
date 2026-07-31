@@ -35,9 +35,17 @@ Fragments are named `NN_descriptive_name.xml`, where `NN` is `00`–`09` for cor
 3.  **Build**: `python3 theGUI/build.py` to assemble `LuminariGUI.xml`.
 4.  **Test**: `python3 tests/run_tests.py`.
 5.  **Manual test**: import `LuminariGUI.xml` into Mudlet.
-6.  **Release**: `python3 theGUI/package.py release` (use `--dry-run` to preview).
-7.  **Commit** the source fragments, `theGUI/build.yaml`, the built
+6.  **Commit** the source fragments, `theGUI/build.yaml`, the built
     `LuminariGUI.xml`, and any newly generated tracked archive.
+7.  **Preview**: `python3 theGUI/package.py release --dry-run`.
+8.  **Publish**: `python3 theGUI/package.py release`. The command commits the
+    final release artifacts, merges them into `master`, atomically pushes
+    `master`, the release branch, and tag to `origin`, and verifies the remote
+    refs. It then publishes the GitHub Release page with the `.mpackage` and
+    JSON metadata attached and verifies both assets. It never treats local
+    commits as a completed release.
+9.  **Verify**: independently inspect the remote refs and GitHub Release before
+    handoff. See [PYTHON_TOOLS.md](PYTHON_TOOLS.md#creating-a-release).
 
 Additional build modes: `--diff` and `--stats` are read-only; `--extract`
 overwrites fragments and `build.yaml`, while `--watch` immediately builds and

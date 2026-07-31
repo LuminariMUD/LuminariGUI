@@ -24,6 +24,7 @@ The LuminariGUI project includes a sophisticated Python toolchain that provides 
 #### Core Tools
 - **Python 3.10+**
 - **Git** (required for release workflows)
+- **GitHub CLI (`gh`)** (required to publish and verify the GitHub Release page)
 - **Standard Library Only**: No external dependencies for core tools
 
 #### Optional Dependencies
@@ -84,13 +85,13 @@ python3 theGUI/build.py --version 2.0.4.029
 
 ### theGUI/package.py - Package Manager
 
-**Purpose**: Creates distributable `.mpackage` files for Mudlet with full release workflow support.
+**Purpose**: Creates local distributable `.mpackage` files and publishes complete release refs and artifacts.
 
 #### Commands
 
 **Create Package:**
 ```bash
-# Create release package (builds XML first, runs tests)
+# Create a local distributable package (builds XML first, runs tests)
 python3 theGUI/package.py create
 
 # Create development package with timestamp
@@ -108,18 +109,18 @@ python3 theGUI/package.py create --version 2.0.4.029
 
 **Release Workflow:**
 ```bash
-# Full release workflow (build, test, branch, package, tag)
+# Publish and verify the complete release, including GitHub assets
 python3 theGUI/package.py release
 
-# Preview release without changes
+# Preview publication without changes
 python3 theGUI/package.py release --dry-run
 
-# Release and push to remote
-python3 theGUI/package.py release --push
-
-# Use one exact version for the XML, package, branch, and tag
-python3 theGUI/package.py release --version 2.0.4.029
+# Publish one exact version across the XML, package, branch, and tag
+python3 theGUI/package.py release --version 2.0.4.030
 ```
+
+`release` always publishes and requires authenticated Git and `gh` access. For
+a local artifact without commits, tags, or pushes, use `create`.
 
 **Maintenance:**
 ```bash
@@ -143,11 +144,16 @@ The `release` command executes:
 4. **Branch**: Creates `release/v{version}` branch
 5. **Package**: Creates and commits `.mpackage` plus metadata
 6. **Tag**: Creates annotated git tag
-7. **Push**: (Optional) Pushes to remote
+7. **Merge**: Merges the release branch into `master`
+8. **Publish**: Atomically pushes `master`, the release branch, and tag to `origin`
+9. **Verify refs**: Confirms all three remote refs match their local release refs
+10. **GitHub Release**: Publishes the release page and attaches `.mpackage` plus JSON metadata
+11. **Verify assets**: Confirms the page is public and both assets are uploaded
 
 An explicit `--version` is propagated through `build.yaml`, the built XML,
 package metadata, branch, and tag. When `--skip-build` is used, packaging
 fails if the selected version does not match the version embedded in the XML.
+There is no commit-without-push release mode.
 
 #### Package Output Structure
 ```
@@ -228,15 +234,20 @@ python3 theGUI/package.py create --dev
 ### Creating a Release
 
 ```bash
-# Preview the release workflow
+# Preview the publishing workflow
 python3 theGUI/package.py release --dry-run
 
-# Execute release (without push)
+# Build, publish, and verify the complete release
 python3 theGUI/package.py release
 
-# Or release and push in one step
-python3 theGUI/package.py release --push
+# Independently verify the public release and uploaded assets
+gh release view v2.0.4.030 \
+  --json url,isDraft,isPrerelease,tagName,assets
 ```
+
+The command does not report success until the remote refs are present and the
+GitHub Release is published (not a draft) with both assets in the `uploaded`
+state. Independently verify that state before handing off a release.
 
 ### Quick Package Creation
 
@@ -292,7 +303,8 @@ python3 theGUI/package.py release --skip-git-check
 1. **Use the release workflow**: `python3 theGUI/package.py release`
 2. **Test with dry-run first**: `python3 theGUI/package.py release --dry-run`
 3. **Update CHANGELOG.md** before releasing
-4. **Test the .mpackage** in Mudlet before pushing
+4. **Test the .mpackage** in Mudlet before invoking `release`, because the command publishes automatically
+5. **Publish and verify the GitHub Release page** with both generated assets
 
 ### Maintenance
 1. **Clean old dev packages**: `python3 theGUI/package.py clean`

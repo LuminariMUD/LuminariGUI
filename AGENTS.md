@@ -55,20 +55,17 @@ that mutation is specifically intended.
 ## Package Commands
 
 ```bash
-# Create release package (builds XML, runs tests)
+# Create a local distributable package only (builds XML, runs tests)
 python3 theGUI/package.py create
 
 # Create dev package with timestamp
 python3 theGUI/package.py create --dev
 
-# Full release workflow (build, test, branch, package, tag)
+# Publish a complete release (including GitHub page and uploaded assets)
 python3 theGUI/package.py release
 
-# Preview release without changes
+# Preview the publishing workflow without changes
 python3 theGUI/package.py release --dry-run
-
-# Release and push to remote
-python3 theGUI/package.py release --push
 
 # List existing packages
 python3 theGUI/package.py list
@@ -83,6 +80,18 @@ release branch, and tag. With `--skip-build`, the requested/current version
 must already match the version embedded in `LuminariGUI.xml`; packaging refuses
 a mismatch. Both commands accept `--skip-build` / `--skip-tests`, and `release`
 also accepts `--skip-git-check`.
+
+**A release is never local-only.** `package.py release` atomically pushes
+`master`, `release/v<version>`, and `v<version>` to `origin`, verifies all three
+remote refs, publishes the GitHub Release page through authenticated `gh`, and
+attaches and verifies both the `.mpackage` and JSON metadata. There is no
+commit-without-push release mode. Use `create` when the requested outcome is
+only a local `.mpackage`.
+
+Do not report a release complete unless the command reaches its final
+`fully published and verified` status. Independently confirm with
+`git ls-remote` and `gh release view` before handing the result back to the
+user.
 
 `package.py` invokes the test suite itself, so `create` and `release` run tests
 without requiring a separate working-directory setup.

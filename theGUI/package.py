@@ -7,10 +7,9 @@ Creates distributable .mpackage files for Mudlet with full release workflow supp
 This script integrates with build.py and uses build.yaml for version management.
 
 Usage:
-    python package.py create              # Create release package
+    python package.py create              # Create a local distributable package
     python package.py create --dev        # Create dev package with timestamp
-    python package.py release             # Full release workflow
-    python package.py release --push      # Release and push to remote
+    python package.py release             # Build and publish a release
     python package.py list                # List existing packages
     python package.py clean               # Clean old dev packages
 
@@ -18,8 +17,8 @@ Examples:
     python package.py create                    # Build XML, create package
     python package.py create --skip-build       # Package existing XML
     python package.py create --skip-tests       # Skip test suite
-    python package.py release --dry-run         # Preview release workflow
-    python package.py release --push            # Full release with push
+    python package.py release --dry-run         # Preview publication
+    python package.py release                   # Publish refs and GitHub assets
 """
 
 import argparse
@@ -199,27 +198,42 @@ class GitManager:
             return False
         return True
 
-    def push(self, branch: str = None, tags: bool = False) -> bool:
-        """Push branch and/or tags to remote"""
-        success = True
+    def publish_release(self, branch_name: str, tag_name: str) -> bool:
+        """Atomically push and verify every ref that constitutes a release."""
+        refspecs = [
+            "master",
+            branch_name,
+            f"refs/tags/{tag_name}",
+        ]
+        _, stderr, rc = self.run(['push', '--atomic', 'origin', *refspecs])
+        if rc != 0:
+            print(f"  ERROR publishing release refs: {stderr}")
+            return False
 
-        if branch:
-            _, stderr, rc = self.run(['push', '-u', 'origin', branch])
-            if rc != 0:
-                print(f"  ERROR pushing branch: {stderr}")
-                success = False
-            else:
-                print(f"  Pushed branch: {branch}")
+        refs = (
+            ("refs/heads/master", "refs/heads/master"),
+            (f"refs/heads/{branch_name}", f"refs/heads/{branch_name}"),
+            (f"refs/tags/{tag_name}", f"refs/tags/{tag_name}"),
+        )
+        for local_ref, remote_ref in refs:
+            local_sha, local_error, local_rc = self.run(['rev-parse', local_ref])
+            remote_line, remote_error, remote_rc = self.run(
+                ['ls-remote', '--exit-code', 'origin', remote_ref],
+                check=False,
+            )
+            remote_sha = remote_line.split()[0] if remote_line else ""
+            if (
+                local_rc != 0
+                or remote_rc != 0
+                or not local_sha
+                or local_sha != remote_sha
+            ):
+                detail = remote_error or local_error or "remote ref differs from local"
+                print(f"  ERROR verifying {remote_ref}: {detail}")
+                return False
 
-        if tags:
-            _, stderr, rc = self.run(['push', 'origin', '--tags'])
-            if rc != 0:
-                print(f"  ERROR pushing tags: {stderr}")
-                success = False
-            else:
-                print("  Pushed tags")
-
-        return success
+        print(f"  Published master, {branch_name}, and {tag_name} to origin")
+        return True
 
     def merge_to_master(self, source_branch: str, version: str) -> bool:
         """Merge a branch to master"""
@@ -440,7 +454,7 @@ class ReleaseWorkflow:
 
     def run_build(self) -> bool:
         """Run build.py to generate fresh XML"""
-        print("\n[2/6] Building XML from sources...")
+        print("\n[2/7] Building XML from sources...")
         if self.dry_run:
             target_version = (
                 self.version_override
@@ -483,7 +497,7 @@ class ReleaseWorkflow:
 
     def run_tests(self) -> bool:
         """Run test suite"""
-        print("\n[3/6] Running test suite...")
+        print("\n[3/7] Running test suite...")
         if self.dry_run:
             print("  [DRY RUN] Would run tests")
             return True
@@ -511,7 +525,7 @@ class ReleaseWorkflow:
 
     def check_git_status(self) -> bool:
         """Check git repository status"""
-        print("\n[1/6] Checking git status before build...")
+        print("\n[1/7] Checking git status before build...")
         if self.dry_run:
             print("  [DRY RUN] Would check git status")
             return True
@@ -532,10 +546,39 @@ class ReleaseWorkflow:
         print(f"  Repository clean on branch: {status.current_branch}")
         return True
 
+    def check_github_access(self) -> bool:
+        """Verify GitHub CLI availability and authentication before mutation."""
+        if self.dry_run:
+            print("  [DRY RUN] Would verify authenticated GitHub CLI access")
+            return True
+
+        gh_path = shutil.which("gh")
+        if not gh_path:
+            print(
+                "  ERROR: GitHub CLI (gh) is required before publishing a "
+                "release"
+            )
+            return False
+
+        result = subprocess.run(
+            [gh_path, "auth", "status"],
+            cwd=PROJECT_ROOT,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        if result.returncode != 0:
+            detail = result.stderr.strip() or result.stdout.strip()
+            print(f"  ERROR: GitHub CLI is not authenticated: {detail}")
+            return False
+
+        print("  GitHub CLI authentication verified")
+        return True
+
     def create_release_branch(self) -> bool:
         """Create release branch"""
         branch_name = f"release/v{self.version}"
-        print(f"\n[4/6] Creating release branch: {branch_name}")
+        print(f"\n[4/7] Creating release branch: {branch_name}")
 
         if self.dry_run:
             print(f"  [DRY RUN] Would create branch {branch_name}")
@@ -558,7 +601,7 @@ class ReleaseWorkflow:
 
     def create_package(self) -> bool:
         """Create the release package"""
-        print("\n[5/6] Creating release package...")
+        print("\n[5/7] Creating release package...")
         if self.dry_run:
             print(f"  [DRY RUN] Would create package v{self.version}")
             return True
@@ -575,16 +618,16 @@ class ReleaseWorkflow:
 
         return True
 
-    def create_tag_and_merge(self, push: bool = False) -> bool:
-        """Create git tag and optionally push"""
+    def create_tag_merge_and_publish(self) -> bool:
+        """Create the tag, merge to master, and publish all release refs."""
         tag_name = f"v{self.version}"
         branch_name = f"release/v{self.version}"
-        print(f"\n[6/6] Creating tag: {tag_name}")
+        print(f"\n[6/7] Tagging, merging, and publishing refs: {tag_name}")
 
         if self.dry_run:
             print(f"  [DRY RUN] Would create tag {tag_name}")
-            if push:
-                print("  [DRY RUN] Would push to remote")
+            print(f"  [DRY RUN] Would merge {branch_name} to master")
+            print("  [DRY RUN] Would atomically push master, release branch, and tag")
             return True
 
         # Create tag
@@ -595,25 +638,116 @@ class ReleaseWorkflow:
         if not self.git.merge_to_master(branch_name, self.version):
             return False
 
-        # Switch back to release branch
-        _, stderr, rc = self.git.run(['checkout', branch_name])
-        if rc != 0:
-            print(f"  ERROR: Could not return to {branch_name}: {stderr}")
+        print("  Publishing release refs to origin...")
+        if not self.git.publish_release(branch_name, tag_name):
             return False
-
-        # Push if requested
-        if push:
-            print("  Pushing to remote...")
-            if not self.git.push(branch_name, tags=True):
-                return False
-            if not self.git.push("master", tags=False):
-                return False
 
         return True
 
+    def publish_github_release(self) -> bool:
+        """Create and verify the public GitHub Release and both assets."""
+        tag_name = f"v{self.version}"
+        package_path = self.packager.get_package_path(is_dev=False)
+        metadata_path = package_path.with_suffix('.json')
+        print(f"\n[7/7] Publishing GitHub Release: {tag_name}")
+
+        if self.dry_run:
+            print(f"  [DRY RUN] Would publish GitHub Release {tag_name}")
+            print(
+                "  [DRY RUN] Would attach "
+                f"{package_path.name} and {metadata_path.name}"
+            )
+            print("  [DRY RUN] Would verify the release and uploaded assets")
+            return True
+
+        if not package_path.exists() or not metadata_path.exists():
+            print("  ERROR: Release package or metadata is missing")
+            return False
+
+        gh_path = shutil.which("gh")
+        if not gh_path:
+            print(
+                "  ERROR: GitHub CLI (gh) is required to publish a release. "
+                "Install and authenticate gh, then retry."
+            )
+            return False
+
+        create_result = subprocess.run(
+            [
+                gh_path,
+                "release",
+                "create",
+                tag_name,
+                str(package_path),
+                str(metadata_path),
+                "--title",
+                f"LuminariGUI v{self.version}",
+                "--generate-notes",
+                "--verify-tag",
+                "--latest",
+            ],
+            cwd=PROJECT_ROOT,
+            capture_output=True,
+            text=True,
+            timeout=180,
+        )
+        if create_result.returncode != 0:
+            detail = create_result.stderr.strip() or create_result.stdout.strip()
+            print(f"  ERROR publishing GitHub Release: {detail}")
+            return False
+
+        view_result = subprocess.run(
+            [
+                gh_path,
+                "release",
+                "view",
+                tag_name,
+                "--json",
+                "url,isDraft,isPrerelease,tagName,assets",
+            ],
+            cwd=PROJECT_ROOT,
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+        if view_result.returncode != 0:
+            detail = view_result.stderr.strip() or view_result.stdout.strip()
+            print(f"  ERROR verifying GitHub Release: {detail}")
+            return False
+
+        try:
+            release = json.loads(view_result.stdout)
+        except json.JSONDecodeError as error:
+            print(f"  ERROR parsing GitHub Release verification: {error}")
+            return False
+
+        if release.get("tagName") != tag_name:
+            print("  ERROR: GitHub Release tag does not match the package version")
+            return False
+        if release.get("isDraft"):
+            print("  ERROR: GitHub Release is still a draft")
+            return False
+        if release.get("isPrerelease"):
+            print("  ERROR: GitHub Release was unexpectedly marked as a prerelease")
+            return False
+
+        assets = {
+            asset.get("name"): str(asset.get("state", "")).lower()
+            for asset in release.get("assets", [])
+        }
+        expected_assets = (package_path.name, metadata_path.name)
+        for asset_name in expected_assets:
+            if assets.get(asset_name) != "uploaded":
+                print(f"  ERROR: GitHub Release asset is not uploaded: {asset_name}")
+                return False
+
+        release_url = release.get("url") or create_result.stdout.strip()
+        print(f"  Published and verified: {release_url}")
+        return True
+
     def execute(self, skip_build: bool = False, skip_tests: bool = False,
-                skip_git_check: bool = False, push: bool = False) -> bool:
-        """Execute the full release workflow"""
+                skip_git_check: bool = False) -> bool:
+        """Execute the complete, publishing release workflow."""
         if skip_build or self.version_override is not None:
             print(f"Starting release workflow for v{self.version}")
         else:
@@ -630,21 +764,24 @@ class ReleaseWorkflow:
                 print("\nCommit your changes first, or use --skip-git-check")
                 return False
         else:
-            print("\n[1/6] Git check skipped")
+            print("\n[1/7] Git check skipped")
+
+        if not self.check_github_access():
+            return False
 
         # Step 2: Build
         if not skip_build:
             if not self.run_build():
                 return False
         else:
-            print("\n[2/6] Build skipped")
+            print("\n[2/7] Build skipped")
 
         # Step 3: Tests
         if not skip_tests:
             if not self.run_tests():
                 return False
         else:
-            print("\n[3/6] Tests skipped")
+            print("\n[3/7] Tests skipped")
 
         # Step 4: Release branch
         if not self.create_release_branch():
@@ -654,21 +791,26 @@ class ReleaseWorkflow:
         if not self.create_package():
             return False
 
-        # Step 6: Tag and push
-        if not self.create_tag_and_merge(push):
+        # Step 6: Tag, merge, push, and verify remote refs.
+        if not self.create_tag_merge_and_publish():
+            return False
+
+        # Step 7: Publish and verify the GitHub Release page and assets.
+        if not self.publish_github_release():
             return False
 
         # Summary
         print(f"\n{'=' * 50}")
-        print(f"Release v{self.version} completed!")
+        if self.dry_run:
+            print(
+                f"Release v{self.version} publication preview completed; "
+                "no changes made."
+            )
+        else:
+            print(
+                f"Release v{self.version} fully published and verified!"
+            )
         print(f"{'=' * 50}")
-
-        if not self.dry_run and not push:
-            print("\nNext steps:")
-            print(f"  git push origin release/v{self.version}")
-            print("  git push origin master")
-            print("  git push origin --tags")
-            print("  Create GitHub release with release notes")
 
         return True
 
@@ -760,7 +902,6 @@ def cmd_release(args):
         skip_build=args.skip_build,
         skip_tests=args.skip_tests,
         skip_git_check=args.skip_git_check,
-        push=args.push
     )
     return 0 if success else 1
 
@@ -801,15 +942,15 @@ def main():
         epilog="""
 Commands:
   create    Create a package from built XML
-  release   Full release workflow (build, test, branch, package, tag)
+  release   Publish refs, GitHub Release page, and both assets
   list      List existing packages
   clean     Remove old development packages
 
 Examples:
-  python package.py create                Create release package
+  python package.py create                Create a local package
   python package.py create --dev          Create dev package
-  python package.py release --dry-run     Preview release workflow
-  python package.py release --push        Full release with push
+  python package.py release --dry-run     Preview publication
+  python package.py release               Publish a complete release
         """
     )
 
@@ -830,16 +971,17 @@ Examples:
                                help='Skip running test suite')
 
     # release command
-    release_parser = subparsers.add_parser('release', help='Full release workflow')
+    release_parser = subparsers.add_parser(
+        'release',
+        help='Build and publish a complete release',
+    )
     release_parser.add_argument(
         '--version',
         type=parse_version_argument,
-        help='Build, package, branch, and tag an exact version',
+        help='Build, package, branch, tag, and publish an exact version',
     )
     release_parser.add_argument('--dry-run', action='store_true',
-                                help='Preview without making changes')
-    release_parser.add_argument('--push', action='store_true',
-                                help='Push to remote after release')
+                                help='Preview publication without making changes')
     release_parser.add_argument('--skip-build', action='store_true',
                                 help='Skip building XML')
     release_parser.add_argument('--skip-tests', action='store_true',
