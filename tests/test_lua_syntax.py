@@ -11,8 +11,10 @@ import subprocess
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
+DEFAULT_XML_FILE = str(Path(__file__).resolve().parents[1] / "LuminariGUI.xml")
+
 class LuaSyntaxTester:
-    def __init__(self, xml_file="../LuminariGUI.xml"):
+    def __init__(self, xml_file=DEFAULT_XML_FILE):
         self.xml_file = xml_file
         self.luac_path = self._find_luac()
         self.errors = []
@@ -196,7 +198,7 @@ def main():
     import argparse
     
     parser = argparse.ArgumentParser(description='Validate Lua syntax in LuminariGUI XML')
-    parser.add_argument('--xml', default='../LuminariGUI.xml', help='XML file to validate')
+    parser.add_argument('--xml', default=DEFAULT_XML_FILE, help='XML file to validate')
     parser.add_argument('--verbose', '-v', action='store_true', help='Verbose output')
     parser.add_argument('--quiet', '-q', action='store_true', help='Quiet mode - only errors')
     

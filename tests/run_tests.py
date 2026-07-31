@@ -10,8 +10,12 @@ import subprocess
 import json
 import time
 import argparse
+import io
+from contextlib import redirect_stdout
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
+
+DEFAULT_XML_FILE = str(Path(__file__).resolve().parents[1] / "LuminariGUI.xml")
 
 # Import test modules
 try:
@@ -27,7 +31,7 @@ except ImportError as e:
     sys.exit(1)
 
 class TestRunner:
-    def __init__(self, xml_file="../LuminariGUI.xml"):
+    def __init__(self, xml_file=DEFAULT_XML_FILE):
         self.xml_file = xml_file
         self.results = {}
         self.start_time = None
@@ -387,37 +391,105 @@ class TestRunner:
         
         return result['success']
 
+def _run_requested_tests(runner, args):
+    """Execute the selected suite(s) and optional report."""
+    if args.test:
+        success = runner.run_single_test(args.test)
+    else:
+        parallel = args.parallel or (not args.sequential)
+        success = runner.run_all_tests(
+            parallel=parallel,
+            skip_optional=args.skip_optional,
+        )
+
+    if args.report:
+        runner.generate_report(format=args.format, output_file=args.report)
+
+    return success
+
+
+def _print_verbose_configuration(args):
+    """Show details that are intentionally absent from normal output."""
+    if args.test:
+        execution = f"single suite ({args.test})"
+    elif args.sequential:
+        execution = "all available suites, sequential"
+    else:
+        execution = "all available suites, parallel"
+
+    print("Runner configuration:")
+    print(f"  XML: {Path(args.xml).resolve()}")
+    print(f"  Execution: {execution}")
+    print(f"  Missing optional tools: {'skip suites' if args.skip_optional else 'fail'}")
+    print(f"  Report: {args.report or 'none'} ({args.format})")
+    print("")
+
+
+def _print_quiet_result(runner, success, captured_output):
+    """Emit one status line, plus concise diagnostics when a quiet run fails."""
+    status = "PASS" if success else "FAIL"
+    print(f"{status}: {runner.passed_tests}/{runner.total_tests} test suites")
+
+    if success:
+        return
+
+    diagnostics = list(runner.errors[:10])
+    if not diagnostics:
+        noteworthy = (
+            "missing dependencies",
+            "error:",
+            "unknown test:",
+            "no test suites",
+        )
+        diagnostics = [
+            line.strip()
+            for line in captured_output.splitlines()
+            if any(marker in line.lower() for marker in noteworthy)
+        ][:10]
+
+    for diagnostic in diagnostics:
+        print(f"  {diagnostic}", file=sys.stderr)
+
+
 def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(description='Run LuminariGUI tests')
-    parser.add_argument('--xml', default='../LuminariGUI.xml', help='XML file to test')
+    parser.add_argument('--xml', default=DEFAULT_XML_FILE, help='XML file to test')
     parser.add_argument('--parallel', action='store_true', help='Run tests in parallel')
     parser.add_argument('--sequential', action='store_true', help='Run tests sequentially')
     parser.add_argument('--skip-optional', action='store_true', help='Skip tests with missing dependencies')
     parser.add_argument('--test', help='Run specific test suite (syntax, quality, functions, events, lifecycle, system, performance)')
     parser.add_argument('--report', help='Generate report file')
     parser.add_argument('--format', choices=['text', 'json'], default='text', help='Report format')
-    parser.add_argument('--verbose', '-v', action='store_true', help='Verbose output')
-    parser.add_argument('--quiet', '-q', action='store_true', help='Quiet mode')
-    
+    output_group = parser.add_mutually_exclusive_group()
+    output_group.add_argument(
+        '--verbose',
+        '-v',
+        action='store_true',
+        help='Show runner configuration in addition to normal output',
+    )
+    output_group.add_argument(
+        '--quiet',
+        '-q',
+        action='store_true',
+        help='Suppress suite output and print one final status line',
+    )
     args = parser.parse_args()
-    
+
     # Create test runner
     runner = TestRunner(args.xml)
-    
-    # Run tests
-    if args.test:
-        success = runner.run_single_test(args.test)
+
+    if args.quiet:
+        captured = io.StringIO()
+        with redirect_stdout(captured):
+            success = _run_requested_tests(runner, args)
+        _print_quiet_result(runner, success, captured.getvalue())
     else:
-        parallel = args.parallel or (not args.sequential)
-        success = runner.run_all_tests(parallel=parallel, skip_optional=args.skip_optional)
-    
-    # Generate report if requested
-    if args.report:
-        runner.generate_report(format=args.format, output_file=args.report)
-    
-    # Exit with appropriate code
-    sys.exit(0 if success else 1)
+        if args.verbose:
+            _print_verbose_configuration(args)
+        success = _run_requested_tests(runner, args)
+
+    return 0 if success else 1
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

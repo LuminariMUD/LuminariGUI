@@ -34,6 +34,17 @@ except ImportError:
 SCRIPT_DIR = Path(__file__).parent.resolve()
 PROJECT_ROOT = SCRIPT_DIR.parent
 
+VERSION_PATTERN = re.compile(r"^[0-9A-Za-z]+(?:[._+-][0-9A-Za-z]+)*$")
+
+
+def parse_version_argument(value: str) -> str:
+    """Validate a version before writing it into YAML and XML."""
+    if not VERSION_PATTERN.fullmatch(value):
+        raise argparse.ArgumentTypeError(
+            "version must contain only letters, numbers, '.', '_', '+', or '-'"
+        )
+    return value
+
 
 class BuildConfig:
     """Configuration loaded from build.yaml"""
@@ -343,18 +354,30 @@ class Builder:
 
         return "\n".join(parts)
 
-    def build(self, validate_only: bool = False) -> tuple[bool, str]:
+    def build(
+        self,
+        validate_only: bool = False,
+        version_override: str | None = None,
+    ) -> tuple[bool, str]:
         """
         Build the final XML from fragments.
         Returns (success, output_content)
         """
-        # Increment version before building (skip for validate-only)
-        if not validate_only:
+        # An explicit version is exact; otherwise normal builds auto-increment.
+        # Validation/diff modes may render an override in memory, but never save it.
+        if version_override is not None:
+            old_version = self.config.version
+            self.config.version = version_override
+            if not validate_only:
+                print(f"Setting version: {old_version} -> {version_override}")
+                if not self.config.save_version():
+                    return False, ""
+        elif not validate_only:
             old_version = self.config.version
             new_version = self.config.increment_version()
             print(f"Incrementing version: {old_version} -> {new_version}")
             if not self.config.save_version():
-                print("  WARNING: Failed to save version to build.yaml")
+                return False, ""
 
         print(f"Building {self.config.package_name} v{self.config.version}...")
 
@@ -414,12 +437,15 @@ class Builder:
         print(f"  Done! {line_count} lines written.")
         return True, output
 
-    def diff(self) -> tuple[bool, bool]:
+    def diff(self, version_override: str | None = None) -> tuple[bool, bool]:
         """
         Show differences between current output and what build would produce.
         Returns (success, has_differences).
         """
-        success, new_content = self.build(validate_only=True)
+        success, new_content = self.build(
+            validate_only=True,
+            version_override=version_override,
+        )
         if not success:
             return False, False
 
@@ -950,9 +976,10 @@ triggers:
 class Watcher:
     """Watch for file changes and rebuild"""
 
-    def __init__(self, builder: Builder):
+    def __init__(self, builder: Builder, version_override: str | None = None):
         self.builder = builder
         self.config = builder.config
+        self.version_override = version_override
 
     def watch(self):
         """Watch source files and rebuild on changes"""
@@ -981,7 +1008,7 @@ class Watcher:
                 if latest_mtime > last_build:
                     timestamp = time.strftime("%H:%M:%S")
                     print(f"\n[{timestamp}] Change detected, rebuilding...")
-                    self.builder.build()
+                    self.builder.build(version_override=self.version_override)
                     last_build = time.time()
 
                 time.sleep(1)
@@ -1018,8 +1045,13 @@ Examples:
                         help='Show line counts and fragment statistics')
     parser.add_argument('--fail-on-diff', action='store_true',
                         help='Compare without writing and exit with error if output differs (for CI; implies --diff)')
+    parser.add_argument('--version', type=parse_version_argument,
+                        help='Build an exact version instead of auto-incrementing')
 
     args = parser.parse_args()
+
+    if args.version and (args.extract or args.clean or args.stats):
+        parser.error("--version is only valid with build, --validate, --diff, or --watch")
 
     # Load configuration
     config = BuildConfig()
@@ -1040,7 +1072,7 @@ Examples:
         sys.exit(0)
 
     if args.diff or args.fail_on_diff:
-        success, has_differences = builder.diff()
+        success, has_differences = builder.diff(version_override=args.version)
         if not success:
             sys.exit(1)
         if args.fail_on_diff and has_differences:
@@ -1049,12 +1081,15 @@ Examples:
         sys.exit(0)
 
     if args.watch:
-        watcher = Watcher(builder)
+        watcher = Watcher(builder, version_override=args.version)
         watcher.watch()
         sys.exit(0)
 
     # Default: build
-    success, _ = builder.build(validate_only=args.validate)
+    success, _ = builder.build(
+        validate_only=args.validate,
+        version_override=args.version,
+    )
     sys.exit(0 if success else 1)
 
 

@@ -32,6 +32,7 @@ import subprocess
 import sys
 import tempfile
 import zipfile
+import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
@@ -40,6 +41,37 @@ from typing import Optional
 # Script directory for relative paths
 SCRIPT_DIR = Path(__file__).parent.resolve()
 PROJECT_ROOT = SCRIPT_DIR.parent
+
+VERSION_PATTERN = re.compile(r"^[0-9A-Za-z]+(?:[._+-][0-9A-Za-z]+)*$")
+
+
+def parse_version_argument(value: str) -> str:
+    """Validate a version before using it in filenames, YAML, or XML."""
+    if not VERSION_PATTERN.fullmatch(value):
+        raise argparse.ArgumentTypeError(
+            "version must contain only letters, numbers, '.', '_', '+', or '-'"
+        )
+    return value
+
+
+def increment_build_version(version: str) -> str:
+    """Return the version produced by build.py's normal auto-increment."""
+    parts = version.split('.')
+    last_part = parts[-1]
+    width = len(last_part)
+    try:
+        parts[-1] = str(int(last_part) + 1).zfill(width)
+    except ValueError:
+        parts.append('1')
+    return '.'.join(parts)
+
+
+def get_version_from_xml(xml_path: Path) -> Optional[str]:
+    """Read the embedded Mudlet package version from a built XML file."""
+    try:
+        return ET.parse(xml_path).getroot().attrib.get("version")
+    except (ET.ParseError, OSError):
+        return None
 
 
 @dataclass
@@ -268,6 +300,18 @@ dependencies = ""
             print("Run 'python build.py' first to generate the XML file")
             return None
 
+        xml_version = get_version_from_xml(self.xml_file)
+        if not xml_version:
+            print(f"ERROR: Could not read package version from {self.xml_file}")
+            return None
+        if xml_version != self.version:
+            print(
+                "ERROR: Refusing to package mismatched versions: "
+                f"requested v{self.version}, XML contains v{xml_version}"
+            )
+            print("Build the requested version first, or omit --version.")
+            return None
+
         output_path = self.get_package_path(is_dev)
         print(f"Creating {'development' if is_dev else 'release'} package: {output_path.name}")
 
@@ -377,21 +421,42 @@ dependencies = ""
 class ReleaseWorkflow:
     """Manages the full release workflow"""
 
-    def __init__(self, version: str, dry_run: bool = False):
+    def __init__(
+        self,
+        version: str,
+        dry_run: bool = False,
+        version_override: Optional[str] = None,
+    ):
         self.version = version
+        self.version_override = version_override
         self.dry_run = dry_run
         self.git = GitManager()
         self.packager = Packager(version)
 
+    def _set_version(self, version: str) -> None:
+        """Keep branch, tag, package metadata, and XML expectations aligned."""
+        self.version = version
+        self.packager = Packager(version)
+
     def run_build(self) -> bool:
         """Run build.py to generate fresh XML"""
-        print("\n[1/6] Building XML from sources...")
+        print("\n[2/6] Building XML from sources...")
         if self.dry_run:
-            print("  [DRY RUN] Would run build.py")
+            target_version = (
+                self.version_override
+                if self.version_override is not None
+                else increment_build_version(self.version)
+            )
+            self._set_version(target_version)
+            print(f"  [DRY RUN] Would build exact version v{target_version}")
             return True
 
+        command = [sys.executable, str(SCRIPT_DIR / "build.py")]
+        if self.version_override is not None:
+            command.extend(["--version", self.version_override])
+
         result = subprocess.run(
-            [sys.executable, str(SCRIPT_DIR / "build.py")],
+            command,
             capture_output=True,
             text=True
         )
@@ -401,12 +466,24 @@ class ReleaseWorkflow:
             print(result.stderr)
             return False
 
-        print("  Build completed")
+        built_version = get_version_from_build_yaml()
+        if not built_version:
+            print("  ERROR: Build completed but build.yaml has no version")
+            return False
+        if self.version_override is not None and built_version != self.version_override:
+            print(
+                "  ERROR: Build ignored requested version "
+                f"v{self.version_override} and produced v{built_version}"
+            )
+            return False
+
+        self._set_version(built_version)
+        print(f"  Build completed at v{self.version}")
         return True
 
     def run_tests(self) -> bool:
         """Run test suite"""
-        print("\n[2/6] Running test suite...")
+        print("\n[3/6] Running test suite...")
         if self.dry_run:
             print("  [DRY RUN] Would run tests")
             return True
@@ -434,7 +511,7 @@ class ReleaseWorkflow:
 
     def check_git_status(self) -> bool:
         """Check git repository status"""
-        print("\n[3/6] Checking git status...")
+        print("\n[1/6] Checking git status before build...")
         if self.dry_run:
             print("  [DRY RUN] Would check git status")
             return True
@@ -471,6 +548,7 @@ class ReleaseWorkflow:
         files_to_commit = [
             PROJECT_ROOT / "LuminariGUI.xml",
             PROJECT_ROOT / "theGUI" / "build.yaml",
+            PROJECT_ROOT / "docs" / "archive",
         ]
 
         if not self.git.commit(f"Prepare release v{self.version}", files_to_commit):
@@ -486,7 +564,16 @@ class ReleaseWorkflow:
             return True
 
         package_path = self.packager.create(is_dev=False)
-        return package_path is not None
+        if package_path is None:
+            return False
+
+        metadata_path = package_path.with_suffix('.json')
+        files_to_commit = [package_path, metadata_path]
+        if not self.git.commit(f"Add release package v{self.version}", files_to_commit):
+            print("  ERROR: Could not commit release package")
+            return False
+
+        return True
 
     def create_tag_and_merge(self, push: bool = False) -> bool:
         """Create git tag and optionally push"""
@@ -502,50 +589,62 @@ class ReleaseWorkflow:
 
         # Create tag
         if not self.git.tag(tag_name, f"Release version {self.version}"):
-            print("  WARNING: Could not create tag")
+            return False
 
         # Merge to master
-        self.git.merge_to_master(branch_name, self.version)
+        if not self.git.merge_to_master(branch_name, self.version):
+            return False
 
         # Switch back to release branch
-        self.git.run(['checkout', branch_name])
+        _, stderr, rc = self.git.run(['checkout', branch_name])
+        if rc != 0:
+            print(f"  ERROR: Could not return to {branch_name}: {stderr}")
+            return False
 
         # Push if requested
         if push:
             print("  Pushing to remote...")
-            self.git.push(branch_name, tags=True)
-            self.git.push("master", tags=False)
+            if not self.git.push(branch_name, tags=True):
+                return False
+            if not self.git.push("master", tags=False):
+                return False
 
         return True
 
     def execute(self, skip_build: bool = False, skip_tests: bool = False,
                 skip_git_check: bool = False, push: bool = False) -> bool:
         """Execute the full release workflow"""
-        print(f"Starting release workflow for v{self.version}")
+        if skip_build or self.version_override is not None:
+            print(f"Starting release workflow for v{self.version}")
+        else:
+            print(
+                f"Starting release workflow from v{self.version}; "
+                "the build will select the next version"
+            )
         if self.dry_run:
             print("DRY RUN MODE - No changes will be made\n")
 
-        # Step 1: Build
-        if not skip_build:
-            if not self.run_build():
-                return False
-        else:
-            print("\n[1/6] Build skipped")
-
-        # Step 2: Tests
-        if not skip_tests:
-            if not self.run_tests():
-                return False
-        else:
-            print("\n[2/6] Tests skipped")
-
-        # Step 3: Git status
+        # Step 1: Verify the user's tree before the build creates expected changes.
         if not skip_git_check:
             if not self.check_git_status():
                 print("\nCommit your changes first, or use --skip-git-check")
                 return False
         else:
-            print("\n[3/6] Git check skipped")
+            print("\n[1/6] Git check skipped")
+
+        # Step 2: Build
+        if not skip_build:
+            if not self.run_build():
+                return False
+        else:
+            print("\n[2/6] Build skipped")
+
+        # Step 3: Tests
+        if not skip_tests:
+            if not self.run_tests():
+                return False
+        else:
+            print("\n[3/6] Tests skipped")
 
         # Step 4: Release branch
         if not self.create_release_branch():
@@ -596,8 +695,12 @@ def cmd_create(args):
     # Run build first unless skipped
     if not args.skip_build:
         print("Building XML from sources...")
+        command = [sys.executable, str(SCRIPT_DIR / "build.py")]
+        if args.version is not None:
+            command.extend(["--version", args.version])
+
         result = subprocess.run(
-            [sys.executable, str(SCRIPT_DIR / "build.py")],
+            command,
             capture_output=True,
             text=True
         )
@@ -607,6 +710,12 @@ def cmd_create(args):
             return 1
         # Re-read version after build (it auto-increments)
         version = get_version_from_build_yaml() or version
+        if args.version is not None and version != args.version:
+            print(
+                "ERROR: Build ignored requested version "
+                f"v{args.version} and produced v{version}"
+            )
+            return 1
 
     # Run tests unless skipped
     if not args.skip_tests and not args.dev:
@@ -642,7 +751,11 @@ def cmd_release(args):
         print("ERROR: Could not determine version")
         return 1
 
-    workflow = ReleaseWorkflow(version, dry_run=args.dry_run)
+    workflow = ReleaseWorkflow(
+        version,
+        dry_run=args.dry_run,
+        version_override=args.version,
+    )
     success = workflow.execute(
         skip_build=args.skip_build,
         skip_tests=args.skip_tests,
@@ -706,7 +819,11 @@ Examples:
     create_parser = subparsers.add_parser('create', help='Create a package')
     create_parser.add_argument('--dev', action='store_true',
                                help='Create development package with timestamp')
-    create_parser.add_argument('--version', help='Override version')
+    create_parser.add_argument(
+        '--version',
+        type=parse_version_argument,
+        help='Build and package an exact version',
+    )
     create_parser.add_argument('--skip-build', action='store_true',
                                help='Skip building XML (use existing)')
     create_parser.add_argument('--skip-tests', action='store_true',
@@ -714,7 +831,11 @@ Examples:
 
     # release command
     release_parser = subparsers.add_parser('release', help='Full release workflow')
-    release_parser.add_argument('--version', help='Override version')
+    release_parser.add_argument(
+        '--version',
+        type=parse_version_argument,
+        help='Build, package, branch, and tag an exact version',
+    )
     release_parser.add_argument('--dry-run', action='store_true',
                                 help='Preview without making changes')
     release_parser.add_argument('--push', action='store_true',

@@ -36,9 +36,13 @@ Fragments are named `NN_descriptive_name.xml`, where `NN` is `00`–`09` for cor
 4.  **Test**: `python3 tests/run_tests.py`.
 5.  **Manual test**: import `LuminariGUI.xml` into Mudlet.
 6.  **Release**: `python3 theGUI/package.py release` (use `--dry-run` to preview).
-7.  **Commit** both the source fragments and the built `LuminariGUI.xml`.
+7.  **Commit** the source fragments, `theGUI/build.yaml`, the built
+    `LuminariGUI.xml`, and any newly generated tracked archive.
 
-Additional build modes: `--extract` (first-time split of an existing XML), `--watch` (rebuild on change), `--diff` (show pending changes).
+Additional build modes: `--diff` and `--stats` are read-only; `--extract`
+overwrites fragments and `build.yaml`, while `--watch` immediately builds and
+then rebuilds/version-bumps on every change. Use the mutating modes only when
+that behavior is intended.
 
 ---
 

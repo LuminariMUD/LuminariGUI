@@ -22,7 +22,7 @@ The LuminariGUI project includes a sophisticated Python toolchain that provides 
 ### Requirements
 
 #### Core Tools
-- **Python 3.8+** (recommended: Python 3.10+)
+- **Python 3.10+**
 - **Git** (required for release workflows)
 - **Standard Library Only**: No external dependencies for core tools
 
@@ -56,10 +56,10 @@ python3 theGUI/build.py
 # Validate without writing output
 python3 theGUI/build.py --validate
 
-# Extract existing XML into fragments (first-time setup)
+# DESTRUCTIVE: replace fragments and build.yaml from the existing XML
 python3 theGUI/build.py --extract
 
-# Watch mode for active development
+# MUTATING: build immediately and version-bump on each detected change
 python3 theGUI/build.py --watch
 
 # Show what would change
@@ -67,7 +67,13 @@ python3 theGUI/build.py --diff
 
 # Show statistics
 python3 theGUI/build.py --stats
+
+# Build an exact version without auto-incrementing
+python3 theGUI/build.py --version 2.0.4.029
 ```
+
+`--validate`, `--diff`, `--stats`, and `--fail-on-diff` are read-only.
+`--extract`, `--watch`, and `--clean` mutate or delete repository artifacts.
 
 #### Features
 - **Fragment Assembly**: Combines XML fragments into single package
@@ -95,6 +101,9 @@ python3 theGUI/package.py create --skip-build
 
 # Skip test suite
 python3 theGUI/package.py create --skip-tests
+
+# Build and package an exact version
+python3 theGUI/package.py create --version 2.0.4.029
 ```
 
 **Release Workflow:**
@@ -107,6 +116,9 @@ python3 theGUI/package.py release --dry-run
 
 # Release and push to remote
 python3 theGUI/package.py release --push
+
+# Use one exact version for the XML, package, branch, and tag
+python3 theGUI/package.py release --version 2.0.4.029
 ```
 
 **Maintenance:**
@@ -114,7 +126,7 @@ python3 theGUI/package.py release --push
 # List all packages in Releases/
 python3 theGUI/package.py list
 
-# Clean old dev packages (keeps latest 3)
+# DESTRUCTIVE: remove old dev packages (keeps latest 3)
 python3 theGUI/package.py clean
 
 # Keep different number of dev packages
@@ -125,13 +137,17 @@ python3 theGUI/package.py clean --keep 5
 
 The `release` command executes:
 
-1. **Build**: Runs `build.py` to generate fresh XML
-2. **Test**: Runs full test suite
-3. **Git Check**: Verifies clean repository state
+1. **Git Preflight**: Verifies the user's repository is clean before creating build changes
+2. **Build**: Runs `build.py` to generate fresh XML and resolves the release version
+3. **Test**: Runs the available test suites
 4. **Branch**: Creates `release/v{version}` branch
-5. **Package**: Creates `.mpackage` with metadata
+5. **Package**: Creates and commits `.mpackage` plus metadata
 6. **Tag**: Creates annotated git tag
 7. **Push**: (Optional) Pushes to remote
+
+An explicit `--version` is propagated through `build.yaml`, the built XML,
+package metadata, branch, and tag. When `--skip-build` is used, packaging
+fails if the selected version does not match the version embedded in the XML.
 
 #### Package Output Structure
 ```
@@ -169,20 +185,25 @@ python3 scripts/validate_package.py --no-lua-syntax
 
 #### Command-Line Usage
 ```bash
-# Run complete test suite
+# Run the complete suite (fails before testing if an external tool is missing)
 python3 tests/run_tests.py
 
-# Skip tests requiring optional tools (lua, luacheck)
+# Run every suite supported by the installed external tools
 python3 tests/run_tests.py --skip-optional
 
 # Run from tests directory
 cd tests && python3 run_tests.py
+
+# Add runner configuration or reduce output to one status line
+python3 tests/run_tests.py --skip-optional --verbose
+python3 tests/run_tests.py --skip-optional --quiet
 ```
 
 #### Test Suites
 - **Lua Syntax**: Validates all Lua code compiles
 - **Function Tests**: Unit tests for core functions
 - **Event System**: Tests event handlers and MSDP integration
+- **Lifecycle Regressions**: Tests upgrade/reset handling and tooling invariants
 - **System Tests**: Memory leak detection, error boundaries
 - **Performance**: Benchmarks for critical operations
 

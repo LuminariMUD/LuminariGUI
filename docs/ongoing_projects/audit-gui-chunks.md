@@ -325,8 +325,9 @@ These are global by design due to Mudlet API requirements:
 
 - Edit source files in `theGUI/src/`, NOT `LuminariGUI.xml` directly
 - Always run `python3 theGUI/build.py --validate` before building
-- Commit both source files and built `LuminariGUI.xml`
-- Reference CLAUDE.md for project conventions
+- Commit source files, `theGUI/build.yaml`, built `LuminariGUI.xml`, and any
+  new tracked archive
+- Reference `AGENTS.md` for project conventions
 
 ## Next Steps
 

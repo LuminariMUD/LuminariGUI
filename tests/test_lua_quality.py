@@ -13,8 +13,10 @@ import json
 import re
 from pathlib import Path
 
+DEFAULT_XML_FILE = str(Path(__file__).resolve().parents[1] / "LuminariGUI.xml")
+
 class LuaQualityAnalyzer:
-    def __init__(self, xml_file="../LuminariGUI.xml"):
+    def __init__(self, xml_file=DEFAULT_XML_FILE):
         self.xml_file = xml_file
         self.luacheck_path = self._find_luacheck()
         self.errors = []
@@ -272,7 +274,7 @@ def main():
     import argparse
     
     parser = argparse.ArgumentParser(description='Analyze Lua code quality in LuminariGUI XML')
-    parser.add_argument('--xml', default='../LuminariGUI.xml', help='XML file to analyze')
+    parser.add_argument('--xml', default=DEFAULT_XML_FILE, help='XML file to analyze')
     parser.add_argument('--strict', action='store_true', help='Fail on warnings too')
     parser.add_argument('--verbose', '-v', action='store_true', help='Verbose output')
     parser.add_argument('--quiet', '-q', action='store_true', help='Quiet mode - only errors')

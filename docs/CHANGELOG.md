@@ -47,6 +47,17 @@ long-standing event-handler leak found during the audit.
 - **Obsolete standalone test removed.** `tests/test_state_validation.py`
   targeted a "State Validator" subsystem that does not exist in the package
   and therefore failed every direct invocation.
+- **Package/release version consistency.** `--version` now builds the requested
+  version exactly, and default releases adopt the version selected by the
+  auto-incrementing build. Packaging refuses an XML/metadata version mismatch.
+- **Release preflight ordering.** The clean-tree check now runs before the
+  release build creates expected changes; tag, merge, checkout, and push
+  failures now stop the workflow instead of reporting false success.
+- **Test runner output flags.** `--verbose` now prints runner configuration and
+  `--quiet` emits a single status line instead of both flags being no-ops.
+- **Test path resolution.** The runner and standalone Python suites now locate
+  `LuminariGUI.xml` relative to the repository and work from either root or
+  `tests/`.
 
 ### Changed
 
@@ -76,12 +87,12 @@ long-standing event-handler leak found during the audit.
 
 - Added `docs/MUDLET_COMPATIBILITY.md` — Mudlet 4.20–4.22 changes affecting
   this package, known open upstream bugs, and a triage checklist.
-- Corrected `docs/MUDLET_DEVELOPMENT.md`, `CONTRIBUTING.md`, and `CLAUDE.md`,
+- Corrected `docs/MUDLET_DEVELOPMENT.md`, `CONTRIBUTING.md`, and `AGENTS.md`,
   which described an obsolete "single-file architecture" and a deleted
   `scripts/create_package.py`.
-- Documented that `tests/run_tests.py` must be run from `tests/` (or with an
-  explicit `--xml`), and that omitting `--skip-optional` without `luacheck`
-  installed exits 0 having run **no tests**.
+- Made `AGENTS.md` canonical and linked `CLAUDE.md` / `GEMINI.md` to it.
+- Corrected dependency guidance: omitting `--skip-optional` when a tool such as
+  `luacheck` is missing exits 1 before any suite runs.
 
 ## [Unreleased] - 2025-11-29
 

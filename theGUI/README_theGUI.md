@@ -36,7 +36,8 @@ cd theGUI
 python build.py --extract
 ```
 
-This creates source fragments from the existing `LuminariGUI.xml`.
+This overwrites source fragments and regenerates `build.yaml` from the existing
+`LuminariGUI.xml`; use it only for intentional reverse extraction.
 
 ### Build Package
 
@@ -60,11 +61,12 @@ Validates all fragments and the assembly without writing output.
 |---------|-------------|
 | `python build.py` | Build the package |
 | `python build.py --validate` | Validate only, don't write |
-| `python build.py --extract` | Split existing XML into fragments |
+| `python build.py --extract` | **Destructive:** overwrite fragments from existing XML |
 | `python build.py --diff` | Show what would change |
 | `python build.py --stats` | Show line counts and statistics |
-| `python build.py --clean` | Remove generated output file |
-| `python build.py --watch` | Watch files and rebuild on changes |
+| `python build.py --clean` | **Destructive:** remove generated output file |
+| `python build.py --watch` | **Mutating:** build immediately and on each change |
+| `python build.py --version VERSION` | Build one exact version without incrementing |
 
 ## Package Manager (package.py)
 
@@ -77,11 +79,13 @@ After building the XML, use `package.py` to create distributable `.mpackage` fil
 | `python package.py create` | Create release package (runs build & tests) |
 | `python package.py create --dev` | Create dev package with timestamp |
 | `python package.py create --skip-build` | Package existing XML without rebuilding |
+| `python package.py create --version VERSION` | Build and package one exact version |
 | `python package.py release` | Full release workflow (build, test, branch, tag) |
+| `python package.py release --version VERSION` | Use one exact build/package/branch/tag version |
 | `python package.py release --dry-run` | Preview release without changes |
 | `python package.py release --push` | Release and push to remote |
 | `python package.py list` | List existing packages |
-| `python package.py clean` | Remove old dev packages |
+| `python package.py clean` | **Destructive:** remove old dev packages |
 
 ### Quick Examples
 
@@ -134,7 +138,7 @@ keys:
 2. Validate: `python build.py --validate`
 3. Build: `python build.py`
 4. Test in Mudlet
-5. Commit both source and output
+5. Commit source, `build.yaml`, output, and any new tracked archive
 
 ### Adding New Functionality
 
@@ -148,7 +152,8 @@ For active development:
 ```bash
 python build.py --watch
 ```
-Automatically rebuilds when source files change.
+Runs a build immediately, then rebuilds and version-bumps when source files
+change.
 
 ## Fragment Format
 
@@ -206,7 +211,8 @@ descriptive_name = lowercase_with_underscores
 ## Version Control
 
 - Source fragments (`src/`) are the source of truth
-- Both source and output (`LuminariGUI.xml`) are tracked in git
+- Source, `build.yaml`, output (`LuminariGUI.xml`), and generated archives are
+  tracked in git
 - Users can download `LuminariGUI.xml` directly without building
 
 ## Troubleshooting
