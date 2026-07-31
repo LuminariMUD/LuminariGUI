@@ -324,8 +324,8 @@ assert(calls.mapper == 1, "reset recovery ran during a fresh profile load")
             r"\bGUI\.DEBUG\s*=\s*(?:true|false)\b", source_text
         )
         self._require(
-            explicit_boolean_assignments == ["GUI.DEBUG = true"],
-            "GUI.DEBUG must have exactly one explicit boolean assignment set to true",
+            explicit_boolean_assignments == ["GUI.DEBUG = false"],
+            "GUI.DEBUG must have exactly one explicit boolean assignment set to false",
         )
         self._require(
             "This is the ONE switch" in debug_source,
@@ -515,7 +515,8 @@ end
 
 {debug_script}
 
-assert(GUI.DEBUG == true, "debug mode is not enabled")
+assert(GUI.DEBUG == false, "debug mode is not disabled by default")
+GUI.DEBUG = true
 GUI.debug("TEST", "visible message", {{answer = 42}})
 local joined = table.concat(captured, "\\n")
 assert(joined:find("LGUI%-DEBUG"), "debug prefix was not written")

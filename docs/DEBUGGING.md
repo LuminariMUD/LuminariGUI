@@ -4,11 +4,12 @@ LuminariGUI has one master diagnostic switch, defined at the start of
 `theGUI/src/scripts/00_debug.xml`:
 
 ```lua
-GUI.DEBUG = true
+GUI.DEBUG = false
 ```
 
-This is the only persistent debug-mode setting. Set it to `false` and rebuild
-the package when the startup problem has been resolved.
+This is the only persistent debug-mode setting and is disabled by default. Set
+it to `true` temporarily and rebuild the package when collecting diagnostics,
+then restore it to `false` afterward.
 
 While enabled, diagnostics are deliberately verbose and are written directly
 to Mudlet's main console. Normal trace lines begin with `[LGUI-DEBUG`, caught
