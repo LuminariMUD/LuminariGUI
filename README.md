@@ -1,5 +1,7 @@
 # LuminariGUI
 
+[![CI](https://github.com/LuminariMUD/LuminariGUI/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/LuminariMUD/LuminariGUI/actions/workflows/ci.yml)
+
 LuminariGUI is a comprehensive graphical user interface package for [LuminariMUD](http://luminarimud.com/), built for the [Mudlet](https://www.mudlet.org/) client. It provides real-time data integration, advanced mapping, and a customizable chat interface to enhance the gameplay experience.
 
 ## Features
@@ -44,6 +46,8 @@ Detailed documentation is available in the `docs/` directory:
 *   **[Mudlet Compatibility](docs/MUDLET_COMPATIBILITY.md)**: What changed in Mudlet 4.20–4.22, known upstream bugs, and a "the GUI broke after updating" triage checklist.
 *   **[Build System Guide](theGUI/README_theGUI.md)**: How to use the source-to-build system for modular XML development.
 *   **[Python Tools](docs/PYTHON_TOOLS.md)**: Guide to the automated build and testing tools (`validate_package.py`, `run_tests.py`, etc.).
+*   **[Continuous Integration](docs/CI.md)**: Required checks, exact local commands, troubleshooting, ownership, and retention.
+*   **[Mudlet Smoke Test](docs/MUDLET_SMOKE_TEST.md)**: Real-client release checklist and advisory Xvfb boundary.
 *   **[Protocol Reference](docs/PROTOCOL_REFERENCE.md)**: Details on MSDP variables and how they map to the GUI.
 *   **[Runtime Resource Ownership](docs/RESOURCE_LIFECYCLE.md)**: Handler/timer ownership, cleanup boundaries, audit commands, and verified lifecycle counts.
 *   **[Sound Usage](docs/SOUND_USAGE.md)**: Configuration for sound triggers and audio assets.

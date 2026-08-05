@@ -143,6 +143,31 @@ There is no `requirements.txt` and no required third-party Python package.
 External tools `lua`/`luac` (and optionally `luacheck`) enable the Lua test
 suites.
 
+## Continuous Integration
+
+The protected `master` branch requires the GitHub Actions check runs
+`quality`, `build-and-test`, `gitleaks`, `CodeQL`, `Semgrep Lua`, and
+`dependency-review`. Coverage and the manual Mudlet/Xvfb smoke remain
+informational. `docs/CI.md` is the canonical source for pinned versions, exact
+local equivalents, hosted-only boundaries, false-positive handling, tool
+ownership, update cadence, and artifact retention.
+
+Before pushing a source change, at minimum run:
+
+```bash
+python3 theGUI/build.py --validate
+python3 theGUI/build.py --diff --fail-on-diff
+python3 tests/run_tests.py --skip-optional
+python3 scripts/validate_package.py
+python3 scripts/analyze_handlers.py --fail-on-unowned
+```
+
+For a CI-equivalent gate, install the hash-locked Python tools plus Lua 5.1
+and luacheck 0.23.0, then run every suite **without** `--skip-optional` and the
+quality/security commands in `docs/CI.md`. A real release still requires
+`docs/MUDLET_SMOKE_TEST.md`; mocked tests, coverage, or the advisory Xvfb job
+cannot approve it.
+
 ## Architecture
 
 ### Source-to-Build System

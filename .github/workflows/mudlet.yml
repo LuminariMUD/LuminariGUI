@@ -84,11 +84,6 @@ jobs:
           test -x "${app_run}"
           printf 'MUDLET_APP_RUN=%s\n' "${app_run}" >> "${GITHUB_ENV}"
 
-          QT_QPA_PLATFORM=offscreen "${app_run}" --version \
-            | tee "${MUDLET_SMOKE_ROOT}/artifacts/mudlet-version.log"
-          grep --fixed-strings --quiet "${MUDLET_VERSION}" \
-            "${MUDLET_SMOKE_ROOT}/artifacts/mudlet-version.log"
-
       - name: Launch package queue under Xvfb
         shell: bash
         run: |
@@ -111,11 +106,23 @@ jobs:
           done
 
           if [[ ${display_ready} -eq 1 ]]; then
+            "${MUDLET_APP_RUN}" --version \
+              > "${artifacts}/mudlet-version.log" 2>&1
+            version_status=$?
+            if [[ ${version_status} -eq 0 ]] \
+              && grep --fixed-strings --quiet "${MUDLET_VERSION}" \
+                "${artifacts}/mudlet-version.log"; then
+              version_ready=1
+            else
+              version_ready=0
+            fi
+
             dbus-run-session -- "${MUDLET_APP_RUN}" --mirror \
               "${GITHUB_WORKSPACE}/LuminariGUI.xml" \
               > "${artifacts}/mudlet.log" 2>&1 &
             mudlet_pid=$!
           else
+            version_ready=0
             mudlet_pid=""
             printf 'Xvfb did not become ready\n' > "${artifacts}/mudlet.log"
           fi
@@ -140,7 +147,7 @@ jobs:
             printf 'Display capture was unavailable\n' \
               > "${artifacts}/display-unavailable.txt"
 
-          if [[ -n "${window_id}" ]]; then
+          if [[ ${version_ready} -eq 1 ]] && [[ -n "${window_id}" ]]; then
             window_name="$(xdotool getwindowname "${window_id}" 2> /dev/null || true)"
             {
               printf '# Experimental Mudlet Xvfb smoke\n\n'
@@ -155,7 +162,11 @@ jobs:
               printf '# Experimental Mudlet Xvfb smoke\n\n'
               printf -- '- Result: FAIL\n'
               printf -- '- Mudlet: %s\n' "${MUDLET_VERSION}"
-              printf -- '- Reason: no visible Mudlet window appeared within 60 seconds\n'
+              if [[ ${version_ready} -ne 1 ]]; then
+                printf -- '- Reason: official binary version probe failed\n'
+              else
+                printf -- '- Reason: no visible Mudlet window appeared within 60 seconds\n'
+              fi
             } > "${artifacts}/result.md"
             smoke_status=1
           fi

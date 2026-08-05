@@ -45,6 +45,12 @@ python3 theGUI/package.py --help
 python3 scripts/validate_package.py --help
 ```
 
+For the hash-locked CI environment, required check names, exact local command
+groups, scanner pins, troubleshooting, owners, update cadence, and artifact
+retention, see [`CI.md`](CI.md). The ordinary `--skip-optional` developer run
+is not equivalent to CI: required CI installs Lua 5.1 and luacheck 0.23.0 and
+runs all nine suites without that flag.
+
 ## Tools Reference
 
 ### theGUI/build.py - Source-to-Build System
@@ -304,6 +310,10 @@ python3 theGUI/build.py --diff
 python3 tests/run_tests.py --skip-optional
 ```
 
+To reproduce a required CI failure, install the missing pinned dependency and
+rerun without `--skip-optional`. See [`CI.md`](CI.md) for Lua version mismatch,
+source-map errors, generated drift, and scanner false-positive triage.
+
 ### Git Issues
 ```bash
 # Skip git check for quick packaging
@@ -347,3 +357,5 @@ python3 theGUI/package.py release --skip-git-check
 - **[Developer Guide](MUDLET_DEVELOPMENT.md)**: Architecture and best practices
 - **[Changelog](CHANGELOG.md)**: Version history
 - **[Contributing](../CONTRIBUTING.md)**: Contribution guidelines
+- **[Continuous Integration](CI.md)**: Required checks and local reproduction
+- **[Mudlet Runtime Smoke Test](MUDLET_SMOKE_TEST.md)**: Release-quality client verification

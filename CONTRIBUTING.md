@@ -18,11 +18,31 @@ We use a custom Python toolchain for building, validation, and testing. See [doc
 - `tests/run_tests.py`
 
 ## Pull Requests
-1.  Create a feature branch.
-2.  Make your changes to the source fragments in `theGUI/src/` — **not** to `LuminariGUI.xml`, which is a build output.
-3.  Build: `python3 theGUI/build.py`.
-4.  Run validation: `python3 scripts/validate_package.py`.
-5.  Run tests: `python3 tests/run_tests.py`.
-6.  Commit both the source fragments and the rebuilt `LuminariGUI.xml`.
-7.  Submit PR.
 
+1. Create a feature branch.
+2. Make changes to source fragments in `theGUI/src/`, **not** directly to
+   `LuminariGUI.xml`.
+3. Run the non-mutating validation and drift checks while iterating:
+
+   ```bash
+   python3 theGUI/build.py --validate
+   python3 theGUI/build.py --diff --fail-on-diff
+   ```
+
+4. When source changes are ready, run one intentional
+   `python3 theGUI/build.py` and commit the source fragments,
+   `theGUI/build.yaml`, generated `LuminariGUI.xml`, and new tracked archive.
+5. Install the pinned CI dependencies and run the exact `quality`,
+   `build-and-test`, Gitleaks, and Semgrep equivalents in
+   [docs/CI.md](docs/CI.md). Do not use `--skip-optional` for the CI-equivalent
+   test run.
+6. Complete the real-client checklist in
+   [docs/MUDLET_SMOKE_TEST.md](docs/MUDLET_SMOKE_TEST.md) when behavior,
+   callbacks, input, assets, or layout changed.
+7. Submit the pull request and wait for `quality`, `build-and-test`, `gitleaks`,
+   `CodeQL`, `Semgrep Lua`, and `dependency-review`. Coverage and Mudlet Xvfb
+   are informational.
+
+The protected branch requires the pull request to be current with `master`.
+See [docs/CI.md](docs/CI.md) for false-positive handling; do not broadly
+disable a scanner or replace an immutable action pin with a floating tag.
