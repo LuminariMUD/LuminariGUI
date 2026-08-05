@@ -69,7 +69,11 @@ in this folder.
     Python tooling only; separate JSON/LCOV-or-XML/HTML artifacts, baseline
     deltas, 30-day retention, and a ninth `coverage` regression suite are in
     place. The initial baselines are 30.36% Lua and 51.49% Python line
-    coverage with no thresholds. Hosted acceptance is pending.
+    coverage with no thresholds. Hosted
+    [run 31050957309](https://github.com/LuminariMUD/LuminariGUI/actions/runs/31050957309)
+    passed every collection, mapping, normalization, summary, clean-tree, and
+    artifact step in 99 seconds; core CI, Security, and dependency-graph runs
+    for the same commit also passed. Phase 4 is accepted and Phase 5 follows.
 - [ ] Define Mudlet-aware duplicate-name rules and add scope-aware build
   validation with regression tests. Do not reject intentional same-named items
   that Mudlet permits in different groups or package sections.

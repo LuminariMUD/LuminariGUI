@@ -1,6 +1,6 @@
 # Comprehensive CI Pipeline Plan
 
-- **Status:** In progress — Phases 1–3 accepted; Phase 4 in progress
+- **Status:** In progress — Phases 1–4 accepted; Phase 5 in progress
 - **Created:** 2026-08-05
 - **Last updated:** 2026-08-05
 - **Scope:** Pull-request and `master` automation for the XML/Lua package,
@@ -433,7 +433,11 @@ reports, raw/mapped data, a
 source-map manifest, and baseline deltas for 30 days. The ninth `coverage`
 suite verifies mapping tamper resistance and report separation. Exclusions,
 pins, local reproduction, and the no-threshold policy are documented in
-`docs/COVERAGE.md`. Hosted acceptance remains before Phase 5 begins.
+`docs/COVERAGE.md`. Hosted
+[run 31050957309](https://github.com/LuminariMUD/LuminariGUI/actions/runs/31050957309)
+then completed in 99 seconds with every collection, mapping, normalization,
+summary, clean-tree, and artifact step passing. The companion core CI,
+Security, and dependency-graph runs also passed. Phase 4 is accepted.
 
 **Acceptance criteria**
 
