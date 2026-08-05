@@ -47,6 +47,7 @@ Detailed documentation is available in the `docs/` directory:
 *   **[Protocol Reference](docs/PROTOCOL_REFERENCE.md)**: Details on MSDP variables and how they map to the GUI.
 *   **[Sound Usage](docs/SOUND_USAGE.md)**: Configuration for sound triggers and audio assets.
 *   **[Changelog](docs/CHANGELOG.md)**: History of changes and updates.
+*   **[Historical Changelog](docs/HISTORICAL_CHANGELOG.md)**: Preserved release history through v2.0.4.016.
 *   **[Project Task List](docs/ongoing-projects/TASK_LIST.md)**: The single tracker for unfinished work.
 *   **[Contributing](CONTRIBUTING.md)**: Guidelines for contributing to the project.
 

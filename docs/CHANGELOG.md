@@ -5,7 +5,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-# Previous Changelogs: `docs/previous_changelogs/`
+Historical entries through v2.0.4.016 are preserved in
+[`HISTORICAL_CHANGELOG.md`](HISTORICAL_CHANGELOG.md).
 
 ---
 Begin Changelog entries below
@@ -68,6 +69,10 @@ Begin Changelog entries below
   `map.mapwindow` and `map.minimap` objects.
 
 ### Changed
+
+- **Historical changelogs consolidated.** The two legacy changelog snapshots
+  now live in one `docs/HISTORICAL_CHANGELOG.md` document with their original
+  filenames and introducing commit recorded for provenance.
 
 - **Source-aware lifecycle tests.** Tests assemble the composite source in
   memory, find Lua by Mudlet script name, enforce script order/size bounds,
@@ -295,7 +300,8 @@ End Changelog entries here
 
 ## Version History Summary
 
-See Previous Changelogs for More Details: `docs/previous_changelogs/`
+See [`HISTORICAL_CHANGELOG.md`](HISTORICAL_CHANGELOG.md) for detailed entries
+through v2.0.4.016.
 
 | Version | Release Date | Key Features |
 |---------|--------------|--------------|

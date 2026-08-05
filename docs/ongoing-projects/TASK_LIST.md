@@ -6,8 +6,14 @@ in this folder.
 
 ## Maintenance and automation
 
-- [ ] Consolidate `docs/previous_changelogs/` into one historical document or
+- [x] Consolidate `docs/previous_changelogs/` into one historical document or
   archive while preserving release provenance.
+  - Completed 2026-08-05: combined both snapshots in
+    `docs/HISTORICAL_CHANGELOG.md`, retaining source filenames, release
+    entries, and their introducing commit.
+  - Verified: all archived release headings are present, the old directory is
+    gone, `git -c core.whitespace=cr-at-eol diff --check` passes, and
+    `python3 theGUI/build.py --validate` passes.
 - [ ] Audit the long-lived handlers and timers reported by
   `scripts/analyze_handlers.py`. Distinguish intentional file-scope/lifecycle
   registrations from real leaks, add ownership/cleanup where needed, and
