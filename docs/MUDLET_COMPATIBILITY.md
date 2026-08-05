@@ -130,7 +130,17 @@ tab:setClickCallback(function() demonnicChatSwitch(tab) end)
 ### 2. `box-shadow` in stylesheets — *will never work*
 `box-shadow` appears in the GUI stylesheets. **Qt's stylesheet engine has never supported `box-shadow`** — it is not part of QSS. It is silently ignored, but it is dead code and — under Qt6's stricter parsing — an invalid declaration risks the surrounding rule being dropped.
 
-**Fixed:** 8 `box-shadow` and 1 `text-shadow` declarations removed from stylesheets. The `text-shadow` uses inside `echo()` HTML were deliberately left alone: that is Qt's rich-text engine, a different parser from QSS. `background` (shorthand) and `vertical-align` remain in use and have limited QSS support — worth re-verifying visually.
+**Fixed:** 8 `box-shadow` and 1 `text-shadow` declarations were removed from
+stylesheets. The `text-shadow` uses inside `echo()` HTML were deliberately left
+alone: that is Qt's rich-text engine, a different parser from QSS. The final
+Qt6 pass on 2026-08-05 also removed unsupported `vertical-align` declarations,
+replaced scrollbar `background` shorthand with explicit `background-color`,
+and repaired a missing semicolon in the tabbed-info center style. The official
+Mudlet 4.22.0 AppImage (Qt 6.9.0) then produced no stylesheet parse warning at
+1600×1000 or 1000×700; before/after scrollbar, gauge, and action-icon crops
+were pixel-identical. Regression coverage keeps these declarations from
+returning. See the official
+[Qt Style Sheets Reference](https://doc.qt.io/qt-6/stylesheet-reference.html).
 
 ### 3. `config.lua` `dependencies` type mismatch
 `theGUI/package.py:233` emits:
@@ -143,7 +153,10 @@ Mudlet's own package exporter (`src/dlgPackageExporter.cpp`, `writeConfigFile`) 
 
 `package.py` additionally emitted a non-standard `modified` field and omitted `icon` and `helpURL`.
 
-**Fixed:** `dependencies` is now a comma-separated string, `helpURL` added, `modified` removed. `icon` is still omitted deliberately — no icon asset exists in the repo, and since Mudlet 4.20 an icon-less package simply gets no icon, whereas naming a missing file would be worse. Adding a 512x512 icon remains an open improvement.
+**Fixed:** `dependencies` is now a comma-separated string, `helpURL` was added,
+and `modified` was removed. The package now declares the bundled 512×512 icon
+by basename and ships it at `.mudlet/Icon/LuminariGUI.png`, matching Mudlet's
+native exporter and package-manager lookup.
 
 ### 4. Stale `mudlet_version = "4.0+"`
 `theGUI/package.py` claimed 4.0+. Given Qt6 rendering, the 4.21 label fixes, and the event-signature changes, the realistic floor is much higher.

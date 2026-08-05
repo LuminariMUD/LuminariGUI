@@ -1371,6 +1371,37 @@ assert(type(msdp) == "table",
             "the reviewed single-scope mapper grew without a new split decision",
         )
 
+    def _test_qt6_stylesheet_compatibility(self):
+        gui_root = self.repo_root / "theGUI" / "src" / "scripts" / "gui"
+        gui_sources = "\n".join(
+            path.read_text(encoding="utf-8") for path in sorted(gui_root.glob("*.xml"))
+        )
+        self._require(
+            re.search(r"(?m)^\s*vertical-align\s*:", gui_sources) is None,
+            "unsupported CSS vertical-align declaration returned to Qt stylesheets",
+        )
+
+        scrollbar = (gui_root / "70_custom_scrollbar.xml").read_text(encoding="utf-8")
+        self._require(
+            re.search(r"(?m)^\s*background\s*:", scrollbar) is None,
+            "scrollbar uses background shorthand instead of Qt background-color",
+        )
+        self._require(
+            "background-color: transparent;" in scrollbar,
+            "scrollbar page regions no longer declare an explicit transparent color",
+        )
+
+        tab_shell = (gui_root / "30_tab_shell.xml").read_text(encoding="utf-8")
+        self._require(
+            re.search(
+                r"GUI\.tabbedInfoWindow\.color2\s*\.\.\s*\[\[;\s*"
+                r"font-family:",
+                tab_shell,
+            )
+            is not None,
+            "tabbed-info center background color is missing its QSS semicolon",
+        )
+
     def _test_core_parent_load_order_and_orphan_guard(self):
         foundation_script = self._fragment_script(
             self.adjustable_source_path,
@@ -2567,6 +2598,10 @@ raise SystemExit(1)
             (
                 "remaining_fragment_size_review",
                 self._test_remaining_fragment_size_review,
+            ),
+            (
+                "qt6_stylesheet_compatibility",
+                self._test_qt6_stylesheet_compatibility,
             ),
             (
                 "core_parent_load_order_and_orphan_guard",

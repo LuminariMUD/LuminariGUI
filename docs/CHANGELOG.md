@@ -66,6 +66,12 @@ Begin Changelog entries below
 
 ### Fixed
 
+- **Qt6 stylesheet compatibility.** Unsupported `vertical-align` declarations
+  were removed, scrollbar backgrounds now use explicit `background-color`,
+  and the tabbed-info center's dynamically assembled declaration now has its
+  required semicolon. Mudlet 4.22.0/Qt 6.9 runtime logs are warning-free and
+  relevant before/after visual crops are pixel-identical; regression coverage
+  prevents the invalid forms from returning.
 - **Live monolithic-to-split upgrade lifecycle overlap.** Pre-split releases
   registered anonymous load/connection closures without retaining their IDs,
   so one legacy callback can survive an in-session replacement and run beside

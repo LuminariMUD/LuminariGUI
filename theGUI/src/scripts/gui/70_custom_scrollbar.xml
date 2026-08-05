@@ -8,14 +8,14 @@
   setProfileStyleSheet(
     [[
   QScrollBar:vertical {
-     background: ]] ..
+     background-color: ]] ..
     background_color ..
     [[;
      width: 15px;
      margin: 22px 0 22px 0;
   }
   QScrollBar:horizontal {
-     background: ]] ..
+     background-color: ]] ..
     background_color ..
     [[;
      height: 15px;
@@ -106,20 +106,20 @@
         subcontrol-origin: margin;
   }
   QScrollBar::up-arrow:vertical, QScrollBar::down-arrow:vertical {
-     background: #404040;
+     background-color: #404040;
      width: 4px;
      height: 3px;
   }
   QScrollBar::left-arrow:horizontal, QScrollBar::right-arrow:horizontal {
-     background: #404040;
+     background-color: #404040;
      width: 3px;
      height: 4px;
   }
   QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
-     background: none;
+     background-color: transparent;
   }
   QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {
-     background: none;
+     background-color: transparent;
   }
 ]]
   )

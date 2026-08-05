@@ -373,6 +373,7 @@ Practical rules:
 
 -   **Only QSS-supported properties work.** Notably, **`box-shadow` does not exist in QSS** and is silently ignored — as are most modern CSS features (flexbox, grid, transforms, transitions, custom properties). Layout is Geyser's job, not the stylesheet's.
 -   Prefer explicit longhand properties (`border-width`, `border-color`, `border-style`) over shorthands where behaviour is ambiguous.
+-   `vertical-align` is not a QSS property. Position widgets with Geyser and use a widget's Qt alignment property when its contents need alignment. For scrollbars, use explicit `background-color` values, including `transparent`, instead of CSS background shorthand.
 -   `background-image` does not scale; use **`border-image`** when you need the image to stretch to the widget.
 -   Qt6 parses stylesheets more strictly than Qt5. A malformed declaration can cause the surrounding rule to be dropped, which typically shows up as a **silently unstyled widget** rather than an error.
 -   Verify texture/image paths resolve at runtime — a missing file also yields a silently unstyled widget.

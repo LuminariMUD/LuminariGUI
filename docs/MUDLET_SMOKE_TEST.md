@@ -204,6 +204,40 @@ Screenshot/log artifact locations:
 Release decision: APPROVE | REJECT
 ```
 
+## Targeted acceptance records
+
+### 2026-08-05 — QSS and input backlog closeout
+
+This was a focused acceptance pass for checklist sections 5 and 9, not a full
+release approval. It used the official Linux x86_64 Mudlet 4.22.0 AppImage
+with Qt 6.9.0, an isolated portable profile, Xvfb at 1600×1000, a 1000×700
+resize, the US X11 keymap, and a local non-MSDP TCP fixture. Alias/key evidence
+came from package 2.0.4.039; the QSS correction was re-imported as 2.0.4.041.
+
+- **Aliases:** `gag chat`, `show self`, `hscroll`, `chaseres`, `fix gui`,
+  `debug list`, `debugc`, `dblink`, `set chat sound volume 42`, `dsound`, and
+  `fix chat` each matched in Mudlet. `dsound` was run once in each direction.
+  No alias command reached the TCP fixture.
+- **Keypad:** with Num Lock on, XTEST-delivered Qt keypad events produced
+  `southwest`, `south`, `southeast`, `west`, `look`, `east`, `northwest`,
+  `north`, `northeast`, `inv`, `scan`, `up`, and `down`, each exactly once.
+  With Num Lock off, the four operator keys retained their bindings and the
+  nine navigation-mode keys remained unbound, matching the package's declared
+  numeric-key bindings. A number-row `1` stayed in the command line and sent
+  no movement command.
+- **QSS:** the original package logged a parse failure for
+  `GUI.tabbedInfoWindow.center`, revealing a missing semicolon. After that fix,
+  removing `vertical-align`, and expanding scrollbar backgrounds to explicit
+  colors, the client logged no stylesheet parse failure. The action-icon crop
+  (130×105), scrollbar crop (25×475), and status/action crop (770×250) each had
+  an ImageMagick absolute-error count of zero between the before and after
+  1600×1000 screenshots. The 1000×700 resize retained the corrected styles.
+
+The keypad events traversed the real X11 → Qt → Mudlet input path and preserved
+the keypad modifier distinction, but were injected with XTEST because the
+isolated environment had no attached keyboard. A human physical-keyboard pass
+therefore remains part of every release-candidate checklist.
+
 ## Optional GitHub Xvfb experiment
 
 The manual-dispatch workflow `.github/workflows/mudlet.yml` downloads the

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE MudletPackage>
-<MudletPackage version="2.0.4.041">
+<MudletPackage version="2.0.4.039">
 	<TriggerPackage>
 		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 			<name>LuminariGUI</name>
@@ -2712,6 +2712,7 @@ function GUI.init_action_icons()
   -- Initialize action icon CSS
   GUI.ActionIconCSS = CSSMan.new([[
 	margin: 0px;
+	vertical-align: top;
 	border: 1px solid rgba(184, 115, 27, 0.5);
 	border-radius: 3px;
 ]])
@@ -2730,6 +2731,7 @@ function GUI.init_action_icons()
       getMudletHomeDir():gsub("\\", "/") ..
       [[/LuminariGUI/images/action-standard.png"); 
       margin: 0px; 
+      vertical-align: top; 
     }
   ]])
   GUI.StandardActionIcon:setToolTip("Standard Action", "10")
@@ -2746,6 +2748,7 @@ function GUI.init_action_icons()
     QLabel { 
       border-image: url("]] .. getMudletHomeDir():gsub("\\", "/") .. [[/LuminariGUI/images/action-move.png"); 
       margin: 0px; 
+      vertical-align: top; 
     }
   ]])
   GUI.MoveActionIcon:setToolTip("Move Action", "10")
@@ -2762,6 +2765,7 @@ function GUI.init_action_icons()
     QLabel { 
       border-image: url("]] .. getMudletHomeDir():gsub("\\", "/") .. [[/LuminariGUI/images/action-swift.png"); 
       margin: 0px; 
+      vertical-align: top; 
     }
   ]])
   GUI.SwiftActionIcon:setToolTip("Swift Action", "10")
@@ -2988,7 +2992,7 @@ function GUI.tabbedInfoWindow.init()
     [[
   background-color: ]] ..
     GUI.tabbedInfoWindow.color2 ..
-    [[;
+    [[
 	font-family: Tahoma, Geneva, sans-serif;
 	]]
   )
@@ -5268,14 +5272,14 @@ end
   setProfileStyleSheet(
     [[
   QScrollBar:vertical {
-     background-color: ]] ..
+     background: ]] ..
     background_color ..
     [[;
      width: 15px;
      margin: 22px 0 22px 0;
   }
   QScrollBar:horizontal {
-     background-color: ]] ..
+     background: ]] ..
     background_color ..
     [[;
      height: 15px;
@@ -5366,20 +5370,20 @@ end
         subcontrol-origin: margin;
   }
   QScrollBar::up-arrow:vertical, QScrollBar::down-arrow:vertical {
-     background-color: #404040;
+     background: #404040;
      width: 4px;
      height: 3px;
   }
   QScrollBar::left-arrow:horizontal, QScrollBar::right-arrow:horizontal {
-     background-color: #404040;
+     background: #404040;
      width: 3px;
      height: 4px;
   }
   QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
-     background-color: transparent;
+     background: none;
   }
   QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {
-     background-color: transparent;
+     background: none;
   }
 ]]
   )

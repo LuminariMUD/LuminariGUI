@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE MudletPackage>
-<MudletPackage version="2.0.4.041">
+<MudletPackage version="2.0.4.040">
 	<TriggerPackage>
 		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 			<name>LuminariGUI</name>
@@ -2988,7 +2988,7 @@ function GUI.tabbedInfoWindow.init()
     [[
   background-color: ]] ..
     GUI.tabbedInfoWindow.color2 ..
-    [[;
+    [[
 	font-family: Tahoma, Geneva, sans-serif;
 	]]
   )

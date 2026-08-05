@@ -12,6 +12,7 @@ LuminariGUI is a comprehensive graphical user interface package for [LuminariMUD
 *   **Spell Casting Console**: Visual tracking of spell casting progress.
 *   **Group Management**: Live status display of group members.
 *   **Affects Tracking**: Visual indicators for active spells and status effects.
+*   **Numeric Keypad Movement**: Thirteen Num Lock-on keypad bindings cover eight directions, look, inventory, scan, up, and down without colliding with the keyboard number row.
 *   **Customizable Layout**: Geyser-based UI components with CSS styling.
 
 ## Installation

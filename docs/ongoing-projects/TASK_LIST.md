@@ -136,12 +136,29 @@ in this folder.
     at 32px. Packaging mirrors Mudlet's exporter with
     `.mudlet/Icon/LuminariGUI.png` plus `icon = "LuminariGUI.png"`; regression
     tests inspect the archive, PNG signature, and exact 512×512 IHDR.
-- [ ] Visually re-verify the remaining QSS `background` shorthand and
+- [x] Visually re-verify the remaining QSS `background` shorthand and
   `vertical-align` declarations under supported Qt6/Mudlet releases; replace
   any declarations that render inconsistently.
-- [ ] Complete and record a manual Mudlet smoke test of the package aliases and
+  - Completed 2026-08-05 with the official Mudlet 4.22.0 AppImage and Qt 6.9.0
+    in an isolated Linux/Xvfb profile. Unsupported `vertical-align` was
+    removed, scrollbar shorthand became explicit `background-color`, and the
+    run exposed and fixed a separate missing QSS semicolon on the tabbed-info
+    center. The corrected package emitted no stylesheet parse warning at
+    1600×1000 or 1000×700, while scrollbar, gauge, and action-icon comparison
+    crops remained pixel-identical. A regression test guards all three fixes.
+- [x] Complete and record a manual Mudlet smoke test of the package aliases and
   numeric-keypad movement bindings. Automated tests cover their structure but
   not physical keyboard input in Mudlet.
+  - Completed 2026-08-05 in a disposable Mudlet 4.22.0/Qt 6.9.0 profile
+    connected to a local TCP fixture. All 11 package alias definitions were
+    exercised and intercepted locally without leaking a command to the
+    server. X11 XTEST keypad events then proved that all 13 Num Lock-on
+    bindings emitted their expected command exactly once, the four operator
+    bindings remained active with Num Lock off, navigation-mode keypad events
+    remained deliberately unbound, and the keyboard number row did not match.
+    This operator-driven real-client pass exercises Mudlet's Qt key-event path;
+    the release checklist still requires a human physical-keyboard pass because
+    no keyboard hardware was attached to the isolated environment.
 
 ## Feature backlog
 

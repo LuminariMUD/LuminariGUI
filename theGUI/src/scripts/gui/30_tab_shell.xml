@@ -99,7 +99,7 @@ function GUI.tabbedInfoWindow.init()
     [[
   background-color: ]] ..
     GUI.tabbedInfoWindow.color2 ..
-    [[
+    [[;
 	font-family: Tahoma, Geneva, sans-serif;
 	]]
   )

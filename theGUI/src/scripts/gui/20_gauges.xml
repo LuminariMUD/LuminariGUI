@@ -150,7 +150,6 @@ function GUI.init_action_icons()
   -- Initialize action icon CSS
   GUI.ActionIconCSS = CSSMan.new([[
 	margin: 0px;
-	vertical-align: top;
 	border: 1px solid rgba(184, 115, 27, 0.5);
 	border-radius: 3px;
 ]])
@@ -169,7 +168,6 @@ function GUI.init_action_icons()
       getMudletHomeDir():gsub("\\", "/") ..
       [[/LuminariGUI/images/action-standard.png"); 
       margin: 0px; 
-      vertical-align: top; 
     }
   ]])
   GUI.StandardActionIcon:setToolTip("Standard Action", "10")
@@ -186,7 +184,6 @@ function GUI.init_action_icons()
     QLabel { 
       border-image: url("]] .. getMudletHomeDir():gsub("\\", "/") .. [[/LuminariGUI/images/action-move.png"); 
       margin: 0px; 
-      vertical-align: top; 
     }
   ]])
   GUI.MoveActionIcon:setToolTip("Move Action", "10")
@@ -203,7 +200,6 @@ function GUI.init_action_icons()
     QLabel { 
       border-image: url("]] .. getMudletHomeDir():gsub("\\", "/") .. [[/LuminariGUI/images/action-swift.png"); 
       margin: 0px; 
-      vertical-align: top; 
     }
   ]])
   GUI.SwiftActionIcon:setToolTip("Swift Action", "10")
