@@ -82,6 +82,9 @@ jobs:
           )
           app_run="${MUDLET_SMOKE_ROOT}/squashfs-root/AppRun"
           test -x "${app_run}"
+          mkdir -p "${MUDLET_SMOKE_ROOT}/portable"
+          printf '%s\n' "${MUDLET_SMOKE_ROOT}/portable" \
+            > "${MUDLET_SMOKE_ROOT}/squashfs-root/portable.txt"
           printf 'MUDLET_APP_RUN=%s\n' "${app_run}" >> "${GITHUB_ENV}"
 
       - name: Launch package queue under Xvfb
