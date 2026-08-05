@@ -55,7 +55,8 @@ jobs:
       - name: Install Xvfb capture tools
         run: |
           sudo apt-get update
-          sudo apt-get install --yes dbus-x11 scrot x11-utils xdotool xvfb
+          sudo apt-get install --yes \
+            dbus-x11 libopengl0 scrot x11-utils xdotool xvfb
 
       - name: Download and verify official Mudlet AppImage
         shell: bash
