@@ -142,6 +142,93 @@ jobs:
       - name: Analyze Python and Actions
         uses: github/codeql-action/analyze@5595ccaf912efad79be6eef63a5619ff05969be3 # v4.37.6
 
+  semgrep-lua:
+    name: Semgrep Lua
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12.3"
+          cache: pip
+          cache-dependency-path: requirements-ci.txt
+          pip-version: "26.2.1"
+
+      - name: Install pinned Python tools
+        run: python -m pip install --require-hashes -r requirements-ci.txt
+
+      - name: Extract shared Lua analysis workspace
+        run: |
+          python scripts/extract_embedded_lua.py \
+            --output "${RUNNER_TEMP}/semgrep-lua/workspace"
+
+      - name: Verify all custom rules against fixtures
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --rm \
+            --volume "${GITHUB_WORKSPACE}:/src:ro" \
+            --workdir /src \
+            semgrep/semgrep@sha256:65dcd4408adda7c183a6b4550cb1e9b19f7f627a6fbb7e0559bd466bedc44d7b \
+            python3 scripts/test_semgrep_rules.py
+
+      - name: Scan production Lua with findings report-only
+        shell: bash
+        run: |
+          set -euo pipefail
+          analysis_dir="${RUNNER_TEMP}/semgrep-lua"
+          docker run --rm \
+            --volume "${GITHUB_WORKSPACE}:/src:ro" \
+            --volume "${analysis_dir}/workspace:/analysis:ro" \
+            --workdir /src \
+            semgrep/semgrep@sha256:65dcd4408adda7c183a6b4550cb1e9b19f7f627a6fbb7e0559bd466bedc44d7b \
+            semgrep scan \
+              --config semgrep/rules/luminari-lua-security.yml \
+              --json \
+              --metrics=off \
+              --quiet \
+              /analysis/lua > "${analysis_dir}/semgrep-raw.json"
+
+          python scripts/remap_lua_diagnostics.py \
+            --tool semgrep \
+            --manifest "${analysis_dir}/workspace/manifest.json" \
+            --input "${analysis_dir}/semgrep-raw.json" \
+            --output "${analysis_dir}/semgrep-normalized.json"
+          tool_errors="$(jq '.tool_error_count' \
+            "${analysis_dir}/semgrep-normalized.json")"
+          finding_count="$(jq '.finding_count' \
+            "${analysis_dir}/semgrep-normalized.json")"
+          {
+            echo '### Semgrep Lua'
+            echo "- Scanner errors (blocking): ${tool_errors}"
+            echo "- Security findings (report-only): ${finding_count}"
+          } >> "${GITHUB_STEP_SUMMARY}"
+          if [[ ${tool_errors} -ne 0 ]]; then
+            echo "::error::Semgrep produced ${tool_errors} scanner error(s)"
+            exit 1
+          fi
+
+      - name: Verify read-only Semgrep analysis
+        run: test -z "$(git status --porcelain --untracked-files=all)"
+
+      - name: Upload mapped Semgrep report
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: semgrep-lua-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/semgrep-lua/workspace/manifest.json
+            ${{ runner.temp }}/semgrep-lua/semgrep-raw.json
+            ${{ runner.temp }}/semgrep-lua/semgrep-normalized.json
+          if-no-files-found: warn
+          retention-days: 30
+
   dependency-review:
     name: dependency-review
     if: ${{ github.event_name == 'pull_request' }}

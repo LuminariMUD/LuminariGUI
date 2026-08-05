@@ -1,0 +1,142 @@
+rules:
+  - id: luminari.lua.dynamic-code-execution
+    languages: [lua]
+    severity: ERROR
+    message: >-
+      Dynamic Lua execution can turn server or profile data into code. Keep
+      executable logic static and use explicit dispatch tables.
+    metadata:
+      category: security
+      confidence: HIGH
+      cwe: CWE-95
+    pattern-either:
+      - pattern: load(...)
+      - pattern: loadfile(...)
+      - pattern: loadstring(...)
+      - pattern: dofile(...)
+
+  - id: luminari.lua.shell-execution
+    languages: [lua]
+    severity: ERROR
+    message: >-
+      Shell execution is unsafe in a Mudlet package and can expose the local
+      profile to command injection.
+    metadata:
+      category: security
+      confidence: HIGH
+      cwe: CWE-78
+    pattern-either:
+      - pattern: os.execute(...)
+      - pattern: io.popen(...)
+
+  - id: luminari.lua.untrusted-command-flow
+    languages: [lua]
+    severity: WARNING
+    message: >-
+      Server or trigger data reaches a command-sending API. Validate against
+      an explicit command allow-list before sending it back to the game.
+    metadata:
+      category: security
+      confidence: MEDIUM
+      cwe: CWE-20
+    mode: taint
+    pattern-sources:
+      - pattern-either:
+          - pattern: matches[$INDEX]
+          - pattern: msdp.$FIELD
+          - pattern: gmcp.$FIELD
+          - pattern: line
+    pattern-sinks:
+      - pattern-either:
+          - pattern: send($COMMAND, ...)
+          - pattern: sendAll($COMMAND, ...)
+          - pattern: sendRaw($COMMAND)
+
+  - id: luminari.lua.untrusted-file-path-flow
+    languages: [lua]
+    severity: WARNING
+    message: >-
+      Server or trigger data reaches a local file or download path. Constrain
+      the resolved path to the Mudlet profile/package directory first.
+    metadata:
+      category: security
+      confidence: MEDIUM
+      cwe: CWE-22
+    mode: taint
+    pattern-sources:
+      - pattern-either:
+          - pattern: matches[$INDEX]
+          - pattern: msdp.$FIELD
+          - pattern: gmcp.$FIELD
+          - pattern: line
+    pattern-sinks:
+      - patterns:
+          - pattern-either:
+              - pattern: io.open($PATH, ...)
+              - pattern: downloadFile($PATH, ...)
+              - pattern: loadMap($PATH)
+          - focus-metavariable: $PATH
+
+  - id: luminari.lua.string-code-callback
+    languages: [lua]
+    severity: WARNING
+    message: >-
+      A temporary Mudlet resource uses a code string callback. Pass a function
+      reference so callback content cannot become dynamically constructed Lua.
+    metadata:
+      category: security
+      confidence: HIGH
+      cwe: CWE-95
+    pattern-regex: >-
+      \b(?:tempTimer|tempTrigger|tempAlias)\s*\([^,\n]+,\s*["']
+
+  - id: luminari.lua.untrusted-rich-output-flow
+    languages: [lua]
+    severity: WARNING
+    message: >-
+      Server or trigger data reaches a markup/QSS-capable output API. Escape or
+      reduce it to a trusted display value before rendering.
+    metadata:
+      category: security
+      confidence: MEDIUM
+      cwe: CWE-116
+    mode: taint
+    pattern-sources:
+      - pattern-either:
+          - pattern: matches[$INDEX]
+          - pattern: msdp.$FIELD
+          - pattern: gmcp.$FIELD
+          - pattern: line
+    pattern-sinks:
+      - pattern-either:
+          - pattern: $WIDGET:setStyleSheet($CONTENT)
+          - pattern: $WIDGET:echo($CONTENT, ...)
+          - pattern: cecho($CONTENT, ...)
+          - pattern: decho($CONTENT, ...)
+          - pattern: hecho($CONTENT, ...)
+          - pattern: echo($CONTENT, ...)
+
+  - id: luminari.lua.sensitive-runtime-logging
+    languages: [lua]
+    severity: INFO
+    message: >-
+      Protocol or trigger data reaches debug output. Confirm the value cannot
+      contain credentials, private messages, or private profile data.
+    metadata:
+      category: security
+      confidence: MEDIUM
+      cwe: CWE-532
+    mode: taint
+    pattern-sources:
+      - pattern-either:
+          - pattern: matches
+          - pattern: msdp
+          - pattern: msdp.$FIELD
+          - pattern: gmcp
+          - pattern: gmcp.$FIELD
+          - pattern: line
+    pattern-sinks:
+      - pattern-either:
+          - pattern: GUI.debug(..., $VALUE)
+          - pattern: print($VALUE)
+

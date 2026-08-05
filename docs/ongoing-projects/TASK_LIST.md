@@ -53,8 +53,13 @@ in this folder.
     mappings, and rejects unsafe or colliding outputs. The new `extractor`
     regression suite verifies byte-for-byte package parity and input
     immutability; `luac` and `luacheck` now share the adapter. All eight suites
-    pass in the pinned Lua 5.1/luacheck 0.23.0 environment. LuaLS, StyLua, and
-    Semgrep integration remains in progress.
+    pass in the pinned Lua 5.1/luacheck 0.23.0 environment.
+  - Phase 3 static-tool checkpoint implemented locally 2026-08-05: LuaLS
+    errors now block while 112 warnings remain report-only; StyLua's 79-file
+    baseline is report-only; and seven fixture-backed Semgrep rules report 23
+    triage findings with scanner failures blocking. Every normalized result
+    maps back to a physical XML/item/line with no temporary path. Hosted
+    acceptance is pending before Phase 4 coverage work.
 - [ ] Define Mudlet-aware duplicate-name rules and add scope-aware build
   validation with regression tests. Do not reject intentional same-named items
   that Mudlet permits in different groups or package sections.

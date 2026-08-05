@@ -1,0 +1,42 @@
+{
+  "$schema": "https://raw.githubusercontent.com/LuaLS/vscode-lua/master/setting/schema.json",
+  "runtime.version": "Lua 5.1",
+  "runtime.path": [
+    "?.lua",
+    "?/init.lua"
+  ],
+  "workspace.checkThirdParty": false,
+  "workspace.library": [
+    "${workspaceFolder}/stubs/mudlet/4.22"
+  ],
+  "diagnostics.libraryFiles": "Disable",
+  "diagnostics.globals": [
+    "GUI",
+    "LUM",
+    "CSSMan",
+    "Adjustable",
+    "areas",
+    "atcp",
+    "channel102",
+    "color_table",
+    "demonnic",
+    "geyser",
+    "gmcp",
+    "line",
+    "map",
+    "matches",
+    "msdp",
+    "mud",
+    "mudlet",
+    "roommaplineTrig",
+    "maplineTrig",
+    "speedwalk_active",
+    "speedwalk_index",
+    "speedwalk_timer",
+    "speedwalk_vnums",
+    "speedWalkDir",
+    "speedWalkPath",
+    "stubmap"
+  ],
+  "telemetry.enable": false
+}

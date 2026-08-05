@@ -54,11 +54,136 @@ jobs:
           PYTHONPYCACHEPREFIX: ${{ runner.temp }}/pycache
         run: python -m compileall -q theGUI scripts tests
 
+      - name: Install checksum-pinned Lua analysis tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          tools_dir="${RUNNER_TEMP}/lua-tools"
+          mkdir -p "${tools_dir}/luals" "${tools_dir}/stylua"
+
+          luals_archive="${tools_dir}/lua-language-server-3.18.2.tar.gz"
+          curl --fail --location --silent --show-error \
+            https://github.com/LuaLS/lua-language-server/releases/download/3.18.2/lua-language-server-3.18.2-linux-x64.tar.gz \
+            --output "${luals_archive}"
+          printf '%s  %s\n' \
+            ca71415dd19f19e30aaa35a4915aefca9fdb5fec31b98331cc3d77f778d539c5 \
+            "${luals_archive}" | sha256sum --check
+          tar -xzf "${luals_archive}" -C "${tools_dir}/luals"
+          test "$("${tools_dir}/luals/bin/lua-language-server" --version)" = "3.18.2-dev"
+
+          stylua_archive="${tools_dir}/stylua-2.5.2.zip"
+          curl --fail --location --silent --show-error \
+            https://github.com/JohnnyMorganz/StyLua/releases/download/v2.5.2/stylua-linux-x86_64.zip \
+            --output "${stylua_archive}"
+          printf '%s  %s\n' \
+            bcb0d855e91f102f28a370e850f8566b3b44b79e6274d806ea5246837c0fd5ab \
+            "${stylua_archive}" | sha256sum --check
+          unzip -q "${stylua_archive}" -d "${tools_dir}/stylua"
+          test "$("${tools_dir}/stylua/stylua" --version)" = "stylua 2.5.2"
+
+      - name: Extract one shared Lua analysis workspace
+        shell: bash
+        run: |
+          set -euo pipefail
+          workspace="${RUNNER_TEMP}/lua-analysis/workspace"
+          python scripts/extract_embedded_lua.py --output "${workspace}"
+          cp -R stubs "${workspace}/stubs"
+          cp .luarc.json "${workspace}/.luarc.json"
+
+      - name: Run LuaLS with errors blocking and warnings report-only
+        shell: bash
+        run: |
+          set -euo pipefail
+          analysis_dir="${RUNNER_TEMP}/lua-analysis"
+          workspace="${analysis_dir}/workspace"
+          mkdir -p "${analysis_dir}/luals-log" "${analysis_dir}/luals-meta"
+
+          set +e
+          "${RUNNER_TEMP}/lua-tools/luals/bin/lua-language-server" \
+            --check="${workspace}" \
+            --checklevel=Warning \
+            --check_format=json \
+            --check_out_path="${analysis_dir}/luals-raw.json" \
+            --configpath="${workspace}/.luarc.json" \
+            --logpath="${analysis_dir}/luals-log" \
+            --metapath="${analysis_dir}/luals-meta"
+          luals_status=$?
+          set -e
+          if [[ ${luals_status} -gt 1 ]]; then
+            echo "::error::LuaLS failed with status ${luals_status}"
+            exit "${luals_status}"
+          fi
+
+          python scripts/remap_lua_diagnostics.py \
+            --tool luals \
+            --manifest "${workspace}/manifest.json" \
+            --input "${analysis_dir}/luals-raw.json" \
+            --output "${analysis_dir}/luals-normalized.json"
+          error_count="$(jq '[.findings[] | select(.severity == "error")] | length' \
+            "${analysis_dir}/luals-normalized.json")"
+          warning_count="$(jq '.severity_counts.warning // 0' \
+            "${analysis_dir}/luals-normalized.json")"
+          {
+            echo '### LuaLS'
+            echo "- Errors (blocking): ${error_count}"
+            echo "- Warnings (report-only): ${warning_count}"
+          } >> "${GITHUB_STEP_SUMMARY}"
+          if [[ ${error_count} -ne 0 ]]; then
+            echo "::error::LuaLS produced ${error_count} blocking error diagnostic(s)"
+            exit 1
+          fi
+
+      - name: Run StyLua format check in report-only mode
+        shell: bash
+        run: |
+          set -euo pipefail
+          analysis_dir="${RUNNER_TEMP}/lua-analysis"
+          workspace="${analysis_dir}/workspace"
+
+          set +e
+          "${RUNNER_TEMP}/lua-tools/stylua/stylua" \
+            --check \
+            --config-path .stylua.toml \
+            --output-format Json \
+            "${workspace}/lua" > "${analysis_dir}/stylua-raw.jsonl"
+          stylua_status=$?
+          set -e
+          if [[ ${stylua_status} -gt 1 ]]; then
+            echo "::error::StyLua failed with status ${stylua_status}"
+            exit "${stylua_status}"
+          fi
+
+          python scripts/remap_lua_diagnostics.py \
+            --tool stylua \
+            --manifest "${workspace}/manifest.json" \
+            --input "${analysis_dir}/stylua-raw.jsonl" \
+            --output "${analysis_dir}/stylua-normalized.json"
+          finding_count="$(jq '.finding_count' \
+            "${analysis_dir}/stylua-normalized.json")"
+          {
+            echo '### StyLua'
+            echo "- Files needing formatting (report-only): ${finding_count}"
+          } >> "${GITHUB_STEP_SUMMARY}"
+
       - name: Audit runtime resource ownership
         run: python scripts/analyze_handlers.py --fail-on-unowned
 
       - name: Verify read-only quality checks
         run: test -z "$(git status --porcelain --untracked-files=all)"
+
+      - name: Upload mapped Lua analysis reports
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: lua-analysis-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/lua-analysis/workspace/manifest.json
+            ${{ runner.temp }}/lua-analysis/luals-raw.json
+            ${{ runner.temp }}/lua-analysis/luals-normalized.json
+            ${{ runner.temp }}/lua-analysis/stylua-raw.jsonl
+            ${{ runner.temp }}/lua-analysis/stylua-normalized.json
+          if-no-files-found: warn
+          retention-days: 14
 
   build-and-test:
     name: build-and-test

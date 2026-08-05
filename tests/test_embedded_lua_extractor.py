@@ -20,6 +20,10 @@ from scripts.extract_embedded_lua import (  # noqa: E402
     LuaExtractionError,
     extract_for_package,
 )
+from scripts.remap_lua_diagnostics import (  # noqa: E402
+    DiagnosticMappingError,
+    normalize_report,
+)
 from theGUI.build import FragmentBuildError  # noqa: E402
 
 
@@ -281,6 +285,119 @@ return "A &amp; B"
                 "custom XML Lua start line was mapped incorrectly",
             )
 
+    def _test_diagnostic_remapping(self):
+        with tempfile.TemporaryDirectory(prefix="luminari-diagnostic-map-") as temp:
+            root = Path(temp)
+            config, _fragments = self._write_fixture(root)
+            result = EmbeddedLuaExtractor(root).extract_project(
+                root / "workspace", config
+            )
+            script = result.scripts[0]
+
+            luals_path = root / "luals.json"
+            luals_path.write_text(
+                json.dumps(
+                    {
+                        script.output_path.as_uri(): [
+                            {
+                                "code": "undefined-global",
+                                "message": "Undefined global `unsafe`.",
+                                "range": {
+                                    "start": {"line": 0, "character": 2},
+                                    "end": {"line": 0, "character": 8},
+                                },
+                                "severity": 2,
+                            }
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+            luals = normalize_report(
+                tool="luals",
+                manifest_path=result.manifest_path,
+                report_path=luals_path,
+            )
+            finding = luals["findings"][0]
+            self._require(
+                finding["source_fragment"] == script.source_fragment
+                and finding["item_path"] == script.item_path
+                and finding["source_line"] == script.lua_start_line,
+                "LuaLS diagnostic did not map to its XML item and line",
+            )
+            self._require(
+                str(root) not in json.dumps(luals),
+                "normalized LuaLS report retained a random temporary path",
+            )
+
+            semgrep_path = root / "semgrep.json"
+            semgrep_path.write_text(
+                json.dumps(
+                    {
+                        "results": [
+                            {
+                                "check_id": "fixture.rule",
+                                "path": f"/src/{script.lua_file}",
+                                "start": {"line": 1, "col": 1},
+                                "extra": {"severity": "ERROR", "message": "fixture"},
+                            }
+                        ],
+                        "errors": [],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            semgrep = normalize_report(
+                tool="semgrep",
+                manifest_path=result.manifest_path,
+                report_path=semgrep_path,
+            )
+            self._require(
+                semgrep["findings"][0]["source_line"] == script.lua_start_line,
+                "Semgrep suffix path was not mapped",
+            )
+
+            stylua_path = root / "stylua.jsonl"
+            stylua_path.write_text(
+                json.dumps(
+                    {
+                        "file": str(script.output_path),
+                        "mismatches": [
+                            {
+                                "original_start_line": 1,
+                                "original_end_line": 1,
+                            }
+                        ],
+                    }
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            stylua = normalize_report(
+                tool="stylua",
+                manifest_path=result.manifest_path,
+                report_path=stylua_path,
+            )
+            self._require(
+                stylua["findings"][0]["item_path"] == script.item_path,
+                "StyLua diagnostic did not map to its Mudlet item",
+            )
+
+            missing_path = root / "missing.json"
+            missing_path.write_text(
+                json.dumps({"file:///not/extracted.lua": []}), encoding="utf-8"
+            )
+            try:
+                normalize_report(
+                    tool="luals",
+                    manifest_path=result.manifest_path,
+                    report_path=missing_path,
+                )
+            except DiagnosticMappingError:
+                pass
+            else:
+                raise AssertionError("unmapped diagnostic path was accepted")
+
     def _test_malformed_and_traversal_rejected(self):
         with tempfile.TemporaryDirectory(prefix="luminari-extractor-invalid-") as temp:
             root = Path(temp)
@@ -379,6 +496,7 @@ return "A &amp; B"
             ("fixture ordering and mapping", self._test_fixture_extraction),
             ("assembled-package parity", self._test_current_package_parity),
             ("arbitrary XML mode", self._test_arbitrary_xml_mode),
+            ("tool diagnostic remapping", self._test_diagnostic_remapping),
             (
                 "malformed/traversal rejection",
                 self._test_malformed_and_traversal_rejected,
