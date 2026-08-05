@@ -1,6 +1,6 @@
 # Comprehensive CI Pipeline Plan
 
-- **Status:** In progress — Phase 1 implemented and locally verified
+- **Status:** In progress — Phase 1 complete; Phase 2 next
 - **Created:** 2026-08-05
 - **Last updated:** 2026-08-05
 - **Scope:** Pull-request and `master` automation for the XML/Lua package,
@@ -297,7 +297,9 @@ third-party actions are pinned to full commit SHAs. Local verification passed
 Ruff, mypy, actionlint 1.7.12, non-mutating assembly/drift validation, all
 seven test suites (including lifecycle 33/33), package validation, and the
 resource-ownership audit in a clean Ubuntu 24.04 replica. The first hosted
-GitHub Actions run remains the final acceptance check for this phase.
+GitHub Actions run, [31044018354](https://github.com/LuminariMUD/LuminariGUI/actions/runs/31044018354),
+then passed `quality` in 26 seconds and `build-and-test` in 52 seconds, including
+the clean-tree checks and retained JSON report. Phase 1 is accepted.
 
 **Acceptance criteria**
 

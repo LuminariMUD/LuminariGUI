@@ -34,8 +34,9 @@ in this folder.
   - Phase 1 implemented and locally verified 2026-08-05: hash-locked Python
     tooling, Ruff/mypy, Lua 5.1 plus luacheck, all seven test suites,
     non-mutating build/drift/package checks, clean-tree enforcement, pinned
-    Actions, timeouts, and retained JSON reports. Hosted-run confirmation is
-    pending the checkpoint push; Phase 2 security work follows.
+    Actions, timeouts, and retained JSON reports. Hosted run
+    [31044018354](https://github.com/LuminariMUD/LuminariGUI/actions/runs/31044018354)
+    passed both jobs in under one minute; Phase 2 security work follows.
 - [ ] Define Mudlet-aware duplicate-name rules and add scope-aware build
   validation with regression tests. Do not reject intentional same-named items
   that Mudlet permits in different groups or package sections.
