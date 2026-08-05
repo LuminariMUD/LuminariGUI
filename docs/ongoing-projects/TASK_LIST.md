@@ -74,6 +74,14 @@ in this folder.
     passed every collection, mapping, normalization, summary, clean-tree, and
     artifact step in 99 seconds; core CI, Security, and dependency-graph runs
     for the same commit also passed. Phase 4 is accepted and Phase 5 follows.
+  - Phase 5 implemented locally 2026-08-05: the canonical real-Mudlet release
+    checklist now covers import, MSDP, both maps, callbacks, YATCO, aliases,
+    physical keypad input, refresh/reconnect/reset, replacement/uninstall, and
+    Qt6/Geyser visual behavior with explicit package-versus-upstream outcomes.
+    A manual-only `Mudlet / smoke` workflow checksum-verifies the official
+    4.22.0 AppImage and captures logs plus the Xvfb display while testing Qt
+    startup and command-line package queuing. It remains advisory and hosted
+    launch acceptance is pending.
 - [ ] Define Mudlet-aware duplicate-name rules and add scope-aware build
   validation with regression tests. Do not reject intentional same-named items
   that Mudlet permits in different groups or package sections.

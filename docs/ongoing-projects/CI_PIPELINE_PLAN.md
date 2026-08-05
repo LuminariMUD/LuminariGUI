@@ -448,16 +448,29 @@ Security, and dependency-graph runs also passed. Phase 4 is accepted.
 
 ### Phase 5 — Mudlet runtime smoke testing
 
-- [ ] Preserve a manual release checklist for Mudlet 4.22 or the current
+- [x] Preserve a manual release checklist for Mudlet 4.22 or the current
   documented supported release.
-- [ ] Cover package import, connection, MSDP subscription and updates, map
+- [x] Cover package import, connection, MSDP subscription and updates, map
   initialization, tab/callback interaction, `fix gui`, reconnect,
   `resetProfile()`, resize behavior, and package replacement.
-- [ ] Investigate an opt-in Linux/Xvfb smoke job using an official Mudlet
+- [x] Investigate an opt-in Linux/Xvfb smoke job using an official Mudlet
   build; keep it non-blocking until it is reliable.
-- [ ] Capture Mudlet logs and screenshots when an automated smoke run fails.
-- [ ] Keep platform-specific Qt/Geyser visual checks manual unless automation
+- [x] Capture Mudlet logs and screenshots when an automated smoke run fails.
+- [x] Keep platform-specific Qt/Geyser visual checks manual unless automation
   proves stable across supported platforms.
+
+Implemented locally 2026-08-05. `docs/MUDLET_SMOKE_TEST.md` is the canonical
+release checklist and result template. It covers the complete real-client
+surface, names the resource baseline, records physical-keyboard context, and
+requires package failures to be separated from linked upstream Mudlet
+regressions. The manual-only `Mudlet / smoke` workflow verifies the official
+4.22.0 Linux AppImage archive checksum, launches the command-line package queue
+under an isolated Xvfb/XDG environment, and retains version/checksum output,
+Mudlet and Xvfb logs, a display capture, and a result record for 14 days. Its
+scope is deliberately limited to official-binary integrity, Qt startup, and
+package queuing; it is not a profile, MSDP, callback, visual, or physical-input
+test and is not included in branch protection. Hosted launch acceptance is
+pending.
 
 **Acceptance criteria**
 

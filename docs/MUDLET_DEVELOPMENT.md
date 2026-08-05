@@ -644,8 +644,11 @@ jobs:
 
 ### Quality Assurance Checklist
 
-Run the automated validation commands from the project workflow first. Then use
-a supported Mudlet release for this hands-on smoke test:
+Run the automated validation commands from the project workflow first. Then
+complete the canonical
+[`MUDLET_SMOKE_TEST.md`](MUDLET_SMOKE_TEST.md) checklist in a supported Mudlet
+release. Its result template is the release record; the summary below is only
+a reminder:
 
 - Freshly import the complete package and confirm bundled images and audio
   resolve from the installed asset paths.

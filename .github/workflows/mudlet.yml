@@ -1,0 +1,200 @@
+name: Mudlet
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mudlet-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  MUDLET_VERSION: "4.22.0"
+  MUDLET_ARCHIVE_SHA256: "8f10a78ab918d4b46b1f842c1ca7522b9c26aa8200f657bd8fd5ccba8a7c9040"
+
+jobs:
+  smoke:
+    name: smoke
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Prepare isolated smoke paths
+        shell: bash
+        run: |
+          set -euo pipefail
+          smoke_root="${RUNNER_TEMP}/mudlet-smoke"
+          mkdir -p \
+            "${smoke_root}/artifacts" \
+            "${smoke_root}/cache" \
+            "${smoke_root}/config/mudlet" \
+            "${smoke_root}/data" \
+            "${smoke_root}/runtime"
+          chmod 700 "${smoke_root}/runtime"
+          {
+            printf 'MUDLET_SMOKE_ROOT=%s\n' "${smoke_root}"
+            printf 'XDG_CACHE_HOME=%s/cache\n' "${smoke_root}"
+            printf 'XDG_CONFIG_HOME=%s/config\n' "${smoke_root}"
+            printf 'XDG_DATA_HOME=%s/data\n' "${smoke_root}"
+            printf 'XDG_RUNTIME_DIR=%s/runtime\n' "${smoke_root}"
+          } >> "${GITHUB_ENV}"
+
+      - name: Validate the package without mutations
+        run: |
+          python3 theGUI/build.py --validate
+          python3 theGUI/build.py --diff --fail-on-diff
+          python3 scripts/validate_package.py --no-lua-syntax
+          test -z "$(git status --porcelain --untracked-files=all)"
+
+      - name: Install Xvfb capture tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes dbus-x11 scrot x11-utils xdotool xvfb
+
+      - name: Download and verify official Mudlet AppImage
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="${MUDLET_SMOKE_ROOT}/Mudlet-${MUDLET_VERSION}-linux-x64.AppImage.tar"
+          curl --fail --location --silent --show-error \
+            "https://github.com/Mudlet/Mudlet/releases/download/Mudlet-${MUDLET_VERSION}/Mudlet-${MUDLET_VERSION}-linux-x64.AppImage.tar" \
+            --output "${archive}"
+          printf '%s  %s\n' "${MUDLET_ARCHIVE_SHA256}" "${archive}" \
+            | sha256sum --check \
+            | tee "${MUDLET_SMOKE_ROOT}/artifacts/archive-checksum.log"
+          tar -xf "${archive}" -C "${MUDLET_SMOKE_ROOT}"
+
+          appimage="$(find "${MUDLET_SMOKE_ROOT}" -maxdepth 1 -type f \
+            -name '*.AppImage' -print -quit)"
+          test -n "${appimage}"
+          chmod +x "${appimage}"
+          (
+            cd "${MUDLET_SMOKE_ROOT}"
+            "${appimage}" --appimage-extract \
+              > "${MUDLET_SMOKE_ROOT}/artifacts/appimage-extract.log"
+          )
+          app_run="${MUDLET_SMOKE_ROOT}/squashfs-root/AppRun"
+          test -x "${app_run}"
+          printf 'MUDLET_APP_RUN=%s\n' "${app_run}" >> "${GITHUB_ENV}"
+
+          QT_QPA_PLATFORM=offscreen "${app_run}" --version \
+            | tee "${MUDLET_SMOKE_ROOT}/artifacts/mudlet-version.log"
+          grep --fixed-strings --quiet "${MUDLET_VERSION}" \
+            "${MUDLET_SMOKE_ROOT}/artifacts/mudlet-version.log"
+
+      - name: Launch package queue under Xvfb
+        shell: bash
+        run: |
+          set -uo pipefail
+          artifacts="${MUDLET_SMOKE_ROOT}/artifacts"
+          display_number=99
+          display=":${display_number}"
+          Xvfb "${display}" -screen 0 1600x1000x24 \
+            > "${artifacts}/xvfb.log" 2>&1 &
+          xvfb_pid=$!
+
+          export DISPLAY="${display}"
+          display_ready=0
+          for _ in $(seq 1 30); do
+            if xdpyinfo > /dev/null 2>&1; then
+              display_ready=1
+              break
+            fi
+            sleep 1
+          done
+
+          if [[ ${display_ready} -eq 1 ]]; then
+            dbus-run-session -- "${MUDLET_APP_RUN}" --mirror \
+              "${GITHUB_WORKSPACE}/LuminariGUI.xml" \
+              > "${artifacts}/mudlet.log" 2>&1 &
+            mudlet_pid=$!
+          else
+            mudlet_pid=""
+            printf 'Xvfb did not become ready\n' > "${artifacts}/mudlet.log"
+          fi
+
+          window_id=""
+          if [[ -n "${mudlet_pid}" ]]; then
+            for _ in $(seq 1 60); do
+              if ! kill -0 "${mudlet_pid}" 2> /dev/null; then
+                break
+              fi
+              window_id="$(xdotool search --onlyvisible \
+                --name 'Mudlet|Connection Profiles' 2> /dev/null \
+                | head -n 1 || true)"
+              if [[ -n "${window_id}" ]]; then
+                break
+              fi
+              sleep 1
+            done
+          fi
+
+          scrot --silent "${artifacts}/display.png" || \
+            printf 'Display capture was unavailable\n' \
+              > "${artifacts}/display-unavailable.txt"
+
+          if [[ -n "${window_id}" ]]; then
+            window_name="$(xdotool getwindowname "${window_id}" 2> /dev/null || true)"
+            {
+              printf '# Experimental Mudlet Xvfb smoke\n\n'
+              printf -- '- Result: PASS\n'
+              printf -- '- Mudlet: %s\n' "${MUDLET_VERSION}"
+              printf -- '- Visible window: %s\n' "${window_name}"
+              printf -- '- Scope: Qt startup and command-line package queue only\n'
+            } > "${artifacts}/result.md"
+            smoke_status=0
+          else
+            {
+              printf '# Experimental Mudlet Xvfb smoke\n\n'
+              printf -- '- Result: FAIL\n'
+              printf -- '- Mudlet: %s\n' "${MUDLET_VERSION}"
+              printf -- '- Reason: no visible Mudlet window appeared within 60 seconds\n'
+            } > "${artifacts}/result.md"
+            smoke_status=1
+          fi
+
+          if [[ -n "${mudlet_pid}" ]] && kill -0 "${mudlet_pid}" 2> /dev/null; then
+            kill -TERM "${mudlet_pid}" 2> /dev/null || true
+            for _ in $(seq 1 10); do
+              if ! kill -0 "${mudlet_pid}" 2> /dev/null; then
+                break
+              fi
+              sleep 1
+            done
+            if kill -0 "${mudlet_pid}" 2> /dev/null; then
+              kill -KILL "${mudlet_pid}" 2> /dev/null || true
+            fi
+          fi
+          kill -TERM "${xvfb_pid}" 2> /dev/null || true
+
+          cat "${artifacts}/result.md" >> "${GITHUB_STEP_SUMMARY}"
+          if [[ ${smoke_status} -ne 0 ]]; then
+            tail -n 200 "${artifacts}/mudlet.log"
+          fi
+          exit "${smoke_status}"
+
+      - name: Record pre-launch failure context
+        if: ${{ failure() }}
+        shell: bash
+        run: |
+          artifacts="${MUDLET_SMOKE_ROOT}/artifacts"
+          if [[ ! -e "${artifacts}/display.png" ]] \
+            && [[ ! -e "${artifacts}/display-unavailable.txt" ]]; then
+            printf 'Failure happened before display capture was available\n' \
+              > "${artifacts}/display-unavailable.txt"
+          fi
+
+      - name: Upload Mudlet logs and display evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: mudlet-smoke-${{ github.run_id }}
+          path: ${{ runner.temp }}/mudlet-smoke/artifacts
+          if-no-files-found: error
+          retention-days: 14
