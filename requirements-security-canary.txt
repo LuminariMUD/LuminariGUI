@@ -1,0 +1,2 @@
+# Deliberately vulnerable fixture used only to verify dependency-review CI.
+Django==1.11.0
