@@ -1,6 +1,6 @@
 # Comprehensive CI Pipeline Plan
 
-- **Status:** In progress — Phase 1 complete; Phase 2 implemented locally
+- **Status:** In progress — Phases 1–2 complete; Phase 3 next
 - **Created:** 2026-08-05
 - **Last updated:** 2026-08-05
 - **Scope:** Pull-request and `master` automation for the XML/Lua package,
@@ -329,7 +329,15 @@ default rules found zero leaks across all 102 existing commits, so
 weekly full scans, and minimal job permissions. Dependabot covers the root pip
 lock and GitHub Actions, with matching `dependencies` and `ci` labels created
 in the repository. Hosted workflow and deliberately vulnerable PR checks are
-pending the checkpoint push.
+now verified. The hosted [Security run
+31044714531](https://github.com/LuminariMUD/LuminariGUI/actions/runs/31044714531)
+passed Gitleaks in 20 seconds and combined Python/Actions CodeQL in 73 seconds.
+The repository dependency graph and vulnerability alerts were then enabled.
+The documentation-only control [PR #7](https://github.com/LuminariMUD/LuminariGUI/pull/7)
+passed dependency review in 8 seconds, while deliberately vulnerable
+[PR #6](https://github.com/LuminariMUD/LuminariGUI/pull/6) was rejected for
+Django 1.11.0 advisories at critical, high, and moderate severity. Both draft
+canary PRs were closed and their remote branches deleted. Phase 2 is accepted.
 
 **Acceptance criteria**
 

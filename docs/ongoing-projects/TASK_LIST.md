@@ -40,8 +40,13 @@ in this folder.
   - Phase 2 implemented locally 2026-08-05: checksum-pinned Gitleaks with a
     mandatory redacted canary (zero findings across 102 historical commits),
     Python/Actions CodeQL, dependency review, weekly scans, and grouped
-    Dependabot updates. Hosted security and vulnerable-PR verification are
-    pending the checkpoint push.
+    Dependabot updates. Hosted security
+    [run 31044714531](https://github.com/LuminariMUD/LuminariGUI/actions/runs/31044714531)
+    passed; dependency review passed documentation-only
+    [PR #7](https://github.com/LuminariMUD/LuminariGUI/pull/7) and rejected
+    Django 1.11.0 in [PR #6](https://github.com/LuminariMUD/LuminariGUI/pull/6).
+    The repository dependency graph and alerts are enabled, both canary PRs
+    are closed, and both remote branches were deleted.
 - [ ] Define Mudlet-aware duplicate-name rules and add scope-aware build
   validation with regression tests. Do not reject intentional same-named items
   that Mudlet permits in different groups or package sections.
