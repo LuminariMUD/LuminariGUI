@@ -1,7 +1,6 @@
 # Comprehensive CI Pipeline Plan
 
-- **Status:** In progress — Phases 1–3 implemented; hosted Phase 3 acceptance
-  pending, Phase 4 next
+- **Status:** In progress — Phases 1–3 accepted; Phase 4 in progress
 - **Created:** 2026-08-05
 - **Last updated:** 2026-08-05
 - **Scope:** Pull-request and `master` automation for the XML/Lua package,
@@ -382,7 +381,7 @@ with Lua 5.1 and luacheck 0.23.0 passes all eight suites; the host-supported
 seven-suite run, read-only assembly/drift checks, Ruff, mypy, and resource
 ownership audit also pass.
 
-Static-tool integration implemented locally 2026-08-05. Checksum-pinned LuaLS
+Static-tool integration implemented 2026-08-05. Checksum-pinned LuaLS
 3.18.2 and StyLua 2.5.2 run in `CI / quality`; LuaLS errors block while its 112
 baseline warnings remain report-only, and all 79 files/572 StyLua ranges remain
 report-only. `Security / Semgrep Lua` uses the digest-pinned Semgrep 1.172.0
@@ -391,9 +390,12 @@ initial production findings (10 warning, 13 informational) without blocking.
 Tool/config/scanner errors do block. All raw reports are normalized through the
 extraction manifest so artifacts identify physical XML paths, Mudlet items,
 and source lines without temporary paths. Exact pins, local commands, policy,
-and maintenance guidance are in `docs/LUA_STATIC_ANALYSIS.md`. Phase 3 hosted
-acceptance remains before Phase 4 begins; LuaCov consumption of the same
-workspace is intentionally completed in Phase 4.
+and maintenance guidance are in `docs/LUA_STATIC_ANALYSIS.md`. Hosted CI
+[run 31048108086](https://github.com/LuminariMUD/LuminariGUI/actions/runs/31048108086)
+passed both core jobs, including the LuaLS/StyLua integration, while Security
+[run 31048108103](https://github.com/LuminariMUD/LuminariGUI/actions/runs/31048108103)
+passed Gitleaks, Semgrep Lua, and CodeQL. Phase 3 is accepted. LuaCov
+consumption of the same workspace is intentionally completed in Phase 4.
 
 **Acceptance criteria**
 

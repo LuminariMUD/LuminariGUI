@@ -58,8 +58,11 @@ in this folder.
     errors now block while 112 warnings remain report-only; StyLua's 79-file
     baseline is report-only; and seven fixture-backed Semgrep rules report 23
     triage findings with scanner failures blocking. Every normalized result
-    maps back to a physical XML/item/line with no temporary path. Hosted
-    acceptance is pending before Phase 4 coverage work.
+    maps back to a physical XML/item/line with no temporary path. Hosted CI
+    [run 31048108086](https://github.com/LuminariMUD/LuminariGUI/actions/runs/31048108086)
+    and Security
+    [run 31048108103](https://github.com/LuminariMUD/LuminariGUI/actions/runs/31048108103)
+    passed every Phase 3 job; Phase 4 coverage work follows.
 - [ ] Define Mudlet-aware duplicate-name rules and add scope-aware build
   validation with regression tests. Do not reject intentional same-named items
   that Mudlet permits in different groups or package sections.
