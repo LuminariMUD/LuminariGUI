@@ -1,0 +1,122 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHONDONTWRITEBYTECODE: "1"
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+
+jobs:
+  quality:
+    name: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12.3"
+          cache: pip
+          cache-dependency-path: requirements-ci.txt
+          pip-version: "26.2.1"
+
+      - name: Install pinned Python tools
+        run: python -m pip install --require-hashes -r requirements-ci.txt
+
+      - name: Check Python lint
+        run: ruff check --no-cache --output-format=github theGUI scripts tests
+
+      - name: Check Python formatting
+        run: ruff format --check --no-cache --output-format=github theGUI scripts tests
+
+      - name: Check typed Python tooling
+        run: mypy --cache-dir "${RUNNER_TEMP}/mypy-cache"
+
+      - name: Compile Python without touching the checkout
+        env:
+          PYTHONPYCACHEPREFIX: ${{ runner.temp }}/pycache
+        run: python -m compileall -q theGUI scripts tests
+
+      - name: Audit runtime resource ownership
+        run: python scripts/analyze_handlers.py --fail-on-unowned
+
+      - name: Verify read-only quality checks
+        run: test -z "$(git status --porcelain --untracked-files=all)"
+
+  build-and-test:
+    name: build-and-test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12.3"
+          cache: pip
+          cache-dependency-path: requirements-ci.txt
+          pip-version: "26.2.1"
+
+      - name: Install pinned Python tools
+        run: python -m pip install --require-hashes -r requirements-ci.txt
+
+      - name: Install Lua 5.1 and luacheck
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes lua5.1 liblua5.1-0-dev luarocks
+          sudo update-alternatives --set lua-interpreter /usr/bin/lua5.1
+          sudo update-alternatives --set lua-compiler /usr/bin/luac5.1
+          sudo luarocks --lua-version=5.1 install luacheck 0.23.0
+          lua -e 'assert(_VERSION == "Lua 5.1", _VERSION)'
+          luac -v
+          luacheck --version
+
+      - name: Validate source assembly
+        run: python theGUI/build.py --validate
+
+      - name: Reject generated-output drift
+        run: python theGUI/build.py --diff --fail-on-diff
+
+      - name: Run every test suite
+        working-directory: tests
+        run: |
+          python run_tests.py \
+            --parallel \
+            --report "${RUNNER_TEMP}/test-results.json" \
+            --format json
+
+      - name: Validate built package
+        run: python scripts/validate_package.py
+
+      - name: Verify read-only build and tests
+        run: test -z "$(git status --porcelain --untracked-files=all)"
+
+      - name: Upload test report
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: test-results-${{ github.run_id }}
+          path: ${{ runner.temp }}/test-results.json
+          if-no-files-found: warn
+          retention-days: 14

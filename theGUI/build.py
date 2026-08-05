@@ -15,7 +15,6 @@ Usage:
 """
 
 import argparse
-import os
 import re
 import shutil
 import sys
@@ -25,7 +24,8 @@ from pathlib import Path
 
 # Optional imports
 try:
-    import yaml
+    import yaml  # type: ignore[import-untyped]
+
     YAML_AVAILABLE = True
 except ImportError:
     YAML_AVAILABLE = False
@@ -58,7 +58,7 @@ def parse_version_argument(value: str) -> str:
 class BuildConfig:
     """Configuration loaded from build.yaml"""
 
-    def __init__(self, config_path: Path = None):
+    def __init__(self, config_path: Path | None = None):
         if config_path is None:
             config_path = SCRIPT_DIR / "build.yaml"
 
@@ -72,36 +72,36 @@ class BuildConfig:
             self._load_simple_yaml()
             return
 
-        with open(self.config_path, 'r', encoding='utf-8') as f:
+        with open(self.config_path, encoding="utf-8") as f:
             config = yaml.safe_load(f)
 
-        self.package_name = config.get('package', {}).get('name', 'LuminariGUI')
-        self.version = config.get('package', {}).get('version', '2.0.4.016')
+        self.package_name = config.get("package", {}).get("name", "LuminariGUI")
+        self.version = config.get("package", {}).get("version", "2.0.4.016")
 
-        output = config.get('output', {})
-        self.output_file = output.get('file', '../LuminariGUI.xml')
-        self.encoding = output.get('encoding', 'UTF-8')
+        output = config.get("output", {})
+        self.output_file = output.get("file", "../LuminariGUI.xml")
+        self.encoding = output.get("encoding", "UTF-8")
 
-        options = config.get('options', {})
-        self.embed_markers = options.get('embed_markers', True)
-        self.marker_format = options.get('marker_format', '<!-- SOURCE: {file} -->')
-        self.validate_fragments = options.get('validate_fragments', True)
-        self.validate_output = options.get('validate_output', True)
-        self.strip_dev_comments = options.get('strip_dev_comments', True)
+        options = config.get("options", {})
+        self.embed_markers = options.get("embed_markers", True)
+        self.marker_format = options.get("marker_format", "<!-- SOURCE: {file} -->")
+        self.validate_fragments = options.get("validate_fragments", True)
+        self.validate_output = options.get("validate_output", True)
+        self.strip_dev_comments = options.get("strip_dev_comments", True)
 
-        self.triggers = config.get('triggers', [])
-        self.aliases = config.get('aliases', [])
-        self.scripts = config.get('scripts', [])
-        self.keys = config.get('keys', [])
+        self.triggers = config.get("triggers", [])
+        self.aliases = config.get("aliases", [])
+        self.scripts = config.get("scripts", [])
+        self.keys = config.get("keys", [])
 
     def _load_simple_yaml(self):
         """Simple YAML parser fallback when PyYAML not available"""
-        self.package_name = 'LuminariGUI'
-        self.version = '2.0.4.016'
-        self.output_file = '../LuminariGUI.xml'
-        self.encoding = 'UTF-8'
+        self.package_name = "LuminariGUI"
+        self.version = "2.0.4.016"
+        self.output_file = "../LuminariGUI.xml"
+        self.encoding = "UTF-8"
         self.embed_markers = True
-        self.marker_format = '<!-- SOURCE: {file} -->'
+        self.marker_format = "<!-- SOURCE: {file} -->"
         self.validate_fragments = True
         self.validate_output = True
         self.strip_dev_comments = True
@@ -113,21 +113,21 @@ class BuildConfig:
         self.keys = []
 
         current_section = None
-        with open(self.config_path, 'r', encoding='utf-8') as f:
+        with open(self.config_path, encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
-                if line.startswith('triggers:'):
-                    current_section = 'triggers'
-                elif line.startswith('aliases:'):
-                    current_section = 'aliases'
-                elif line.startswith('scripts:'):
-                    current_section = 'scripts'
-                elif line.startswith('keys:'):
-                    current_section = 'keys'
-                elif line.startswith('- ') and current_section:
+                if line.startswith("triggers:"):
+                    current_section = "triggers"
+                elif line.startswith("aliases:"):
+                    current_section = "aliases"
+                elif line.startswith("scripts:"):
+                    current_section = "scripts"
+                elif line.startswith("keys:"):
+                    current_section = "keys"
+                elif line.startswith("- ") and current_section:
                     path = line[2:].strip()
                     getattr(self, current_section).append(path)
-                elif line.startswith('version:'):
+                elif line.startswith("version:"):
                     match = re.search(r'"([^"]+)"', line)
                     if match:
                         self.version = match.group(1)
@@ -138,7 +138,7 @@ class BuildConfig:
         e.g., 2.0.4.015 -> 2.0.4.016
         Returns the new version string.
         """
-        parts = self.version.split('.')
+        parts = self.version.split(".")
         if len(parts) >= 1:
             # Get the last part and increment it
             last_part = parts[-1]
@@ -149,9 +149,9 @@ class BuildConfig:
                 parts[-1] = str(new_num).zfill(width)
             except ValueError:
                 # If last part isn't a number, just append .1
-                parts.append('1')
+                parts.append("1")
 
-        self.version = '.'.join(parts)
+        self.version = ".".join(parts)
         return self.version
 
     def save_version(self) -> bool:
@@ -160,17 +160,15 @@ class BuildConfig:
         Returns True on success, False on error.
         """
         try:
-            with open(self.config_path, 'r', encoding='utf-8') as f:
+            with open(self.config_path, encoding="utf-8") as f:
                 content = f.read()
 
             # Replace the version line
             new_content = re.sub(
-                r'(version:\s*")[^"]+(")',
-                rf'\g<1>{self.version}\2',
-                content
+                r'(version:\s*")[^"]+(")', rf"\g<1>{self.version}\2", content
             )
 
-            with open(self.config_path, 'w', encoding='utf-8') as f:
+            with open(self.config_path, "w", encoding="utf-8") as f:
                 f.write(new_content)
 
             return True
@@ -216,11 +214,11 @@ class FragmentValidator:
             return False, errors
 
         # Check root element
-        if root.tag != 'MudletPackage':
+        if root.tag != "MudletPackage":
             errors.append(f"Root element should be 'MudletPackage', found '{root.tag}'")
 
         # Check for required packages
-        required = {'TriggerPackage', 'AliasPackage', 'ScriptPackage', 'KeyPackage'}
+        required = {"TriggerPackage", "AliasPackage", "ScriptPackage", "KeyPackage"}
         found = {child.tag for child in root}
         missing = required - found
         if missing:
@@ -254,7 +252,7 @@ class CompositeFragmentResolver:
 
     def resolve(self, path: Path) -> tuple[str, list[tuple[str, str, int]]]:
         """Return expanded XML and ordered physical sources used to build it."""
-        sources = []
+        sources: list[tuple[str, str, int]] = []
         resolved_path = self._require_source_path(path, included_from=None)
         content = self._expand(resolved_path, [], sources, 0)
         return content, sources
@@ -272,9 +270,7 @@ class CompositeFragmentResolver:
             if included_from is None:
                 detail = self.display_path(path)
             else:
-                detail = (
-                    f"{path} (included from {self.display_path(included_from)})"
-                )
+                detail = f"{path} (included from {self.display_path(included_from)})"
             raise FragmentBuildError(
                 f"Fragment path escapes the source tree: {detail}"
             ) from error
@@ -319,9 +315,7 @@ class CompositeFragmentResolver:
         is_valid, errors = self.validator.validate_fragment(content, display)
         if not is_valid:
             details = "; ".join(errors)
-            raise FragmentBuildError(
-                f"Invalid {stage} fragment {display}: {details}"
-            )
+            raise FragmentBuildError(f"Invalid {stage} fragment {display}: {details}")
 
     def _expand(
         self,
@@ -385,7 +379,7 @@ class CompositeFragmentResolver:
             if newline and child_content and not child_content.endswith(("\n", "\r")):
                 child_content += newline
 
-            parts.append(raw_content[cursor:match.start()])
+            parts.append(raw_content[cursor : match.start()])
             parts.append(child_content)
             cursor = match.end()
 
@@ -402,7 +396,7 @@ class CompositeFragmentResolver:
 class Builder:
     """Main build class - assembles fragments into final XML"""
 
-    def __init__(self, config: BuildConfig = None):
+    def __init__(self, config: BuildConfig | None = None):
         self.config = config or BuildConfig()
         self.validator = FragmentValidator()
         self.script_dir = self.config.config_path.parent.resolve()
@@ -432,7 +426,7 @@ class Builder:
             return None
 
         try:
-            with open(xml_path, 'r', encoding='utf-8') as f:
+            with open(xml_path, encoding="utf-8") as f:
                 # Read first few lines to find version
                 for _ in range(10):
                     line = f.readline()
@@ -459,7 +453,9 @@ class Builder:
         # Get version from existing file
         version = self.get_existing_version(output_path)
         if not version:
-            print("  WARNING: Could not determine version of existing file, skipping archive.")
+            print(
+                "  WARNING: Could not determine version of existing file, skipping archive."
+            )
             return True
 
         # Prepare archive destination
@@ -486,7 +482,7 @@ class Builder:
     def read_skeleton(self) -> str:
         """Read skeleton.xml template"""
         skeleton_path = self.script_dir / "skeleton.xml"
-        with open(skeleton_path, 'r', encoding='utf-8') as f:
+        with open(skeleton_path, encoding="utf-8") as f:
             return f.read()
 
     def read_fragment(self, rel_path: str) -> str:
@@ -502,7 +498,9 @@ class Builder:
         fragment_path = self.script_dir / rel_path
         return self.fragment_resolver.resolve(fragment_path)
 
-    def assemble_fragments(self, fragment_list: list[str], indent: str = "\t\t\t") -> str:
+    def assemble_fragments(
+        self, fragment_list: list[str], indent: str = "\t\t\t"
+    ) -> str:
         """
         Assemble multiple fragments into a single block.
         Returns the combined content with optional source markers.
@@ -613,10 +611,10 @@ class Builder:
         # Write output
         output_path = self.get_output_path()
         print(f"  Writing to {output_path}...")
-        with open(output_path, 'w', encoding=self.config.encoding) as f:
+        with open(output_path, "w", encoding=self.config.encoding) as f:
             f.write(output)
 
-        line_count = output.count('\n') + 1
+        line_count = output.count("\n") + 1
         print(f"  Done! {line_count} lines written.")
         return True, output
 
@@ -637,7 +635,7 @@ class Builder:
             print(f"Output file {output_path} does not exist. Build would create it.")
             return True, True
 
-        with open(output_path, 'r', encoding='utf-8') as f:
+        with open(output_path, encoding="utf-8") as f:
             current_content = f.read()
 
         if current_content == new_content:
@@ -649,13 +647,12 @@ class Builder:
         new_lines = new_content.splitlines()
 
         import difflib
+
         diff = difflib.unified_diff(
-            current_lines, new_lines,
-            fromfile='current', tofile='new',
-            lineterm=''
+            current_lines, new_lines, fromfile="current", tofile="new", lineterm=""
         )
 
-        diff_output = '\n'.join(diff)
+        diff_output = "\n".join(diff)
         if diff_output:
             print("Changes detected:")
             print(diff_output[:5000])  # Limit output
@@ -685,7 +682,7 @@ class Builder:
                 try:
                     _, sources = self.read_fragment_details(rel_path)
                     for source_path, source_content, depth in sources:
-                        lines = source_content.count('\n') + 1
+                        lines = source_content.count("\n") + 1
                         section_lines += lines
                         label = "include " if depth else ""
                         prefix = "  " + ("  " * depth)
@@ -702,8 +699,8 @@ class Builder:
         # Check output file
         output_path = self.get_output_path()
         if output_path.exists():
-            with open(output_path, 'r', encoding='utf-8') as f:
-                output_lines = f.read().count('\n') + 1
+            with open(output_path, encoding="utf-8") as f:
+                output_lines = f.read().count("\n") + 1
             print(f"Output file lines: {output_lines}")
         return success
 
@@ -720,11 +717,11 @@ class Builder:
 class Extractor:
     """Extracts fragments from existing monolithic XML using raw text parsing"""
 
-    def __init__(self, config: BuildConfig = None):
+    def __init__(self, config: BuildConfig | None = None):
         self.config = config or BuildConfig()
         self.script_dir = self.config.config_path.parent.resolve()
-        self.lines = []
-        self.generated_files = []
+        self.lines: list[str] = []
+        self.generated_files: list[str] = []
 
     def get_input_path(self) -> Path:
         """Get path to existing XML file"""
@@ -760,9 +757,7 @@ class Extractor:
         """
         composite = self._composite_fragments()
         if composite:
-            print(
-                "ERROR: --extract refuses to overwrite composite source fragments."
-            )
+            print("ERROR: --extract refuses to overwrite composite source fragments.")
             print(
                 "  Reverse extraction would collapse BUILD_INCLUDE layouts back "
                 "into monolithic files."
@@ -783,7 +778,7 @@ class Extractor:
 
         print(f"Extracting fragments from {input_path}...")
 
-        with open(input_path, 'r', encoding='utf-8') as f:
+        with open(input_path, encoding="utf-8") as f:
             self.lines = f.readlines()
 
         # Find version
@@ -797,10 +792,10 @@ class Extractor:
         boundaries = self._find_package_boundaries()
 
         # Extract each section
-        self._extract_section('triggers', boundaries.get('TriggerPackage', (0, 0)))
-        self._extract_section('aliases', boundaries.get('AliasPackage', (0, 0)))
-        self._extract_section('scripts', boundaries.get('ScriptPackage', (0, 0)))
-        self._extract_section('keys', boundaries.get('KeyPackage', (0, 0)))
+        self._extract_section("triggers", boundaries.get("TriggerPackage", (0, 0)))
+        self._extract_section("aliases", boundaries.get("AliasPackage", (0, 0)))
+        self._extract_section("scripts", boundaries.get("ScriptPackage", (0, 0)))
+        self._extract_section("keys", boundaries.get("KeyPackage", (0, 0)))
 
         # Generate build.yaml with actual file list
         self._generate_build_yaml()
@@ -812,15 +807,20 @@ class Extractor:
     def _find_package_boundaries(self) -> dict:
         """Find start/end line numbers for each package"""
         boundaries = {}
-        package_names = ['TriggerPackage', 'AliasPackage', 'ScriptPackage', 'KeyPackage']
+        package_names = [
+            "TriggerPackage",
+            "AliasPackage",
+            "ScriptPackage",
+            "KeyPackage",
+        ]
 
         for pkg in package_names:
             start = None
             end = None
             for i, line in enumerate(self.lines):
-                if f'<{pkg}>' in line or f'<{pkg} ' in line:
+                if f"<{pkg}>" in line or f"<{pkg} " in line:
                     start = i
-                elif f'</{pkg}>' in line:
+                elif f"</{pkg}>" in line:
                     end = i
                     break
             if start is not None and end is not None:
@@ -828,23 +828,23 @@ class Extractor:
 
         return boundaries
 
-    def _extract_section(self, section_name: str, boundaries: tuple):
+    def _extract_section(self, section_name: str, boundaries: tuple[int, int]):
         """Extract fragments from a section"""
         start, end = boundaries
         if start == 0 and end == 0:
             print(f"  No {section_name} section found")
             return
 
-        section_lines = self.lines[start:end+1]
-        content = ''.join(section_lines)
+        section_lines = self.lines[start : end + 1]
+        content = "".join(section_lines)
 
-        if section_name == 'triggers':
+        if section_name == "triggers":
             self._extract_triggers(content, start)
-        elif section_name == 'aliases':
+        elif section_name == "aliases":
             self._extract_aliases(content, start)
-        elif section_name == 'scripts':
+        elif section_name == "scripts":
             self._extract_scripts(content, start)
-        elif section_name == 'keys':
+        elif section_name == "keys":
             self._extract_keys(content, start)
 
     def _write_fragment(self, rel_path: str, content: str):
@@ -853,17 +853,23 @@ class Extractor:
         fragment_path.parent.mkdir(parents=True, exist_ok=True)
 
         # Ensure content ends with newline
-        if not content.endswith('\n'):
-            content += '\n'
+        if not content.endswith("\n"):
+            content += "\n"
 
-        with open(fragment_path, 'w', encoding='utf-8') as f:
+        with open(fragment_path, "w", encoding="utf-8") as f:
             f.write(content)
 
-        lines = content.count('\n')
+        lines = content.count("\n")
         print(f"  Wrote {rel_path} ({lines} lines)")
         self.generated_files.append(rel_path)
 
-    def _find_element_bounds(self, lines: list, tag: str, start_idx: int = 0, target_depth: int = 0) -> list:
+    def _find_element_bounds(
+        self,
+        lines: list[str],
+        tag: str,
+        start_idx: int = 0,
+        target_depth: int = 0,
+    ) -> list[tuple[int, int, str]]:
         """
         Find all occurrences of an element in lines at a specific depth.
         Returns list of (start_line, end_line, name) tuples.
@@ -875,7 +881,7 @@ class Extractor:
             target_depth: Capture elements when depth equals this value (after incrementing)
                          0 = top-level elements, 1 = elements nested 1 level deep, etc.
         """
-        results = []
+        results: list[tuple[int, int, str]] = []
         i = start_idx
         depth = 0
         current_start = None
@@ -886,7 +892,7 @@ class Extractor:
             line = lines[i]
 
             # Check for opening tag
-            open_match = re.search(rf'<{tag}\s+[^>]*>', line)
+            open_match = re.search(rf"<{tag}\s+[^>]*>", line)
             if open_match:
                 depth += 1
                 # Check AFTER incrementing depth
@@ -895,16 +901,22 @@ class Extractor:
                     current_start = i
                     capture_depth = depth
                     # Try to find name on next lines
-                    for j in range(i, min(i+5, len(lines))):
-                        name_match = re.search(r'<name>([^<]+)</name>', lines[j])
+                    for j in range(i, min(i + 5, len(lines))):
+                        name_match = re.search(r"<name>([^<]+)</name>", lines[j])
                         if name_match:
                             current_name = name_match.group(1)
                             break
 
             # Check for closing tag
-            if f'</{tag}>' in line:
-                if capture_depth is not None and depth == capture_depth:
-                    results.append((current_start, i, current_name or f"{tag}_{len(results)}"))
+            if f"</{tag}>" in line:
+                if (
+                    capture_depth is not None
+                    and depth == capture_depth
+                    and current_start is not None
+                ):
+                    results.append(
+                        (current_start, i, current_name or f"{tag}_{len(results)}")
+                    )
                     current_start = None
                     current_name = None
                     capture_depth = None
@@ -914,7 +926,9 @@ class Extractor:
 
         return results
 
-    def _find_direct_children(self, lines: list, parent_tag: str, child_tag: str) -> list:
+    def _find_direct_children(
+        self, lines: list[str], parent_tag: str, child_tag: str
+    ) -> list[tuple[int, int, str]]:
         """
         Find direct children of a parent element.
         First finds the parent, then finds children at depth=1 within parent.
@@ -928,10 +942,10 @@ class Extractor:
         parent_start, parent_end, _ = parent_bounds[0]
 
         # Now find children within the parent
-        parent_lines = lines[parent_start:parent_end+1]
+        parent_lines = lines[parent_start : parent_end + 1]
 
         # Find all child elements - track depth based on the tag type
-        results = []
+        results: list[tuple[int, int, str]] = []
         depth = 0
         current_start = None
         current_name = None
@@ -943,27 +957,29 @@ class Extractor:
 
         for i, line in enumerate(parent_lines):
             # Check for opening tag of our target element
-            open_match = re.search(rf'<{child_tag}\s+[^>]*>', line)
+            open_match = re.search(rf"<{child_tag}\s+[^>]*>", line)
 
             if open_match:
                 depth += 1
                 if depth == target_depth:
                     current_start = i
                     # Try to find name
-                    for j in range(i, min(i+5, len(parent_lines))):
-                        name_match = re.search(r'<name>([^<]+)</name>', parent_lines[j])
+                    for j in range(i, min(i + 5, len(parent_lines))):
+                        name_match = re.search(r"<name>([^<]+)</name>", parent_lines[j])
                         if name_match:
                             current_name = name_match.group(1)
                             break
 
             # Check for closing tag
-            if f'</{child_tag}>' in line:
+            if f"</{child_tag}>" in line:
                 if depth == target_depth and current_start is not None:
-                    results.append((
-                        parent_start + current_start,
-                        parent_start + i,
-                        current_name or f"{child_tag}_{len(results)}"
-                    ))
+                    results.append(
+                        (
+                            parent_start + current_start,
+                            parent_start + i,
+                            current_name or f"{child_tag}_{len(results)}",
+                        )
+                    )
                     current_start = None
                     current_name = None
                 depth -= 1
@@ -972,16 +988,16 @@ class Extractor:
 
     def _extract_triggers(self, content: str, base_line: int):
         """Extract trigger fragments"""
-        lines = content.split('\n')
-        fragments = []
+        lines = content.split("\n")
+        fragments: list[str] = []
 
         # Find direct TriggerGroup children of the main TriggerGroup
-        children = self._find_direct_children(lines, 'TriggerGroup', 'TriggerGroup')
+        children = self._find_direct_children(lines, "TriggerGroup", "TriggerGroup")
 
         for start, end, name in children:
-            safe_name = re.sub(r'[^a-zA-Z0-9_]', '_', name.lower())
-            fragment_lines = lines[start:end+1]
-            fragment_content = '\n'.join(fragment_lines)
+            safe_name = re.sub(r"[^a-zA-Z0-9_]", "_", name.lower())
+            fragment_lines = lines[start : end + 1]
+            fragment_content = "\n".join(fragment_lines)
 
             rel_path = f"src/triggers/{len(fragments):02d}_{safe_name}.xml"
             self._write_fragment(rel_path, fragment_content)
@@ -991,16 +1007,16 @@ class Extractor:
 
     def _extract_aliases(self, content: str, base_line: int):
         """Extract alias fragments"""
-        lines = content.split('\n')
-        fragments = []
+        lines = content.split("\n")
+        fragments: list[str] = []
 
         # Find direct AliasGroup children of the main AliasGroup
-        children = self._find_direct_children(lines, 'AliasGroup', 'AliasGroup')
+        children = self._find_direct_children(lines, "AliasGroup", "AliasGroup")
 
         for start, end, name in children:
-            safe_name = re.sub(r'[^a-zA-Z0-9_]', '_', name.lower())
-            fragment_lines = lines[start:end+1]
-            fragment_content = '\n'.join(fragment_lines)
+            safe_name = re.sub(r"[^a-zA-Z0-9_]", "_", name.lower())
+            fragment_lines = lines[start : end + 1]
+            fragment_content = "\n".join(fragment_lines)
 
             rel_path = f"src/aliases/{len(fragments):02d}_{safe_name}.xml"
             self._write_fragment(rel_path, fragment_content)
@@ -1010,16 +1026,16 @@ class Extractor:
 
     def _extract_scripts(self, content: str, base_line: int):
         """Extract script fragments - preserving structural groups for proper assembly"""
-        lines = content.split('\n')
-        fragments = []
+        lines = content.split("\n")
+        fragments: list[str] = []
 
         # Find direct ScriptGroup children of the main ScriptGroup
-        children = self._find_direct_children(lines, 'ScriptGroup', 'ScriptGroup')
+        children = self._find_direct_children(lines, "ScriptGroup", "ScriptGroup")
 
         for start, end, name in children:
-            safe_name = re.sub(r'[^a-zA-Z0-9_]', '_', name.lower())
-            fragment_lines = lines[start:end+1]
-            fragment_content = '\n'.join(fragment_lines)
+            safe_name = re.sub(r"[^a-zA-Z0-9_]", "_", name.lower())
+            fragment_lines = lines[start : end + 1]
+            fragment_content = "\n".join(fragment_lines)
 
             # Keep each major ScriptGroup as a complete fragment
             # This preserves the nested structure for proper assembly
@@ -1029,17 +1045,17 @@ class Extractor:
 
         print(f"  Extracted {len(fragments)} script fragments")
 
-    def _extract_gui_subscripts(self, content: str, fragments: list):
+    def _extract_gui_subscripts(self, content: str, fragments: list[str]):
         """Extract individual scripts from the GUI ScriptGroup"""
-        lines = content.split('\n')
+        lines = content.split("\n")
         gui_idx = 0
 
         # Find direct children of the GUI group - these are CSSman, GUI (inner)
-        children = self._find_direct_children(lines, 'ScriptGroup', 'ScriptGroup')
+        children = self._find_direct_children(lines, "ScriptGroup", "ScriptGroup")
 
         for start, end, name in children:
-            fragment_lines = lines[start:end+1]
-            fragment_content = '\n'.join(fragment_lines)
+            fragment_lines = lines[start : end + 1]
+            fragment_content = "\n".join(fragment_lines)
 
             if name == "CSSman":
                 rel_path = f"src/scripts/gui/{gui_idx:02d}_cssman.xml"
@@ -1049,61 +1065,69 @@ class Extractor:
             elif name == "GUI":
                 # Extract individual scripts from inner GUI group
                 inner_lines = fragment_lines
-                scripts = self._find_element_bounds(inner_lines, 'Script', target_depth=0)
+                scripts = self._find_element_bounds(
+                    inner_lines, "Script", target_depth=0
+                )
 
                 for s_start, s_end, s_name in scripts:
-                    safe_name = re.sub(r'[^a-zA-Z0-9_]', '_', s_name.lower().replace(' ', '_').replace('/', '_'))
-                    script_lines = inner_lines[s_start:s_end+1]
-                    script_content = '\n'.join(script_lines)
+                    safe_name = re.sub(
+                        r"[^a-zA-Z0-9_]",
+                        "_",
+                        s_name.lower().replace(" ", "_").replace("/", "_"),
+                    )
+                    script_lines = inner_lines[s_start : s_end + 1]
+                    script_content = "\n".join(script_lines)
 
                     rel_path = f"src/scripts/gui/{gui_idx:02d}_{safe_name}.xml"
                     self._write_fragment(rel_path, script_content)
                     fragments.append(rel_path)
                     gui_idx += 1
 
-    def _extract_yatco_subscripts(self, content: str, fragments: list):
+    def _extract_yatco_subscripts(self, content: str, fragments: list[str]):
         """Extract individual scripts from the YATCO ScriptGroup"""
-        lines = content.split('\n')
+        lines = content.split("\n")
         yatco_idx = 0
 
         # Find all Scripts at any depth in YATCO
         scripts = self._find_all_scripts(lines)
 
         for start, end, name in scripts:
-            safe_name = re.sub(r'[^a-zA-Z0-9_]', '_', name.lower())
-            fragment_lines = lines[start:end+1]
-            fragment_content = '\n'.join(fragment_lines)
+            safe_name = re.sub(r"[^a-zA-Z0-9_]", "_", name.lower())
+            fragment_lines = lines[start : end + 1]
+            fragment_content = "\n".join(fragment_lines)
 
             rel_path = f"src/scripts/yatco/{yatco_idx:02d}_{safe_name}.xml"
             self._write_fragment(rel_path, fragment_content)
             fragments.append(rel_path)
             yatco_idx += 1
 
-    def _find_all_scripts(self, lines: list) -> list:
+    def _find_all_scripts(self, lines: list[str]) -> list[tuple[int, int, str]]:
         """Find all Script elements regardless of depth"""
-        results = []
+        results: list[tuple[int, int, str]] = []
         depth = 0
         current_start = None
         current_name = None
 
         for i, line in enumerate(lines):
             # Check for Script opening tag
-            if '<Script ' in line:
+            if "<Script " in line:
                 if depth == 0:
                     current_start = i
                     # Find name
-                    for j in range(i, min(i+5, len(lines))):
-                        name_match = re.search(r'<name>([^<]+)</name>', lines[j])
+                    for j in range(i, min(i + 5, len(lines))):
+                        name_match = re.search(r"<name>([^<]+)</name>", lines[j])
                         if name_match:
                             current_name = name_match.group(1)
                             break
                 depth += 1
 
             # Check for Script closing tag
-            if '</Script>' in line:
+            if "</Script>" in line:
                 depth -= 1
                 if depth == 0 and current_start is not None:
-                    results.append((current_start, i, current_name or f"script_{len(results)}"))
+                    results.append(
+                        (current_start, i, current_name or f"script_{len(results)}")
+                    )
                     current_start = None
                     current_name = None
 
@@ -1111,18 +1135,18 @@ class Extractor:
 
     def _extract_keys(self, content: str, base_line: int):
         """Extract key fragments"""
-        lines = content.split('\n')
+        lines = content.split("\n")
 
         # Find all Key elements
-        keys = self._find_element_bounds(lines, 'Key')
+        keys = self._find_element_bounds(lines, "Key")
 
         if keys:
             # Combine all keys into single fragment
             key_lines = []
-            for start, end, name in keys:
-                key_lines.extend(lines[start:end+1])
+            for start, end, _name in keys:
+                key_lines.extend(lines[start : end + 1])
 
-            fragment_content = '\n'.join(key_lines)
+            fragment_content = "\n".join(key_lines)
             rel_path = "src/keys/00_movement.xml"
             self._write_fragment(rel_path, fragment_content)
 
@@ -1131,19 +1155,31 @@ class Extractor:
     def _generate_build_yaml(self):
         """Generate build.yaml with the list of extracted files"""
         # Categorize files
-        triggers = sorted([f for f in self.generated_files if f.startswith('src/triggers/')])
-        aliases = sorted([f for f in self.generated_files if f.startswith('src/aliases/')])
-        scripts = sorted([f for f in self.generated_files if f.startswith('src/scripts/') and '/gui/' not in f and '/yatco/' not in f])
-        gui_scripts = sorted([f for f in self.generated_files if '/gui/' in f])
-        yatco_scripts = sorted([f for f in self.generated_files if '/yatco/' in f])
-        keys = sorted([f for f in self.generated_files if f.startswith('src/keys/')])
+        triggers = sorted(
+            [f for f in self.generated_files if f.startswith("src/triggers/")]
+        )
+        aliases = sorted(
+            [f for f in self.generated_files if f.startswith("src/aliases/")]
+        )
+        scripts = sorted(
+            [
+                f
+                for f in self.generated_files
+                if f.startswith("src/scripts/")
+                and "/gui/" not in f
+                and "/yatco/" not in f
+            ]
+        )
+        gui_scripts = sorted([f for f in self.generated_files if "/gui/" in f])
+        yatco_scripts = sorted([f for f in self.generated_files if "/yatco/" in f])
+        keys = sorted([f for f in self.generated_files if f.startswith("src/keys/")])
 
         # Build scripts list in correct order
-        all_scripts = []
+        all_scripts: list[str] = []
         for s in scripts:
-            if 'msdpmapper' in s.lower():
+            if "msdpmapper" in s.lower():
                 all_scripts.insert(0, s)  # MSDPMapper first
-            elif 'yatcoconfig' in s.lower():
+            elif "yatcoconfig" in s.lower():
                 pass  # Will add after GUI scripts
             else:
                 all_scripts.append(s)
@@ -1152,12 +1188,12 @@ class Extractor:
 
         # Add YATCOConfig after GUI
         for s in scripts:
-            if 'yatcoconfig' in s.lower():
+            if "yatcoconfig" in s.lower():
                 all_scripts.append(s)
 
         all_scripts.extend(yatco_scripts)
 
-        yaml_content = f'''# theGUI/build.yaml
+        yaml_content = """# theGUI/build.yaml
 # LuminariGUI Source-to-Build Configuration
 # AUTO-GENERATED by build.py --extract
 
@@ -1171,31 +1207,31 @@ output:
 
 options:
   embed_markers: false
-  marker_format: "<!-- SOURCE: {{file}} -->"
+  marker_format: "<!-- SOURCE: {file} -->"
   validate_fragments: true
   validate_output: true
   strip_dev_comments: true
 
 triggers:
-'''
+"""
         for f in triggers:
-            yaml_content += f'  - {f}\n'
+            yaml_content += f"  - {f}\n"
 
-        yaml_content += '\naliases:\n'
+        yaml_content += "\naliases:\n"
         for f in aliases:
-            yaml_content += f'  - {f}\n'
+            yaml_content += f"  - {f}\n"
 
-        yaml_content += '\nscripts:\n'
+        yaml_content += "\nscripts:\n"
         for f in all_scripts:
-            yaml_content += f'  - {f}\n'
+            yaml_content += f"  - {f}\n"
 
-        yaml_content += '\nkeys:\n'
+        yaml_content += "\nkeys:\n"
         for f in keys:
-            yaml_content += f'  - {f}\n'
+            yaml_content += f"  - {f}\n"
 
-        yaml_path = self.script_dir / 'build.yaml'
-        with open(yaml_path, 'w', encoding='utf-8') as f:
-            f.write(yaml_content)
+        yaml_path = self.script_dir / "build.yaml"
+        with open(yaml_path, "w", encoding="utf-8") as yaml_file:
+            yaml_file.write(yaml_content)
 
         print(f"  Updated build.yaml with {len(self.generated_files)} fragments")
 
@@ -1226,7 +1262,7 @@ class Watcher:
         """Watch source files and rebuild on changes"""
         print("Watching for changes... (Ctrl+C to stop)")
 
-        last_build = 0
+        last_build = 0.0
 
         try:
             while True:
@@ -1256,30 +1292,50 @@ Examples:
     python build.py --extract       Split existing XML into fragments
     python build.py --diff          Show what would change
     python build.py --stats         Show fragment statistics
-        """
+        """,
     )
 
-    parser.add_argument('--validate', action='store_true',
-                        help='Validate fragments and output, but do not write')
-    parser.add_argument('--extract', action='store_true',
-                        help='Extract fragments from existing LuminariGUI.xml')
-    parser.add_argument('--diff', action='store_true',
-                        help='Show differences between current output and what build would produce')
-    parser.add_argument('--watch', action='store_true',
-                        help='Watch source files and rebuild on changes')
-    parser.add_argument('--clean', action='store_true',
-                        help='Remove generated output file')
-    parser.add_argument('--stats', action='store_true',
-                        help='Show line counts and fragment statistics')
-    parser.add_argument('--fail-on-diff', action='store_true',
-                        help='Compare without writing and exit with error if output differs (for CI; implies --diff)')
-    parser.add_argument('--version', type=parse_version_argument,
-                        help='Build an exact version instead of auto-incrementing')
+    parser.add_argument(
+        "--validate",
+        action="store_true",
+        help="Validate fragments and output, but do not write",
+    )
+    parser.add_argument(
+        "--extract",
+        action="store_true",
+        help="Extract fragments from existing LuminariGUI.xml",
+    )
+    parser.add_argument(
+        "--diff",
+        action="store_true",
+        help="Show differences between current output and what build would produce",
+    )
+    parser.add_argument(
+        "--watch", action="store_true", help="Watch source files and rebuild on changes"
+    )
+    parser.add_argument(
+        "--clean", action="store_true", help="Remove generated output file"
+    )
+    parser.add_argument(
+        "--stats", action="store_true", help="Show line counts and fragment statistics"
+    )
+    parser.add_argument(
+        "--fail-on-diff",
+        action="store_true",
+        help="Compare without writing and exit with error if output differs (for CI; implies --diff)",
+    )
+    parser.add_argument(
+        "--version",
+        type=parse_version_argument,
+        help="Build an exact version instead of auto-incrementing",
+    )
 
     args = parser.parse_args()
 
     if args.version and (args.extract or args.clean or args.stats):
-        parser.error("--version is only valid with build, --validate, --diff, or --watch")
+        parser.error(
+            "--version is only valid with build, --validate, --diff, or --watch"
+        )
 
     # Load configuration
     config = BuildConfig()
@@ -1304,7 +1360,9 @@ Examples:
         if not success:
             sys.exit(1)
         if args.fail_on_diff and has_differences:
-            print("ERROR: Output differs from source. Run 'python build.py' to rebuild.")
+            print(
+                "ERROR: Output differs from source. Run 'python build.py' to rebuild."
+            )
             sys.exit(1)
         sys.exit(0)
 

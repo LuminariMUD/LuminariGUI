@@ -1,7 +1,8 @@
 # Comprehensive CI Pipeline Plan
 
-- **Status:** Proposed
+- **Status:** In progress — Phase 1 implemented and locally verified
 - **Created:** 2026-08-05
+- **Last updated:** 2026-08-05
 - **Scope:** Pull-request and `master` automation for the XML/Lua package,
   Python build tools, tests, and repository security.
 
@@ -275,20 +276,28 @@ Only CodeQL/SARIF upload jobs should receive `security-events: write`.
 
 ### Phase 1 — Reproducible core CI
 
-- [ ] Remove the tracked root `__pycache__/*.pyc` files; retain the existing
+- [x] Remove the tracked root `__pycache__/*.pyc` files; retain the existing
   ignore rules and prevent bytecode writes during CI.
-- [ ] Add `requirements-ci.in` and a pinned `requirements-ci.txt` for the
+- [x] Add `requirements-ci.in` and a pinned `requirements-ci.txt` for the
   initial Python tools.
-- [ ] Add `.github/workflows/ci.yml` for pull requests, pushes to `master`, and
+- [x] Add `.github/workflows/ci.yml` for pull requests, pushes to `master`, and
   manual dispatch.
-- [ ] Install and assert Lua 5.1, `luac`, and `luacheck`.
-- [ ] Run `build.py --validate` and `--diff --fail-on-diff`.
-- [ ] Run Python compile checks and the initial Ruff checks.
-- [ ] Run every existing test suite without `--skip-optional`.
-- [ ] Run `scripts/validate_package.py`.
-- [ ] Upload the JSON test report on success or failure.
-- [ ] Assert that the worktree remains unchanged.
-- [ ] Add job timeouts and cancellation of superseded PR runs.
+- [x] Install and assert Lua 5.1, `luac`, and `luacheck`.
+- [x] Run `build.py --validate` and `--diff --fail-on-diff`.
+- [x] Run Python compile checks and the initial Ruff checks.
+- [x] Run every existing test suite without `--skip-optional`.
+- [x] Run `scripts/validate_package.py`.
+- [x] Upload the JSON test report on success or failure.
+- [x] Assert that the worktree remains unchanged.
+- [x] Add job timeouts and cancellation of superseded PR runs.
+
+Implemented 2026-08-05. The initial baseline uses Python 3.12.3, a
+hash-locked Ruff/mypy/PyYAML toolchain, Lua 5.1, and luacheck 0.23.0. All
+third-party actions are pinned to full commit SHAs. Local verification passed
+Ruff, mypy, actionlint 1.7.12, non-mutating assembly/drift validation, all
+seven test suites (including lifecycle 33/33), package validation, and the
+resource-ownership audit in a clean Ubuntu 24.04 replica. The first hosted
+GitHub Actions run remains the final acceptance check for this phase.
 
 **Acceptance criteria**
 

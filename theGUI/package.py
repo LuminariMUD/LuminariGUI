@@ -24,18 +24,17 @@ Examples:
 import argparse
 import hashlib
 import json
-import os
 import re
 import shutil
 import subprocess
 import sys
 import tempfile
-import zipfile
 import xml.etree.ElementTree as ET
+import zipfile
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+from typing import Any
 
 # Script directory for relative paths
 SCRIPT_DIR = Path(__file__).parent.resolve()
@@ -55,17 +54,17 @@ def parse_version_argument(value: str) -> str:
 
 def increment_build_version(version: str) -> str:
     """Return the version produced by build.py's normal auto-increment."""
-    parts = version.split('.')
+    parts = version.split(".")
     last_part = parts[-1]
     width = len(last_part)
     try:
         parts[-1] = str(int(last_part) + 1).zfill(width)
     except ValueError:
-        parts.append('1')
-    return '.'.join(parts)
+        parts.append("1")
+    return ".".join(parts)
 
 
-def get_version_from_xml(xml_path: Path) -> Optional[str]:
+def get_version_from_xml(xml_path: Path) -> str | None:
     """Read the embedded Mudlet package version from a built XML file."""
     try:
         return ET.parse(xml_path).getroot().attrib.get("version")
@@ -76,6 +75,7 @@ def get_version_from_xml(xml_path: Path) -> Optional[str]:
 @dataclass
 class PackageMetadata:
     """Metadata for a package release"""
+
     version: str
     package_type: str  # "release" or "development"
     created: str
@@ -106,10 +106,11 @@ class PackageMetadata:
 @dataclass
 class GitStatus:
     """Git repository status"""
+
     is_clean: bool
     current_branch: str
     uncommitted_files: list = field(default_factory=list)
-    error: Optional[str] = None
+    error: str | None = None
 
 
 class GitManager:
@@ -120,64 +121,73 @@ class GitManager:
         """Run a git command and return (stdout, stderr, returncode)"""
         try:
             result = subprocess.run(
-                ['git'] + command,
+                ["git"] + command,
                 capture_output=True,
                 text=True,
                 check=check,
-                cwd=PROJECT_ROOT
+                cwd=PROJECT_ROOT,
             )
             return result.stdout.strip(), result.stderr.strip(), result.returncode
         except subprocess.CalledProcessError as e:
-            return e.stdout.strip() if e.stdout else "", e.stderr.strip() if e.stderr else "", e.returncode
+            return (
+                e.stdout.strip() if e.stdout else "",
+                e.stderr.strip() if e.stderr else "",
+                e.returncode,
+            )
         except FileNotFoundError:
             return "", "Git not found", 1
 
     def get_status(self) -> GitStatus:
         """Get current git repository status"""
-        stdout, stderr, rc = self.run(['branch', '--show-current'])
+        stdout, stderr, rc = self.run(["branch", "--show-current"])
         if rc != 0:
             return GitStatus(is_clean=False, current_branch="", error=stderr)
 
         current_branch = stdout
 
-        stdout, stderr, rc = self.run(['status', '--porcelain'])
+        stdout, stderr, rc = self.run(["status", "--porcelain"])
         if rc != 0:
-            return GitStatus(is_clean=False, current_branch=current_branch, error=stderr)
+            return GitStatus(
+                is_clean=False, current_branch=current_branch, error=stderr
+            )
 
-        uncommitted = [line for line in stdout.split('\n') if line.strip()]
+        uncommitted = [line for line in stdout.split("\n") if line.strip()]
         return GitStatus(
             is_clean=len(uncommitted) == 0,
             current_branch=current_branch,
-            uncommitted_files=uncommitted
+            uncommitted_files=uncommitted,
         )
 
     def create_branch(self, branch_name: str) -> bool:
         """Create and checkout a branch, or checkout if it exists"""
         # Check if branch exists
-        stdout, _, rc = self.run(['show-ref', '--verify', '--quiet', f'refs/heads/{branch_name}'], check=False)
+        stdout, _, rc = self.run(
+            ["show-ref", "--verify", "--quiet", f"refs/heads/{branch_name}"],
+            check=False,
+        )
 
         if rc == 0:
             # Branch exists, checkout
             print(f"  Branch {branch_name} exists, checking out...")
-            _, stderr, rc = self.run(['checkout', branch_name])
+            _, stderr, rc = self.run(["checkout", branch_name])
         else:
             # Create new branch
             print(f"  Creating branch: {branch_name}")
-            _, stderr, rc = self.run(['checkout', '-b', branch_name])
+            _, stderr, rc = self.run(["checkout", "-b", branch_name])
 
         if rc != 0:
             print(f"  ERROR: {stderr}")
             return False
         return True
 
-    def commit(self, message: str, files: list[Path] = None) -> bool:
+    def commit(self, message: str, files: list[Path] | None = None) -> bool:
         """Stage files and commit"""
         if files:
             for f in files:
                 if f.exists():
-                    self.run(['add', str(f)])
+                    self.run(["add", str(f)])
 
-        _, stderr, rc = self.run(['commit', '-m', message])
+        _, stderr, rc = self.run(["commit", "-m", message])
         if rc != 0:
             if "nothing to commit" in stderr:
                 print("  No changes to commit")
@@ -188,9 +198,9 @@ class GitManager:
 
     def tag(self, tag_name: str, message: str, force: bool = False) -> bool:
         """Create an annotated tag"""
-        cmd = ['tag', '-a', tag_name, '-m', message]
+        cmd = ["tag", "-a", tag_name, "-m", message]
         if force:
-            cmd.insert(1, '-f')
+            cmd.insert(1, "-f")
 
         _, stderr, rc = self.run(cmd)
         if rc != 0:
@@ -205,7 +215,7 @@ class GitManager:
             branch_name,
             f"refs/tags/{tag_name}",
         ]
-        _, stderr, rc = self.run(['push', '--atomic', 'origin', *refspecs])
+        _, stderr, rc = self.run(["push", "--atomic", "origin", *refspecs])
         if rc != 0:
             print(f"  ERROR publishing release refs: {stderr}")
             return False
@@ -216,9 +226,9 @@ class GitManager:
             (f"refs/tags/{tag_name}", f"refs/tags/{tag_name}"),
         )
         for local_ref, remote_ref in refs:
-            local_sha, local_error, local_rc = self.run(['rev-parse', local_ref])
+            local_sha, local_error, local_rc = self.run(["rev-parse", local_ref])
             remote_line, remote_error, remote_rc = self.run(
-                ['ls-remote', '--exit-code', 'origin', remote_ref],
+                ["ls-remote", "--exit-code", "origin", remote_ref],
                 check=False,
             )
             remote_sha = remote_line.split()[0] if remote_line else ""
@@ -237,12 +247,20 @@ class GitManager:
 
     def merge_to_master(self, source_branch: str, version: str) -> bool:
         """Merge a branch to master"""
-        _, stderr, rc = self.run(['checkout', 'master'])
+        _, stderr, rc = self.run(["checkout", "master"])
         if rc != 0:
             print(f"  WARNING: Could not checkout master: {stderr}")
             return False
 
-        _, stderr, rc = self.run(['merge', source_branch, '--no-ff', '-m', f'Merge release v{version} to master'])
+        _, stderr, rc = self.run(
+            [
+                "merge",
+                source_branch,
+                "--no-ff",
+                "-m",
+                f"Merge release v{version} to master",
+            ]
+        )
         if rc != 0:
             print(f"  WARNING: Could not merge to master: {stderr}")
             return False
@@ -281,7 +299,7 @@ class Packager:
         Mudlet 4.20 an icon-less package simply gets no icon, whereas
         naming a missing file would be worse.
         """
-        today = datetime.now().strftime('%Y-%m-%d')
+        today = datetime.now().strftime("%Y-%m-%d")
         return f'''mpackage = "LuminariGUI"
 author = "LuminariMUD Team"
 title = "LuminariGUI"
@@ -303,7 +321,7 @@ dependencies = ""
                 sha256.update(chunk)
         return sha256.hexdigest()
 
-    def create(self, is_dev: bool = False) -> Optional[Path]:
+    def create(self, is_dev: bool = False) -> Path | None:
         """Create a .mpackage file"""
         # Ensure releases directory exists
         self.releases_dir.mkdir(parents=True, exist_ok=True)
@@ -327,7 +345,9 @@ dependencies = ""
             return None
 
         output_path = self.get_package_path(is_dev)
-        print(f"Creating {'development' if is_dev else 'release'} package: {output_path.name}")
+        print(
+            f"Creating {'development' if is_dev else 'release'} package: {output_path.name}"
+        )
 
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
@@ -350,11 +370,11 @@ dependencies = ""
 
             # Create config.lua
             config_lua = temp_path / "config.lua"
-            config_lua.write_text(self.create_config_lua(), encoding='utf-8')
+            config_lua.write_text(self.create_config_lua(), encoding="utf-8")
             print("  Added: config.lua")
 
             # Create ZIP archive
-            with zipfile.ZipFile(output_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            with zipfile.ZipFile(output_path, "w", zipfile.ZIP_DEFLATED) as zipf:
                 for file_path in temp_path.rglob("*"):
                     if file_path.is_file():
                         arc_name = file_path.relative_to(temp_path)
@@ -371,11 +391,13 @@ dependencies = ""
                 created=datetime.now().isoformat(),
                 package_file=output_path.name,
                 file_size=output_path.stat().st_size,
-                sha256=self.calculate_sha256(output_path)
+                sha256=self.calculate_sha256(output_path),
             )
 
-            metadata_path = output_path.with_suffix('.json')
-            metadata_path.write_text(json.dumps(metadata.to_dict(), indent=2), encoding='utf-8')
+            metadata_path = output_path.with_suffix(".json")
+            metadata_path.write_text(
+                json.dumps(metadata.to_dict(), indent=2), encoding="utf-8"
+            )
             print(f"Metadata created: {metadata_path.name}")
 
             return output_path
@@ -383,18 +405,18 @@ dependencies = ""
         print("ERROR: Failed to create package")
         return None
 
-    def list_packages(self) -> list[tuple[str, dict]]:
+    def list_packages(self) -> list[tuple[str, dict[str, Any] | None]]:
         """List all packages in Releases directory"""
         if not self.releases_dir.exists():
             return []
 
-        packages = []
+        packages: list[tuple[str, dict[str, Any] | None]] = []
         for pkg in sorted(self.releases_dir.glob("*.mpackage")):
             metadata = None
-            metadata_path = pkg.with_suffix('.json')
+            metadata_path = pkg.with_suffix(".json")
             if metadata_path.exists():
                 try:
-                    metadata = json.loads(metadata_path.read_text(encoding='utf-8'))
+                    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
                 except (json.JSONDecodeError, OSError):
                     pass
             packages.append((pkg.name, metadata))
@@ -406,13 +428,15 @@ dependencies = ""
         if not self.releases_dir.exists():
             return 0
 
-        dev_pattern = re.compile(r'LuminariGUI-v[\d.]+.*-dev-(\d{8})-(\d{6})\.mpackage')
+        dev_pattern = re.compile(r"LuminariGUI-v[\d.]+.*-dev-(\d{8})-(\d{6})\.mpackage")
         dev_packages = []
 
         for pkg in self.releases_dir.glob("*-dev-*.mpackage"):
             match = dev_pattern.match(pkg.name)
             if match:
-                timestamp = datetime.strptime(f"{match.group(1)}-{match.group(2)}", "%Y%m%d-%H%M%S")
+                timestamp = datetime.strptime(
+                    f"{match.group(1)}-{match.group(2)}", "%Y%m%d-%H%M%S"
+                )
                 dev_packages.append((timestamp, pkg))
 
         dev_packages.sort(key=lambda x: x[0], reverse=True)
@@ -421,7 +445,7 @@ dependencies = ""
         for _, pkg in dev_packages[keep:]:
             try:
                 pkg.unlink()
-                metadata = pkg.with_suffix('.json')
+                metadata = pkg.with_suffix(".json")
                 if metadata.exists():
                     metadata.unlink()
                 print(f"  Removed: {pkg.name}")
@@ -439,7 +463,7 @@ class ReleaseWorkflow:
         self,
         version: str,
         dry_run: bool = False,
-        version_override: Optional[str] = None,
+        version_override: str | None = None,
     ):
         self.version = version
         self.version_override = version_override
@@ -469,14 +493,10 @@ class ReleaseWorkflow:
         if self.version_override is not None:
             command.extend(["--version", self.version_override])
 
-        result = subprocess.run(
-            command,
-            capture_output=True,
-            text=True
-        )
+        result = subprocess.run(command, capture_output=True, text=True)
 
         if result.returncode != 0:
-            print(f"  ERROR: Build failed")
+            print("  ERROR: Build failed")
             print(result.stderr)
             return False
 
@@ -512,7 +532,7 @@ class ReleaseWorkflow:
             capture_output=True,
             text=True,
             timeout=300,
-            cwd=PROJECT_ROOT / "tests"
+            cwd=PROJECT_ROOT / "tests",
         )
 
         if result.returncode != 0:
@@ -554,10 +574,7 @@ class ReleaseWorkflow:
 
         gh_path = shutil.which("gh")
         if not gh_path:
-            print(
-                "  ERROR: GitHub CLI (gh) is required before publishing a "
-                "release"
-            )
+            print("  ERROR: GitHub CLI (gh) is required before publishing a release")
             return False
 
         result = subprocess.run(
@@ -610,7 +627,7 @@ class ReleaseWorkflow:
         if package_path is None:
             return False
 
-        metadata_path = package_path.with_suffix('.json')
+        metadata_path = package_path.with_suffix(".json")
         files_to_commit = [package_path, metadata_path]
         if not self.git.commit(f"Add release package v{self.version}", files_to_commit):
             print("  ERROR: Could not commit release package")
@@ -648,14 +665,13 @@ class ReleaseWorkflow:
         """Create and verify the public GitHub Release and both assets."""
         tag_name = f"v{self.version}"
         package_path = self.packager.get_package_path(is_dev=False)
-        metadata_path = package_path.with_suffix('.json')
+        metadata_path = package_path.with_suffix(".json")
         print(f"\n[7/7] Publishing GitHub Release: {tag_name}")
 
         if self.dry_run:
             print(f"  [DRY RUN] Would publish GitHub Release {tag_name}")
             print(
-                "  [DRY RUN] Would attach "
-                f"{package_path.name} and {metadata_path.name}"
+                f"  [DRY RUN] Would attach {package_path.name} and {metadata_path.name}"
             )
             print("  [DRY RUN] Would verify the release and uploaded assets")
             return True
@@ -745,8 +761,12 @@ class ReleaseWorkflow:
         print(f"  Published and verified: {release_url}")
         return True
 
-    def execute(self, skip_build: bool = False, skip_tests: bool = False,
-                skip_git_check: bool = False) -> bool:
+    def execute(
+        self,
+        skip_build: bool = False,
+        skip_tests: bool = False,
+        skip_git_check: bool = False,
+    ) -> bool:
         """Execute the complete, publishing release workflow."""
         if skip_build or self.version_override is not None:
             print(f"Starting release workflow for v{self.version}")
@@ -807,21 +827,19 @@ class ReleaseWorkflow:
                 "no changes made."
             )
         else:
-            print(
-                f"Release v{self.version} fully published and verified!"
-            )
+            print(f"Release v{self.version} fully published and verified!")
         print(f"{'=' * 50}")
 
         return True
 
 
-def get_version_from_build_yaml() -> Optional[str]:
+def get_version_from_build_yaml() -> str | None:
     """Get version from build.yaml"""
     build_yaml = SCRIPT_DIR / "build.yaml"
     if not build_yaml.exists():
         return None
 
-    content = build_yaml.read_text(encoding='utf-8')
+    content = build_yaml.read_text(encoding="utf-8")
     match = re.search(r'version:\s*"([^"]+)"', content)
     return match.group(1) if match else None
 
@@ -841,11 +859,7 @@ def cmd_create(args):
         if args.version is not None:
             command.extend(["--version", args.version])
 
-        result = subprocess.run(
-            command,
-            capture_output=True,
-            text=True
-        )
+        result = subprocess.run(command, capture_output=True, text=True)
         if result.returncode != 0:
             print("ERROR: Build failed")
             print(result.stderr)
@@ -869,11 +883,15 @@ def cmd_create(args):
                 capture_output=True,
                 text=True,
                 timeout=300,
-                cwd=PROJECT_ROOT / "tests"
+                cwd=PROJECT_ROOT / "tests",
             )
             if result.returncode != 0:
                 print("ERROR: Tests failed")
-                print(result.stdout[-1000:] if len(result.stdout) > 1000 else result.stdout)
+                print(
+                    result.stdout[-1000:]
+                    if len(result.stdout) > 1000
+                    else result.stdout
+                )
                 return 1
             print("Tests passed\n")
 
@@ -951,51 +969,64 @@ Examples:
   python package.py create --dev          Create dev package
   python package.py release --dry-run     Preview publication
   python package.py release               Publish a complete release
-        """
+        """,
     )
 
-    subparsers = parser.add_subparsers(dest='command', help='Command to run')
+    subparsers = parser.add_subparsers(dest="command", help="Command to run")
 
     # create command
-    create_parser = subparsers.add_parser('create', help='Create a package')
-    create_parser.add_argument('--dev', action='store_true',
-                               help='Create development package with timestamp')
+    create_parser = subparsers.add_parser("create", help="Create a package")
     create_parser.add_argument(
-        '--version',
-        type=parse_version_argument,
-        help='Build and package an exact version',
+        "--dev", action="store_true", help="Create development package with timestamp"
     )
-    create_parser.add_argument('--skip-build', action='store_true',
-                               help='Skip building XML (use existing)')
-    create_parser.add_argument('--skip-tests', action='store_true',
-                               help='Skip running test suite')
+    create_parser.add_argument(
+        "--version",
+        type=parse_version_argument,
+        help="Build and package an exact version",
+    )
+    create_parser.add_argument(
+        "--skip-build", action="store_true", help="Skip building XML (use existing)"
+    )
+    create_parser.add_argument(
+        "--skip-tests", action="store_true", help="Skip running test suite"
+    )
 
     # release command
     release_parser = subparsers.add_parser(
-        'release',
-        help='Build and publish a complete release',
+        "release",
+        help="Build and publish a complete release",
     )
     release_parser.add_argument(
-        '--version',
+        "--version",
         type=parse_version_argument,
-        help='Build, package, branch, tag, and publish an exact version',
+        help="Build, package, branch, tag, and publish an exact version",
     )
-    release_parser.add_argument('--dry-run', action='store_true',
-                                help='Preview publication without making changes')
-    release_parser.add_argument('--skip-build', action='store_true',
-                                help='Skip building XML')
-    release_parser.add_argument('--skip-tests', action='store_true',
-                                help='Skip test suite')
-    release_parser.add_argument('--skip-git-check', action='store_true',
-                                help='Skip git status check')
+    release_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Preview publication without making changes",
+    )
+    release_parser.add_argument(
+        "--skip-build", action="store_true", help="Skip building XML"
+    )
+    release_parser.add_argument(
+        "--skip-tests", action="store_true", help="Skip test suite"
+    )
+    release_parser.add_argument(
+        "--skip-git-check", action="store_true", help="Skip git status check"
+    )
 
     # list command
-    subparsers.add_parser('list', help='List existing packages')
+    subparsers.add_parser("list", help="List existing packages")
 
     # clean command
-    clean_parser = subparsers.add_parser('clean', help='Clean old dev packages')
-    clean_parser.add_argument('--keep', type=int, default=3,
-                              help='Number of dev packages to keep (default: 3)')
+    clean_parser = subparsers.add_parser("clean", help="Clean old dev packages")
+    clean_parser.add_argument(
+        "--keep",
+        type=int,
+        default=3,
+        help="Number of dev packages to keep (default: 3)",
+    )
 
     args = parser.parse_args()
 
@@ -1004,10 +1035,10 @@ Examples:
         return 0
 
     commands = {
-        'create': cmd_create,
-        'release': cmd_release,
-        'list': cmd_list,
-        'clean': cmd_clean,
+        "create": cmd_create,
+        "release": cmd_release,
+        "list": cmd_list,
+        "clean": cmd_clean,
     }
 
     return commands[args.command](args)

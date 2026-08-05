@@ -31,6 +31,11 @@ in this folder.
   [comprehensive CI pipeline plan](CI_PIPELINE_PLAN.md), beginning with the
   non-mutating `python3 theGUI/build.py --diff --fail-on-diff` source/output
   drift check and full dependency-backed test run.
+  - Phase 1 implemented and locally verified 2026-08-05: hash-locked Python
+    tooling, Ruff/mypy, Lua 5.1 plus luacheck, all seven test suites,
+    non-mutating build/drift/package checks, clean-tree enforcement, pinned
+    Actions, timeouts, and retained JSON reports. Hosted-run confirmation is
+    pending the checkpoint push; Phase 2 security work follows.
 - [ ] Define Mudlet-aware duplicate-name rules and add scope-aware build
   validation with regression tests. Do not reject intentional same-named items
   that Mudlet permits in different groups or package sections.

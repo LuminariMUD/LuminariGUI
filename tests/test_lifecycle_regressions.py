@@ -18,8 +18,8 @@ import shutil
 import subprocess
 import sys
 import tempfile
-import zipfile
 import xml.etree.ElementTree as ET
+import zipfile
 from contextlib import redirect_stdout
 from pathlib import Path
 
@@ -127,7 +127,9 @@ class LifecycleRegressionTester:
         for node in inner_gui.findall("./Script"):
             name = node.findtext("name")
             self._require(name, "inner GUI contains an unnamed Script")
-            self._require(name not in scripts, f"duplicate inner GUI script name: {name}")
+            self._require(
+                name not in scripts, f"duplicate inner GUI script name: {name}"
+            )
             scripts[name] = node.findtext("script") or ""
             order.append(name)
 
@@ -171,13 +173,13 @@ class LifecycleRegressionTester:
 
     def _test_upgrade_preserves_file_scope_handler_ids(self):
         source = self._gui_script("GUI Event Registry")
-        register_function = source[source.index("GUI.EVENT_HANDLERS ="):]
+        register_function = source[source.index("GUI.EVENT_HANDLERS =") :]
         resource_source = self._fragment_script(
             self.resource_source_path,
             "Resource Ownership",
         )
 
-        script = f'''
+        script = f"""
 GUI = {{
   DEBUG = false,
   debug = function() end,
@@ -226,7 +228,7 @@ assert(GUI.eventHandlerIds.shiftRoom == 101)
 assert(GUI.eventHandlerIds.sysProtocolEnabled == 104)
 assert(GUI.eventHandlerIds["msdp.ROOM_map"] == 105)
 assert(GUI.eventHandlerIds["msdp.HEALTH"] ~= 201)
-'''
+"""
         self._run_lua(script)
 
     def _test_resource_ownership_manager(self):
@@ -235,7 +237,7 @@ assert(GUI.eventHandlerIds["msdp.HEALTH"] ~= 201)
             "Resource Ownership",
         )
 
-        script = f'''
+        script = f"""
 activeTimers = {{}}
 activeHandlers = {{}}
 nextTimerId = 0
@@ -326,7 +328,7 @@ assert(activeHandlers[firstHandler] == nil,
 assert(countEntries(activeHandlers) == 1, "handler replacement stacked")
 assert(GUI.unregisterOwnedHandlers(owner) == 1)
 assert(countEntries(activeHandlers) == 0)
-'''
+"""
         self._run_lua(script)
 
     def _test_package_cleanup_removes_owned_resources(self):
@@ -339,7 +341,7 @@ assert(countEntries(activeHandlers) == 0)
             preferences_source.index("function GUI.cleanup()") :
         ]
 
-        script = f'''
+        script = f"""
 activeTimers = {{}}
 activeHandlers = {{}}
 activeAliases = {{[701] = true, [702] = true}}
@@ -469,7 +471,7 @@ assert(countEntries(GUI.lifecycleHandlerIds) == 0)
 assert(map.maplineTrig == nil)
 assert(saves == 1)
 assert(blinkStops == 1)
-'''
+"""
         self._run_lua(script)
 
     def _test_handler_counts_across_lifecycle_paths(self):
@@ -487,7 +489,7 @@ assert(blinkStops == 1)
         refresh_source = self._gui_script("GUI Refresh")
         lifecycle_source = self._gui_script("GUI Lifecycle")
 
-        script = f'''
+        script = f"""
 activeHandlers = {{}}
 activeTimers = {{}}
 nextHandlerId = 0
@@ -637,7 +639,7 @@ assert(countEntries(activeHandlers) == expectedHandlers,
   "rapid fix gui calls stacked handlers")
 runAllTimers()
 assertStable("rapid fix gui")
-'''
+"""
         self._run_lua(script)
 
     def _test_handler_analyzer_reports_owned_resources(self):
@@ -670,21 +672,18 @@ assertStable("rapid fix gui")
             f"unexpected recurring timer total: {totals}",
         )
         self._require(
-            totals["unowned_handlers"] == 0
-            and totals["unowned_timers"] == 0,
+            totals["unowned_handlers"] == 0 and totals["unowned_timers"] == 0,
             f"analyzer reported unowned resources: {totals}",
         )
 
-        built_xml = (self.repo_root / "LuminariGUI.xml").read_text(
-            encoding="utf-8"
-        )
-        probe = '''<Script isActive="yes" isFolder="no">
+        built_xml = (self.repo_root / "LuminariGUI.xml").read_text(encoding="utf-8")
+        probe = """<Script isActive="yes" isFolder="no">
   <name>Unowned Probe</name>
   <packageName></packageName>
   <script>tempTimer(1, function() end)</script>
   <eventHandlerList />
 </Script>
-'''
+"""
         self._require(
             "</ScriptPackage>" in built_xml,
             "built XML has no ScriptPackage terminator",
@@ -750,7 +749,7 @@ assertStable("rapid fix gui")
             "\nfunction map.get_default_map()",
         )
 
-        script = f'''
+        script = f"""
 local createCalls = 0
 local aliasCalls = 0
 local fontCalls = 0
@@ -823,13 +822,13 @@ assert(map.container == firstMapContainer)
 assert(GUI.asciiMapContainer == firstAsciiContainer)
 assert(map.mapwindow == firstMapWindow)
 assert(map.minimap == firstMinimap)
-'''
+"""
         self._run_lua(script)
 
     def _test_profile_reset_initializes_mapper(self):
         source = self._gui_script("GUI Lifecycle")
 
-        script = f'''
+        script = f"""
 calls = {{gui = 0, mapper = 0, reports = 0, refresh = 0}}
 handlers = {{}}
 nextHandlerId = 0
@@ -888,13 +887,13 @@ assert(calls.refresh == 1)
 GUI.onSysLoadEvent("sysLoadEvent", true)
 assert(calls.gui == 2)
 assert(calls.mapper == 1, "reset recovery ran during a fresh profile load")
-'''
+"""
         self._run_lua(script)
 
     def _test_lifecycle_registration_is_idempotent(self):
         source = self._gui_script("GUI Lifecycle")
 
-        script = f'''
+        script = f"""
 nextHandlerId = 0
 killed = 0
 activeHandlers = {{}}
@@ -950,7 +949,7 @@ for event, oldId in pairs(firstIds) do
   assert(GUI.lifecycleHandlerIds[event] ~= oldId,
     "lifecycle handler ID was not replaced for " .. event)
 end
-'''
+"""
         self._run_lua(script)
 
     def _test_legacy_lifecycle_work_is_coalesced(self):
@@ -959,7 +958,7 @@ end
         init_source = boot_source[boot_source.index("function GUI.init()") :]
         protocol_source = self._gui_script("MSDP Protocol")
 
-        refresh_script = f'''
+        refresh_script = f"""
 queuedTimers = {{}}
 registrationCalls = 0
 msdp = {{}}
@@ -995,10 +994,10 @@ for _, callback in ipairs(pending) do callback() end
 GUI.initializeOrRefresh("connection established")
 assert(registrationCalls == 2,
   "a later connection refresh remained incorrectly suppressed")
-'''
+"""
         self._run_lua(refresh_script)
 
-        init_script = f'''
+        init_script = f"""
 queuedTimers = {{}}
 stageCalls = 0
 map = {{}}
@@ -1047,10 +1046,10 @@ for _, callback in ipairs(pending) do callback() end
 GUI.init()
 assert(stageCalls == firstStageCount * 2,
   "a later GUI initialization remained incorrectly suppressed")
-'''
+"""
         self._run_lua(init_script)
 
-        protocol_script = f'''
+        protocol_script = f"""
 queuedTimers = {{}}
 reportCalls = 0
 
@@ -1083,13 +1082,13 @@ for _, callback in ipairs(pending) do callback() end
 GUI.requestMSDPReports()
 assert(reportCalls == #GUI.MSDP_REPORT_VARS * 2,
   "a later REPORT request remained incorrectly suppressed")
-'''
+"""
         self._run_lua(protocol_script)
 
     def _test_refresh_recovers_missing_msdp_table(self):
         source = self._gui_script("GUI Refresh")
 
-        script = f'''
+        script = f"""
 GUI = {{
   initialized = true,
   debug = function() end,
@@ -1114,7 +1113,7 @@ msdp = nil
 GUI.initializeOrRefresh("profile reset without protocol values")
 assert(type(msdp) == "table",
   "refresh did not recreate the MSDP table cleared by resetProfile()")
-'''
+"""
         self._run_lua(script)
 
     def _test_debug_master_toggle_and_load_order(self):
@@ -1216,9 +1215,7 @@ assert(type(msdp) == "table",
         )
 
     def _test_gui_wrapper_and_fragment_sizes(self):
-        wrapper_path = (
-            self.repo_root / "theGUI" / "src" / "scripts" / "01_gui.xml"
-        )
+        wrapper_path = self.repo_root / "theGUI" / "src" / "scripts" / "01_gui.xml"
         wrapper = wrapper_path.read_text(encoding="utf-8")
         wrapper_lines = len(wrapper.splitlines())
         self._require(
@@ -1277,7 +1274,7 @@ assert(type(msdp) == "table",
             "button parent guard runs after widget creation",
         )
 
-        script = f'''
+        script = f"""
 GUI = {{debug = function() end}}
 function getMudletHomeDir()
   return "/tmp/luminari-test-profile"
@@ -1297,10 +1294,10 @@ assert(
   tostring(failure):find("refusing to create root-level controls", 1, true),
   "button initialization failed without the orphan-control explanation"
 )
-'''
+"""
         self._run_lua(script)
 
-        healthy_bootstrap = f'''
+        healthy_bootstrap = f"""
 local rootWidgets = {{}}
 
 local function newWindow(config, parent)
@@ -1392,7 +1389,7 @@ local roomParent = GUI.roomInfoContainer.Inside or GUI.roomInfoContainer
 assert(GUI.buttonWindow.container.container == buttonParent)
 assert(GUI.buttonWindow.roomInfo.container == roomParent)
 assert(GUI.buttonWindow.Legend.container == roomParent)
-'''
+"""
         self._run_lua(healthy_bootstrap)
 
     def _test_debug_runtime_output_and_error_semantics(self):
@@ -1400,7 +1397,7 @@ assert(GUI.buttonWindow.Legend.container == roomParent)
         debug_script = root.find(".//Script/script").text
         self._require(debug_script, "debug bootstrap has no Lua script")
 
-        script = f'''
+        script = f"""
 captured = {{}}
 function echo(value)
   captured[#captured + 1] = value
@@ -1447,7 +1444,7 @@ local propagated = pcall(function()
 end)
 assert(propagated == false,
   "disabled debug mode swallowed an error instead of preserving production behavior")
-'''
+"""
         self._run_lua(script)
 
     def _test_debug_startup_boundary_and_system_coverage(self):
@@ -1521,13 +1518,13 @@ assert(propagated == false,
 
     def _test_debug_event_callbacks_keep_their_event_and_handler(self):
         source = self._gui_script("GUI Event Registry")
-        register_function = source[source.index("GUI.EVENT_HANDLERS ="):]
+        register_function = source[source.index("GUI.EVENT_HANDLERS =") :]
         resource_source = self._fragment_script(
             self.resource_source_path,
             "Resource Ownership",
         )
 
-        script = f'''
+        script = f"""
 handlers = {{}}
 next_id = 0
 calls = {{health = 0, room = 0}}
@@ -1582,7 +1579,7 @@ handlers["msdp.HEALTH"]("msdp.HEALTH")
 handlers["msdp.ROOM"]("msdp.ROOM")
 assert(calls.health == 1, "HEALTH callback lost its loop-local handler")
 assert(calls.room == 1, "ROOM callback lost its loop-local handler")
-'''
+"""
         self._run_lua(script)
 
     def _copy_build_tree(self, destination):
@@ -1597,9 +1594,7 @@ assert(calls.room == 1, "ROOM callback lost its loop-local handler")
         child_include="grandchild.xml",
         grandchild_content=None,
     ):
-        fixture_dir = (
-            project_root / "theGUI" / "src" / "scripts" / "include_test"
-        )
+        fixture_dir = project_root / "theGUI" / "src" / "scripts" / "include_test"
         parts_dir = fixture_dir / "parts"
         parts_dir.mkdir(parents=True, exist_ok=True)
 
@@ -1682,8 +1677,7 @@ assert(calls.room == 1, "ROOM callback lost its loop-local handler")
                 "stats did not report the included child separately",
             )
             self._require(
-                "include src/scripts/include_test/parts/grandchild.xml"
-                in stats.stdout,
+                "include src/scripts/include_test/parts/grandchild.xml" in stats.stdout,
                 "stats did not report the nested include separately",
             )
 
@@ -1707,9 +1701,7 @@ assert(calls.room == 1, "ROOM callback lost its loop-local handler")
             )
 
             build_module = self._load_build_module(project_root)
-            config = build_module.BuildConfig(
-                project_root / "theGUI" / "build.yaml"
-            )
+            config = build_module.BuildConfig(project_root / "theGUI" / "build.yaml")
             watcher = build_module.Watcher(build_module.Builder(config))
             baseline = watcher.latest_mtime()
             os.utime(grandchild_path, (baseline + 5, baseline + 5))
@@ -1857,7 +1849,9 @@ assert(calls.room == 1, "ROOM callback lost its loop-local handler")
         )
 
     def _test_create_version_override_is_consistent(self):
-        with tempfile.TemporaryDirectory(prefix="luminari-package-version-") as temp_dir:
+        with tempfile.TemporaryDirectory(
+            prefix="luminari-package-version-"
+        ) as temp_dir:
             project_root = self._copy_build_tree(Path(temp_dir))
             target_version = "9.8.7.006"
 
@@ -1873,11 +1867,11 @@ assert(calls.room == 1, "ROOM callback lost its loop-local handler")
             self._assert_package_versions(project_root, target_version)
 
     def _test_create_default_version_is_consistent(self):
-        with tempfile.TemporaryDirectory(prefix="luminari-package-version-") as temp_dir:
+        with tempfile.TemporaryDirectory(
+            prefix="luminari-package-version-"
+        ) as temp_dir:
             project_root = self._copy_build_tree(Path(temp_dir))
-            expected_version = self._next_version(
-                self._manifest_version(project_root)
-            )
+            expected_version = self._next_version(self._manifest_version(project_root))
 
             result = self._run_package(
                 project_root,
@@ -1889,7 +1883,9 @@ assert(calls.room == 1, "ROOM callback lost its loop-local handler")
             self._assert_package_versions(project_root, expected_version)
 
     def _test_skip_build_rejects_version_mismatch(self):
-        with tempfile.TemporaryDirectory(prefix="luminari-package-version-") as temp_dir:
+        with tempfile.TemporaryDirectory(
+            prefix="luminari-package-version-"
+        ) as temp_dir:
             project_root = self._copy_build_tree(Path(temp_dir))
             shutil.copy2(
                 self.repo_root / "LuminariGUI.xml",
@@ -1912,7 +1908,7 @@ assert(calls.room == 1, "ROOM callback lost its loop-local handler")
             )
 
     def _run_release_build_probe(self, project_root, override, expected_version):
-        probe = r'''
+        probe = r"""
 import importlib.util
 import sys
 
@@ -1932,7 +1928,7 @@ assert workflow.version == expected, (workflow.version, expected)
 assert workflow.packager.version == expected
 assert module.get_version_from_build_yaml() == expected
 assert module.get_version_from_xml(module.PROJECT_ROOT / "LuminariGUI.xml") == expected
-'''
+"""
         current_version = self._manifest_version(project_root)
         result = subprocess.run(
             [
@@ -1952,19 +1948,21 @@ assert module.get_version_from_xml(module.PROJECT_ROOT / "LuminariGUI.xml") == e
         self._require(result.returncode == 0, result.stdout + result.stderr)
 
     def _test_release_build_version_is_consistent(self):
-        with tempfile.TemporaryDirectory(prefix="luminari-release-version-") as temp_dir:
+        with tempfile.TemporaryDirectory(
+            prefix="luminari-release-version-"
+        ) as temp_dir:
             project_root = self._copy_build_tree(Path(temp_dir))
-            expected_version = self._next_version(
-                self._manifest_version(project_root)
-            )
+            expected_version = self._next_version(self._manifest_version(project_root))
             self._run_release_build_probe(project_root, None, expected_version)
 
-        with tempfile.TemporaryDirectory(prefix="luminari-release-version-") as temp_dir:
+        with tempfile.TemporaryDirectory(
+            prefix="luminari-release-version-"
+        ) as temp_dir:
             project_root = self._copy_build_tree(Path(temp_dir))
             self._run_release_build_probe(project_root, "9.8.7.006", "9.8.7.006")
 
     def _test_release_checks_git_before_build(self):
-        probe = r'''
+        probe = r"""
 import importlib.util
 import sys
 
@@ -1989,7 +1987,7 @@ assert calls == [
     "git", "github_access", "build", "tests", "branch", "package", "publish",
     "github"
 ], calls
-'''
+"""
         result = subprocess.run(
             [
                 sys.executable,
@@ -2113,9 +2111,7 @@ raise SystemExit(1)
             fake_gh.chmod(0o755)
             environment = os.environ.copy()
             environment["PATH"] = (
-                str(fake_bin)
-                + os.pathsep
-                + environment.get("PATH", "")
+                str(fake_bin) + os.pathsep + environment.get("PATH", "")
             )
 
             result = self._run_package(
@@ -2210,8 +2206,7 @@ raise SystemExit(1)
                 "release package was not committed and merged to master",
             )
             self._require(
-                f"docs/archive/LuminariGUI.xml_{current_version}"
-                in master_tree.stdout,
+                f"docs/archive/LuminariGUI.xml_{current_version}" in master_tree.stdout,
                 "generated archive was not committed and merged to master",
             )
 
@@ -2260,7 +2255,9 @@ raise SystemExit(1)
 
     def _test_missing_optional_dependency_is_failure(self):
         luac_path = shutil.which("luac")
-        self._require(luac_path is not None, "luac is required for this regression test")
+        self._require(
+            luac_path is not None, "luac is required for this regression test"
+        )
 
         with tempfile.TemporaryDirectory(prefix="luminari-test-tools-") as temp_dir:
             tool_dir = Path(temp_dir)
@@ -2448,7 +2445,10 @@ raise SystemExit(1)
                 self._test_handler_analyzer_reports_owned_resources,
             ),
             ("mapper_initializer_exported", self._test_mapper_initializer_is_exported),
-            ("mapper_initializer_idempotent", self._test_mapper_initializer_is_idempotent),
+            (
+                "mapper_initializer_idempotent",
+                self._test_mapper_initializer_is_idempotent,
+            ),
             ("profile_reset_mapper", self._test_profile_reset_initializes_mapper),
             (
                 "profile_reset_missing_msdp",

@@ -18,7 +18,6 @@ import xml.etree.ElementTree as ET
 from contextlib import redirect_stdout
 from pathlib import Path
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 BUILD_SCRIPT = PROJECT_ROOT / "theGUI" / "build.py"
 RESOURCE_MANAGER_SCRIPT = "Resource Ownership"
@@ -42,9 +41,7 @@ def assemble_source_xml():
             validate_only=True
         )
     if not success:
-        raise RuntimeError(
-            "source assembly failed:\n" + build_log.getvalue().strip()
-        )
+        raise RuntimeError("source assembly failed:\n" + build_log.getvalue().strip())
     return assembled
 
 
@@ -57,20 +54,12 @@ def load_root(xml_path=None):
 def logical_handler_count(script_name, source):
     """Count registrations hidden behind the package's ownership wrappers."""
     if script_name == "MSDPMapper":
-        return len(
-            re.findall(r'registerFileScopeHandler\s*\(\s*["\']', source)
-        )
+        return len(re.findall(r'registerFileScopeHandler\s*\(\s*["\']', source))
     if script_name == "GUI Lifecycle":
-        return len(
-            re.findall(r'registerLifecycleHandler\s*\(\s*["\']', source)
-        )
+        return len(re.findall(r'registerLifecycleHandler\s*\(\s*["\']', source))
     if script_name == "GUI Event Registry":
-        table_source = source.split(
-            "function GUI.unregisterEventHandlers", 1
-        )[0]
-        return len(
-            re.findall(r'^\s*\[["\'][^"\']+["\']\]\s*=', table_source, re.M)
-        )
+        table_source = source.split("function GUI.unregisterEventHandlers", 1)[0]
+        return len(re.findall(r'^\s*\[["\'][^"\']+["\']\]\s*=', table_source, re.M))
     return 0
 
 
@@ -82,11 +71,9 @@ def timer_names(source):
 
 
 def raw_registration_count(source, primitive):
-    direct = rf'\b{primitive}\s*\('
-    through_pcall = rf'\bpcall\s*\(\s*{primitive}\b'
-    return len(re.findall(direct, source)) + len(
-        re.findall(through_pcall, source)
-    )
+    direct = rf"\b{primitive}\s*\("
+    through_pcall = rf"\bpcall\s*\(\s*{primitive}\b"
+    return len(re.findall(direct, source)) + len(re.findall(through_pcall, source))
 
 
 def classify_script(script):
@@ -96,8 +83,7 @@ def classify_script(script):
     owned_handlers = logical_handler_count(name, source)
     owned_timer_names = timer_names(source)
     recurring_timers = sum(
-        timer_name in RECURRING_TIMER_NAMES
-        for timer_name in owned_timer_names
+        timer_name in RECURRING_TIMER_NAMES for timer_name in owned_timer_names
     )
 
     raw_handlers = raw_registration_count(
@@ -139,16 +125,19 @@ def analyze(root):
     results = []
     for script in root.iter("Script"):
         result = classify_script(script)
-        if any(
-            result[key]
-            for key in (
-                "owned_handlers",
-                "xml_handlers",
-                "owned_timers",
-                "unowned_handlers",
-                "unowned_timers",
+        if (
+            any(
+                result[key]
+                for key in (
+                    "owned_handlers",
+                    "xml_handlers",
+                    "owned_timers",
+                    "unowned_handlers",
+                    "unowned_timers",
+                )
             )
-        ) or result["script"] == RESOURCE_MANAGER_SCRIPT:
+            or result["script"] == RESOURCE_MANAGER_SCRIPT
+        ):
             results.append(result)
 
     totals = {
@@ -173,12 +162,8 @@ def print_text(report):
     print(header)
     print("-" * len(header))
     for result in report["scripts"]:
-        handlers = (
-            f"{result['owned_handlers']}/{result['xml_handlers']}"
-        )
-        timers = (
-            f"{result['owned_timers']}/{result['unowned_timers']}"
-        )
+        handlers = f"{result['owned_handlers']}/{result['xml_handlers']}"
+        timers = f"{result['owned_timers']}/{result['unowned_timers']}"
         print(
             f"{result['script']:<30} | {handlers:<20} | "
             f"{timers:<20} | {result['status']}"
