@@ -18,6 +18,7 @@ import struct
 import subprocess
 import sys
 import tempfile
+import wave
 import xml.etree.ElementTree as ET
 import zipfile
 from contextlib import redirect_stdout
@@ -659,6 +660,7 @@ demonnic = {{chat = {{use = false}}}}
 
 GUI.loadToggles = function() end
 GUI.applyPreferencesAfterLoad = function() end
+GUI.Sound = {{load = function() end}}
 GUI.AdjustableContainers = {{init = function() end}}
 GUI.requestMSDPReports = function() return true end
 GUI.init = function()
@@ -1286,6 +1288,8 @@ assert(type(msdp) == "table",
             "MSDP Protocol",
             "MSDP Gauges",
             "MSDP Actions",
+            "Sound Core",
+            "Sound Commands",
             "GUI Boot",
             "GUI Event Registry",
             "GUI Refresh",
@@ -1400,6 +1404,151 @@ assert(type(msdp) == "table",
             )
             is not None,
             "tabbed-info center background color is missing its QSS semicolon",
+        )
+
+    def _test_native_sound_subsystem(self):
+        core = self._gui_script("Sound Core")
+        commands = self._gui_script("Sound Commands")
+        script = f"""
+played = {{}}
+stopped = {{}}
+echoes = {{}}
+debugErrors = {{}}
+saved = 0
+
+GUI = {{
+  toggles = {{chatSound = true}},
+  debug = function() end,
+  debugError = function(scope, message)
+    debugErrors[#debugErrors + 1] = {{scope = scope, message = message}}
+  end,
+  saveToggles = function()
+    saved = saved + 1
+  end,
+}}
+demonnic = {{chat = {{config = {{
+  soundFile = "audio/chat_sound.mp3",
+  soundVolume = 88,
+  soundCooldown = 9,
+}}}}}}
+
+function getMudletHomeDir()
+  return "/tmp/luminari-sound-test"
+end
+function cecho(message)
+  echoes[#echoes + 1] = message
+end
+function playSoundFile(settings)
+  played[#played + 1] = settings
+end
+function stopSounds(settings)
+  stopped[#stopped + 1] = settings
+end
+
+{core}
+{commands}
+
+local settings = GUI.Sound.load()
+assert(settings.masterEnabled == true)
+assert(settings.channels.chat.enabled == true,
+  "legacy chatSound preference was not migrated")
+assert(settings.channels.chat.volume == 88 and settings.channels.chat.cooldown == 9,
+  "legacy chat sound values were not migrated")
+assert(settings.channels.low_health.enabled == false)
+assert(settings.channels.low_moves.enabled == false)
+assert(demonnic.chat.config.soundEnabled == true,
+  "legacy YATCO configuration was not synchronized")
+assert(saved >= 1, "loaded sound settings were not persisted")
+
+GUI.Sound.resolveFile = function(fileName)
+  return "/resolved/" .. fileName
+end
+settings.channels.chat.cooldown = 10
+local ok, result = GUI.Sound.play("chat", {{now = 100}})
+assert(ok == true and result == "/resolved/audio/chat_sound.mp3")
+assert(#played == 1)
+assert(played[1].volume == 88)
+assert(played[1].key == "LuminariGUI.chat")
+assert(played[1].tag == "LuminariGUI")
+
+ok, result = GUI.Sound.play("chat", {{now = 105}})
+assert(ok == false and result == "cooldown")
+assert(#played == 1, "cooldown allowed duplicate playback")
+ok = GUI.Sound.play("chat", {{now = 105, force = true}})
+assert(ok == true and #played == 2, "forced test playback was suppressed")
+
+assert(GUI.Sound.setMaster(false) == true)
+ok, result = GUI.Sound.play("chat", {{now = 200}})
+assert(ok == false and result == "master-disabled")
+assert(GUI.Sound.setMaster(true) == true)
+
+assert(GUI.Sound.setEnabled("health", true) == true)
+settings.channels.low_health.cooldown = 0
+GUI.Sound.latches = {{}}
+local beforeThreshold = #played
+assert(GUI.Sound.checkThreshold("health", 20, 100) == true)
+ok, result = GUI.Sound.checkThreshold("health", 10, 100)
+assert(ok == false and result == "latched")
+ok, result = GUI.Sound.checkThreshold("health", 40, 100)
+assert(ok == false and result == "armed")
+assert(GUI.Sound.checkThreshold("health", 20, 100) == true)
+assert(#played == beforeThreshold + 2,
+  "threshold latch did not emit exactly once per low crossing")
+
+local normalized = GUI.Sound.normalizeRelativeFile(
+  "audio" .. string.char(92) .. "custom.wav"
+)
+assert(normalized == "audio/custom.wav")
+assert(GUI.Sound.normalizeRelativeFile("../escape.wav") == nil)
+assert(GUI.Sound.normalizeRelativeFile("/absolute.wav") == nil)
+assert(GUI.Sound.normalizeRelativeFile("https://example.test/tone.wav") == nil)
+
+assert(GUI.Sound.handleCommand("moves on") == true)
+assert(GUI.Sound.handleCommand("moves volume 33") == true)
+assert(settings.channels.low_moves.volume == 33)
+assert(GUI.Sound.handleCommand("moves threshold 22") == true)
+assert(settings.channels.low_moves.threshold == 22)
+assert(GUI.Sound.handleCommand("moves file audio/custom.wav") == true)
+assert(settings.channels.low_moves.file == "audio/custom.wav")
+assert(GUI.Sound.handleCommand("moves volume 101") == false)
+assert(GUI.Sound.handleCommand("all off") == true)
+assert(settings.masterEnabled == false)
+assert(GUI.Sound.handleLegacyChatCommand(nil) == true,
+  "bare legacy chat command raised instead of showing status")
+assert(GUI.Sound.stopAll() == true)
+assert(#stopped == 1 and stopped[1].tag == "LuminariGUI")
+assert(#echoes > 0)
+"""
+        self._run_lua(script)
+
+        alias_source = "\n".join(
+            path.read_text(encoding="utf-8")
+            for path in (self.repo_root / "theGUI" / "src" / "aliases").glob("*.xml")
+        )
+        yatco_source = (
+            self.repo_root
+            / "theGUI"
+            / "src"
+            / "scripts"
+            / "yatco"
+            / "10_tabbed_chat.xml"
+        ).read_text(encoding="utf-8")
+        gauges_source = (
+            self.repo_root / "theGUI" / "src" / "scripts" / "gui" / "41_msdp_gauges.xml"
+        ).read_text(encoding="utf-8")
+        self._require(
+            "playSoundFile" not in alias_source,
+            "an alias bypasses the native sound subsystem",
+        )
+        self._require(
+            "playSoundFile" not in yatco_source
+            and 'GUI.Sound.play("chat")' in yatco_source,
+            "YATCO bypasses the native sound subsystem",
+        )
+        self._require(
+            'GUI.Sound.checkThreshold("low_health"' in gauges_source
+            and 'GUI.Sound.checkThreshold("low_moves"' in gauges_source,
+            "MSDP gauges do not feed both native threshold alerts",
         )
 
     def _test_core_parent_load_order_and_orphan_guard(self):
@@ -1656,6 +1805,7 @@ assert(propagated == false,
             "event firing": (gui_source, "EVENT/FIRE"),
             "MSDP reports": (gui_source, "MSDP/REPORT"),
             "MSDP values": (gui_source, "MSDP/VALUE"),
+            "sound subsystem": (gui_source, "SOUND/PLAY"),
             "mapper events": (mapper_source, "MAPPER/EVENT"),
             "mapper initialization": (mapper_source, "MAPPER/INIT"),
             "map triggers": (trigger_source, "TRIGGER/MAP"),
@@ -1754,6 +1904,7 @@ assert(calls.room == 1, "ROOM callback lost its loop-local handler")
             self.repo_root / "images" / "LuminariGUI.png",
             icon_dir / "LuminariGUI.png",
         )
+        shutil.copytree(self.repo_root / "audio", project_root / "audio")
         return project_root
 
     @staticmethod
@@ -2008,6 +2159,11 @@ assert(calls.room == 1, "ROOM callback lost its loop-local handler")
             config = package.read("config.lua").decode("utf-8")
             packaged_xml = ET.fromstring(package.read("LuminariGUI.xml"))
             icon = package.read(".mudlet/Icon/LuminariGUI.png")
+            chat_sound = package.read("audio/chat_sound.mp3")
+            alert_sounds = {
+                name: package.read(f"audio/{name}")
+                for name in ("health_warning.wav", "movement_warning.wav")
+            }
 
         self._require(
             f'version = "{expected_version}"' in config,
@@ -2030,6 +2186,19 @@ assert(calls.room == 1, "ROOM callback lost its loop-local handler")
             (width, height) == (512, 512),
             f"packaged icon dimensions changed: {width}x{height}",
         )
+        self._require(
+            chat_sound.startswith(b"ID3"),
+            "packaged chat notification is not the expected MP3 asset",
+        )
+        for name, payload in alert_sounds.items():
+            with wave.open(io.BytesIO(payload), "rb") as sound:
+                self._require(
+                    sound.getnchannels() == 1
+                    and sound.getsampwidth() == 2
+                    and sound.getframerate() == 44100
+                    and sound.getnframes() > 0,
+                    f"packaged {name} is not a non-empty mono 16-bit/44.1 kHz WAV",
+                )
 
     def _test_create_version_override_is_consistent(self):
         with tempfile.TemporaryDirectory(
@@ -2603,6 +2772,7 @@ raise SystemExit(1)
                 "qt6_stylesheet_compatibility",
                 self._test_qt6_stylesheet_compatibility,
             ),
+            ("native_sound_subsystem", self._test_native_sound_subsystem),
             (
                 "core_parent_load_order_and_orphan_guard",
                 self._test_core_parent_load_order_and_orphan_guard,

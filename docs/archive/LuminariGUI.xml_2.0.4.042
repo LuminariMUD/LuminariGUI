@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE MudletPackage>
-<MudletPackage version="2.0.4.043">
+<MudletPackage version="2.0.4.042">
 	<TriggerPackage>
 		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 			<name>LuminariGUI</name>
@@ -4535,7 +4535,7 @@ end</script>
 						<script>local Sound = GUI.Sound
 
 local function soundEcho(message, color)
-  cecho("\n&lt;" .. (color or "cyan") .. "&gt;[SOUND] " .. message .. "&lt;reset&gt;\n")
+  cecho("\n&lt;" .. (color or "cyan") .. "&gt;[SOUND] " .. message .. "&lt;reset&gt;")
 end
 
 function Sound.setMaster(enabled)
@@ -4630,20 +4630,20 @@ function Sound.printStatus(name)
     "yellow"
   )
   for _, channel in ipairs(Sound.ORDER) do
-    cecho("&lt;white&gt;  " .. Sound.describe(channel) .. "&lt;reset&gt;\n")
+    cecho("\n&lt;white&gt;  " .. Sound.describe(channel) .. "&lt;reset&gt;")
   end
 end
 
 function Sound.printHelp()
   soundEcho("Commands", "cyan")
-  cecho("&lt;white&gt;  sound status&lt;reset&gt; - Show every channel\n")
-  cecho("&lt;white&gt;  sound all on|off&lt;reset&gt; - Master switch\n")
-  cecho("&lt;white&gt;  sound chat|health|moves on|off&lt;reset&gt;\n")
-  cecho("&lt;white&gt;  sound &lt;channel&gt; volume &lt;0-100&gt;&lt;reset&gt;\n")
-  cecho("&lt;white&gt;  sound &lt;channel&gt; cooldown &lt;0-3600&gt;&lt;reset&gt;\n")
-  cecho("&lt;white&gt;  sound &lt;channel&gt; file &lt;relative path&gt;&lt;reset&gt;\n")
-  cecho("&lt;white&gt;  sound health|moves threshold &lt;1-95&gt;&lt;reset&gt;\n")
-  cecho("&lt;white&gt;  sound &lt;channel&gt; test | sound stop&lt;reset&gt;\n")
+  cecho("\n&lt;white&gt;  sound status&lt;reset&gt; - Show every channel")
+  cecho("\n&lt;white&gt;  sound all on|off&lt;reset&gt; - Master switch")
+  cecho("\n&lt;white&gt;  sound chat|health|moves on|off&lt;reset&gt;")
+  cecho("\n&lt;white&gt;  sound &lt;channel&gt; volume &lt;0-100&gt;&lt;reset&gt;")
+  cecho("\n&lt;white&gt;  sound &lt;channel&gt; cooldown &lt;0-3600&gt;&lt;reset&gt;")
+  cecho("\n&lt;white&gt;  sound &lt;channel&gt; file &lt;relative path&gt;&lt;reset&gt;")
+  cecho("\n&lt;white&gt;  sound health|moves threshold &lt;1-95&gt;&lt;reset&gt;")
+  cecho("\n&lt;white&gt;  sound &lt;channel&gt; test | sound stop&lt;reset&gt;")
 end
 
 function Sound.handleCommand(arguments)

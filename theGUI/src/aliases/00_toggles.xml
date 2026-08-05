@@ -32,4 +32,12 @@ GUI.horizontalScrollToggle()</script>
 					<packageName></packageName>
 					<regex>^hscroll$</regex>
 				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>Sound</name>
+					<script>GUI.debug("ALIAS", "sound matched", matches)
+GUI.Sound.handleCommand(matches[2])</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^sound(?:\s+(.*))?$</regex>
+				</Alias>
 			</AliasGroup>

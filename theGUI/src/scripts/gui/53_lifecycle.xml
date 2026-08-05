@@ -27,6 +27,7 @@ end
 
 local function prepareLoadedState()
   runLifecycleStep("load preferences", GUI.loadToggles)
+  runLifecycleStep("load sound settings", GUI.Sound and GUI.Sound.load)
   runLifecycleStep(
     "initialize layout profiles",
     GUI.AdjustableContainers and GUI.AdjustableContainers.init

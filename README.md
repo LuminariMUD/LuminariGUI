@@ -12,6 +12,7 @@ LuminariGUI is a comprehensive graphical user interface package for [LuminariMUD
 *   **Spell Casting Console**: Visual tracking of spell casting progress.
 *   **Group Management**: Live status display of group members.
 *   **Affects Tracking**: Visual indicators for active spells and status effects.
+*   **Native Sound Alerts**: Persistent, rate-limited chat, low-health, and low-movement channels using Mudlet's media API.
 *   **Numeric Keypad Movement**: Thirteen Num Lock-on keypad bindings cover eight directions, look, inventory, scan, up, and down without colliding with the keyboard number row.
 *   **Customizable Layout**: Geyser-based UI components with CSS styling.
 
@@ -51,7 +52,7 @@ Detailed documentation is available in the `docs/` directory:
 *   **[Mudlet Smoke Test](docs/MUDLET_SMOKE_TEST.md)**: Real-client release checklist and advisory Xvfb boundary.
 *   **[Protocol Reference](docs/PROTOCOL_REFERENCE.md)**: Details on MSDP variables and how they map to the GUI.
 *   **[Runtime Resource Ownership](docs/RESOURCE_LIFECYCLE.md)**: Handler/timer ownership, cleanup boundaries, audit commands, and verified lifecycle counts.
-*   **[Sound Usage](docs/SOUND_USAGE.md)**: Configuration for sound triggers and audio assets.
+*   **[Sound Usage](docs/SOUND_USAGE.md)**: Native channel commands, thresholds, persistence, audio assets, and extension API.
 *   **[Changelog](docs/CHANGELOG.md)**: History of changes and updates.
 *   **[Historical Changelog](docs/HISTORICAL_CHANGELOG.md)**: Preserved release history through v2.0.4.016.
 *   **[Project Task List](docs/ongoing-projects/TASK_LIST.md)**: The single tracker for unfinished work.

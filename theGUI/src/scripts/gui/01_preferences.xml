@@ -127,7 +127,9 @@ end
 function GUI.applyPreferencesAfterLoad()
   return GUI.setOwnedTimer("preferences.applyAfterLoad", 2, function()
     GUI.applyHorizontalScrollSetting()
-    if GUI.toggles.chatSound
+    if GUI.Sound and type(GUI.Sound.syncLegacyChat) == "function" then
+      GUI.Sound.syncLegacyChat()
+    elseif GUI.toggles.chatSound
       and demonnic
       and demonnic.chat
       and demonnic.chat.config
@@ -141,6 +143,9 @@ end
 -- handlers are retained here because sysExitEvent is only closing the profile;
 -- package uninstall uses GUI.cleanupPackageResources() below.
 function GUI.cleanup()
+  if GUI.Sound and type(GUI.Sound.stopAll) == "function" then
+    GUI.Sound.stopAll()
+  end
   if demonnic and demonnic.chat and demonnic.chat.stopBlinking then
     demonnic.chat:stopBlinking()
   end

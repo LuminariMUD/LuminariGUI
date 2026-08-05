@@ -1,0 +1,300 @@
+					<Script isActive="yes" isFolder="no">
+						<name>Sound Core</name>
+						<packageName></packageName>
+						<script>GUI.Sound = GUI.Sound or {}
+local Sound = GUI.Sound
+
+Sound.TAG = "LuminariGUI"
+Sound.ORDER = {"chat", "low_health", "low_moves"}
+Sound.ALIASES = {
+  chat = "chat",
+  health = "low_health",
+  low_health = "low_health",
+  moves = "low_moves",
+  movement = "low_moves",
+  low_moves = "low_moves",
+}
+Sound.DEFAULTS = {
+  masterEnabled = true,
+  channels = {
+    chat = {
+      label = "Chat",
+      enabled = false,
+      file = "audio/chat_sound.mp3",
+      volume = 100,
+      cooldown = 0,
+      priority = 40,
+    },
+    low_health = {
+      label = "Low health",
+      enabled = false,
+      file = "audio/health_warning.wav",
+      volume = 75,
+      cooldown = 30,
+      priority = 80,
+      threshold = 25,
+      reset = 35,
+    },
+    low_moves = {
+      label = "Low movement",
+      enabled = false,
+      file = "audio/movement_warning.wav",
+      volume = 65,
+      cooldown = 30,
+      priority = 60,
+      threshold = 20,
+      reset = 30,
+    },
+  },
+}
+Sound.lastPlayed = Sound.lastPlayed or {}
+Sound.latches = Sound.latches or {}
+Sound.lastFailure = Sound.lastFailure or {}
+
+local function copyTable(value)
+  if type(value) ~= "table" then
+    return value
+  end
+  local result = {}
+  for key, child in pairs(value) do
+    result[key] = copyTable(child)
+  end
+  return result
+end
+
+local function clamp(value, minimum, maximum, fallback)
+  value = tonumber(value)
+  if not value then
+    return fallback
+  end
+  return math.max(minimum, math.min(maximum, value))
+end
+
+function Sound.channelName(name)
+  if type(name) ~= "string" then
+    return nil
+  end
+  return Sound.ALIASES[name:lower()]
+end
+
+function Sound.normalizedSettings(saved)
+  local settings = copyTable(Sound.DEFAULTS)
+  if type(saved) ~= "table" then
+    return settings
+  end
+  if type(saved.masterEnabled) == "boolean" then
+    settings.masterEnabled = saved.masterEnabled
+  end
+  local savedChannels = type(saved.channels) == "table" and saved.channels or {}
+  for name, defaults in pairs(settings.channels) do
+    local source = savedChannels[name]
+    if type(source) == "table" then
+      if type(source.enabled) == "boolean" then
+        defaults.enabled = source.enabled
+      end
+      if type(source.file) == "string" and source.file ~= "" then
+        local normalized = Sound.normalizeRelativeFile
+          and Sound.normalizeRelativeFile(source.file)
+        if normalized then
+          defaults.file = normalized
+        end
+      end
+      defaults.volume = clamp(source.volume, 0, 100, defaults.volume)
+      defaults.cooldown = clamp(source.cooldown, 0, 3600, defaults.cooldown)
+      defaults.priority = clamp(source.priority, 1, 100, defaults.priority)
+      if defaults.threshold then
+        defaults.threshold = clamp(source.threshold, 1, 95, defaults.threshold)
+        defaults.reset = clamp(source.reset, defaults.threshold + 5, 100, defaults.reset)
+      end
+    end
+  end
+  return settings
+end
+
+function Sound.channel(name)
+  local canonical = Sound.channelName(name)
+  if not canonical then
+    return nil, "unknown sound channel: " .. tostring(name)
+  end
+  Sound.settings = Sound.settings or Sound.normalizedSettings(nil)
+  return Sound.settings.channels[canonical], canonical
+end
+
+function Sound.syncLegacyChat()
+  local chat = Sound.settings and Sound.settings.channels.chat
+  if not chat then
+    return
+  end
+  GUI.toggles = GUI.toggles or {}
+  GUI.toggles.chatSound = chat.enabled
+  if demonnic and demonnic.chat and demonnic.chat.config then
+    demonnic.chat.config.soundEnabled = chat.enabled
+    demonnic.chat.config.soundFile = chat.file
+    demonnic.chat.config.soundVolume = chat.volume
+    demonnic.chat.config.soundCooldown = chat.cooldown
+  end
+end
+
+function Sound.save()
+  GUI.toggles = GUI.toggles or {}
+  GUI.toggles.sound = Sound.settings
+  Sound.syncLegacyChat()
+  if type(GUI.saveToggles) ~= "function" then
+    return false, "toggle persistence is unavailable"
+  end
+  local ok, errorMessage = pcall(GUI.saveToggles)
+  if not ok then
+    GUI.debugError("SOUND/SAVE", errorMessage)
+    return false, tostring(errorMessage)
+  end
+  return true
+end
+
+function Sound.load()
+  GUI.toggles = GUI.toggles or {}
+  local saved = GUI.toggles.sound
+  if type(saved) ~= "table" then
+    local legacy = demonnic and demonnic.chat and demonnic.chat.config or {}
+    saved = {
+      channels = {
+        chat = {
+          enabled = GUI.toggles.chatSound == true or legacy.soundEnabled == true,
+          file = legacy.soundFile,
+          volume = legacy.soundVolume,
+          cooldown = legacy.soundCooldown,
+        },
+      },
+    }
+  end
+  Sound.settings = Sound.normalizedSettings(saved)
+  Sound.latches = {}
+  Sound.syncLegacyChat()
+  Sound.save()
+  GUI.debug("SOUND/LOAD", "sound settings loaded", Sound.settings)
+  return Sound.settings
+end
+
+function Sound.normalizeRelativeFile(fileName)
+  if type(fileName) ~= "string" then
+    return nil, "sound file must be a relative path"
+  end
+  local normalized = fileName:gsub("\\", "/"):match("^%s*(.-)%s*$")
+  if normalized == "" or normalized:sub(1, 1) == "/"
+    or normalized:match("^%a:/") or normalized:find("://", 1, true)
+  then
+    return nil, "sound file must stay inside the profile or LuminariGUI package"
+  end
+  for segment in normalized:gmatch("[^/]+") do
+    if segment == ".." then
+      return nil, "sound file cannot traverse outside its sound directory"
+    end
+  end
+  return normalized
+end
+
+function Sound.resolveFile(fileName)
+  local normalized, pathError = Sound.normalizeRelativeFile(fileName)
+  if not normalized then
+    return nil, pathError
+  end
+  local home = getMudletHomeDir():gsub("\\", "/")
+  local candidates = {
+    home .. "/LuminariGUI/" .. normalized,
+    home .. "/" .. normalized,
+  }
+  for _, path in ipairs(candidates) do
+    local handle = io.open(path, "rb")
+    if handle then
+      handle:close()
+      return path
+    end
+  end
+  return nil, "sound file not found: " .. normalized
+end
+
+local function reportFailure(channel, message)
+  if Sound.lastFailure[channel] ~= message then
+    Sound.lastFailure[channel] = message
+    GUI.debugError("SOUND/" .. channel, message)
+  end
+end
+
+function Sound.play(name, options)
+  options = options or {}
+  local config, channel = Sound.channel(name)
+  if not config then
+    return false, channel
+  end
+  local force = options.force == true
+  if not force and Sound.settings.masterEnabled == false then
+    return false, "master-disabled"
+  end
+  if not force and config.enabled == false then
+    return false, "channel-disabled"
+  end
+  local now = tonumber(options.now) or os.time()
+  local lastPlayed = Sound.lastPlayed[channel]
+  if not force and lastPlayed and now - lastPlayed &lt; config.cooldown then
+    return false, "cooldown"
+  end
+  local path, pathError = Sound.resolveFile(config.file)
+  if not path then
+    reportFailure(channel, pathError)
+    return false, pathError
+  end
+  local media = {
+    name = path,
+    volume = config.volume,
+    key = "LuminariGUI." .. channel,
+    tag = Sound.TAG,
+    priority = config.priority,
+  }
+  local ok, result = pcall(playSoundFile, media)
+  if not ok or result == false then
+    local message = ok and "Mudlet rejected sound playback" or tostring(result)
+    reportFailure(channel, message)
+    return false, message
+  end
+  Sound.lastFailure[channel] = nil
+  Sound.lastPlayed[channel] = now
+  if channel == "chat" and demonnic and demonnic.chat then
+    demonnic.chat.lastSoundTime = now
+  end
+  GUI.debug("SOUND/PLAY", "sound played", {channel = channel, media = media})
+  return true, path
+end
+
+function Sound.checkThreshold(name, value, maximum)
+  local config, channel = Sound.channel(name)
+  value = tonumber(value)
+  maximum = tonumber(maximum)
+  if not config or not config.threshold or not value or not maximum or maximum &lt;= 0 then
+    return false, "invalid-threshold-data"
+  end
+  local percentage = math.max(0, math.min(100, (value / maximum) * 100))
+  if percentage &gt;= config.reset then
+    Sound.latches[channel] = false
+    return false, "armed"
+  end
+  if percentage &lt;= config.threshold then
+    if Sound.latches[channel] then
+      return false, "latched"
+    end
+    Sound.latches[channel] = true
+    return Sound.play(channel)
+  end
+  return false, "unchanged"
+end
+
+function Sound.stopAll()
+  if type(stopSounds) ~= "function" then
+    return false, "Mudlet stopSounds API is unavailable"
+  end
+  local ok, result = pcall(stopSounds, {tag = Sound.TAG})
+  if not ok or result == false then
+    return false, ok and "Mudlet rejected stopSounds" or tostring(result)
+  end
+  return true
+end</script>
+						<eventHandlerList />
+					</Script>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE MudletPackage>
-<MudletPackage version="2.0.4.043">
+<MudletPackage version="2.0.4.041">
 	<TriggerPackage>
 		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 			<name>LuminariGUI</name>
@@ -587,14 +587,6 @@ GUI.horizontalScrollToggle()</script>
 					<packageName></packageName>
 					<regex>^hscroll$</regex>
 				</Alias>
-				<Alias isActive="yes" isFolder="no">
-					<name>Sound</name>
-					<script>GUI.debug("ALIAS", "sound matched", matches)
-GUI.Sound.handleCommand(matches[2])</script>
-					<command></command>
-					<packageName></packageName>
-					<regex>^sound(?:\s+(.*))?$</regex>
-				</Alias>
 			</AliasGroup>
 			<AliasGroup isActive="yes" isFolder="yes">
 				<name>YATCO</name>
@@ -703,8 +695,43 @@ end</script>
 						</Alias>
 						<Alias isActive="yes" isFolder="no">
 							<name>dsound</name>
-							<script>GUI.debug("ALIAS", "dsound matched", matches)
-GUI.Sound.toggleChat()</script>
+							<script>-- Toggle chat sound notifications
+GUI.debug("ALIAS", "dsound matched", matches)
+if demonnic and demonnic.chat and demonnic.chat.config then
+    demonnic.chat.config.soundEnabled = not demonnic.chat.config.soundEnabled
+    
+    if demonnic.chat.config.soundEnabled then
+        cecho("\n&lt;green&gt;Chat sound notifications ENABLED&lt;reset&gt;\n")
+        -- Play a test sound
+        local soundPath = getMudletHomeDir():gsub("\\", "/") .. "/LuminariGUI/" .. demonnic.chat.config.soundFile
+        local file = io.open(soundPath, "r")
+        if file then
+            file:close()
+            playSoundFile(soundPath, demonnic.chat.config.soundVolume)
+        else
+            -- Try user's home directory as fallback
+            soundPath = getMudletHomeDir():gsub("\\", "/") .. "/" .. demonnic.chat.config.soundFile
+            file = io.open(soundPath, "r")
+            if file then
+                file:close()
+                playSoundFile(soundPath, demonnic.chat.config.soundVolume)
+            else
+                -- Try system beep as final fallback
+                playSoundFile("")  -- Empty string triggers system beep in Mudlet
+            end
+        end
+    else
+        cecho("\n&lt;red&gt;Chat sound notifications DISABLED&lt;reset&gt;\n")
+    end
+    
+    -- Save to GUI.toggles for persistence
+    if GUI and GUI.toggles then
+        GUI.toggles.chatSound = demonnic.chat.config.soundEnabled
+        table.save(getMudletHomeDir():gsub("\\", "/") .. "/GUI.toggles.lua", GUI.toggles)
+    end
+else
+    cecho("\n&lt;red&gt;Chat system not initialized. Type 'fix chat' to reinitialize.&lt;reset&gt;\n")
+end</script>
 							<command></command>
 							<packageName></packageName>
 							<regex>^dsound$</regex>
@@ -712,7 +739,78 @@ GUI.Sound.toggleChat()</script>
 						<Alias isActive="yes" isFolder="no">
 							<name>set chat sound</name>
 							<script>GUI.debug("ALIAS", "set chat sound matched", matches)
-GUI.Sound.handleLegacyChatCommand(matches[2])</script>
+local args = matches[2]:split(" ")
+local command = args[1]
+local value = args[2]
+
+if command == "on" or command == "off" then
+    -- Enable/disable sounds
+    demonnic.chat.config.soundEnabled = (command == "on")
+    GUI.toggles.chatSound = demonnic.chat.config.soundEnabled
+    table.save(getMudletHomeDir():gsub("\\", "/") .. "/GUI.toggles.lua", GUI.toggles)
+    cecho(string.format("\n&lt;yellow&gt;Chat sounds %s&lt;reset&gt;\n", command:upper()))
+    
+elseif command == "volume" and value then
+    -- Set volume (0-100)
+    local vol = tonumber(value)
+    if vol and vol >= 0 and vol &lt;= 100 then
+        demonnic.chat.config.soundVolume = vol
+        cecho(string.format("\n&lt;yellow&gt;Chat sound volume set to %d&lt;reset&gt;\n", vol))
+    else
+        cecho("\n&lt;red&gt;Volume must be between 0 and 100&lt;reset&gt;\n")
+    end
+    
+elseif command == "file" and value then
+    -- Set sound file
+    demonnic.chat.config.soundFile = value
+    cecho(string.format("\n&lt;yellow&gt;Chat sound file set to: %s&lt;reset&gt;\n", value))
+    
+elseif command == "cooldown" and value then
+    -- Set cooldown between sounds
+    local cd = tonumber(value)
+    if cd and cd >= 0 then
+        demonnic.chat.config.soundCooldown = cd
+        cecho(string.format("\n&lt;yellow&gt;Chat sound cooldown set to %d seconds&lt;reset&gt;\n", cd))
+    else
+        cecho("\n&lt;red&gt;Cooldown must be 0 or positive number&lt;reset&gt;\n")
+    end
+    
+elseif command == "test" then
+    -- Test the sound
+    local soundPath = getMudletHomeDir():gsub("\\", "/") .. "/LuminariGUI/" .. demonnic.chat.config.soundFile
+    local file = io.open(soundPath, "r")
+    if file then
+        file:close()
+        playSoundFile(soundPath, demonnic.chat.config.soundVolume)
+        cecho("\n&lt;green&gt;Playing test sound...&lt;reset&gt;\n")
+    else
+        -- Try user's home directory as fallback
+        soundPath = getMudletHomeDir():gsub("\\", "/") .. "/" .. demonnic.chat.config.soundFile
+        file = io.open(soundPath, "r")
+        if file then
+            file:close()
+            playSoundFile(soundPath, demonnic.chat.config.soundVolume)
+            cecho("\n&lt;green&gt;Playing test sound from user directory...&lt;reset&gt;\n")
+        else
+            playSoundFile("")  -- Empty string triggers system beep in Mudlet
+            cecho("\n&lt;yellow&gt;Sound file not found, playing default beep&lt;reset&gt;\n")
+        end
+    end
+    
+else
+    -- Show help
+    cecho("\n&lt;cyan&gt;Chat Sound Commands:&lt;reset&gt;\n")
+    cecho("  &lt;white&gt;set chat sound on/off&lt;reset&gt; - Enable or disable sounds for ALL channels\n")
+    cecho("  &lt;white&gt;set chat sound volume &lt;0-100&gt;&lt;reset&gt; - Set volume level\n")
+    cecho("  &lt;white&gt;set chat sound file &lt;filename&gt;&lt;reset&gt; - Set sound file\n")
+    cecho("  &lt;white&gt;set chat sound cooldown &lt;seconds&gt;&lt;reset&gt; - Set cooldown between sounds\n")
+    cecho("  &lt;white&gt;set chat sound test&lt;reset&gt; - Test the current sound\n")
+    cecho("\n&lt;yellow&gt;Current settings:&lt;reset&gt;\n")
+    cecho(string.format("  Enabled: %s (plays for ALL channels)\n", demonnic.chat.config.soundEnabled and "YES" or "NO"))
+    cecho(string.format("  Volume: %d\n", demonnic.chat.config.soundVolume))
+    cecho(string.format("  File: %s\n", demonnic.chat.config.soundFile))
+    cecho(string.format("  Cooldown: %d seconds\n", demonnic.chat.config.soundCooldown))
+end</script>
 							<command></command>
 							<packageName></packageName>
 							<regex>^set chat sound(?:\s+(.*))?$</regex>
@@ -2199,9 +2297,7 @@ end
 function GUI.applyPreferencesAfterLoad()
   return GUI.setOwnedTimer("preferences.applyAfterLoad", 2, function()
     GUI.applyHorizontalScrollSetting()
-    if GUI.Sound and type(GUI.Sound.syncLegacyChat) == "function" then
-      GUI.Sound.syncLegacyChat()
-    elseif GUI.toggles.chatSound
+    if GUI.toggles.chatSound
       and demonnic
       and demonnic.chat
       and demonnic.chat.config
@@ -2215,9 +2311,6 @@ end
 -- handlers are retained here because sysExitEvent is only closing the profile;
 -- package uninstall uses GUI.cleanupPackageResources() below.
 function GUI.cleanup()
-  if GUI.Sound and type(GUI.Sound.stopAll) == "function" then
-    GUI.Sound.stopAll()
-  end
   if demonnic and demonnic.chat and demonnic.chat.stopBlinking then
     demonnic.chat:stopBlinking()
   end
@@ -3968,9 +4061,6 @@ end
   else
     GUI.Health:setValue(pct_health, 100)
   end
-  if GUI.Sound then
-    GUI.Sound.checkThreshold("low_health", health, max_health)
-  end
 end
 
 function GUI.updateMovesGauge()
@@ -4010,9 +4100,6 @@ function GUI.updateMovesGauge()
     GUI.Moves:setValue(100, 100)
   else
     GUI.Moves:setValue(pct_moves, 100)
-  end
-  if GUI.Sound then
-    GUI.Sound.checkThreshold("low_moves", moves, max_moves)
   end
 end
 
@@ -4227,506 +4314,6 @@ end
   end
 end
 </script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="yes" isFolder="no">
-						<name>Sound Core</name>
-						<packageName></packageName>
-						<script>GUI.Sound = GUI.Sound or {}
-local Sound = GUI.Sound
-
-Sound.TAG = "LuminariGUI"
-Sound.ORDER = {"chat", "low_health", "low_moves"}
-Sound.ALIASES = {
-  chat = "chat",
-  health = "low_health",
-  low_health = "low_health",
-  moves = "low_moves",
-  movement = "low_moves",
-  low_moves = "low_moves",
-}
-Sound.DEFAULTS = {
-  masterEnabled = true,
-  channels = {
-    chat = {
-      label = "Chat",
-      enabled = false,
-      file = "audio/chat_sound.mp3",
-      volume = 100,
-      cooldown = 0,
-      priority = 40,
-    },
-    low_health = {
-      label = "Low health",
-      enabled = false,
-      file = "audio/health_warning.wav",
-      volume = 75,
-      cooldown = 30,
-      priority = 80,
-      threshold = 25,
-      reset = 35,
-    },
-    low_moves = {
-      label = "Low movement",
-      enabled = false,
-      file = "audio/movement_warning.wav",
-      volume = 65,
-      cooldown = 30,
-      priority = 60,
-      threshold = 20,
-      reset = 30,
-    },
-  },
-}
-Sound.lastPlayed = Sound.lastPlayed or {}
-Sound.latches = Sound.latches or {}
-Sound.lastFailure = Sound.lastFailure or {}
-
-local function copyTable(value)
-  if type(value) ~= "table" then
-    return value
-  end
-  local result = {}
-  for key, child in pairs(value) do
-    result[key] = copyTable(child)
-  end
-  return result
-end
-
-local function clamp(value, minimum, maximum, fallback)
-  value = tonumber(value)
-  if not value then
-    return fallback
-  end
-  return math.max(minimum, math.min(maximum, value))
-end
-
-function Sound.channelName(name)
-  if type(name) ~= "string" then
-    return nil
-  end
-  return Sound.ALIASES[name:lower()]
-end
-
-function Sound.normalizedSettings(saved)
-  local settings = copyTable(Sound.DEFAULTS)
-  if type(saved) ~= "table" then
-    return settings
-  end
-  if type(saved.masterEnabled) == "boolean" then
-    settings.masterEnabled = saved.masterEnabled
-  end
-  local savedChannels = type(saved.channels) == "table" and saved.channels or {}
-  for name, defaults in pairs(settings.channels) do
-    local source = savedChannels[name]
-    if type(source) == "table" then
-      if type(source.enabled) == "boolean" then
-        defaults.enabled = source.enabled
-      end
-      if type(source.file) == "string" and source.file ~= "" then
-        local normalized = Sound.normalizeRelativeFile
-          and Sound.normalizeRelativeFile(source.file)
-        if normalized then
-          defaults.file = normalized
-        end
-      end
-      defaults.volume = clamp(source.volume, 0, 100, defaults.volume)
-      defaults.cooldown = clamp(source.cooldown, 0, 3600, defaults.cooldown)
-      defaults.priority = clamp(source.priority, 1, 100, defaults.priority)
-      if defaults.threshold then
-        defaults.threshold = clamp(source.threshold, 1, 95, defaults.threshold)
-        defaults.reset = clamp(source.reset, defaults.threshold + 5, 100, defaults.reset)
-      end
-    end
-  end
-  return settings
-end
-
-function Sound.channel(name)
-  local canonical = Sound.channelName(name)
-  if not canonical then
-    return nil, "unknown sound channel: " .. tostring(name)
-  end
-  Sound.settings = Sound.settings or Sound.normalizedSettings(nil)
-  return Sound.settings.channels[canonical], canonical
-end
-
-function Sound.syncLegacyChat()
-  local chat = Sound.settings and Sound.settings.channels.chat
-  if not chat then
-    return
-  end
-  GUI.toggles = GUI.toggles or {}
-  GUI.toggles.chatSound = chat.enabled
-  if demonnic and demonnic.chat and demonnic.chat.config then
-    demonnic.chat.config.soundEnabled = chat.enabled
-    demonnic.chat.config.soundFile = chat.file
-    demonnic.chat.config.soundVolume = chat.volume
-    demonnic.chat.config.soundCooldown = chat.cooldown
-  end
-end
-
-function Sound.save()
-  GUI.toggles = GUI.toggles or {}
-  GUI.toggles.sound = Sound.settings
-  Sound.syncLegacyChat()
-  if type(GUI.saveToggles) ~= "function" then
-    return false, "toggle persistence is unavailable"
-  end
-  local ok, errorMessage = pcall(GUI.saveToggles)
-  if not ok then
-    GUI.debugError("SOUND/SAVE", errorMessage)
-    return false, tostring(errorMessage)
-  end
-  return true
-end
-
-function Sound.load()
-  GUI.toggles = GUI.toggles or {}
-  local saved = GUI.toggles.sound
-  if type(saved) ~= "table" then
-    local legacy = demonnic and demonnic.chat and demonnic.chat.config or {}
-    saved = {
-      channels = {
-        chat = {
-          enabled = GUI.toggles.chatSound == true or legacy.soundEnabled == true,
-          file = legacy.soundFile,
-          volume = legacy.soundVolume,
-          cooldown = legacy.soundCooldown,
-        },
-      },
-    }
-  end
-  Sound.settings = Sound.normalizedSettings(saved)
-  Sound.latches = {}
-  Sound.syncLegacyChat()
-  Sound.save()
-  GUI.debug("SOUND/LOAD", "sound settings loaded", Sound.settings)
-  return Sound.settings
-end
-
-function Sound.normalizeRelativeFile(fileName)
-  if type(fileName) ~= "string" then
-    return nil, "sound file must be a relative path"
-  end
-  local normalized = fileName:gsub("\\", "/"):match("^%s*(.-)%s*$")
-  if normalized == "" or normalized:sub(1, 1) == "/"
-    or normalized:match("^%a:/") or normalized:find("://", 1, true)
-  then
-    return nil, "sound file must stay inside the profile or LuminariGUI package"
-  end
-  for segment in normalized:gmatch("[^/]+") do
-    if segment == ".." then
-      return nil, "sound file cannot traverse outside its sound directory"
-    end
-  end
-  return normalized
-end
-
-function Sound.resolveFile(fileName)
-  local normalized, pathError = Sound.normalizeRelativeFile(fileName)
-  if not normalized then
-    return nil, pathError
-  end
-  local home = getMudletHomeDir():gsub("\\", "/")
-  local candidates = {
-    home .. "/LuminariGUI/" .. normalized,
-    home .. "/" .. normalized,
-  }
-  for _, path in ipairs(candidates) do
-    local handle = io.open(path, "rb")
-    if handle then
-      handle:close()
-      return path
-    end
-  end
-  return nil, "sound file not found: " .. normalized
-end
-
-local function reportFailure(channel, message)
-  if Sound.lastFailure[channel] ~= message then
-    Sound.lastFailure[channel] = message
-    GUI.debugError("SOUND/" .. channel, message)
-  end
-end
-
-function Sound.play(name, options)
-  options = options or {}
-  local config, channel = Sound.channel(name)
-  if not config then
-    return false, channel
-  end
-  local force = options.force == true
-  if not force and Sound.settings.masterEnabled == false then
-    return false, "master-disabled"
-  end
-  if not force and config.enabled == false then
-    return false, "channel-disabled"
-  end
-  local now = tonumber(options.now) or os.time()
-  local lastPlayed = Sound.lastPlayed[channel]
-  if not force and lastPlayed and now - lastPlayed &lt; config.cooldown then
-    return false, "cooldown"
-  end
-  local path, pathError = Sound.resolveFile(config.file)
-  if not path then
-    reportFailure(channel, pathError)
-    return false, pathError
-  end
-  local media = {
-    name = path,
-    volume = config.volume,
-    key = "LuminariGUI." .. channel,
-    tag = Sound.TAG,
-    priority = config.priority,
-  }
-  local ok, result = pcall(playSoundFile, media)
-  if not ok or result == false then
-    local message = ok and "Mudlet rejected sound playback" or tostring(result)
-    reportFailure(channel, message)
-    return false, message
-  end
-  Sound.lastFailure[channel] = nil
-  Sound.lastPlayed[channel] = now
-  if channel == "chat" and demonnic and demonnic.chat then
-    demonnic.chat.lastSoundTime = now
-  end
-  GUI.debug("SOUND/PLAY", "sound played", {channel = channel, media = media})
-  return true, path
-end
-
-function Sound.checkThreshold(name, value, maximum)
-  local config, channel = Sound.channel(name)
-  value = tonumber(value)
-  maximum = tonumber(maximum)
-  if not config or not config.threshold or not value or not maximum or maximum &lt;= 0 then
-    return false, "invalid-threshold-data"
-  end
-  local percentage = math.max(0, math.min(100, (value / maximum) * 100))
-  if percentage &gt;= config.reset then
-    Sound.latches[channel] = false
-    return false, "armed"
-  end
-  if percentage &lt;= config.threshold then
-    if Sound.latches[channel] then
-      return false, "latched"
-    end
-    Sound.latches[channel] = true
-    return Sound.play(channel)
-  end
-  return false, "unchanged"
-end
-
-function Sound.stopAll()
-  if type(stopSounds) ~= "function" then
-    return false, "Mudlet stopSounds API is unavailable"
-  end
-  local ok, result = pcall(stopSounds, {tag = Sound.TAG})
-  if not ok or result == false then
-    return false, ok and "Mudlet rejected stopSounds" or tostring(result)
-  end
-  return true
-end</script>
-						<eventHandlerList />
-					</Script>
-					<Script isActive="yes" isFolder="no">
-						<name>Sound Commands</name>
-						<packageName></packageName>
-						<script>local Sound = GUI.Sound
-
-local function soundEcho(message, color)
-  cecho("\n&lt;" .. (color or "cyan") .. "&gt;[SOUND] " .. message .. "&lt;reset&gt;\n")
-end
-
-function Sound.setMaster(enabled)
-  Sound.settings = Sound.settings or Sound.normalizedSettings(nil)
-  Sound.settings.masterEnabled = enabled == true
-  local saved, saveError = Sound.save()
-  return saved, saved and Sound.settings.masterEnabled or saveError
-end
-
-function Sound.setEnabled(name, enabled)
-  local config, channel = Sound.channel(name)
-  if not config then
-    return false, channel
-  end
-  config.enabled = enabled == true
-  local saved, saveError = Sound.save()
-  return saved, saved and config.enabled or saveError
-end
-
-function Sound.setFile(name, fileName)
-  local config, channel = Sound.channel(name)
-  if not config then
-    return false, channel
-  end
-  local normalized, pathError = Sound.normalizeRelativeFile(fileName)
-  if not normalized then
-    return false, pathError
-  end
-  config.file = normalized
-  local saved, saveError = Sound.save()
-  return saved, saved and normalized or saveError
-end
-
-function Sound.setNumber(name, field, value)
-  local config, channel = Sound.channel(name)
-  if not config then
-    return false, channel
-  end
-  local number = tonumber(value)
-  local ranges = {
-    volume = {0, 100},
-    cooldown = {0, 3600},
-    threshold = {1, 95},
-  }
-  local range = ranges[field]
-  if not number or not range or number &lt; range[1] or number &gt; range[2] then
-    return false, string.format(
-      "%s must be between %d and %d",
-      tostring(field),
-      range and range[1] or 0,
-      range and range[2] or 0
-    )
-  end
-  if field == "threshold" and not config.threshold then
-    return false, "threshold is only available for health and movement alerts"
-  end
-  config[field] = number
-  if field == "threshold" then
-    config.reset = math.min(100, math.max(config.reset, number + 5))
-    Sound.latches[channel] = false
-  end
-  local saved, saveError = Sound.save()
-  return saved, saved and number or saveError
-end
-
-function Sound.describe(name)
-  local config, channel = Sound.channel(name)
-  if not config then
-    return channel
-  end
-  local threshold = config.threshold
-    and string.format(", threshold=%g%%", config.threshold)
-    or ""
-  return string.format(
-    "%s: %s, volume=%g, cooldown=%gs, file=%s%s",
-    config.label,
-    config.enabled and "ON" or "OFF",
-    config.volume,
-    config.cooldown,
-    config.file,
-    threshold
-  )
-end
-
-function Sound.printStatus(name)
-  if name then
-    soundEcho(Sound.describe(name), "yellow")
-    return
-  end
-  soundEcho(
-    "Master sounds " .. (Sound.settings.masterEnabled and "ON" or "OFF"),
-    "yellow"
-  )
-  for _, channel in ipairs(Sound.ORDER) do
-    cecho("&lt;white&gt;  " .. Sound.describe(channel) .. "&lt;reset&gt;\n")
-  end
-end
-
-function Sound.printHelp()
-  soundEcho("Commands", "cyan")
-  cecho("&lt;white&gt;  sound status&lt;reset&gt; - Show every channel\n")
-  cecho("&lt;white&gt;  sound all on|off&lt;reset&gt; - Master switch\n")
-  cecho("&lt;white&gt;  sound chat|health|moves on|off&lt;reset&gt;\n")
-  cecho("&lt;white&gt;  sound &lt;channel&gt; volume &lt;0-100&gt;&lt;reset&gt;\n")
-  cecho("&lt;white&gt;  sound &lt;channel&gt; cooldown &lt;0-3600&gt;&lt;reset&gt;\n")
-  cecho("&lt;white&gt;  sound &lt;channel&gt; file &lt;relative path&gt;&lt;reset&gt;\n")
-  cecho("&lt;white&gt;  sound health|moves threshold &lt;1-95&gt;&lt;reset&gt;\n")
-  cecho("&lt;white&gt;  sound &lt;channel&gt; test | sound stop&lt;reset&gt;\n")
-end
-
-function Sound.handleCommand(arguments)
-  Sound.settings = Sound.settings or Sound.normalizedSettings(nil)
-  local input = type(arguments) == "string" and arguments:match("^%s*(.-)%s*$") or ""
-  if input == "" or input == "status" then
-    Sound.printStatus()
-    return true, "status"
-  end
-  if input == "help" then
-    Sound.printHelp()
-    return true, "help"
-  end
-  if input == "stop" then
-    local stopped, stopError = Sound.stopAll()
-    soundEcho(stopped and "Stopped LuminariGUI sounds" or stopError, stopped and "green" or "red")
-    return stopped, stopError
-  end
-
-  local channelToken, action, value = input:match("^(%S+)%s*(%S*)%s*(.-)%s*$")
-  channelToken = channelToken and channelToken:lower() or ""
-  action = action and action:lower() or ""
-  if channelToken == "all" and (action == "on" or action == "off") then
-    local changed, result = Sound.setMaster(action == "on")
-    soundEcho(changed and "Master sounds " .. action:upper() or result, changed and "green" or "red")
-    return changed, result
-  end
-
-  local config, channel = Sound.channel(channelToken)
-  if not config then
-    Sound.printHelp()
-    return false, channel
-  end
-  if action == "" or action == "status" then
-    Sound.printStatus(channel)
-    return true, "status"
-  end
-  if action == "on" or action == "off" then
-    local changed, result = Sound.setEnabled(channel, action == "on")
-    soundEcho(changed and config.label .. " sounds " .. action:upper() or result, changed and "green" or "red")
-    return changed, result
-  end
-  if action == "test" then
-    local played, result = Sound.play(channel, {force = true})
-    soundEcho(played and "Played " .. config.label .. " test" or result, played and "green" or "red")
-    return played, result
-  end
-
-  local changed, result
-  if action == "file" then
-    changed, result = Sound.setFile(channel, value)
-  elseif action == "volume" or action == "cooldown" or action == "threshold" then
-    changed, result = Sound.setNumber(channel, action, value)
-  else
-    Sound.printHelp()
-    return false, "unknown sound action: " .. tostring(action)
-  end
-  soundEcho(
-    changed and string.format("%s %s set to %s", config.label, action, tostring(result)) or result,
-    changed and "green" or "red"
-  )
-  return changed, result
-end
-
-function Sound.handleLegacyChatCommand(arguments)
-  local suffix = type(arguments) == "string" and arguments or ""
-  return Sound.handleCommand("chat " .. suffix)
-end
-
-function Sound.toggleChat()
-  local chat = Sound.channel("chat")
-  local enabled = not chat.enabled
-  local changed, result = Sound.setEnabled("chat", enabled)
-  if not changed then
-    soundEcho(result, "red")
-    return false, result
-  end
-  soundEcho("Chat sound notifications " .. (enabled and "ENABLED" or "DISABLED"), enabled and "green" or "red")
-  if enabled then
-    Sound.play("chat", {force = true})
-  end
-  return true, enabled
-end</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
@@ -5340,7 +4927,6 @@ end
 
 local function prepareLoadedState()
   runLifecycleStep("load preferences", GUI.loadToggles)
-  runLifecycleStep("load sound settings", GUI.Sound and GUI.Sound.load)
   runLifecycleStep(
     "initialize layout profiles",
     GUI.AdjustableContainers and GUI.AdjustableContainers.init
@@ -6446,16 +6032,45 @@ function demonnic.chat:append(chat)
     end
   end
   
-  -- The shared native sound layer owns path resolution, cooldowns, and media
-  -- tags. Keep YATCO's active-tab suppression here because it is chat state.
-  local shouldPlaySound = demonnic.chat.config.soundEnabled
-    and GUI.Sound
-    and not (
-      demonnic.chat.currentTab ~= demonnic.chat.config.Alltab
-      and chat == demonnic.chat.currentTab
-    )
-  if shouldPlaySound then
-    GUI.Sound.play("chat")
+  -- Sound notification logic - play for ALL channels when enabled
+  if demonnic.chat.config.soundEnabled then
+    -- Check if we should play sound
+    local shouldPlaySound = true
+    
+    -- Don't play sound if we're viewing the specific channel tab (not "All")
+    if demonnic.chat.currentTab ~= demonnic.chat.config.Alltab and chat == demonnic.chat.currentTab then
+      shouldPlaySound = false
+    end
+    
+    if shouldPlaySound then
+      -- Check cooldown
+      local currentTime = os.time()
+      if currentTime - demonnic.chat.lastSoundTime >= demonnic.chat.config.soundCooldown then
+        -- Construct sound file path - try package directory first
+        local soundPath = getMudletHomeDir():gsub("\\", "/") .. "/LuminariGUI/" .. demonnic.chat.config.soundFile
+        
+        -- Check if file exists before playing
+        local file = io.open(soundPath, "r")
+        if file then
+          file:close()
+          playSoundFile(soundPath, demonnic.chat.config.soundVolume)
+          demonnic.chat.lastSoundTime = currentTime
+        else
+          -- Try user's home directory as fallback
+          soundPath = getMudletHomeDir():gsub("\\", "/") .. "/" .. demonnic.chat.config.soundFile
+          file = io.open(soundPath, "r")
+          if file then
+            file:close()
+            playSoundFile(soundPath, demonnic.chat.config.soundVolume)
+            demonnic.chat.lastSoundTime = currentTime
+          else
+            -- Use system beep as final fallback
+            playSoundFile("")  -- Empty string triggers system beep in Mudlet
+            demonnic.chat.lastSoundTime = currentTime
+          end
+        end
+      end
+    end
   end
   -- Deliberately logged at the end: emitting to the main console before
   -- selectCurrentLine/copy/append would change the current line and corrupt

@@ -162,4 +162,16 @@ in this folder.
 
 ## Feature backlog
 
-- [ ] Expand sound support beyond chat notifications using a small native subsystem
+- [x] Expand sound support beyond chat notifications using a small native subsystem
+  - Completed 2026-08-05: `GUI.Sound` centralizes tagged Mudlet media playback,
+    safe profile/package file resolution, persistence, master/per-channel
+    switches, volume, cooldown, forced tests, cleanup, and legacy chat-setting
+    migration. Low-health and low-movement MSDP gauges now emit bundled PCM
+    cues once per threshold crossing with hysteresis; all channels default off.
+    The new `sound` command configures the subsystem while `dsound` and
+    `set chat sound` remain compatible. Lua regressions cover migration,
+    validation, cooldowns, latching, command routing, ownership, and path
+    rejection; package tests inspect all three audio assets. An isolated
+    Mudlet 4.22.0/Qt 6.9.0 run decoded WAV/WAV/MP3 successfully, persisted
+    settings, rejected traversal, stopped tagged media, and leaked no alias
+    command to its TCP fixture.

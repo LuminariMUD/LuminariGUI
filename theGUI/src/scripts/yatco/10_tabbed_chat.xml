@@ -235,45 +235,16 @@ function demonnic.chat:append(chat)
     end
   end
   
-  -- Sound notification logic - play for ALL channels when enabled
-  if demonnic.chat.config.soundEnabled then
-    -- Check if we should play sound
-    local shouldPlaySound = true
-    
-    -- Don't play sound if we're viewing the specific channel tab (not "All")
-    if demonnic.chat.currentTab ~= demonnic.chat.config.Alltab and chat == demonnic.chat.currentTab then
-      shouldPlaySound = false
-    end
-    
-    if shouldPlaySound then
-      -- Check cooldown
-      local currentTime = os.time()
-      if currentTime - demonnic.chat.lastSoundTime >= demonnic.chat.config.soundCooldown then
-        -- Construct sound file path - try package directory first
-        local soundPath = getMudletHomeDir():gsub("\\", "/") .. "/LuminariGUI/" .. demonnic.chat.config.soundFile
-        
-        -- Check if file exists before playing
-        local file = io.open(soundPath, "r")
-        if file then
-          file:close()
-          playSoundFile(soundPath, demonnic.chat.config.soundVolume)
-          demonnic.chat.lastSoundTime = currentTime
-        else
-          -- Try user's home directory as fallback
-          soundPath = getMudletHomeDir():gsub("\\", "/") .. "/" .. demonnic.chat.config.soundFile
-          file = io.open(soundPath, "r")
-          if file then
-            file:close()
-            playSoundFile(soundPath, demonnic.chat.config.soundVolume)
-            demonnic.chat.lastSoundTime = currentTime
-          else
-            -- Use system beep as final fallback
-            playSoundFile("")  -- Empty string triggers system beep in Mudlet
-            demonnic.chat.lastSoundTime = currentTime
-          end
-        end
-      end
-    end
+  -- The shared native sound layer owns path resolution, cooldowns, and media
+  -- tags. Keep YATCO's active-tab suppression here because it is chat state.
+  local shouldPlaySound = demonnic.chat.config.soundEnabled
+    and GUI.Sound
+    and not (
+      demonnic.chat.currentTab ~= demonnic.chat.config.Alltab
+      and chat == demonnic.chat.currentTab
+    )
+  if shouldPlaySound then
+    GUI.Sound.play("chat")
   end
   -- Deliberately logged at the end: emitting to the main console before
   -- selectCurrentLine/copy/append would change the current line and corrupt

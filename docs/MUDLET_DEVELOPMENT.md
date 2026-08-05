@@ -378,6 +378,17 @@ Practical rules:
 -   Qt6 parses stylesheets more strictly than Qt5. A malformed declaration can cause the surrounding rule to be dropped, which typically shows up as a **silently unstyled widget** rather than an error.
 -   Verify texture/image paths resolve at runtime — a missing file also yields a silently unstyled widget.
 
+### Sound ownership {#sound-ownership}
+
+Route package audio through `GUI.Sound` rather than calling `playSoundFile`
+from aliases, triggers, or feature scripts. The subsystem supplies stable
+Mudlet media keys/tags, cooldowns, persistence, safe path resolution, and
+profile-exit cleanup. Add a new channel to `GUI.Sound.DEFAULTS`, expose only
+the configuration fields users need, and keep unsolicited channels disabled
+by default. Threshold alerts should call `GUI.Sound.checkThreshold()` so they
+fire once per crossing and re-arm with hysteresis. See
+[`SOUND_USAGE.md`](SOUND_USAGE.md) for the public API and command contract.
+
 ### Label callbacks: prefer closures {#label-callbacks}
 
 The legacy form passes a **function name as a string plus trailing arguments**:

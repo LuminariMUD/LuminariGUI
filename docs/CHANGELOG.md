@@ -63,6 +63,11 @@ Begin Changelog entries below
 - **Package icon.** A 512×512 compass-and-portal mark now ships in Mudlet's
   native `.mudlet/Icon/` archive layout and is declared by basename in the
   generated `config.lua`; package tests verify the asset and dimensions.
+- **Native sound subsystem.** Chat, low-health, and low-movement alerts now
+  share tagged Mudlet media playback, persistent per-channel switches, volume,
+  files, cooldowns, low-vitals thresholds, crossing latches, a master switch,
+  and the `sound` command. Two portable PCM warning cues ship with the package;
+  `dsound` and `set chat sound` remain compatible delegates.
 
 ### Fixed
 

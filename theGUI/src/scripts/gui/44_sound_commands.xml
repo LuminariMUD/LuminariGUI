@@ -1,0 +1,200 @@
+					<Script isActive="yes" isFolder="no">
+						<name>Sound Commands</name>
+						<packageName></packageName>
+						<script>local Sound = GUI.Sound
+
+local function soundEcho(message, color)
+  cecho("\n&lt;" .. (color or "cyan") .. "&gt;[SOUND] " .. message .. "&lt;reset&gt;\n")
+end
+
+function Sound.setMaster(enabled)
+  Sound.settings = Sound.settings or Sound.normalizedSettings(nil)
+  Sound.settings.masterEnabled = enabled == true
+  local saved, saveError = Sound.save()
+  return saved, saved and Sound.settings.masterEnabled or saveError
+end
+
+function Sound.setEnabled(name, enabled)
+  local config, channel = Sound.channel(name)
+  if not config then
+    return false, channel
+  end
+  config.enabled = enabled == true
+  local saved, saveError = Sound.save()
+  return saved, saved and config.enabled or saveError
+end
+
+function Sound.setFile(name, fileName)
+  local config, channel = Sound.channel(name)
+  if not config then
+    return false, channel
+  end
+  local normalized, pathError = Sound.normalizeRelativeFile(fileName)
+  if not normalized then
+    return false, pathError
+  end
+  config.file = normalized
+  local saved, saveError = Sound.save()
+  return saved, saved and normalized or saveError
+end
+
+function Sound.setNumber(name, field, value)
+  local config, channel = Sound.channel(name)
+  if not config then
+    return false, channel
+  end
+  local number = tonumber(value)
+  local ranges = {
+    volume = {0, 100},
+    cooldown = {0, 3600},
+    threshold = {1, 95},
+  }
+  local range = ranges[field]
+  if not number or not range or number &lt; range[1] or number &gt; range[2] then
+    return false, string.format(
+      "%s must be between %d and %d",
+      tostring(field),
+      range and range[1] or 0,
+      range and range[2] or 0
+    )
+  end
+  if field == "threshold" and not config.threshold then
+    return false, "threshold is only available for health and movement alerts"
+  end
+  config[field] = number
+  if field == "threshold" then
+    config.reset = math.min(100, math.max(config.reset, number + 5))
+    Sound.latches[channel] = false
+  end
+  local saved, saveError = Sound.save()
+  return saved, saved and number or saveError
+end
+
+function Sound.describe(name)
+  local config, channel = Sound.channel(name)
+  if not config then
+    return channel
+  end
+  local threshold = config.threshold
+    and string.format(", threshold=%g%%", config.threshold)
+    or ""
+  return string.format(
+    "%s: %s, volume=%g, cooldown=%gs, file=%s%s",
+    config.label,
+    config.enabled and "ON" or "OFF",
+    config.volume,
+    config.cooldown,
+    config.file,
+    threshold
+  )
+end
+
+function Sound.printStatus(name)
+  if name then
+    soundEcho(Sound.describe(name), "yellow")
+    return
+  end
+  soundEcho(
+    "Master sounds " .. (Sound.settings.masterEnabled and "ON" or "OFF"),
+    "yellow"
+  )
+  for _, channel in ipairs(Sound.ORDER) do
+    cecho("&lt;white&gt;  " .. Sound.describe(channel) .. "&lt;reset&gt;\n")
+  end
+end
+
+function Sound.printHelp()
+  soundEcho("Commands", "cyan")
+  cecho("&lt;white&gt;  sound status&lt;reset&gt; - Show every channel\n")
+  cecho("&lt;white&gt;  sound all on|off&lt;reset&gt; - Master switch\n")
+  cecho("&lt;white&gt;  sound chat|health|moves on|off&lt;reset&gt;\n")
+  cecho("&lt;white&gt;  sound &lt;channel&gt; volume &lt;0-100&gt;&lt;reset&gt;\n")
+  cecho("&lt;white&gt;  sound &lt;channel&gt; cooldown &lt;0-3600&gt;&lt;reset&gt;\n")
+  cecho("&lt;white&gt;  sound &lt;channel&gt; file &lt;relative path&gt;&lt;reset&gt;\n")
+  cecho("&lt;white&gt;  sound health|moves threshold &lt;1-95&gt;&lt;reset&gt;\n")
+  cecho("&lt;white&gt;  sound &lt;channel&gt; test | sound stop&lt;reset&gt;\n")
+end
+
+function Sound.handleCommand(arguments)
+  Sound.settings = Sound.settings or Sound.normalizedSettings(nil)
+  local input = type(arguments) == "string" and arguments:match("^%s*(.-)%s*$") or ""
+  if input == "" or input == "status" then
+    Sound.printStatus()
+    return true, "status"
+  end
+  if input == "help" then
+    Sound.printHelp()
+    return true, "help"
+  end
+  if input == "stop" then
+    local stopped, stopError = Sound.stopAll()
+    soundEcho(stopped and "Stopped LuminariGUI sounds" or stopError, stopped and "green" or "red")
+    return stopped, stopError
+  end
+
+  local channelToken, action, value = input:match("^(%S+)%s*(%S*)%s*(.-)%s*$")
+  channelToken = channelToken and channelToken:lower() or ""
+  action = action and action:lower() or ""
+  if channelToken == "all" and (action == "on" or action == "off") then
+    local changed, result = Sound.setMaster(action == "on")
+    soundEcho(changed and "Master sounds " .. action:upper() or result, changed and "green" or "red")
+    return changed, result
+  end
+
+  local config, channel = Sound.channel(channelToken)
+  if not config then
+    Sound.printHelp()
+    return false, channel
+  end
+  if action == "" or action == "status" then
+    Sound.printStatus(channel)
+    return true, "status"
+  end
+  if action == "on" or action == "off" then
+    local changed, result = Sound.setEnabled(channel, action == "on")
+    soundEcho(changed and config.label .. " sounds " .. action:upper() or result, changed and "green" or "red")
+    return changed, result
+  end
+  if action == "test" then
+    local played, result = Sound.play(channel, {force = true})
+    soundEcho(played and "Played " .. config.label .. " test" or result, played and "green" or "red")
+    return played, result
+  end
+
+  local changed, result
+  if action == "file" then
+    changed, result = Sound.setFile(channel, value)
+  elseif action == "volume" or action == "cooldown" or action == "threshold" then
+    changed, result = Sound.setNumber(channel, action, value)
+  else
+    Sound.printHelp()
+    return false, "unknown sound action: " .. tostring(action)
+  end
+  soundEcho(
+    changed and string.format("%s %s set to %s", config.label, action, tostring(result)) or result,
+    changed and "green" or "red"
+  )
+  return changed, result
+end
+
+function Sound.handleLegacyChatCommand(arguments)
+  local suffix = type(arguments) == "string" and arguments or ""
+  return Sound.handleCommand("chat " .. suffix)
+end
+
+function Sound.toggleChat()
+  local chat = Sound.channel("chat")
+  local enabled = not chat.enabled
+  local changed, result = Sound.setEnabled("chat", enabled)
+  if not changed then
+    soundEcho(result, "red")
+    return false, result
+  end
+  soundEcho("Chat sound notifications " .. (enabled and "ENABLED" or "DISABLED"), enabled and "green" or "red")
+  if enabled then
+    Sound.play("chat", {force = true})
+  end
+  return true, enabled
+end</script>
+						<eventHandlerList />
+					</Script>

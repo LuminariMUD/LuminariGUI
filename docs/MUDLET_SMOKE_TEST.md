@@ -238,6 +238,20 @@ the keypad modifier distinction, but were injected with XTEST because the
 isolated environment had no attached keyboard. A human physical-keyboard pass
 therefore remains part of every release-candidate checklist.
 
+### 2026-08-05 — native sound subsystem
+
+Package 2.0.4.042 was imported into another isolated Mudlet 4.22.0/Qt 6.9.0
+profile connected to a local TCP fixture. `sound status`, health/movement
+enablement, volume/cooldown/threshold updates, all three forced tests, bare
+`set chat sound`, both `dsound` directions, traversal rejection, and
+`sound stop` all matched locally; the fixture received no command bytes.
+
+Mudlet's media log identified and decoded `health_warning.wav` and
+`movement_warning.wav` as mono 44.1 kHz PCM plus the existing stereo 44.1 kHz
+`chat_sound.mp3`. The saved `GUI.toggles.lua` contained the changed nested
+channel values, kept the rejected `../bad.wav` out, and ended with chat disabled
+after the second `dsound`. No Lua, stylesheet, or media rejection was logged.
+
 ## Optional GitHub Xvfb experiment
 
 The manual-dispatch workflow `.github/workflows/mudlet.yml` downloads the

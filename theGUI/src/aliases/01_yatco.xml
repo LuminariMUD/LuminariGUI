@@ -105,43 +105,8 @@ end</script>
 						</Alias>
 						<Alias isActive="yes" isFolder="no">
 							<name>dsound</name>
-							<script>-- Toggle chat sound notifications
-GUI.debug("ALIAS", "dsound matched", matches)
-if demonnic and demonnic.chat and demonnic.chat.config then
-    demonnic.chat.config.soundEnabled = not demonnic.chat.config.soundEnabled
-    
-    if demonnic.chat.config.soundEnabled then
-        cecho("\n&lt;green&gt;Chat sound notifications ENABLED&lt;reset&gt;\n")
-        -- Play a test sound
-        local soundPath = getMudletHomeDir():gsub("\\", "/") .. "/LuminariGUI/" .. demonnic.chat.config.soundFile
-        local file = io.open(soundPath, "r")
-        if file then
-            file:close()
-            playSoundFile(soundPath, demonnic.chat.config.soundVolume)
-        else
-            -- Try user's home directory as fallback
-            soundPath = getMudletHomeDir():gsub("\\", "/") .. "/" .. demonnic.chat.config.soundFile
-            file = io.open(soundPath, "r")
-            if file then
-                file:close()
-                playSoundFile(soundPath, demonnic.chat.config.soundVolume)
-            else
-                -- Try system beep as final fallback
-                playSoundFile("")  -- Empty string triggers system beep in Mudlet
-            end
-        end
-    else
-        cecho("\n&lt;red&gt;Chat sound notifications DISABLED&lt;reset&gt;\n")
-    end
-    
-    -- Save to GUI.toggles for persistence
-    if GUI and GUI.toggles then
-        GUI.toggles.chatSound = demonnic.chat.config.soundEnabled
-        table.save(getMudletHomeDir():gsub("\\", "/") .. "/GUI.toggles.lua", GUI.toggles)
-    end
-else
-    cecho("\n&lt;red&gt;Chat system not initialized. Type 'fix chat' to reinitialize.&lt;reset&gt;\n")
-end</script>
+							<script>GUI.debug("ALIAS", "dsound matched", matches)
+GUI.Sound.toggleChat()</script>
 							<command></command>
 							<packageName></packageName>
 							<regex>^dsound$</regex>
@@ -149,78 +114,7 @@ end</script>
 						<Alias isActive="yes" isFolder="no">
 							<name>set chat sound</name>
 							<script>GUI.debug("ALIAS", "set chat sound matched", matches)
-local args = matches[2]:split(" ")
-local command = args[1]
-local value = args[2]
-
-if command == "on" or command == "off" then
-    -- Enable/disable sounds
-    demonnic.chat.config.soundEnabled = (command == "on")
-    GUI.toggles.chatSound = demonnic.chat.config.soundEnabled
-    table.save(getMudletHomeDir():gsub("\\", "/") .. "/GUI.toggles.lua", GUI.toggles)
-    cecho(string.format("\n&lt;yellow&gt;Chat sounds %s&lt;reset&gt;\n", command:upper()))
-    
-elseif command == "volume" and value then
-    -- Set volume (0-100)
-    local vol = tonumber(value)
-    if vol and vol >= 0 and vol &lt;= 100 then
-        demonnic.chat.config.soundVolume = vol
-        cecho(string.format("\n&lt;yellow&gt;Chat sound volume set to %d&lt;reset&gt;\n", vol))
-    else
-        cecho("\n&lt;red&gt;Volume must be between 0 and 100&lt;reset&gt;\n")
-    end
-    
-elseif command == "file" and value then
-    -- Set sound file
-    demonnic.chat.config.soundFile = value
-    cecho(string.format("\n&lt;yellow&gt;Chat sound file set to: %s&lt;reset&gt;\n", value))
-    
-elseif command == "cooldown" and value then
-    -- Set cooldown between sounds
-    local cd = tonumber(value)
-    if cd and cd >= 0 then
-        demonnic.chat.config.soundCooldown = cd
-        cecho(string.format("\n&lt;yellow&gt;Chat sound cooldown set to %d seconds&lt;reset&gt;\n", cd))
-    else
-        cecho("\n&lt;red&gt;Cooldown must be 0 or positive number&lt;reset&gt;\n")
-    end
-    
-elseif command == "test" then
-    -- Test the sound
-    local soundPath = getMudletHomeDir():gsub("\\", "/") .. "/LuminariGUI/" .. demonnic.chat.config.soundFile
-    local file = io.open(soundPath, "r")
-    if file then
-        file:close()
-        playSoundFile(soundPath, demonnic.chat.config.soundVolume)
-        cecho("\n&lt;green&gt;Playing test sound...&lt;reset&gt;\n")
-    else
-        -- Try user's home directory as fallback
-        soundPath = getMudletHomeDir():gsub("\\", "/") .. "/" .. demonnic.chat.config.soundFile
-        file = io.open(soundPath, "r")
-        if file then
-            file:close()
-            playSoundFile(soundPath, demonnic.chat.config.soundVolume)
-            cecho("\n&lt;green&gt;Playing test sound from user directory...&lt;reset&gt;\n")
-        else
-            playSoundFile("")  -- Empty string triggers system beep in Mudlet
-            cecho("\n&lt;yellow&gt;Sound file not found, playing default beep&lt;reset&gt;\n")
-        end
-    end
-    
-else
-    -- Show help
-    cecho("\n&lt;cyan&gt;Chat Sound Commands:&lt;reset&gt;\n")
-    cecho("  &lt;white&gt;set chat sound on/off&lt;reset&gt; - Enable or disable sounds for ALL channels\n")
-    cecho("  &lt;white&gt;set chat sound volume &lt;0-100&gt;&lt;reset&gt; - Set volume level\n")
-    cecho("  &lt;white&gt;set chat sound file &lt;filename&gt;&lt;reset&gt; - Set sound file\n")
-    cecho("  &lt;white&gt;set chat sound cooldown &lt;seconds&gt;&lt;reset&gt; - Set cooldown between sounds\n")
-    cecho("  &lt;white&gt;set chat sound test&lt;reset&gt; - Test the current sound\n")
-    cecho("\n&lt;yellow&gt;Current settings:&lt;reset&gt;\n")
-    cecho(string.format("  Enabled: %s (plays for ALL channels)\n", demonnic.chat.config.soundEnabled and "YES" or "NO"))
-    cecho(string.format("  Volume: %d\n", demonnic.chat.config.soundVolume))
-    cecho(string.format("  File: %s\n", demonnic.chat.config.soundFile))
-    cecho(string.format("  Cooldown: %d seconds\n", demonnic.chat.config.soundCooldown))
-end</script>
+GUI.Sound.handleLegacyChatCommand(matches[2])</script>
 							<command></command>
 							<packageName></packageName>
 							<regex>^set chat sound(?:\s+(.*))?$</regex>
