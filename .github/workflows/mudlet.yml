@@ -56,7 +56,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install --yes \
-            dbus-x11 libopengl0 scrot x11-utils xdotool xvfb
+            dbus-x11 libegl1 libopengl0 scrot x11-utils xdotool xvfb
 
       - name: Download and verify official Mudlet AppImage
         shell: bash
