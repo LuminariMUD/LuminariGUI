@@ -330,4 +330,11 @@ Source fragments must be valid XML that inject into the skeleton:
 
 Mudlet expects `<packageName>`, `<script>`, and `<eventHandlerList>` on both the group and the script elements — omitting them produces XML that validates but may not import cleanly. Match the structure of the existing fragments.
 
+Build validation treats a group and leaf as one Mudlet item family. Within one
+direct parent, exact case-sensitive sibling names must be unique across
+`TriggerGroup`/`Trigger`, `AliasGroup`/`Alias`, `ScriptGroup`/`Script`,
+`TimerGroup`/`Timer`, `KeyGroup`/`Key`, and `ActionGroup`/`Action`. Mudlet does
+permit same-named items in different groups or package sections, and the build
+must continue to allow those intentional cross-scope names.
+
 Remember to escape XML special characters: `<` → `&lt;`, `>` → `&gt;`, `&` → `&amp;`

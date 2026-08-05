@@ -191,6 +191,27 @@ their lifecycle registration, component constructors precede `GUI Boot`, and
 the event registry and refresh functions precede `GUI Lifecycle`. Add or move
 GUI children by editing the wrapper's include list, not `build.yaml`.
 
+#### Duplicate-name validation
+
+Mudlet stores folders and leaf items from one editor section in the same unit
+and permits multiple items to share a name. Name-based APIs act on every exact
+match, so repeated names in different groups are sometimes intentional. The
+build therefore applies a narrower ambiguity rule:
+
+- a folder and leaf share one family (`TriggerGroup`/`Trigger`,
+  `AliasGroup`/`Alias`, `ScriptGroup`/`Script`, `TimerGroup`/`Timer`,
+  `KeyGroup`/`Key`, or `ActionGroup`/`Action`);
+- two direct children of the same parent cannot have the same exact,
+  case-sensitive name within that family;
+- the same exact name remains valid under different parent groups or in
+  different package sections; and
+- a group may intentionally share its name with one of its own descendants,
+  as `MSDPMapper` and the nested `GUI` groups currently do.
+
+This catches indistinguishable sibling collisions without rejecting the
+hierarchy that Mudlet 4.22 explicitly supports. `build.py --validate`, normal
+builds, and the generated-output drift check all apply the rule.
+
 #### GUI child responsibilities
 
 The numbered child ranges are stable ownership boundaries:

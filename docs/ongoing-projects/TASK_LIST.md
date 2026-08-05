@@ -82,9 +82,16 @@ in this folder.
     4.22.0 AppImage and captures logs plus the Xvfb display while testing Qt
     startup and command-line package queuing. It remains advisory and hosted
     launch acceptance is pending.
-- [ ] Define Mudlet-aware duplicate-name rules and add scope-aware build
+- [x] Define Mudlet-aware duplicate-name rules and add scope-aware build
   validation with regression tests. Do not reject intentional same-named items
   that Mudlet permits in different groups or package sections.
+  - Completed 2026-08-05: final-package validation now normalizes each Mudlet
+    group/leaf pair into one item family and rejects only exact,
+    case-sensitive sibling collisions. Same names remain valid in different
+    parent groups or package sections, including the current nested `GUI` and
+    `MSDPMapper` names. Regression coverage proves allowed cross-scope/case
+    variants, rejects a leaf/group sibling collision with its full parent
+    scope, and validates the current package.
 - [ ] Review the remaining top-level source fragments over the old approximate
   500-line target (`00_msdpmapper.xml` and `03_yatco.xml`). Either split them
   with hierarchy-preserving composite wrappers or document why each should

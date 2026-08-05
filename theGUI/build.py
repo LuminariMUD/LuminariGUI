@@ -40,6 +40,20 @@ BUILD_INCLUDE_PATTERN = re.compile(
     r"[ \t]*(?P<newline>\r?\n|$)"
 )
 BUILD_INCLUDE_TOKEN = "BUILD_INCLUDE:"
+MUDLET_ITEM_FAMILY_BY_TAG = {
+    "Trigger": "Trigger",
+    "TriggerGroup": "Trigger",
+    "Alias": "Alias",
+    "AliasGroup": "Alias",
+    "Script": "Script",
+    "ScriptGroup": "Script",
+    "Timer": "Timer",
+    "TimerGroup": "Timer",
+    "Key": "Key",
+    "KeyGroup": "Key",
+    "Action": "Action",
+    "ActionGroup": "Action",
+}
 
 
 class FragmentBuildError(Exception):
@@ -180,6 +194,44 @@ class BuildConfig:
 class FragmentValidator:
     """Validates XML fragments for correctness"""
 
+    @classmethod
+    def _duplicate_name_errors(cls, root: ET.Element) -> list[str]:
+        """Reject same-family names only when the items are direct siblings."""
+        errors: list[str] = []
+
+        def visit(parent: ET.Element, scope: str) -> None:
+            seen: dict[tuple[str, str], str] = {}
+            for child in parent:
+                family = MUDLET_ITEM_FAMILY_BY_TAG.get(child.tag)
+                if family is None:
+                    child_scope = child.tag if child.tag.endswith("Package") else scope
+                    visit(child, child_scope)
+                    continue
+
+                name_element = child.find("name")
+                if name_element is None:
+                    visit(child, f"{scope} / {child.tag} <unnamed>")
+                    continue
+
+                name = name_element.text or ""
+                key = (family, name)
+                first_tag = seen.get(key)
+                display_name = repr(name) if name else "<empty>"
+                if first_tag is not None:
+                    errors.append(
+                        f"{scope}: duplicate {family} name {display_name} among "
+                        f"direct children ({first_tag} and {child.tag}); same-named "
+                        "Mudlet items are allowed in different groups or package "
+                        "sections, not as siblings"
+                    )
+                else:
+                    seen[key] = child.tag
+
+                visit(child, f"{scope} / {child.tag} {display_name}")
+
+        visit(root, root.tag)
+        return errors
+
     @staticmethod
     def validate_fragment(content: str, filepath: str) -> tuple[bool, list[str]]:
         """
@@ -223,6 +275,8 @@ class FragmentValidator:
         missing = required - found
         if missing:
             errors.append(f"Missing required packages: {missing}")
+
+        errors.extend(FragmentValidator._duplicate_name_errors(root))
 
         return len(errors) == 0, errors
 

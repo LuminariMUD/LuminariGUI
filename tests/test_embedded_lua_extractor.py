@@ -24,7 +24,7 @@ from scripts.remap_lua_diagnostics import (  # noqa: E402
     DiagnosticMappingError,
     normalize_report,
 )
-from theGUI.build import FragmentBuildError  # noqa: E402
+from theGUI.build import FragmentBuildError, FragmentValidator  # noqa: E402
 
 
 class EmbeddedLuaExtractorTester:
@@ -249,6 +249,68 @@ return 1 &lt; 2</script>
                 ),
                 "source line mapping moved before an opening <script> tag",
             )
+
+    def _test_duplicate_name_scopes(self):
+        def package(trigger_items):
+            return f"""<?xml version="1.0" encoding="UTF-8"?>
+<MudletPackage version="1">
+  <TriggerPackage>{trigger_items}</TriggerPackage>
+  <AliasPackage>
+    <Alias><name>Shared</name></Alias>
+  </AliasPackage>
+  <ScriptPackage>
+    <ScriptGroup><name>Shared</name>
+      <Script><name>Shared</name></Script>
+    </ScriptGroup>
+  </ScriptPackage>
+  <KeyPackage>
+    <Key><name>Shared</name></Key>
+  </KeyPackage>
+</MudletPackage>
+"""
+
+        allowed = package(
+            """
+    <TriggerGroup><name>First</name>
+      <Trigger><name>Shared</name></Trigger>
+    </TriggerGroup>
+    <TriggerGroup><name>Second</name>
+      <Trigger><name>Shared</name></Trigger>
+    </TriggerGroup>
+    <Trigger><name>Case</name></Trigger>
+    <Trigger><name>case</name></Trigger>
+"""
+        )
+        valid, errors = FragmentValidator.validate_final_xml(allowed)
+        self._require(
+            valid and not errors,
+            f"valid cross-scope Mudlet names were rejected: {errors}",
+        )
+
+        sibling_collision = package(
+            """
+    <TriggerGroup><name>Parent</name>
+      <Trigger><name>Same</name></Trigger>
+      <TriggerGroup><name>Same</name></TriggerGroup>
+    </TriggerGroup>
+"""
+        )
+        valid, errors = FragmentValidator.validate_final_xml(sibling_collision)
+        self._require(not valid, "same-family sibling collision was accepted")
+        self._require(
+            len(errors) == 1
+            and "TriggerPackage / TriggerGroup 'Parent'" in errors[0]
+            and "duplicate Trigger name 'Same'" in errors[0]
+            and "Trigger and TriggerGroup" in errors[0],
+            f"sibling collision diagnostic lost its Mudlet scope: {errors}",
+        )
+
+        current = self.xml_file.read_text(encoding="utf-8")
+        valid, errors = FragmentValidator.validate_final_xml(current)
+        self._require(
+            valid and not errors,
+            f"current intentional cross-scope names were rejected: {errors}",
+        )
 
     def _test_arbitrary_xml_mode(self):
         with tempfile.TemporaryDirectory(prefix="luminari-extractor-xml-") as temp:
@@ -495,6 +557,7 @@ return "A &amp; B"
         checks = [
             ("fixture ordering and mapping", self._test_fixture_extraction),
             ("assembled-package parity", self._test_current_package_parity),
+            ("Mudlet duplicate-name scopes", self._test_duplicate_name_scopes),
             ("arbitrary XML mode", self._test_arbitrary_xml_mode),
             ("tool diagnostic remapping", self._test_diagnostic_remapping),
             (

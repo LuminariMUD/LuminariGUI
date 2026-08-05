@@ -44,6 +44,10 @@ Begin Changelog entries below
   assembles current source in memory, separates runtime and package-XML
   handlers, reports named timer creation sites, supports JSON and explicit XML
   input, and fails on raw unowned registrations.
+- **Scope-aware Mudlet name validation.** Final package validation now rejects
+  exact same-family names only when the items are direct siblings. Group/leaf
+  pairs share one family, while intentional same names in different parent
+  groups or package sections remain valid and regression-covered.
 
 ### Fixed
 
