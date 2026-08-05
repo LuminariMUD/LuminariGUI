@@ -1,0 +1,167 @@
+name: Coverage
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: coverage-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHONDONTWRITEBYTECODE: "1"
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  LUACOV_CONFIG: ${{ github.workspace }}/tests/test_configs/luacov_config.lua
+
+jobs:
+  report:
+    name: report
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12.3"
+          cache: pip
+          cache-dependency-path: requirements-ci.txt
+          pip-version: "26.2.1"
+
+      - name: Configure temporary coverage paths
+        shell: bash
+        run: |
+          coverage_root="${RUNNER_TEMP}/coverage"
+          {
+            printf 'COVERAGE_FILE=%s/python/.coverage\n' "${coverage_root}"
+            printf 'LUMINARI_LUA_WORKSPACE=%s/lua-workspace\n' "${coverage_root}"
+            printf 'LUMINARI_LUA_COVERAGE_DIR=%s/lua\n' "${coverage_root}"
+            printf 'LUMINARI_LUACOV_STATS_FILE=%s/lua/luacov.raw.stats.out\n' "${coverage_root}"
+            printf 'LUMINARI_LUACOV_REPORT_FILE=%s/lua/luacov-lines.tsv\n' "${coverage_root}"
+          } >> "${GITHUB_ENV}"
+
+      - name: Install pinned Python tools
+        run: python -m pip install --require-hashes -r requirements-ci.txt
+
+      - name: Install pinned Lua 5.1 coverage tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install --yes lua5.1 liblua5.1-0-dev luarocks
+          sudo update-alternatives --set lua-interpreter /usr/bin/lua5.1
+          sudo update-alternatives --set lua-compiler /usr/bin/luac5.1
+          sudo luarocks --lua-version=5.1 install luacheck 0.23.0
+          sudo luarocks --lua-version=5.1 install datafile 0.11-1
+          sudo luarocks --lua-version=5.1 install luacov 0.17.0-1 --deps-mode=none
+          lua -e 'assert(_VERSION == "Lua 5.1", _VERSION)'
+          lua -e 'local r=require("luacov.runner"); assert(r.version == "0.17.0", r.version); print("LuaCov " .. r.version)'
+          luac -p scripts/luacov/reporter/luminari.lua \
+            tests/test_configs/luacov_config.lua
+          luacheck --std lua51 scripts/luacov/reporter/luminari.lua \
+            tests/test_configs/luacov_config.lua
+          luacheck --version
+
+      - name: Extract one shared Lua coverage workspace
+        run: |
+          mkdir -p "${RUNNER_TEMP}/coverage/lua" "${RUNNER_TEMP}/coverage/python"
+          python scripts/extract_embedded_lua.py \
+            --output "${LUMINARI_LUA_WORKSPACE}"
+
+      - name: Measure Python tooling and production Lua execution
+        shell: bash
+        run: |
+          set -euo pipefail
+          coverage erase
+          coverage run tests/test_coverage_reporting.py
+          coverage run tests/test_embedded_lua_extractor.py
+          coverage run tests/test_lifecycle_regressions.py
+          coverage run theGUI/build.py --validate
+          coverage run theGUI/build.py --diff --fail-on-diff
+          coverage run scripts/validate_package.py
+          coverage run scripts/analyze_handlers.py --fail-on-unowned
+          coverage combine
+
+      - name: Map and render application Lua coverage
+        shell: bash
+        run: |
+          set -euo pipefail
+          lua_dir="${LUMINARI_LUA_COVERAGE_DIR}"
+          coverage run scripts/lua_coverage_cli.py map \
+            --workspace "${LUMINARI_LUA_WORKSPACE}" \
+            --raw-stats "${lua_dir}/luacov.raw.stats.out" \
+            --drivers "${lua_dir}/drivers" \
+            --collection-cwd "${GITHUB_WORKSPACE}" \
+            --output-stats "${lua_dir}/lua-production.stats.out" \
+            --output-map "${lua_dir}/lua-source-map.json"
+
+          (
+            cd "${LUMINARI_LUA_WORKSPACE}"
+            LUMINARI_LUACOV_STATS_FILE="${lua_dir}/lua-production.stats.out" \
+            LUMINARI_LUACOV_REPORT_FILE="${lua_dir}/luacov-lines.tsv" \
+            LUA_PATH="${GITHUB_WORKSPACE}/scripts/?.lua;;" \
+              luacov -c "${LUACOV_CONFIG}" -r luminari
+          )
+
+          coverage run scripts/lua_coverage_cli.py render \
+            --workspace "${LUMINARI_LUA_WORKSPACE}" \
+            --line-report "${lua_dir}/luacov-lines.tsv" \
+            --mapping "${lua_dir}/lua-source-map.json" \
+            --output-json "${lua_dir}/lua-coverage.json" \
+            --output-lcov "${lua_dir}/lua-coverage.lcov" \
+            --output-html "${lua_dir}/html/index.html"
+          coverage combine --append
+
+      - name: Render Python tooling coverage
+        run: |
+          python_dir="${RUNNER_TEMP}/coverage/python"
+          coverage json --pretty-print -o "${python_dir}/coverage.json"
+          coverage xml -o "${python_dir}/coverage.xml"
+          coverage html -d "${python_dir}/html"
+
+      - name: Publish separate totals and baseline deltas
+        run: |
+          coverage_dir="${RUNNER_TEMP}/coverage"
+          python scripts/lua_coverage_cli.py summary \
+            --lua "${coverage_dir}/lua/lua-coverage.json" \
+            --python "${coverage_dir}/python/coverage.json" \
+            --baseline coverage/baselines.json \
+            --output-json "${coverage_dir}/coverage-summary.json" \
+            --output-markdown "${coverage_dir}/coverage-summary.md"
+          cat "${coverage_dir}/coverage-summary.md" >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Verify normalized reports and read-only collection
+        shell: bash
+        run: |
+          set -euo pipefail
+          reports=(
+            "${RUNNER_TEMP}/coverage/lua/lua-coverage.json"
+            "${RUNNER_TEMP}/coverage/lua/lua-coverage.lcov"
+            "${RUNNER_TEMP}/coverage/lua/html/index.html"
+          )
+          if grep --fixed-strings --line-number "${RUNNER_TEMP}" "${reports[@]}"; then
+            echo "::error::Normalized Lua report leaked a temporary path"
+            exit 1
+          fi
+          test -z "$(git status --porcelain --untracked-files=all)"
+
+      - name: Upload separate Lua and Python coverage reports
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: coverage-reports-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/coverage
+            ${{ runner.temp }}/coverage/lua-workspace/manifest.json
+          if-no-files-found: warn
+          retention-days: 30

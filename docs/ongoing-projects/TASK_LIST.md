@@ -63,6 +63,13 @@ in this folder.
     and Security
     [run 31048108103](https://github.com/LuminariMUD/LuminariGUI/actions/runs/31048108103)
     passed every Phase 3 job; Phase 4 coverage work follows.
+  - Phase 4 implemented locally 2026-08-05: LuaCov 0.17.0 maps lifecycle
+    execution back to all 79 extracted production scripts while generated
+    driver code remains a separately reported category. Coverage.py measures
+    Python tooling only; separate JSON/LCOV-or-XML/HTML artifacts, baseline
+    deltas, 30-day retention, and a ninth `coverage` regression suite are in
+    place. The initial baselines are 30.36% Lua and 51.49% Python line
+    coverage with no thresholds. Hosted acceptance is pending.
 - [ ] Define Mudlet-aware duplicate-name rules and add scope-aware build
   validation with regression tests. Do not reject intentional same-named items
   that Mudlet permits in different groups or package sections.

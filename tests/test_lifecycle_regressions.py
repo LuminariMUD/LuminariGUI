@@ -8,7 +8,6 @@ so versioning, packaging, and drift checks are exercised without mutating the
 working tree.
 """
 
-import html
 import importlib.util
 import io
 import json
@@ -23,10 +22,20 @@ import zipfile
 from contextlib import redirect_stdout
 from pathlib import Path
 
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from scripts.extract_embedded_lua import EmbeddedLuaExtractor  # noqa: E402
+from scripts.lua_coverage import (  # noqa: E402
+    LuaCoverageCatalog,
+    LuaCoverageError,
+)
+
 
 class LifecycleRegressionTester:
     def __init__(self, _xml_file=None):
-        self.repo_root = Path(__file__).resolve().parents[1]
+        self.repo_root = PROJECT_ROOT
         self.mapper_source_path = (
             self.repo_root / "theGUI" / "src" / "scripts" / "00_msdpmapper.xml"
         )
@@ -56,6 +65,20 @@ class LifecycleRegressionTester:
         self.warnings = []
         self._gui_scripts_cache = None
         self._gui_script_order_cache = None
+        self._lua_catalog_cache = None
+        self._lua_workspace_temp = None
+        self._lua_driver_count = 0
+        coverage_dir = os.environ.get("LUMINARI_LUA_COVERAGE_DIR")
+        self.coverage_dir = Path(coverage_dir).resolve() if coverage_dir else None
+        if self.coverage_dir is not None:
+            try:
+                self.coverage_dir.relative_to(self.repo_root)
+            except ValueError:
+                pass
+            else:
+                raise AssertionError(
+                    "LUMINARI_LUA_COVERAGE_DIR must be outside the repository"
+                )
 
     @staticmethod
     def _find_lua():
@@ -66,10 +89,38 @@ class LifecycleRegressionTester:
         return None
 
     @staticmethod
-    def _extract(source, start_marker, end_marker):
+    def _extract(source, start_marker, end_marker=None):
         start = source.index(start_marker)
-        end = source.index(end_marker, start)
-        return html.unescape(source[start:end])
+        end = len(source) if end_marker is None else source.index(end_marker, start)
+        return source[start:end]
+
+    def _load_lua_catalog(self):
+        """Load or create the shared stable extraction workspace."""
+        if self._lua_catalog_cache is not None:
+            return self._lua_catalog_cache
+
+        workspace_value = os.environ.get("LUMINARI_LUA_WORKSPACE")
+        if workspace_value:
+            workspace = Path(workspace_value).resolve()
+        else:
+            self._lua_workspace_temp = tempfile.TemporaryDirectory(
+                prefix="luminari-lifecycle-lua-"
+            )
+            workspace = Path(self._lua_workspace_temp.name) / "workspace"
+            EmbeddedLuaExtractor(self.repo_root).extract_project(workspace)
+
+        try:
+            self._lua_catalog_cache = LuaCoverageCatalog.load(workspace)
+        except LuaCoverageError as error:
+            raise AssertionError(str(error)) from error
+        return self._lua_catalog_cache
+
+    def _coverage_source(self, record):
+        catalog = self._load_lua_catalog()
+        return catalog.source(
+            record,
+            markers_enabled=self.coverage_dir is not None,
+        )
 
     def _load_gui_scripts(self):
         """Assemble current sources and index inner-GUI Lua by Mudlet name."""
@@ -122,6 +173,7 @@ class LifecycleRegressionTester:
         )
         self._require(inner_gui is not None, "assembled XML has no inner GUI group")
 
+        catalog = self._load_lua_catalog()
         scripts = {}
         order = []
         for node in inner_gui.findall("./Script"):
@@ -130,7 +182,12 @@ class LifecycleRegressionTester:
             self._require(
                 name not in scripts, f"duplicate inner GUI script name: {name}"
             )
-            scripts[name] = node.findtext("script") or ""
+            content = node.findtext("script") or ""
+            try:
+                record = catalog.find(item_name=name, content=content)
+            except LuaCoverageError as error:
+                raise AssertionError(str(error)) from error
+            scripts[name] = self._coverage_source(record)
             order.append(name)
 
         self._gui_scripts_cache = scripts
@@ -144,23 +201,49 @@ class LifecycleRegressionTester:
 
     def _gui_lua_source(self):
         scripts = self._load_gui_scripts()
-        return "\n".join(scripts[name] for name in self._gui_script_order_cache)
+        return "\n".join(str(scripts[name]) for name in self._gui_script_order_cache)
 
-    @staticmethod
-    def _fragment_script(path, script_name):
-        root = ET.fromstring("<root>" + path.read_text(encoding="utf-8") + "</root>")
-        for script in root.iter("Script"):
-            if script.findtext("name") == script_name:
-                return script.findtext("script") or ""
-        raise AssertionError(f"fragment script was not found: {script_name}")
+    def _fragment_script(self, path, script_name):
+        try:
+            source_fragment = path.resolve().relative_to(self.repo_root).as_posix()
+        except ValueError as error:
+            raise AssertionError(
+                f"fragment is outside the repository: {path}"
+            ) from error
+        try:
+            record = self._load_lua_catalog().find(
+                source_fragment=source_fragment,
+                item_name=script_name,
+            )
+        except LuaCoverageError as error:
+            raise AssertionError(str(error)) from error
+        return self._coverage_source(record)
 
     def _run_lua(self, script):
+        command = [self.lua_path, "-"]
+        input_text = script
+        environment = None
+        if self.coverage_dir is not None:
+            self._lua_driver_count += 1
+            drivers_dir = self.coverage_dir / "drivers"
+            drivers_dir.mkdir(parents=True, exist_ok=True)
+            driver_path = drivers_dir / f"lifecycle-{self._lua_driver_count:03d}.lua"
+            driver_path.write_text(script, encoding="utf-8")
+            command = [self.lua_path, "-lluacov", str(driver_path)]
+            input_text = None
+            environment = os.environ.copy()
+            environment.setdefault(
+                "LUACOV_CONFIG",
+                str(self.repo_root / "tests/test_configs/luacov_config.lua"),
+            )
         result = subprocess.run(
-            [self.lua_path, "-"],
-            input=script,
+            command,
+            input=input_text,
+            cwd=self.repo_root,
+            env=environment,
             capture_output=True,
             text=True,
-            timeout=15,
+            timeout=30,
         )
         if result.returncode != 0:
             detail = result.stderr.strip() or result.stdout.strip()
@@ -479,11 +562,13 @@ assert(blinkStops == 1)
             self.resource_source_path,
             "Resource Ownership",
         )
-        mapper_xml = self.mapper_source_path.read_text(encoding="utf-8")
+        mapper_source = self._fragment_script(
+            self.mapper_source_path,
+            "MSDPMapper",
+        )
         mapper_registration = self._extract(
-            mapper_xml,
+            mapper_source,
             "map.fileScopeHandlerIds = map.fileScopeHandlerIds or {}",
-            "</script>",
         )
         registry_source = self._gui_script("GUI Event Registry")
         refresh_source = self._gui_script("GUI Refresh")
@@ -742,7 +827,7 @@ assertStable("rapid fix gui")
         )
 
     def _test_mapper_initializer_is_idempotent(self):
-        source = self.mapper_source_path.read_text(encoding="utf-8")
+        source = self._fragment_script(self.mapper_source_path, "MSDPMapper")
         initializer = self._extract(
             source,
             "local function mapperRuntimeReady()",
@@ -1249,8 +1334,10 @@ assert(type(msdp) == "table",
                 )
 
     def _test_core_parent_load_order_and_orphan_guard(self):
-        foundation_root = ET.parse(self.adjustable_source_path).getroot()
-        foundation_script = foundation_root.find(".//Script/script").text
+        foundation_script = self._fragment_script(
+            self.adjustable_source_path,
+            "Adjustable Container Foundation",
+        )
         self._require(
             foundation_script,
             "AdjustableContainers foundation has no Lua script",
@@ -1393,8 +1480,10 @@ assert(GUI.buttonWindow.Legend.container == roomParent)
         self._run_lua(healthy_bootstrap)
 
     def _test_debug_runtime_output_and_error_semantics(self):
-        root = ET.parse(self.debug_source_path).getroot()
-        debug_script = root.find(".//Script/script").text
+        debug_script = self._fragment_script(
+            self.debug_source_path,
+            "Debug Bootstrap",
+        )
         self._require(debug_script, "debug bootstrap has no Lua script")
 
         script = f"""

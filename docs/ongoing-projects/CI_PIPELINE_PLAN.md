@@ -409,16 +409,31 @@ consumption of the same workspace is intentionally completed in Phase 4.
 
 ### Phase 4 — Coverage and test reporting
 
-- [ ] Instrument production Lua executed by lifecycle and other mock-based
+- [x] Instrument production Lua executed by lifecycle and other mock-based
   tests with LuaCov.
-- [ ] Exclude generated snippets from production coverage or report them in a
+- [x] Exclude generated snippets from production coverage or report them in a
   separate category.
-- [ ] Add coverage tests for the extractor and the Python build/package tools.
-- [ ] Produce separate Lua and Python HTML plus machine-readable reports.
-- [ ] Add concise coverage deltas to the GitHub job summary.
-- [ ] Retain raw reports as workflow artifacts.
-- [ ] Collect baseline history before proposing subsystem thresholds.
-- [ ] Document every exclusion and the Mudlet runtime behavior it represents.
+- [x] Add coverage tests for the extractor and the Python build/package tools.
+- [x] Produce separate Lua and Python HTML plus machine-readable reports.
+- [x] Add concise coverage deltas to the GitHub job summary.
+- [x] Retain raw reports as workflow artifacts.
+- [x] Collect baseline history before proposing subsystem thresholds.
+- [x] Document every exclusion and the Mudlet runtime behavior it represents.
+
+Implemented locally 2026-08-05. LuaCov 0.17.0-1 records 15 lifecycle drivers,
+then validated inert markers remap production hits onto the same stable 79-file
+workspace used by Phase 3. All extracted scripts remain in the denominator;
+the 993 generated driver lines (740 hit) are excluded from production totals
+and retained as a separate category. The first application baseline is
+860/2,833 executable lines (30.36%) across 12 exercised scripts. Coverage.py
+7.15.3 separately measures `theGUI/`, `scripts/`, and the test runner while
+coverage, extractor, and lifecycle/tooling regressions run: 1,489/2,892 lines
+(51.49%). The workflow publishes independent HTML and machine-readable
+reports, raw/mapped data, a
+source-map manifest, and baseline deltas for 30 days. The ninth `coverage`
+suite verifies mapping tamper resistance and report separation. Exclusions,
+pins, local reproduction, and the no-threshold policy are documented in
+`docs/COVERAGE.md`. Hosted acceptance remains before Phase 5 begins.
 
 **Acceptance criteria**
 

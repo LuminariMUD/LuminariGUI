@@ -20,9 +20,13 @@ pretty = true
 
 [tool.coverage.run]
 branch = true
+parallel = true
+patch = ["subprocess"]
+relative_files = true
 source = ["theGUI", "scripts", "tests"]
 
 [tool.coverage.report]
+omit = ["tests/test_*.py"]
 show_missing = true
 skip_covered = true
 

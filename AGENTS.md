@@ -121,7 +121,7 @@ python3 scripts/validate_package.py
 
 # Run one suite via the runner
 python3 tests/run_tests.py --skip-optional --test syntax
-#   valid: extractor, syntax, quality, functions, events, lifecycle, system, performance
+#   valid: coverage, extractor, syntax, quality, functions, events, lifecycle, system, performance
 
 # Or invoke a suite directly
 python3 tests/test_lua_syntax.py

@@ -9,6 +9,7 @@ The LuminariGUI project includes a sophisticated Python toolchain that provides 
 - **[`theGUI/package.py`](#theguipackagepy---package-manager)** - Creates .mpackage files and manages releases
 - **[`scripts/validate_package.py`](#scriptsvalidate_packagepy---package-validation)** - Package validation with Lua syntax checking
 - **[`scripts/analyze_handlers.py`](#scriptsanalyze_handlerspy---runtime-resource-audit)** - Audits handler/timer ownership
+- **[`scripts/lua_coverage_cli.py`](COVERAGE.md)** - Maps LuaCov driver hits to physical XML and renders split coverage reports
 - **[`tests/run_tests.py`](#testsrun_testspy---testing-orchestration)** - Comprehensive testing framework
 
 ### Key Benefits
@@ -233,7 +234,10 @@ python3 tests/run_tests.py --skip-optional --quiet
 ```
 
 #### Test Suites
+- **Embedded Lua Extraction**: Verifies exact extraction and diagnostic mapping
+- **Coverage Reporting**: Verifies marker safety, source mapping, and split totals
 - **Lua Syntax**: Validates all Lua code compiles
+- **Lua Quality**: Runs Mudlet-aware luacheck analysis
 - **Function Tests**: Unit tests for core functions
 - **Event System**: Tests event handlers and MSDP integration
 - **Lifecycle Regressions**: Tests upgrade/reset handling and tooling invariants
