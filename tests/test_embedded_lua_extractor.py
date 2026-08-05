@@ -20,6 +20,10 @@ from scripts.extract_embedded_lua import (  # noqa: E402
     LuaExtractionError,
     extract_for_package,
 )
+from scripts.map_generated_line import (  # noqa: E402
+    GeneratedLineMappingError,
+    GeneratedXmlLineMapper,
+)
 from scripts.remap_lua_diagnostics import (  # noqa: E402
     DiagnosticMappingError,
     normalize_report,
@@ -312,6 +316,89 @@ return 1 &lt; 2</script>
             f"current intentional cross-scope names were rejected: {errors}",
         )
 
+    def _test_generated_line_mapping(self):
+        def line_number(path, needle):
+            matches = [
+                number
+                for number, text in enumerate(
+                    path.read_text(encoding="utf-8").splitlines(), start=1
+                )
+                if text == needle
+            ]
+            self._require(
+                len(matches) == 1,
+                f"expected one exact {needle!r} line in {path}, got {matches}",
+            )
+            return matches[0]
+
+        mapper = GeneratedXmlLineMapper(PROJECT_ROOT)
+        skeleton = mapper.map_line(1)
+        self._require(
+            skeleton.source_fragment == "theGUI/skeleton.xml"
+            and skeleton.source_line == 1
+            and skeleton.kind == "skeleton",
+            f"skeleton line mapped incorrectly: {skeleton}",
+        )
+
+        cases = [
+            (
+                "GUI.debugSequence = 0",
+                PROJECT_ROOT / "theGUI/src/scripts/00_debug.xml",
+                "theGUI/src/scripts/00_debug.xml",
+                "theGUI/src/scripts/00_debug.xml",
+            ),
+            (
+                "-- MAIN INITIALIZATION FUNCTION: GUI.initializeOrRefresh(context)",
+                PROJECT_ROOT / "theGUI/src/scripts/01_gui.xml",
+                "theGUI/src/scripts/01_gui.xml",
+                "theGUI/src/scripts/01_gui.xml",
+            ),
+            (
+                "  local eventHandlers = GUI.EVENT_HANDLERS",
+                PROJECT_ROOT / "theGUI/src/scripts/gui/51_event_registry.xml",
+                "theGUI/src/scripts/gui/51_event_registry.xml",
+                "theGUI/src/scripts/01_gui.xml",
+            ),
+        ]
+        for needle, source_path, expected_source, expected_entry in cases:
+            generated_line = line_number(self.xml_file, needle)
+            source_line = line_number(source_path, needle)
+            location = mapper.map_line(generated_line)
+            self._require(
+                location.source_fragment == expected_source
+                and location.source_line == source_line
+                and location.entry_fragment == expected_entry
+                and location.section == "scripts",
+                f"generated line {generated_line} mapped incorrectly: {location}",
+            )
+
+        try:
+            mapper.map_line(mapper.line_count + 1)
+        except GeneratedLineMappingError as error:
+            self._require(
+                "between 1 and" in str(error),
+                f"out-of-range diagnostic was unclear: {error}",
+            )
+        else:
+            raise AssertionError("out-of-range generated line was accepted")
+
+        with tempfile.TemporaryDirectory(prefix="luminari-stale-map-") as temp:
+            stale_xml = Path(temp) / "LuminariGUI.xml"
+            current = self.xml_file.read_text(encoding="utf-8")
+            stale_xml.write_text(
+                current.replace("<MudletPackage version=", "<MudletPackage stale=", 1),
+                encoding="utf-8",
+            )
+            try:
+                GeneratedXmlLineMapper(PROJECT_ROOT, xml_path=stale_xml)
+            except GeneratedLineMappingError as error:
+                self._require(
+                    "stale" in str(error),
+                    f"stale-output diagnostic was unclear: {error}",
+                )
+            else:
+                raise AssertionError("stale generated XML was mapped")
+
     def _test_arbitrary_xml_mode(self):
         with tempfile.TemporaryDirectory(prefix="luminari-extractor-xml-") as temp:
             root = Path(temp)
@@ -558,6 +645,7 @@ return "A &amp; B"
             ("fixture ordering and mapping", self._test_fixture_extraction),
             ("assembled-package parity", self._test_current_package_parity),
             ("Mudlet duplicate-name scopes", self._test_duplicate_name_scopes),
+            ("generated XML line mapping", self._test_generated_line_mapping),
             ("arbitrary XML mode", self._test_arbitrary_xml_mode),
             ("tool diagnostic remapping", self._test_diagnostic_remapping),
             (

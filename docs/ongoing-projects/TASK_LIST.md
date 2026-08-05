@@ -27,7 +27,7 @@ in this folder.
     `resetProfile()`, ten rapid and ten settled refreshes, with at most one
     recurring timer and zero owned resources after uninstall. See
     `docs/RESOURCE_LIFECYCLE.md`.
-- [ ] Implement the phased
+- [x] Implement the phased
   [comprehensive CI pipeline plan](CI_PIPELINE_PLAN.md), beginning with the
   non-mutating `python3 theGUI/build.py --diff --fail-on-diff` source/output
   drift check and full dependency-backed test run.
@@ -80,8 +80,20 @@ in this folder.
     Qt6/Geyser visual behavior with explicit package-versus-upstream outcomes.
     A manual-only `Mudlet / smoke` workflow checksum-verifies the official
     4.22.0 AppImage and captures logs plus the Xvfb display while testing Qt
-    startup and command-line package queuing. It remains advisory and hosted
-    launch acceptance is pending.
+    startup and command-line package queuing. Hosted
+    [run 31052249656](https://github.com/LuminariMUD/LuminariGUI/actions/runs/31052249656)
+    passed with Mudlet 4.22.0/Qt 6.9, a visible display capture, and the
+    expected isolated portable configuration path. The experiment is accepted
+    but remains advisory; the full real-client checklist is still manual.
+  - Phase 6 completed 2026-08-05: `docs/CI.md` documents stable required check
+    names, local/hosted reproduction boundaries, troubleshooting, ownership,
+    cadence, and retention; contributor/agent/tooling docs and the README badge
+    are aligned. Strict `master` protection requires `quality`,
+    `build-and-test`, `gitleaks`, `CodeQL`, `Semgrep Lua`, and
+    `dependency-review`, while coverage and Mudlet smoke remain informational.
+    Force pushes/deletions are disabled; administrator enforcement remains off
+    only for the atomic maintainer release workflow. All six phases are
+    accepted.
 - [x] Define Mudlet-aware duplicate-name rules and add scope-aware build
   validation with regression tests. Do not reject intentional same-named items
   that Mudlet permits in different groups or package sections.
@@ -96,10 +108,17 @@ in this folder.
   500-line target (`00_msdpmapper.xml` and `03_yatco.xml`). Either split them
   with hierarchy-preserving composite wrappers or document why each should
   remain intact.
-- [ ] Add a source-line mapping facility (`--map` or an equivalent) for
+- [x] Add a source-line mapping facility (`--map` or an equivalent) for
   correlating errors in generated `LuminariGUI.xml` with physical fragments,
   unless embedded markers and screen diagnostics are first shown to cover the
   same debugging need completely.
+  - Completed 2026-08-05: `scripts/map_generated_line.py LINE` reconstructs
+    the canonical package with provenance from the builder's recursive include
+    resolver and maps skeleton, top-level, wrapper, and included-child lines to
+    exact physical fragments. It reports manifest context, offers JSON, and
+    refuses stale XML. Regression coverage verifies all mapping classes,
+    bounds, and stale-output rejection; line 4530 currently resolves to
+    `theGUI/src/scripts/gui/51_event_registry.xml:51`.
 
 ## Compatibility and release polish
 

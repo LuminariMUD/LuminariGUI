@@ -67,6 +67,7 @@ Validates all fragments and the assembly without writing output.
 | `python build.py --extract` | **Destructive:** overwrite fragments from existing XML |
 | `python build.py --diff` | Show what would change |
 | `python build.py --stats` | Show line counts and statistics |
+| `python ../scripts/map_generated_line.py LINE` | Map generated XML line to its exact physical fragment |
 | `python build.py --clean` | **Destructive:** remove generated output file |
 | `python build.py --watch` | **Mutating:** build immediately and on each change |
 | `python build.py --version VERSION` | Build one exact version without incrementing |
@@ -211,6 +212,24 @@ build therefore applies a narrower ambiguity rule:
 This catches indistinguishable sibling collisions without rejecting the
 hierarchy that Mudlet 4.22 explicitly supports. `build.py --validate`, normal
 builds, and the generated-output drift check all apply the rule.
+
+#### Generated XML source mapping
+
+Production packages omit embedded source-marker comments, and composite
+wrappers replace their include directives during assembly. To correlate a
+Mudlet or XML diagnostic with editable source, run from the repository root:
+
+```bash
+python3 scripts/map_generated_line.py 4530
+python3 scripts/map_generated_line.py 4530 --json
+```
+
+The mapper reconstructs the canonical build with the builder's recursive
+include resolver, so wrapper and included-child lines retain exact physical
+line numbers. It also maps skeleton lines and reports the top-level manifest
+entry that owns an included child. Mapping stops with an error when
+`LuminariGUI.xml` differs from the current source/configuration; inspect that
+condition with `python3 theGUI/build.py --diff` before debugging the line.
 
 #### GUI child responsibilities
 

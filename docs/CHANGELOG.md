@@ -48,6 +48,14 @@ Begin Changelog entries below
   exact same-family names only when the items are direct siblings. Group/leaf
   pairs share one family, while intentional same names in different parent
   groups or package sections remain valid and regression-covered.
+- **Comprehensive continuous integration.** Hash-locked core checks, Lua 5.1
+  analysis, security scanning, source-mapped Lua tooling, separate Lua/Python
+  coverage, an advisory official-Mudlet launch experiment, documentation, and
+  stable branch protection now form one reproducible six-phase baseline.
+- **Generated XML source mapper.** `scripts/map_generated_line.py` maps any
+  current `LuminariGUI.xml` line to the exact skeleton, wrapper, or recursively
+  included physical fragment line, reports manifest context, emits optional
+  JSON, and rejects stale generated output.
 
 ### Fixed
 

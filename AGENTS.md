@@ -37,6 +37,9 @@ python3 theGUI/build.py --diff
 # Show build statistics
 python3 theGUI/build.py --stats
 
+# Map one generated XML line back to its physical fragment
+python3 scripts/map_generated_line.py 4530
+
 # DESTRUCTIVE: delete the generated LuminariGUI.xml
 python3 theGUI/build.py --clean
 
@@ -50,7 +53,9 @@ python3 theGUI/build.py --version 2.0.4.029
 `--validate`, `--diff`, `--stats`, and `--diff --fail-on-diff` are read-only.
 A normal build updates `theGUI/build.yaml`, archives the previous XML, and
 rewrites `LuminariGUI.xml`. Avoid `--extract`, `--watch`, or `--clean` unless
-that mutation is specifically intended.
+that mutation is specifically intended. The line mapper is also read-only and
+refuses stale generated XML so it cannot report a plausible but incorrect
+source location; add `--json` for machine-readable diagnostics.
 
 ## Package Commands
 

@@ -20,6 +20,7 @@ import shutil
 import sys
 import time
 import xml.etree.ElementTree as ET
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 # Optional imports
@@ -40,6 +41,7 @@ BUILD_INCLUDE_PATTERN = re.compile(
     r"[ \t]*(?P<newline>\r?\n|$)"
 )
 BUILD_INCLUDE_TOKEN = "BUILD_INCLUDE:"
+DEV_COMMENT_PATTERN = re.compile(r"<!--\s*DEV:.*?-->\n?", re.DOTALL)
 MUDLET_ITEM_FAMILY_BY_TAG = {
     "Trigger": "Trigger",
     "TriggerGroup": "Trigger",
@@ -58,6 +60,15 @@ MUDLET_ITEM_FAMILY_BY_TAG = {
 
 class FragmentBuildError(Exception):
     """Raised when a source fragment cannot be safely assembled."""
+
+
+@dataclass(frozen=True)
+class ResolvedFragmentLine:
+    """One expanded XML line paired with its physical source location."""
+
+    text: str
+    source_fragment: str
+    source_line: int
 
 
 def parse_version_argument(value: str) -> str:
@@ -308,8 +319,17 @@ class CompositeFragmentResolver:
         """Return expanded XML and ordered physical sources used to build it."""
         sources: list[tuple[str, str, int]] = []
         resolved_path = self._require_source_path(path, included_from=None)
-        content = self._expand(resolved_path, [], sources, 0)
-        return content, sources
+        lines = self._expand_lines(resolved_path, [], sources, 0)
+        return "".join(line.text for line in lines), sources
+
+    def resolve_with_line_map(
+        self, path: Path
+    ) -> tuple[str, list[ResolvedFragmentLine]]:
+        """Return expanded XML and one physical origin per generated line."""
+        sources: list[tuple[str, str, int]] = []
+        resolved_path = self._require_source_path(path, included_from=None)
+        lines = self._expand_lines(resolved_path, [], sources, 0)
+        return "".join(line.text for line in lines), lines
 
     def _require_source_path(
         self,
@@ -345,22 +365,64 @@ class CompositeFragmentResolver:
             )
         return resolved
 
-    def _read_source(self, path: Path) -> str:
+    def _read_raw_source(self, path: Path) -> str:
         try:
-            content = path.read_text(encoding="utf-8")
+            return path.read_text(encoding="utf-8")
         except UnicodeDecodeError as error:
             raise FragmentBuildError(
                 f"Fragment is not valid UTF-8: {self.display_path(path)}"
             ) from error
 
+    def _read_source(self, path: Path) -> str:
+        content = self._read_raw_source(path)
         if self.strip_dev_comments:
-            content = re.sub(
-                r"<!--\s*DEV:.*?-->\n?",
-                "",
-                content,
-                flags=re.DOTALL,
-            )
+            content = DEV_COMMENT_PATTERN.sub("", content)
         return content
+
+    def _read_source_lines(self, path: Path) -> list[ResolvedFragmentLine]:
+        """Read one fragment while retaining pre-strip physical line numbers."""
+        raw_content = self._read_raw_source(path)
+        removals = (
+            list(DEV_COMMENT_PATTERN.finditer(raw_content))
+            if self.strip_dev_comments
+            else []
+        )
+        removal_index = 0
+        current_removal = removals[0] if removals else None
+        kept_characters: list[str] = []
+        kept_line_numbers: list[int] = []
+        physical_line = 1
+
+        for offset, character in enumerate(raw_content):
+            while current_removal is not None and offset >= current_removal.end():
+                removal_index += 1
+                current_removal = (
+                    removals[removal_index] if removal_index < len(removals) else None
+                )
+            removed = (
+                current_removal is not None
+                and current_removal.start() <= offset < current_removal.end()
+            )
+            if not removed:
+                kept_characters.append(character)
+                kept_line_numbers.append(physical_line)
+            if character == "\n":
+                physical_line += 1
+
+        content = "".join(kept_characters)
+        display = self.display_path(path)
+        lines: list[ResolvedFragmentLine] = []
+        cursor = 0
+        for text in content.splitlines(keepends=True):
+            lines.append(
+                ResolvedFragmentLine(
+                    text=text,
+                    source_fragment=display,
+                    source_line=kept_line_numbers[cursor],
+                )
+            )
+            cursor += len(text)
+        return lines
 
     def _validate(self, content: str, path: Path, stage: str) -> None:
         if not self.validate_fragments:
@@ -371,24 +433,24 @@ class CompositeFragmentResolver:
             details = "; ".join(errors)
             raise FragmentBuildError(f"Invalid {stage} fragment {display}: {details}")
 
-    def _expand(
+    def _expand_lines(
         self,
         path: Path,
         stack: list[Path],
         sources: list[tuple[str, str, int]],
         depth: int,
-    ) -> str:
+    ) -> list[ResolvedFragmentLine]:
         if path in stack:
             cycle_start = stack.index(path)
             cycle = stack[cycle_start:] + [path]
             chain = " -> ".join(self.display_path(item) for item in cycle)
             raise FragmentBuildError(f"Build include cycle detected: {chain}")
 
-        raw_content = self._read_source(path)
+        raw_lines = self._read_source_lines(path)
+        raw_content = "".join(line.text for line in raw_lines)
         self._validate(raw_content, path, "source")
         sources.append((self.display_path(path), raw_content, depth))
 
-        matches = list(BUILD_INCLUDE_PATTERN.finditer(raw_content))
         content_without_directives = BUILD_INCLUDE_PATTERN.sub("", raw_content)
         if BUILD_INCLUDE_TOKEN in content_without_directives:
             raise FragmentBuildError(
@@ -396,13 +458,16 @@ class CompositeFragmentResolver:
                 f"{self.display_path(path)}; directives must occupy a full XML comment line"
             )
 
-        if not matches:
-            return raw_content
-
         active_stack = stack + [path]
-        parts = []
-        cursor = 0
-        for match in matches:
+        expanded_lines: list[ResolvedFragmentLine] = []
+        found_include = False
+        for line in raw_lines:
+            match = BUILD_INCLUDE_PATTERN.fullmatch(line.text)
+            if match is None:
+                expanded_lines.append(line)
+                continue
+
+            found_include = True
             include_ref = match.group("path").strip()
             if not include_ref:
                 raise FragmentBuildError(
@@ -423,28 +488,31 @@ class CompositeFragmentResolver:
                 path.parent / include_ref,
                 included_from=path,
             )
-            child_content = self._expand(
+            child_lines = self._expand_lines(
                 child_path,
                 active_stack,
                 sources,
                 depth + 1,
             )
             newline = match.group("newline")
-            if newline and child_content and not child_content.endswith(("\n", "\r")):
-                child_content += newline
+            if (
+                newline
+                and child_lines
+                and not child_lines[-1].text.endswith(("\n", "\r"))
+            ):
+                child_lines[-1] = replace(
+                    child_lines[-1], text=child_lines[-1].text + newline
+                )
+            expanded_lines.extend(child_lines)
 
-            parts.append(raw_content[cursor : match.start()])
-            parts.append(child_content)
-            cursor = match.end()
-
-        parts.append(raw_content[cursor:])
-        expanded = "".join(parts)
+        expanded = "".join(line.text for line in expanded_lines)
         if BUILD_INCLUDE_TOKEN in expanded:
             raise FragmentBuildError(
                 f"Build include directive leaked from {self.display_path(path)}"
             )
-        self._validate(expanded, path, "expanded")
-        return expanded
+        if found_include:
+            self._validate(expanded, path, "expanded")
+        return expanded_lines
 
 
 class Builder:

@@ -9,6 +9,7 @@ The LuminariGUI project includes a sophisticated Python toolchain that provides 
 - **[`theGUI/package.py`](#theguipackagepy---package-manager)** - Creates .mpackage files and manages releases
 - **[`scripts/validate_package.py`](#scriptsvalidate_packagepy---package-validation)** - Package validation with Lua syntax checking
 - **[`scripts/analyze_handlers.py`](#scriptsanalyze_handlerspy---runtime-resource-audit)** - Audits handler/timer ownership
+- **[`scripts/map_generated_line.py`](#scriptsmap_generated_linepy---generated-xml-source-map)** - Maps generated XML lines to physical fragments
 - **[`scripts/lua_coverage_cli.py`](COVERAGE.md)** - Maps LuaCov driver hits to physical XML and renders split coverage reports
 - **[`tests/run_tests.py`](#testsrun_testspy---testing-orchestration)** - Comprehensive testing framework
 
@@ -90,6 +91,27 @@ python3 theGUI/build.py --version 2.0.4.029
 - **Archiving**: Automatically archives previous builds to `docs/archive/`
 - **Validation**: Validates fragments and final output
 - **Watch Mode**: Rebuilds automatically on file changes
+
+### scripts/map_generated_line.py - Generated XML Source Map
+
+**Purpose**: Correlates a one-based line in committed `LuminariGUI.xml` with
+the exact editable XML fragment and physical line that produced it.
+
+```bash
+# Human-readable physical source location
+python3 scripts/map_generated_line.py 4530
+
+# Stable machine-readable record
+python3 scripts/map_generated_line.py 4530 --json
+```
+
+The read-only mapper covers skeleton lines, ordinary manifest fragments,
+composite wrapper lines, and recursively included child fragments. Its output
+also identifies the manifest section and top-level entry for included lines.
+Before returning any mapping, it reconstructs and validates the package in
+memory and requires the selected XML to match byte-for-byte. A stale package
+therefore fails with guidance to run `build.py --diff` instead of producing a
+misleading location.
 
 ### theGUI/package.py - Package Manager
 

@@ -177,6 +177,12 @@ gh workflow run mudlet.yml --ref master
 gh run list --workflow mudlet.yml --limit 1
 ```
 
+The accepted portable-profile baseline is hosted
+[run 31052249656](https://github.com/LuminariMUD/LuminariGUI/actions/runs/31052249656):
+its retained log reports Mudlet 4.22.0, Qt 6.9, and the isolated
+`/home/runner/work/_temp/mudlet-smoke/portable` configuration directory. That
+acceptance covers official-binary launch and package queuing only.
+
 Complete [`MUDLET_SMOKE_TEST.md`](MUDLET_SMOKE_TEST.md) before a release even
 when both informational workflows are green.
 
@@ -191,6 +197,10 @@ when both informational workflows are green.
 - **Generated-output drift:** run `python3 theGUI/build.py --diff` to inspect
   it. Edit `theGUI/src/`, perform one intentional build, and commit the source,
   manifest, generated XML, and archive together.
+- **Generated XML line:** run `python3 scripts/map_generated_line.py LINE` to
+  map a package diagnostic to the physical wrapper or included fragment. The
+  command refuses stale XML; use `--json` when feeding another diagnostic
+  tool.
 - **Source-map error:** delete only the temporary extracted workspace,
   re-extract it, and confirm its `manifest.json` matches the current commit.
   Never patch decoded temporary Lua or suppress a random temporary path.

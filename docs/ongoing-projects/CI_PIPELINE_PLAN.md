@@ -1,6 +1,6 @@
 # Comprehensive CI Pipeline Plan
 
-- **Status:** In progress — Phases 1–4 accepted; Phase 5 in progress
+- **Status:** Complete — Phases 1–6 accepted
 - **Created:** 2026-08-05
 - **Last updated:** 2026-08-05
 - **Scope:** Pull-request and `master` automation for the XML/Lua package,
@@ -469,8 +469,13 @@ under an isolated Xvfb/XDG environment, and retains version/checksum output,
 Mudlet and Xvfb logs, a display capture, and a result record for 14 days. Its
 scope is deliberately limited to official-binary integrity, Qt startup, and
 package queuing; it is not a profile, MSDP, callback, visual, or physical-input
-test and is not included in branch protection. Hosted launch acceptance is
-pending.
+test and is not included in branch protection. Hosted
+[run 31052249656](https://github.com/LuminariMUD/LuminariGUI/actions/runs/31052249656)
+passed with the checksum verified, Mudlet 4.22.0 and Qt 6.9 reported, a visible
+Mudlet window captured at 1600×1000, and both launches using the isolated
+`/home/runner/work/_temp/mudlet-smoke/portable` configuration directory.
+Phase 5's advisory launch experiment is accepted; the documented real-client
+release checklist remains mandatory.
 
 **Acceptance criteria**
 
@@ -482,16 +487,27 @@ pending.
 
 ### Phase 6 — Enforcement and documentation
 
-- [ ] Require stable quality, build/test, Gitleaks, CodeQL, Semgrep, and
+- [x] Require stable quality, build/test, Gitleaks, CodeQL, Semgrep, and
   dependency-review checks through branch protection.
-- [ ] Keep coverage and experimental Mudlet smoke checks informational until
+- [x] Keep coverage and experimental Mudlet smoke checks informational until
   their phase-specific criteria are met.
-- [ ] Update `AGENTS.md`, `CONTRIBUTING.md`, and `docs/PYTHON_TOOLS.md` with
+- [x] Update `AGENTS.md`, `CONTRIBUTING.md`, and `docs/PYTHON_TOOLS.md` with
   exact local equivalents of required CI checks.
-- [ ] Add troubleshooting for tool installation, Lua version mismatch,
+- [x] Add troubleshooting for tool installation, Lua version mismatch,
   source-map errors, and false-positive review.
-- [ ] Add a CI status badge only after required check names are stable.
-- [ ] Record tool owners, update cadence, and expected artifact retention.
+- [x] Add a CI status badge only after required check names are stable.
+- [x] Record tool owners, update cadence, and expected artifact retention.
+
+Implemented and accepted 2026-08-05. `docs/CI.md` records every stable check
+name, its honest local or hosted reproduction boundary, troubleshooting,
+owners, review cadence, and retention. The README badge targets the required
+core workflow. `master` branch protection now requires strict, current
+GitHub-Actions check contexts `quality`, `build-and-test`, `gitleaks`,
+`CodeQL`, `Semgrep Lua`, and `dependency-review`; force pushes and deletions
+are disabled. Administrator enforcement remains disabled solely to preserve
+the documented atomic maintainer release workflow. Informational coverage and
+Mudlet checks are deliberately excluded. Phase 6 and the comprehensive CI
+baseline are accepted.
 
 **Acceptance criteria**
 
