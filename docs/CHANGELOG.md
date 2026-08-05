@@ -25,7 +25,7 @@ Begin Changelog entries below
   protocol, gauge, action, boot, event-registry, refresh, and lifecycle nodes;
   the wrapper is under 100 lines and every child remains under 300 Lua lines.
 - **End-to-end screen diagnostic mode.** A first-loaded debug bootstrap exposes
-  one master `GUI.DEBUG` switch, currently set to `true`, and emits copyable
+  one master `GUI.DEBUG` switch, disabled by default, and emits copyable
   `LGUI-DEBUG`, `LGUI-ERROR`, and `LGUI-TRACE` output in Mudlet's main
   console. Instrumentation covers boot stages, lifecycle events, MSDP
   subscriptions and values, handler registration/invocation, GUI components,
@@ -82,6 +82,16 @@ Begin Changelog entries below
 - **Release guidance hardened.** Agent and developer documentation now requires
   a published GitHub Release page with both the `.mpackage` and JSON metadata,
   plus remote verification, before reporting a requested release complete.
+- **Project documentation consolidated.** Durable source-layout, event
+  ownership, refresh, and manual-test guidance now lives in the build,
+  protocol, compatibility, and development references. Unfinished work is
+  centralized in `docs/ongoing-projects/TASK_LIST.md`.
+
+### Removed
+
+- Superseded source-build and GUI-split project plans, the completed chunk
+  audit, and a one-off diagnostic console capture from
+  `docs/ongoing-projects/` after their durable findings were consolidated.
 
 ## [2.0.4.028] - 2026-07-31
 
@@ -229,7 +239,6 @@ long-standing event-handler leak found during the audit.
 
 - **New Documentation**:
   - `theGUI/README_theGUI.md`: Complete guide to the source-to-build system
-  - `docs/ongoing_projects/source-to-build.md`: Project planning documentation
   - `docs/docs-audit.md`: Documentation audit notes
   - `CONTRIBUTING.md`: Contribution guidelines for the project
 

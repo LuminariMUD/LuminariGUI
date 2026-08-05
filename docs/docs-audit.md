@@ -86,9 +86,9 @@ Tracked in the "Audit Findings" section of `MUDLET_COMPATIBILITY.md`:
 - [x] **Found during the fix pass:** eliminate the event-handler leak and six duplicate registrations.
 - [x] Remove obsolete `tests/test_state_validation.py`; it targeted a nonexistent "State Validator" subsystem and always failed standalone.
 
-Deliberately left open:
-- [ ] `icon` in `config.lua` — needs an actual 512x512 icon asset, which the repo does not have.
-- [ ] Visual re-verification under Qt6 of `background` (shorthand) and `vertical-align`, which have limited QSS support.
+The two follow-ups identified here—adding a package icon and visually
+re-verifying the remaining limited-support QSS declarations—are tracked in the
+central [project task list](ongoing-projects/TASK_LIST.md).
 
 ## Execution Strategy
 - Start with **Phase 1** to ensure the project is navigable.

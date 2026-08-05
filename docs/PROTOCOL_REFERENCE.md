@@ -54,10 +54,11 @@ end
 Updates happen automatically when MSDP data changes, but manual refresh is possible:
 
 1. **Automatic**: Server sends update → Mudlet updates `msdp` table → Events fire → UI refreshes
-2. **Manual Fix**: The `fix gui` command (when implemented) would:
-   - Re-register all event handlers
-   - Call all update functions with current MSDP data
-   - Useful after errors or UI glitches
+2. **Manual recovery**: The implemented `fix gui` command calls
+   `GUI.initializeOrRefresh("fix gui command")`. It idempotently replaces the
+   GUI-owned event handlers, refreshes available MSDP-backed displays, restores
+   container visibility and z-order, and starts chat if needed. File-scope
+   mapper/protocol handlers are deliberately outside this cleanup boundary.
 
 #### 5. Example MSDP Variables for GUI
 
@@ -95,7 +96,7 @@ Updates happen automatically when MSDP data changes, but manual refresh is possi
 
 **UI Not Refreshing:**
 - Event handlers may be disconnected
-- Use `fix gui` to re-register handlers
+- Use `fix gui` to replace GUI-owned handlers and refresh current display data
 - Check Mudlet error console
 
 **Missing Data:**

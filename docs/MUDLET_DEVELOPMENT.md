@@ -644,15 +644,25 @@ jobs:
 
 ### Quality Assurance Checklist
 
-**Pre-Release Testing:**
-- [ ] All triggers fire correctly with sample data
-- [ ] Aliases handle edge cases gracefully
-- [ ] UI scales properly on different resolutions
-- [ ] Package installs/uninstalls cleanly
-- [ ] Dependencies are properly declared
-- [ ] Documentation is complete and accurate
-- [ ] Error handling prevents crashes
-- [ ] Performance is optimized (profile with `getTimestamp()`)
+Run the automated validation commands from the project workflow first. Then use
+a supported Mudlet release for this hands-on smoke test:
+
+- Freshly import the complete package and confirm bundled images and audio
+  resolve from the installed asset paths.
+- Connect, reconnect, and run `resetProfile()` without losing the mapper,
+  MSDP subscriptions, or visible GUI state.
+- Exercise player/group/affect data, resource and opponent gauges, action
+  icons, room information, and both ASCII and Mudlet map modes.
+- Exercise YATCO startup, tab switching, captured chat, and sound toggles.
+- Exercise package aliases and numeric-keypad movement bindings, including
+  modifier keys.
+- Run `fix gui` repeatedly and confirm there is no duplicated output,
+  handler growth, or progressively slower refresh.
+- Save and reload Adjustable.Container profiles; resize the window and
+  confirm parenting, visibility, and z-order remain correct.
+- Test the supported in-place upgrade path. Consult
+  [MUDLET_COMPATIBILITY.md](MUDLET_COMPATIBILITY.md) before attributing a
+  package-removal crash or resize failure to LuminariGUI.
 
 ### Performance Monitoring
 

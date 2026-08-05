@@ -191,6 +191,42 @@ their lifecycle registration, component constructors precede `GUI Boot`, and
 the event registry and refresh functions precede `GUI Lifecycle`. Add or move
 GUI children by editing the wrapper's include list, not `build.yaml`.
 
+#### GUI child responsibilities
+
+The numbered child ranges are stable ownership boundaries:
+
+| Range | Responsibility |
+|---|---|
+| `00`–`01` | CSSMan and persisted GUI preferences |
+| `10`–`12` | Background, borders, and base containers |
+| `20`–`22` | Gauges, cast console, and header/action widgets |
+| `30`–`36` | Tab shell, affects, group/player data, map controls, room information, and frames |
+| `40`–`42` | MSDP subscriptions, gauges/opponent updates, and action-state updates |
+| `50`–`53` | File-scope boot, owned event registry, refresh orchestration, and lifecycle handlers |
+| `60` | Adjustable-container profiles and persistence |
+| `70`–`71` | Scrollbar styling and prompt-line utility |
+
+Preserve these ordering and ownership invariants when adding or moving a child:
+
+- `00_debug.xml` loads first, followed by the AdjustableContainers foundation;
+  the mapper and GUI may create containers only after that foundation exists.
+- GUI constructors load before the file-scope boot sequence invokes them, and
+  the GUI shell exists before YATCO initializes.
+- `GUI.registerEventHandlers()` is idempotent and replaces only the event IDs
+  owned by its local registration table. It must not sweep file-scope mapper
+  or protocol IDs retained during an in-place package upgrade.
+- Mapper registrations for `msdp.ROOM`, `shiftRoom`, `sysConnectionEvent`,
+  `sysDownloadDone`, and `sysProtocolEnabled` remain file-scope in
+  `00_msdpmapper.xml`; do not duplicate them in the GUI registry.
+- `msdp.ROOM` intentionally has two different consumers:
+  `GUI.updateRoom` updates the room display while `map.eventHandler` updates
+  mapping state.
+- The map triggers currently invoke `onMapLine()` and `onRoomMapLine()` through
+  Mudlet code strings, so those callbacks must remain globally resolvable
+  unless the trigger registration is refactored to pass functions directly.
+- The immediate boot block remains file-scope. Lifecycle registrations own and
+  replace their IDs through `GUI.lifecycleHandlerIds`.
+
 ### Script Fragment Example
 
 ```xml
