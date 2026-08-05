@@ -47,6 +47,14 @@ in this folder.
     Django 1.11.0 in [PR #6](https://github.com/LuminariMUD/LuminariGUI/pull/6).
     The repository dependency graph and alerts are enabled, both canary PRs
     are closed, and both remote branches were deleted.
+  - Phase 3 bridge checkpoint implemented locally 2026-08-05:
+    `scripts/extract_embedded_lua.py` extracts all 79 nonempty Lua blocks in
+    assembled order to stable temporary paths, emits physical XML/item/line
+    mappings, and rejects unsafe or colliding outputs. The new `extractor`
+    regression suite verifies byte-for-byte package parity and input
+    immutability; `luac` and `luacheck` now share the adapter. All eight suites
+    pass in the pinned Lua 5.1/luacheck 0.23.0 environment. LuaLS, StyLua, and
+    Semgrep integration remains in progress.
 - [ ] Define Mudlet-aware duplicate-name rules and add scope-aware build
   validation with regression tests. Do not reject intentional same-named items
   that Mudlet permits in different groups or package sections.

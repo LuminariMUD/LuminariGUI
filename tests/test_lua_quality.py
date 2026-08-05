@@ -10,10 +10,19 @@ import re
 import subprocess
 import sys
 import tempfile
-import xml.etree.ElementTree as ET
 from pathlib import Path
 
-DEFAULT_XML_FILE = str(Path(__file__).resolve().parents[1] / "LuminariGUI.xml")
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_XML_FILE = str(PROJECT_ROOT / "LuminariGUI.xml")
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from scripts.extract_embedded_lua import (  # noqa: E402
+    ExtractedLuaScript,
+    LuaExtractionError,
+    extract_for_package,
+)
+from theGUI.build import FragmentBuildError  # noqa: E402
 
 
 class LuaQualityAnalyzer:
@@ -32,54 +41,22 @@ class LuaQualityAnalyzer:
                 return luacheck_path
         return None
 
-    def _extract_lua_scripts(self):
-        """Extract all Lua script blocks from XML."""
-        if not os.path.exists(self.xml_file):
-            self.errors.append(f"XML file not found: {self.xml_file}")
-            return []
-
+    def _extract_lua_scripts(self, output_dir):
+        """Extract Lua once through the shared, source-mapped adapter."""
         try:
-            tree = ET.parse(self.xml_file)
-            root = tree.getroot()
-        except ET.ParseError as e:
-            self.errors.append(f"XML parsing error: {e}")
+            return list(extract_for_package(self.xml_file, output_dir).scripts)
+        except (FragmentBuildError, LuaExtractionError, OSError, ValueError) as error:
+            self.errors.append(f"Lua extraction error: {error}")
             return []
-
-        scripts = []
-
-        # Create a parent map for ElementTree compatibility
-        parent_map = {c: p for p in root.iter() for c in p}
-
-        # Find all <script> elements
-        for script_elem in root.iter("script"):
-            script_text = script_elem.text
-            if script_text and script_text.strip():
-                # Get parent context for better error reporting
-                parent = parent_map.get(script_elem)
-                if parent is not None:
-                    name_elem = parent.find("name")
-                    script_name = name_elem.text if name_elem is not None else "unnamed"
-                else:
-                    script_name = "unnamed"
-
-                scripts.append(
-                    {
-                        "name": script_name,
-                        "content": script_text,
-                        "line": script_elem.sourceline
-                        if hasattr(script_elem, "sourceline")
-                        else 0,
-                    }
-                )
-
-        return scripts
 
     def _get_luacheck_config(self):
         """Get the path to the luacheck configuration file."""
         # Check if custom config exists
-        config_path = os.path.join("test_configs", "luacheck_config.lua")
-        if os.path.exists(config_path):
-            return config_path
+        config_path = (
+            Path(__file__).resolve().parent / "test_configs/luacheck_config.lua"
+        )
+        if config_path.exists():
+            return str(config_path)
 
         # Fallback to creating a temporary config
         self.warnings.append(
@@ -107,25 +84,23 @@ ignore = {
         config_file.close()
         return config_file.name
 
-    def _analyze_script(self, script_name, script_content):
+    def _analyze_script(self, script: ExtractedLuaScript):
         """Analyze a single Lua script with luacheck."""
         if not self.luacheck_path:
             self.errors.append("luacheck not found in PATH. Please install luacheck.")
             return False
-
-        # Create temporary files
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".lua", delete=False
-        ) as script_file:
-            script_file.write(script_content)
-            script_file_path = script_file.name
 
         config_file_path = self._get_luacheck_config()
 
         try:
             # Run luacheck without JSON formatter (use default output)
             result = subprocess.run(
-                [self.luacheck_path, "--config", config_file_path, script_file_path],
+                [
+                    self.luacheck_path,
+                    "--config",
+                    config_file_path,
+                    str(script.output_path),
+                ],
                 capture_output=True,
                 text=True,
                 timeout=30,
@@ -159,8 +134,12 @@ ignore = {
 
                             self.issues.append(
                                 {
-                                    "script": script_name,
+                                    "script": script.item_path,
+                                    "source": script.source_fragment,
                                     "line": int(line_num),
+                                    "xml_line": script.lua_start_line
+                                    + int(line_num)
+                                    - 1,
                                     "column": int(col_num),
                                     "code": code,
                                     "message": message.strip(),
@@ -171,21 +150,19 @@ ignore = {
             else:
                 # luacheck error
                 self.errors.append(
-                    f"luacheck error for '{script_name}': {result.stderr}"
+                    f"luacheck error for '{script.label}': {result.stderr}"
                 )
                 return False
 
         except subprocess.TimeoutExpired:
-            self.errors.append(f"Timeout analyzing script '{script_name}'")
+            self.errors.append(f"Timeout analyzing script '{script.label}'")
             return False
         except Exception as e:
-            self.errors.append(f"Error analyzing script '{script_name}': {e}")
+            self.errors.append(f"Error analyzing script '{script.label}': {e}")
             return False
         finally:
-            # Clean up temporary files
+            # Only delete a generated fallback configuration.
             try:
-                os.unlink(script_file_path)
-                # Only delete config if it's a temporary file
                 if config_file_path and not config_file_path.endswith(
                     "luacheck_config.lua"
                 ):
@@ -228,26 +205,25 @@ ignore = {
             print("  Other: luarocks install luacheck")
             return False
 
-        # Extract scripts from XML
-        scripts = self._extract_lua_scripts()
-        if not scripts:
-            if not self.errors:
-                self.warnings.append("No Lua scripts found in XML file")
-            return False
+        with tempfile.TemporaryDirectory(prefix="luminari-luacheck-") as workspace:
+            scripts = self._extract_lua_scripts(Path(workspace))
+            if not scripts:
+                if not self.errors:
+                    self.warnings.append("No Lua scripts found in XML file")
+                return False
 
-        print(f"Found {len(scripts)} Lua scripts to analyze")
+            print(f"Found {len(scripts)} Lua scripts to analyze")
 
-        # Analyze each script
-        passed = 0
-        failed = 0
-
-        for script in scripts:
-            if self._analyze_script(script["name"], script["content"]):
-                passed += 1
-                print(f"✓ {script['name']}")
-            else:
-                failed += 1
-                print(f"⚠ {script['name']}")
+            # Analyze each stable extracted file.
+            passed = 0
+            failed = 0
+            for script in scripts:
+                if self._analyze_script(script):
+                    passed += 1
+                    print(f"✓ {script.label}")
+                else:
+                    failed += 1
+                    print(f"⚠ {script.label}")
 
         # Categorize and display results
         categorized = self._categorize_issues()
@@ -264,7 +240,8 @@ ignore = {
                 print(f"\n{category.upper()} ({len(issues)} issues):")
                 for issue in issues:
                     print(
-                        f"  {issue['script']}:{issue['line']}:{issue['column']} - {issue['message']}"
+                        f"  {issue['source']}:{issue['xml_line']}:{issue['column']} "
+                        f"({issue['script']}) - {issue['message']}"
                     )
 
         # Display errors

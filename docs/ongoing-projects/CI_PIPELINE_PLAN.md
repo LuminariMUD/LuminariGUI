@@ -1,6 +1,7 @@
 # Comprehensive CI Pipeline Plan
 
-- **Status:** In progress — Phases 1–2 complete; Phase 3 next
+- **Status:** In progress — Phases 1–2 complete; Phase 3 bridge implemented,
+  static-tool integration next
 - **Created:** 2026-08-05
 - **Last updated:** 2026-08-05
 - **Scope:** Pull-request and `master` automation for the XML/Lua package,
@@ -350,22 +351,37 @@ canary PRs were closed and their remote branches deleted. Phase 2 is accepted.
 
 ### Phase 3 — Shared embedded-Lua tool bridge
 
-- [ ] Add `scripts/extract_embedded_lua.py` as a read-only adapter.
-- [ ] Read physical sources in `build.yaml` and composite-include order.
-- [ ] Extract scripts from scripts, triggers, aliases, and keys exactly once.
-- [ ] Decode XML entities while preserving Lua content and stable filenames.
-- [ ] Emit a JSON manifest mapping each temporary Lua file to its physical XML
+- [x] Add `scripts/extract_embedded_lua.py` as a read-only adapter.
+- [x] Read physical sources in `build.yaml` and composite-include order.
+- [x] Extract scripts from scripts, triggers, aliases, and keys exactly once.
+- [x] Decode XML entities while preserving Lua content and stable filenames.
+- [x] Emit a JSON manifest mapping each temporary Lua file to its physical XML
   fragment, Mudlet item name/path, and source location where possible.
-- [ ] Reject output-name collisions and traversal outside the temporary root.
-- [ ] Add regression tests for entities, empty scripts, duplicate item names,
+- [x] Reject output-name collisions and traversal outside the temporary root.
+- [x] Add regression tests for entities, empty scripts, duplicate item names,
   composite includes, multiple script elements, and malformed fragments.
-- [ ] Refactor existing syntax and quality tests to share the adapter.
+- [x] Refactor existing syntax and quality tests to share the adapter.
 - [ ] Add `.luarc.json` and versioned Mudlet/Geyser definition stubs.
 - [ ] Add LuaLS diagnostics in report-only mode, then establish a blocking
   severity policy.
 - [ ] Add `.stylua.toml` and a report-only format check; perform a dedicated
   formatting baseline before enforcing it.
 - [ ] Add Semgrep Lua rules and fixtures, initially report-only.
+
+Bridge baseline implemented 2026-08-05. The adapter reuses the builder's
+manifest, fragment validation, and composite-include semantics; writes only to
+an absent or empty caller workspace; and emits stable decoded Lua plus a JSON
+source map. It currently extracts 79/79 nonempty assembled scripts across 38
+physical source occurrences, byte-for-byte and in package order. The new
+`extractor` regression suite covers entities, empty scripts, duplicate names
+and includes, multiple scripts, malformed XML, source/output traversal,
+collisions, deterministic filenames, and input immutability. `luac` and
+`luacheck` now consume this shared representation and translate diagnostics
+back to physical XML fragments and Mudlet item paths. An Ubuntu 24.04 replica
+with Lua 5.1 and luacheck 0.23.0 passes all eight suites; the host-supported
+seven-suite run, read-only assembly/drift checks, Ruff, mypy, and resource
+ownership audit also pass. LuaLS, StyLua, and Semgrep configuration remains
+the next checkpoint.
 
 **Acceptance criteria**
 

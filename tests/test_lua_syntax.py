@@ -5,13 +5,23 @@ Validates Lua code syntax using luac compiler before package creation.
 """
 
 import os
+import re
 import subprocess
 import sys
 import tempfile
-import xml.etree.ElementTree as ET
 from pathlib import Path
 
-DEFAULT_XML_FILE = str(Path(__file__).resolve().parents[1] / "LuminariGUI.xml")
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_XML_FILE = str(PROJECT_ROOT / "LuminariGUI.xml")
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from scripts.extract_embedded_lua import (  # noqa: E402
+    ExtractedLuaScript,
+    LuaExtractionError,
+    extract_for_package,
+)
+from theGUI.build import FragmentBuildError  # noqa: E402
 
 
 class LuaSyntaxTester:
@@ -30,65 +40,36 @@ class LuaSyntaxTester:
                     return full_path
         return None
 
-    def _extract_lua_scripts(self):
-        """Extract all Lua script blocks from XML."""
-        if not os.path.exists(self.xml_file):
-            self.errors.append(f"XML file not found: {self.xml_file}")
-            return []
-
+    def _extract_lua_scripts(self, output_dir):
+        """Extract Lua once through the shared, source-mapped adapter."""
         try:
-            tree = ET.parse(self.xml_file)
-            root = tree.getroot()
-        except ET.ParseError as e:
-            self.errors.append(f"XML parsing error: {e}")
+            return list(extract_for_package(self.xml_file, output_dir).scripts)
+        except (FragmentBuildError, LuaExtractionError, OSError, ValueError) as error:
+            self.errors.append(f"Lua extraction error: {error}")
             return []
 
-        scripts = []
+    @staticmethod
+    def _map_tool_output(script, output):
+        """Translate extracted-file diagnostics back to physical XML lines."""
+        path_pattern = re.compile(re.escape(str(script.output_path)) + r":(\d+):")
 
-        # Create a parent map for ElementTree compatibility
-        parent_map = {c: p for p in root.iter() for c in p}
+        def replace_line(match):
+            xml_line = script.lua_start_line + int(match.group(1)) - 1
+            return f"{script.source_fragment}:{xml_line}:"
 
-        # Find all <script> elements
-        for script_elem in root.iter("script"):
-            script_text = script_elem.text
-            if script_text and script_text.strip():
-                # Get parent context for better error reporting
-                parent = parent_map.get(script_elem)
-                if parent is not None:
-                    name_elem = parent.find("name")
-                    script_name = name_elem.text if name_elem is not None else "unnamed"
-                else:
-                    script_name = "unnamed"
+        mapped = path_pattern.sub(replace_line, output)
+        return mapped.replace(str(script.output_path), script.source_fragment)
 
-                scripts.append(
-                    {
-                        "name": script_name,
-                        "content": script_text,
-                        "line": script_elem.sourceline
-                        if hasattr(script_elem, "sourceline")
-                        else 0,
-                    }
-                )
-
-        return scripts
-
-    def _validate_script_syntax(self, script_name, script_content):
+    def _validate_script_syntax(self, script: ExtractedLuaScript):
         """Validate syntax of a single Lua script."""
         if not self.luac_path:
             self.errors.append("luac not found in PATH. Please install Lua compiler.")
             return False
 
-        # Create temporary file for luac
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".lua", delete=False
-        ) as tmp_file:
-            tmp_file.write(script_content)
-            tmp_file_path = tmp_file.name
-
         try:
             # Run luac -p (parse only) to check syntax
             result = subprocess.run(
-                [self.luac_path, "-p", tmp_file_path],
+                [self.luac_path, "-p", str(script.output_path)],
                 capture_output=True,
                 text=True,
                 timeout=10,
@@ -98,32 +79,24 @@ class LuaSyntaxTester:
                 return True
             else:
                 # Parse luac error output
-                error_msg = result.stderr.strip()
-                # Remove temporary file path from error message
-                error_msg = error_msg.replace(tmp_file_path, f"<{script_name}>")
-                self.errors.append(f"Syntax error in '{script_name}': {error_msg}")
+                error_msg = self._map_tool_output(script, result.stderr.strip())
+                self.errors.append(f"Syntax error in '{script.item_path}': {error_msg}")
                 return False
 
         except subprocess.TimeoutExpired:
-            self.errors.append(f"Timeout validating script '{script_name}'")
+            self.errors.append(f"Timeout validating script '{script.label}'")
             return False
         except Exception as e:
-            self.errors.append(f"Error validating script '{script_name}': {e}")
+            self.errors.append(f"Error validating script '{script.label}': {e}")
             return False
-        finally:
-            # Clean up temporary file
-            try:
-                os.unlink(tmp_file_path)
-            except OSError:
-                pass
 
     def _check_common_issues(self, scripts):
         """Check for common Lua issues in the codebase."""
         issues_found = []
 
         for script in scripts:
-            content = script["content"]
-            name = script["name"]
+            content = script.content
+            name = script.label
 
             # Check for common issues
             if "function(" in content:
@@ -153,30 +126,28 @@ class LuaSyntaxTester:
         """Run all syntax tests and return results."""
         print("Running Lua syntax validation...")
 
-        # Extract scripts from XML
-        scripts = self._extract_lua_scripts()
-        if not scripts:
-            if not self.errors:
-                self.warnings.append("No Lua scripts found in XML file")
-            return False
+        with tempfile.TemporaryDirectory(prefix="luminari-luac-") as workspace:
+            scripts = self._extract_lua_scripts(Path(workspace))
+            if not scripts:
+                if not self.errors:
+                    self.warnings.append("No Lua scripts found in XML file")
+                return False
 
-        print(f"Found {len(scripts)} Lua scripts to validate")
+            print(f"Found {len(scripts)} Lua scripts to validate")
 
-        # Check syntax of each script
-        passed = 0
-        failed = 0
+            # Check syntax of each stable extracted file.
+            passed = 0
+            failed = 0
+            for script in scripts:
+                if self._validate_script_syntax(script):
+                    passed += 1
+                    print(f"✓ {script.label}")
+                else:
+                    failed += 1
+                    print(f"✗ {script.label}")
 
-        for script in scripts:
-            if self._validate_script_syntax(script["name"], script["content"]):
-                passed += 1
-                print(f"✓ {script['name']}")
-            else:
-                failed += 1
-                print(f"✗ {script['name']}")
-
-        # Check for common issues
-        common_issues = self._check_common_issues(scripts)
-        self.warnings.extend(common_issues)
+            common_issues = self._check_common_issues(scripts)
+            self.warnings.extend(common_issues)
 
         # Print summary
         print("\nSyntax validation results:")

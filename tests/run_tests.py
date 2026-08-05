@@ -18,6 +18,7 @@ DEFAULT_XML_FILE = str(Path(__file__).resolve().parents[1] / "LuminariGUI.xml")
 
 # Import test modules
 try:
+    from test_embedded_lua_extractor import EmbeddedLuaExtractorTester
     from test_events import EventSystemTester
     from test_functions import LuaFunctionTester
     from test_lifecycle_regressions import LifecycleRegressionTester
@@ -140,6 +141,7 @@ class TestRunner:
 
         # Define test suites
         test_suites = [
+            ("Embedded Lua Extraction", EmbeddedLuaExtractorTester),
             ("Lua Syntax", LuaSyntaxTester),
             ("Lua Quality", LuaQualityAnalyzer),
             ("Function Tests", LuaFunctionTester),
@@ -152,7 +154,9 @@ class TestRunner:
         # Filter based on available dependencies
         filtered_suites = []
         for name, test_class in test_suites:
-            if name == "Lua Syntax" and "luac" not in available:
+            if name == "Embedded Lua Extraction":
+                pass
+            elif name == "Lua Syntax" and "luac" not in available:
                 if not skip_optional:
                     print(f"Skipping {name} (luac not available)")
                 continue
@@ -358,6 +362,7 @@ class TestRunner:
     def run_single_test(self, test_name):
         """Run a single test suite."""
         test_map = {
+            "extractor": ("Embedded Lua Extraction", EmbeddedLuaExtractorTester),
             "syntax": ("Lua Syntax", LuaSyntaxTester),
             "quality": ("Lua Quality", LuaQualityAnalyzer),
             "functions": ("Function Tests", LuaFunctionTester),
@@ -473,7 +478,7 @@ def main():
     )
     parser.add_argument(
         "--test",
-        help="Run specific test suite (syntax, quality, functions, events, lifecycle, system, performance)",
+        help="Run specific test suite (extractor, syntax, quality, functions, events, lifecycle, system, performance)",
     )
     parser.add_argument("--report", help="Generate report file")
     parser.add_argument(
