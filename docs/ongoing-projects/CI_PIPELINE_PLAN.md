@@ -1,6 +1,6 @@
 # Comprehensive CI Pipeline Plan
 
-- **Status:** In progress — Phase 1 complete; Phase 2 next
+- **Status:** In progress — Phase 1 complete; Phase 2 implemented locally
 - **Created:** 2026-08-05
 - **Last updated:** 2026-08-05
 - **Scope:** Pull-request and `master` automation for the XML/Lua package,
@@ -311,13 +311,25 @@ the clean-tree checks and retained JSON report. Phase 1 is accepted.
 
 ### Phase 2 — Security baseline
 
-- [ ] Add a pinned Gitleaks CLI workflow with redacted reports.
-- [ ] Baseline existing Gitleaks findings with narrow, reviewed exceptions.
-- [ ] Enable CodeQL advanced setup for Python and GitHub Actions.
-- [ ] Add the pull-request dependency review workflow.
-- [ ] Add Dependabot configuration for Python and Actions dependencies.
-- [ ] Pin action SHAs and declare minimal workflow permissions.
-- [ ] Add a scheduled weekly full security scan.
+- [x] Add a pinned Gitleaks CLI workflow with redacted reports.
+- [x] Baseline existing Gitleaks findings with narrow, reviewed exceptions.
+- [x] Enable CodeQL advanced setup for Python and GitHub Actions.
+- [x] Add the pull-request dependency review workflow.
+- [x] Add Dependabot configuration for Python and Actions dependencies.
+- [x] Pin action SHAs and declare minimal workflow permissions.
+- [x] Add a scheduled weekly full security scan.
+
+Implemented locally 2026-08-05. Gitleaks is checksum-pinned to 8.18.4 because
+the current 8.30.1 release has a confirmed false-negative regression; every
+run generates a split-string GitHub-token canary, requires it to fail the scan,
+and verifies that neither logs nor JSON contain its unredacted value. The
+default rules found zero leaks across all 102 existing commits, so
+`.gitleaks.toml` contains no exceptions. The workflow adds SHA-pinned CodeQL
+4.37.6 for only Python and GitHub Actions, SHA-pinned dependency review 5.0.0,
+weekly full scans, and minimal job permissions. Dependabot covers the root pip
+lock and GitHub Actions, with matching `dependencies` and `ci` labels created
+in the repository. Hosted workflow and deliberately vulnerable PR checks are
+pending the checkpoint push.
 
 **Acceptance criteria**
 

@@ -37,6 +37,11 @@ in this folder.
     Actions, timeouts, and retained JSON reports. Hosted run
     [31044018354](https://github.com/LuminariMUD/LuminariGUI/actions/runs/31044018354)
     passed both jobs in under one minute; Phase 2 security work follows.
+  - Phase 2 implemented locally 2026-08-05: checksum-pinned Gitleaks with a
+    mandatory redacted canary (zero findings across 102 historical commits),
+    Python/Actions CodeQL, dependency review, weekly scans, and grouped
+    Dependabot updates. Hosted security and vulnerable-PR verification are
+    pending the checkpoint push.
 - [ ] Define Mudlet-aware duplicate-name rules and add scope-aware build
   validation with regression tests. Do not reject intentional same-named items
   that Mudlet permits in different groups or package sections.
