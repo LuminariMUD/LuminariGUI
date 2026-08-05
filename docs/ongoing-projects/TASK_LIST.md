@@ -19,9 +19,10 @@ in this folder.
   registrations from real leaks, add ownership/cleanup where needed, and
   verify handler counts across load, reconnect, `resetProfile()`, and repeated
   `fix gui` calls.
-- [ ] Add a non-mutating source/output drift check to repository automation
-  using `python3 theGUI/build.py --diff --fail-on-diff`. CI is preferred; a
-  pre-commit hook may be offered as an optional local convenience.
+- [ ] Implement the phased
+  [comprehensive CI pipeline plan](CI_PIPELINE_PLAN.md), beginning with the
+  non-mutating `python3 theGUI/build.py --diff --fail-on-diff` source/output
+  drift check and full dependency-backed test run.
 - [ ] Define Mudlet-aware duplicate-name rules and add scope-aware build
   validation with regression tests. Do not reject intentional same-named items
   that Mudlet permits in different groups or package sections.
