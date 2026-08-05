@@ -31,13 +31,9 @@ function GUI.requestMSDPReports()
     return true
   end
   GUI.msdpReportRequestPending = true
-  if type(tempTimer) == "function" then
-    tempTimer(0.5, function()
-      GUI.msdpReportRequestPending = false
-    end)
-  else
+  GUI.setOwnedTimer("msdp.reportRequestPending", 0.5, function()
     GUI.msdpReportRequestPending = false
-  end
+  end)
 
   GUI.debug("MSDP/REPORT", "subscription request started", {
     sendMSDP = type(sendMSDP),
@@ -77,7 +73,7 @@ function GUI.onProtocolEnabled(_, protocol)
     GUI.requestMSDPReports()
 
     -- Debug: Show what variables are available after a short delay
-    tempTimer(2, GUI.debugWrap("MSDP/PROTOCOL/two-second inventory", function()
+    GUI.setOwnedTimer("msdp.protocolInventory", 2, GUI.debugWrap("MSDP/PROTOCOL/two-second inventory", function()
       GUI.debug("MSDP/PROTOCOL", "MSDP variables received")
       local count = 0
       for k, v in pairs(msdp) do
@@ -99,7 +95,7 @@ function GUI.onProtocolEnabled(_, protocol)
     end))
     
     -- Initialize or refresh GUI after a short delay to ensure MSDP data arrives
-    tempTimer(0.5, GUI.debugWrap("MSDP/PROTOCOL/GUI refresh", function()
+    GUI.setOwnedTimer("msdp.protocolRefresh", 0.5, GUI.debugWrap("MSDP/PROTOCOL/GUI refresh", function()
       GUI.initializeOrRefresh("MSDP protocol enabled")
     end))
   end

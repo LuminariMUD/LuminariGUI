@@ -124,30 +124,71 @@ function GUI.applyHorizontalScrollSetting()
   end
 end
 
--- Basic resource cleanup function
-function GUI.cleanup()
-  -- Clean up any temporary triggers
-  if maplineTrig and exists(maplineTrig, "trigger") ~= 0 then
-    killTrigger(maplineTrig)
-    maplineTrig = nil
-  end
-  -- Save current toggle preferences
-  GUI.saveToggles()
-end
-
-registerAnonymousEventHandler("sysLoadEvent", "GUI.loadToggles")
-registerAnonymousEventHandler("sysExitEvent", "GUI.saveToggles")
-registerAnonymousEventHandler("sysExitEvent", "GUI.cleanup")
-
--- Apply horizontal scroll settings after chat system loads
-registerAnonymousEventHandler("sysLoadEvent", function()
-  tempTimer(2, function()
+function GUI.applyPreferencesAfterLoad()
+  return GUI.setOwnedTimer("preferences.applyAfterLoad", 2, function()
     GUI.applyHorizontalScrollSetting()
-    -- Also sync chat sound setting after chat system loads
-    if GUI.toggles.chatSound and demonnic and demonnic.chat and demonnic.chat.config then
+    if GUI.toggles.chatSound
+      and demonnic
+      and demonnic.chat
+      and demonnic.chat.config
+    then
       demonnic.chat.config.soundEnabled = true
     end
   end)
-end)</script>
+end
+
+-- Stop runtime resources that can outlive their current UI state. Anonymous
+-- handlers are retained here because sysExitEvent is only closing the profile;
+-- package uninstall uses GUI.cleanupPackageResources() below.
+function GUI.cleanup()
+  if demonnic and demonnic.chat and demonnic.chat.stopBlinking then
+    demonnic.chat:stopBlinking()
+  end
+  local timersCanceled = GUI.cancelAllOwnedTimers()
+  GUI.castConsoleTimer = nil
+  GUI.initCallPending = false
+  GUI.msdpReportRequestPending = false
+  GUI.refreshCallsPending = {}
+
+  if map and map.maplineTrig then
+    if exists(map.maplineTrig, "trigger") ~= 0 then
+      pcall(killTrigger, map.maplineTrig)
+    end
+    map.maplineTrig = nil
+  end
+
+  GUI.saveToggles()
+  return {timers = timersCanceled}
+end
+
+function GUI.cleanupPackageResources()
+  local cleaned = GUI.cleanup()
+  cleaned.guiHandlers = type(GUI.unregisterEventHandlers) == "function"
+    and GUI.unregisterEventHandlers()
+    or 0
+  cleaned.mapperHandlers = map and type(map.unregisterFileScopeHandlers) == "function"
+    and map.unregisterFileScopeHandlers()
+    or 0
+
+  cleaned.aliases = 0
+  if map and type(map.aliases) == "table" then
+    for name, aliasId in pairs(map.aliases) do
+      if aliasId and type(killAlias) == "function" then
+        local ok = pcall(killAlias, aliasId)
+        if ok then
+          cleaned.aliases = cleaned.aliases + 1
+        end
+      end
+      map.aliases[name] = nil
+    end
+  end
+
+  -- Remove lifecycle handlers last because this function is itself called by
+  -- the owned sysUninstallPackage handler.
+  cleaned.lifecycleHandlers = type(GUI.unregisterLifecycleHandlers) == "function"
+    and GUI.unregisterLifecycleHandlers()
+    or 0
+  return cleaned
+end</script>
 						<eventHandlerList />
 					</Script>

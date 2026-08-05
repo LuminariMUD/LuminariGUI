@@ -13,6 +13,27 @@
 -- The main initialization handlers are registered at the bottom of this script
 -- along with the original GUI.init() registration to ensure proper order
 
+local function runLifecycleStep(scope, callable)
+  if type(callable) ~= "function" then
+    GUI.debugError("LIFECYCLE/" .. scope, "required function is unavailable")
+    return false
+  end
+  local ok, result = pcall(callable)
+  if not ok then
+    GUI.debugError("LIFECYCLE/" .. scope, result)
+  end
+  return ok, result
+end
+
+local function prepareLoadedState()
+  runLifecycleStep("load preferences", GUI.loadToggles)
+  runLifecycleStep(
+    "initialize layout profiles",
+    GUI.AdjustableContainers and GUI.AdjustableContainers.init
+  )
+  runLifecycleStep("apply preferences", GUI.applyPreferencesAfterLoad)
+end
+
 -- Since Mudlet 4.20, sysLoadEvent passes a boolean: true for a fresh profile
 -- load, false when it fires after resetProfile(). That distinction matters:
 -- after a resetProfile() the connection is usually still up and MSDP was
@@ -23,6 +44,7 @@ function GUI.onSysLoadEvent(_, isNewLoad)
     isNewLoad = isNewLoad,
     initializedBefore = GUI.initialized,
   })
+  prepareLoadedState()
   GUI.init()
   if type(GUI.debugSnapshot) == "function" then
     GUI.debugCall(
@@ -30,7 +52,7 @@ function GUI.onSysLoadEvent(_, isNewLoad)
       GUI.debugSnapshot,
       "sysLoadEvent immediate"
     )
-    tempTimer(2, GUI.debugWrap("LIFECYCLE/sysLoad delayed snapshot", function()
+    GUI.setOwnedTimer("lifecycle.loadSnapshot", 2, GUI.debugWrap("LIFECYCLE/sysLoad delayed snapshot", function()
       GUI.debugCall(
         "SNAPSHOT/sysLoad delayed",
         GUI.debugSnapshot,
@@ -42,7 +64,7 @@ function GUI.onSysLoadEvent(_, isNewLoad)
   -- isNewLoad == false means we came from resetProfile(). Older Mudlet
   -- versions pass nil here, so only take this path on an explicit false.
   if isNewLoad == false then
-    tempTimer(0.5, GUI.debugWrap("LIFECYCLE/profile reset recovery", function()
+    GUI.setOwnedTimer("lifecycle.profileReset", 0.5, GUI.debugWrap("LIFECYCLE/profile reset recovery", function()
       if map and map.initialize then
         local ok, initialized = GUI.debugCall(
           "LIFECYCLE/profile reset/map.initialize",
@@ -62,9 +84,18 @@ function GUI.onSysLoadEvent(_, isNewLoad)
   end
 end
 
+function GUI.onSysInstallEvent(_, packageName)
+  if packageName ~= "LuminariGUI" then
+    return
+  end
+  GUI.debug("LIFECYCLE", "LuminariGUI sysInstall fired")
+  prepareLoadedState()
+  GUI.init()
+end
+
 function GUI.onConnectionEvent(...)
   GUI.debug("LIFECYCLE", "sysConnectionEvent fired", {...})
-  tempTimer(1, GUI.debugWrap("LIFECYCLE/connection refresh timer", function()
+  GUI.setOwnedTimer("lifecycle.connectionRefresh", 1, GUI.debugWrap("LIFECYCLE/connection refresh timer", function()
     GUI.initializeOrRefresh("connection established")
     if type(GUI.debugSnapshot) == "function" then
       GUI.debugCall(
@@ -76,37 +107,71 @@ function GUI.onConnectionEvent(...)
   end))
 end
 
+function GUI.onExitEvent()
+  runLifecycleStep("profile exit cleanup", GUI.cleanup)
+end
+
+function GUI.onUninstallPackage(_, packageName)
+  if packageName ~= "LuminariGUI" then
+    return
+  end
+  local ok, cleaned = runLifecycleStep(
+    "package uninstall cleanup",
+    GUI.cleanupPackageResources
+  )
+  if ok then
+    GUI.debug("LIFECYCLE", "package resources removed", cleaned)
+  end
+end
+
 -- Keep lifecycle registration idempotent when scripts are recompiled or a
 -- fixed release is upgraded again in the same Mudlet session. The legacy
 -- anonymous closures from pre-split releases did not expose IDs; the guarded
 -- GUI entry points above coalesce their one unavoidable migration overlap.
 GUI.lifecycleHandlerIds = GUI.lifecycleHandlerIds or {}
-local function registerLifecycleHandler(event, handler)
-  local previousId = GUI.lifecycleHandlerIds[event]
-  if previousId then
-    pcall(killAnonymousEventHandler, previousId)
-    GUI.lifecycleHandlerIds[event] = nil
-  end
+GUI.LIFECYCLE_HANDLERS = {
+  ["sysLoadEvent"] = "GUI.onSysLoadEvent",
+  ["sysInstall"] = "GUI.onSysInstallEvent",
+  ["sysProtocolEnabled"] = "GUI.onProtocolEnabled",
+  ["sysConnectionEvent"] = "GUI.onConnectionEvent",
+  ["sysExitEvent"] = "GUI.onExitEvent",
+  ["sysUninstallPackage"] = "GUI.onUninstallPackage",
+}
 
-  local ok, handlerId = pcall(registerAnonymousEventHandler, event, handler)
-  if ok then
-    GUI.lifecycleHandlerIds[event] = handlerId
-  else
+function GUI.unregisterLifecycleHandlers()
+  return GUI.unregisterOwnedHandlers(
+    GUI.lifecycleHandlerIds,
+    GUI.LIFECYCLE_HANDLERS
+  )
+end
+
+local function registerLifecycleHandler(event, handler)
+  local handlerId, handlerError = GUI.registerOwnedHandler(
+    GUI.lifecycleHandlerIds,
+    event,
+    event,
+    handler,
+    "LIFECYCLE/" .. event
+  )
+  if not handlerId then
     GUI.debugError(
       "LIFECYCLE/register/" .. event,
-      "failed to register " .. tostring(handler) .. ": " .. tostring(handlerId)
+      "failed to register " .. tostring(handler) .. ": " .. tostring(handlerError)
     )
   end
+  return handlerId
 end
 
 registerLifecycleHandler("sysLoadEvent", "GUI.onSysLoadEvent")
-registerLifecycleHandler("sysInstall", "GUI.init")
+registerLifecycleHandler("sysInstall", "GUI.onSysInstallEvent")
 
 -- Register protocol handler early to ensure it catches MSDP enablement
 -- This is critical because MSDP can be enabled before GUI.init() completes
 registerLifecycleHandler("sysProtocolEnabled", "GUI.onProtocolEnabled")
 
 -- Add connection-based refresh
-registerLifecycleHandler("sysConnectionEvent", "GUI.onConnectionEvent")</script>
+registerLifecycleHandler("sysConnectionEvent", "GUI.onConnectionEvent")
+registerLifecycleHandler("sysExitEvent", "GUI.onExitEvent")
+registerLifecycleHandler("sysUninstallPackage", "GUI.onUninstallPackage")</script>
 						<eventHandlerList />
 					</Script>

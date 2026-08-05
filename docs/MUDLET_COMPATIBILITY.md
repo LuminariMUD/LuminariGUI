@@ -109,7 +109,11 @@ upgrade. **Fixed:** lifecycle registrations now own IDs in
 own entries. Initialization, refresh, and REPORT entry points briefly coalesce
 the single unidentifiable legacy callback during the first upgrade. Mudlet 4.22
 runtime probes confirm one effective refresh, one REPORT batch after reset,
-and stable 26 GUI + 4 lifecycle registrations.
+and stable registrations. The later complete resource audit centralized all
+runtime handler and timer creation. The current baseline is 5 mapper + 26 GUI
++ 6 lifecycle anonymous handlers, plus two package-XML handlers; all 21 timer
+creation sites are owned and only `yatco.blink` is recurring. See
+[`RESOURCE_LIFECYCLE.md`](RESOURCE_LIFECYCLE.md).
 
 ### 1. Legacy string-name callbacks with arguments — *high priority*
 ```lua

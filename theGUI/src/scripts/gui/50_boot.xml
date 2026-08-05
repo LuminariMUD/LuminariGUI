@@ -69,13 +69,9 @@ function GUI.init()
     return true
   end
   GUI.initCallPending = true
-  if type(tempTimer) == "function" then
-    tempTimer(0.5, function()
-      GUI.initCallPending = false
-    end)
-  else
+  GUI.setOwnedTimer("gui.initCallPending", 0.5, function()
     GUI.initCallPending = false
-  end
+  end)
 
   GUI.debug("GUI/INIT", "initialization sequence starting", {
     alreadyInitialized = GUI.initialized,
@@ -123,7 +119,7 @@ function GUI.init()
   end
 
   -- Ensure proper z-order of adjustable containers
-  tempTimer(0.5, GUI.debugWrap("GUI/INIT/z-order timer", function()
+  GUI.setOwnedTimer("gui.initZOrder", 0.5, GUI.debugWrap("GUI/INIT/z-order timer", function()
     -- Bring containers to front in correct order
     -- Map should be at the back
     if map and map.container then

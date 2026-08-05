@@ -41,29 +41,35 @@ end
 function GUI.castConsole_startCast(spellName, spellLength)
   GUI.currentlyCasting = spellName
 	GUI.castingNow = true
-  clearUserWindow("GUI.castConsole")
-  GUI.castConsole:cecho("\n&lt;b&gt;&lt;white&gt;Spell:&lt;/b&gt; &lt;b&gt;&lt;yellow&gt;"..spellName:title().."&lt;/b&gt; &lt;white&gt;- &lt;cyan&gt;&lt;b&gt;"..spellLength.."&lt;/b&gt;")
-	if GUI.castConsoleTimer then
-	  killTimer(GUI.castConsoleTimer)
-	end
+	  clearUserWindow("GUI.castConsole")
+	  GUI.castConsole:cecho("\n&lt;b&gt;&lt;white&gt;Spell:&lt;/b&gt; &lt;b&gt;&lt;yellow&gt;"..spellName:title().."&lt;/b&gt; &lt;white&gt;- &lt;cyan&gt;&lt;b&gt;"..spellLength.."&lt;/b&gt;")
+		GUI.cancelOwnedTimer("castConsole.clear")
+		GUI.castConsoleTimer = nil
+end
+
+local function clearCastConsoleLater()
+  GUI.castConsoleTimer = GUI.setOwnedTimer("castConsole.clear", 10, function()
+    GUI.castConsoleTimer = nil
+    clearUserWindow("GUI.castConsole")
+  end)
 end
 
 function GUI.castConsole_completeCast()
   GUI.castConsole:cecho("\n&lt;b&gt;&lt;white&gt;Spell:&lt;/b&gt; &lt;b&gt;&lt;yellow&gt;"..GUI.currentlyCasting:title().."&lt;/b&gt; &lt;white&gt;- &lt;b&gt;&lt;green&gt;✓ CAST COMPLETE&lt;/b&gt;")
-	GUI.castConsoleTimer = tempTimer(10, [[clearUserWindow("GUI.castConsole")]])
+		clearCastConsoleLater()
 end
 
 function GUI.castConsole_abortedCast()
-  GUI.castConsole:cecho("\n&lt;b&gt;&lt;white&gt;Spell:&lt;/b&gt; &lt;b&gt;&lt;yellow&gt;"..GUI.currentlyCasting:title().."&lt;/b&gt; &lt;white&gt;- &lt;b&gt;&lt;red&gt;✗ ABORTED&lt;/b&gt;")
-	GUI.castingNow = false
-	GUI.castConsoleTimer = tempTimer(10, [[clearUserWindow("GUI.castConsole")]])
+	  GUI.castConsole:cecho("\n&lt;b&gt;&lt;white&gt;Spell:&lt;/b&gt; &lt;b&gt;&lt;yellow&gt;"..GUI.currentlyCasting:title().."&lt;/b&gt; &lt;white&gt;- &lt;b&gt;&lt;red&gt;✗ ABORTED&lt;/b&gt;")
+		GUI.castingNow = false
+		clearCastConsoleLater()
 end
 
 
 function GUI.castConsole_canceledCast()
-  GUI.castConsole:cecho("\n&lt;b&gt;&lt;white&gt;Spell:&lt;/b&gt; &lt;b&gt;&lt;yellow&gt;"..GUI.currentlyCasting:title().."&lt;/b&gt; &lt;white&gt;- &lt;b&gt;&lt;red&gt;✗ CANCELED&lt;/b&gt;")
-	GUI.castingNow = false
-	GUI.castConsoleTimer = tempTimer(10, [[clearUserWindow("GUI.castConsole")]])
+	  GUI.castConsole:cecho("\n&lt;b&gt;&lt;white&gt;Spell:&lt;/b&gt; &lt;b&gt;&lt;yellow&gt;"..GUI.currentlyCasting:title().."&lt;/b&gt; &lt;white&gt;- &lt;b&gt;&lt;red&gt;✗ CANCELED&lt;/b&gt;")
+		GUI.castingNow = false
+		clearCastConsoleLater()
 end
 
 </script>

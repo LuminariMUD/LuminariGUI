@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE MudletPackage>
-<MudletPackage version="2.0.4.039">
+<MudletPackage version="2.0.4.038">
 	<TriggerPackage>
 		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 			<name>LuminariGUI</name>
@@ -682,7 +682,6 @@ end</script>
 if demonnic.chat.config.blink then
   demonnic.chat.config.blink = false
   demonnic.chat.tabsToBlink = {}
-  demonnic.chat:stopBlinking()
   demonnic:echo("Blinking temporarily turned &lt;red&gt;off&lt;grey&gt;. It will reset if you edit your tabbed chat configuration, or close and reopen mudlet. To make it permanent, change demonnic.chat.config.blink to false in \"Demonnic-&gt;Tabbed Chat-&gt;Configuration options\" under scripts\n")
 else
   demonnic.chat.config.blink = true
@@ -1074,156 +1073,6 @@ GUI.debug("BOOT", "early environment", {
   msdp = type(msdp),
   registerAnonymousEventHandler = type(registerAnonymousEventHandler),
 })</script>
-					<eventHandlerList />
-				</Script>
-			</ScriptGroup>
-			<ScriptGroup isActive="yes" isFolder="yes">
-				<name>LuminariResources</name>
-				<packageName>LuminariGUI</packageName>
-				<script></script>
-				<eventHandlerList />
-				<Script isActive="yes" isFolder="no">
-					<name>Resource Ownership</name>
-					<packageName></packageName>
-					<script>-- Central ownership for runtime-created handlers and timers.
--- This fragment loads before the mapper and GUI so every subsystem can use
--- the same replace-before-register behavior.
-GUI = GUI or {}
-GUI.ownedTimerIds = GUI.ownedTimerIds or {}
-
-local function resourceError(scope, message)
-  if type(GUI.debugError) == "function" then
-    GUI.debugError("RESOURCE/" .. scope, message)
-  else
-    print("[LuminariGUI resource error] " .. tostring(message))
-  end
-end
-
-function GUI.cancelOwnedTimer(name)
-  local timerId = GUI.ownedTimerIds[name]
-  if not timerId then
-    return false
-  end
-
-  GUI.ownedTimerIds[name] = nil
-  local ok, result = pcall(killTimer, timerId)
-  if not ok then
-    resourceError("TIMER/CANCEL/" .. tostring(name), result)
-    return false
-  end
-  return result ~= false
-end
-
-function GUI.setOwnedTimer(name, delay, callback)
-  if type(name) ~= "string" or name == "" then
-    error("GUI.setOwnedTimer requires a non-empty timer name")
-  end
-  if type(callback) ~= "function" then
-    error("GUI.setOwnedTimer requires a function callback")
-  end
-
-  GUI.cancelOwnedTimer(name)
-
-  local timerId
-  local completedSynchronously = false
-  local function runOwnedTimer(...)
-    completedSynchronously = true
-    if GUI.ownedTimerIds[name] == timerId then
-      GUI.ownedTimerIds[name] = nil
-    end
-    return callback(...)
-  end
-
-  local ok, result = pcall(tempTimer, delay, runOwnedTimer)
-  if not ok or result == nil then
-    resourceError("TIMER/CREATE/" .. name, result)
-    return nil, result
-  end
-
-  timerId = result
-  if not completedSynchronously then
-    GUI.ownedTimerIds[name] = timerId
-  end
-  return timerId
-end
-
-function GUI.cancelAllOwnedTimers()
-  local names = {}
-  for name in pairs(GUI.ownedTimerIds) do
-    names[#names + 1] = name
-  end
-
-  local canceled = 0
-  for _, name in ipairs(names) do
-    if GUI.cancelOwnedTimer(name) then
-      canceled = canceled + 1
-    end
-  end
-  return canceled
-end
-
-function GUI.registerOwnedHandler(ownerTable, key, event, handler, scope)
-  if type(ownerTable) ~= "table" then
-    error("GUI.registerOwnedHandler requires an owner table")
-  end
-
-  local previousId = ownerTable[key]
-  if previousId then
-    local removed, removeResult = pcall(
-      killAnonymousEventHandler,
-      previousId
-    )
-    if not removed then
-      resourceError(
-        "HANDLER/REMOVE/" .. tostring(scope or key),
-        removeResult
-      )
-    end
-    ownerTable[key] = nil
-  end
-
-  local ok, handlerId = pcall(registerAnonymousEventHandler, event, handler)
-  if not ok or handlerId == nil then
-    resourceError(
-      "HANDLER/CREATE/" .. tostring(scope or key),
-      handlerId
-    )
-    return nil, handlerId
-  end
-
-  ownerTable[key] = handlerId
-  return handlerId
-end
-
-function GUI.unregisterOwnedHandlers(ownerTable, keys)
-  if type(ownerTable) ~= "table" then
-    return 0
-  end
-
-  local ownedKeys = {}
-  if type(keys) == "table" then
-    for key in pairs(keys) do
-      ownedKeys[#ownedKeys + 1] = key
-    end
-  else
-    for key in pairs(ownerTable) do
-      ownedKeys[#ownedKeys + 1] = key
-    end
-  end
-
-  local removed = 0
-  for _, key in ipairs(ownedKeys) do
-    local handlerId = ownerTable[key]
-    if handlerId then
-      local ok, result = pcall(killAnonymousEventHandler, handlerId)
-      if ok and result ~= false then
-        removed = removed + 1
-      end
-      ownerTable[key] = nil
-    end
-  end
-  return removed
-end</script>
 					<eventHandlerList />
 				</Script>
 			</ScriptGroup>
@@ -1873,7 +1722,7 @@ function map.initialize()
     end
     
     -- Single initialization timer to ensure proper rendering
-    GUI.setOwnedTimer("mapper.render", 0.2, GUI.debugWrap("MAPPER/INIT/render timer", function()
+    tempTimer(0.2, GUI.debugWrap("MAPPER/INIT/render timer", function()
       if map.mapwindow then
         map.mapwindow:show()
         map.mapwindow:resize()
@@ -1957,7 +1806,7 @@ function map.eventHandler(event,...)
 					 if map.container then 
 					   map.container:show()
 					   -- Delay mapper refresh to ensure container is visible
-					   GUI.setOwnedTimer("mapper.roomTransitionResize", 0.1, GUI.debugWrap("MAPPER/EVENT/room transition resize", function()
+					   tempTimer(0.1, GUI.debugWrap("MAPPER/EVENT/room transition resize", function()
 					     if map.mapwindow then
 					       map.mapwindow:show()
 					       map.mapwindow:resize()
@@ -2008,34 +1857,18 @@ function map.onProtocolEnabled(_, protocol)
 end
 
 map.fileScopeHandlerIds = map.fileScopeHandlerIds or {}
-map.fileScopeHandlerEvents = {
-  ["msdp.ROOM"] = true,
-  ["shiftRoom"] = true,
-  ["sysConnectionEvent"] = true,
-  ["sysProtocolEnabled"] = true,
-  ["sysDownloadDone"] = true,
-}
 local function registerFileScopeHandler(event, handler)
-  local handlerId = GUI.registerOwnedHandler(
-    map.fileScopeHandlerIds,
+  local ok, handlerId = GUI.debugCall(
+    "MAPPER/EVENT/register/" .. event,
+    registerAnonymousEventHandler,
     event,
-    event,
-    handler,
-    "MAPPER/" .. event
+    handler
   )
-  GUI.debug("MAPPER/EVENT", "file-scope handler registration", {
-    event = event,
-    handler = handler,
-    handlerId = handlerId,
-  })
-  return handlerId
-end
-
-function map.unregisterFileScopeHandlers()
-  return GUI.unregisterOwnedHandlers(
-    map.fileScopeHandlerIds,
-    map.fileScopeHandlerEvents
-  )
+  if ok then
+    map.fileScopeHandlerIds[event] = handlerId
+  else
+    map.fileScopeHandlerIds[event] = nil
+  end
 end
 
 registerFileScopeHandler("msdp.ROOM", "map.eventHandler")
@@ -2294,72 +2127,31 @@ function GUI.applyHorizontalScrollSetting()
   end
 end
 
-function GUI.applyPreferencesAfterLoad()
-  return GUI.setOwnedTimer("preferences.applyAfterLoad", 2, function()
+-- Basic resource cleanup function
+function GUI.cleanup()
+  -- Clean up any temporary triggers
+  if maplineTrig and exists(maplineTrig, "trigger") ~= 0 then
+    killTrigger(maplineTrig)
+    maplineTrig = nil
+  end
+  -- Save current toggle preferences
+  GUI.saveToggles()
+end
+
+registerAnonymousEventHandler("sysLoadEvent", "GUI.loadToggles")
+registerAnonymousEventHandler("sysExitEvent", "GUI.saveToggles")
+registerAnonymousEventHandler("sysExitEvent", "GUI.cleanup")
+
+-- Apply horizontal scroll settings after chat system loads
+registerAnonymousEventHandler("sysLoadEvent", function()
+  tempTimer(2, function()
     GUI.applyHorizontalScrollSetting()
-    if GUI.toggles.chatSound
-      and demonnic
-      and demonnic.chat
-      and demonnic.chat.config
-    then
+    -- Also sync chat sound setting after chat system loads
+    if GUI.toggles.chatSound and demonnic and demonnic.chat and demonnic.chat.config then
       demonnic.chat.config.soundEnabled = true
     end
   end)
-end
-
--- Stop runtime resources that can outlive their current UI state. Anonymous
--- handlers are retained here because sysExitEvent is only closing the profile;
--- package uninstall uses GUI.cleanupPackageResources() below.
-function GUI.cleanup()
-  if demonnic and demonnic.chat and demonnic.chat.stopBlinking then
-    demonnic.chat:stopBlinking()
-  end
-  local timersCanceled = GUI.cancelAllOwnedTimers()
-  GUI.castConsoleTimer = nil
-  GUI.initCallPending = false
-  GUI.msdpReportRequestPending = false
-  GUI.refreshCallsPending = {}
-
-  if map and map.maplineTrig then
-    if exists(map.maplineTrig, "trigger") ~= 0 then
-      pcall(killTrigger, map.maplineTrig)
-    end
-    map.maplineTrig = nil
-  end
-
-  GUI.saveToggles()
-  return {timers = timersCanceled}
-end
-
-function GUI.cleanupPackageResources()
-  local cleaned = GUI.cleanup()
-  cleaned.guiHandlers = type(GUI.unregisterEventHandlers) == "function"
-    and GUI.unregisterEventHandlers()
-    or 0
-  cleaned.mapperHandlers = map and type(map.unregisterFileScopeHandlers) == "function"
-    and map.unregisterFileScopeHandlers()
-    or 0
-
-  cleaned.aliases = 0
-  if map and type(map.aliases) == "table" then
-    for name, aliasId in pairs(map.aliases) do
-      if aliasId and type(killAlias) == "function" then
-        local ok = pcall(killAlias, aliasId)
-        if ok then
-          cleaned.aliases = cleaned.aliases + 1
-        end
-      end
-      map.aliases[name] = nil
-    end
-  end
-
-  -- Remove lifecycle handlers last because this function is itself called by
-  -- the owned sysUninstallPackage handler.
-  cleaned.lifecycleHandlers = type(GUI.unregisterLifecycleHandlers) == "function"
-    and GUI.unregisterLifecycleHandlers()
-    or 0
-  return cleaned
-end</script>
+end)</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
@@ -2836,35 +2628,29 @@ end
 function GUI.castConsole_startCast(spellName, spellLength)
   GUI.currentlyCasting = spellName
 	GUI.castingNow = true
-	  clearUserWindow("GUI.castConsole")
-	  GUI.castConsole:cecho("\n&lt;b&gt;&lt;white&gt;Spell:&lt;/b&gt; &lt;b&gt;&lt;yellow&gt;"..spellName:title().."&lt;/b&gt; &lt;white&gt;- &lt;cyan&gt;&lt;b&gt;"..spellLength.."&lt;/b&gt;")
-		GUI.cancelOwnedTimer("castConsole.clear")
-		GUI.castConsoleTimer = nil
-end
-
-local function clearCastConsoleLater()
-  GUI.castConsoleTimer = GUI.setOwnedTimer("castConsole.clear", 10, function()
-    GUI.castConsoleTimer = nil
-    clearUserWindow("GUI.castConsole")
-  end)
+  clearUserWindow("GUI.castConsole")
+  GUI.castConsole:cecho("\n&lt;b&gt;&lt;white&gt;Spell:&lt;/b&gt; &lt;b&gt;&lt;yellow&gt;"..spellName:title().."&lt;/b&gt; &lt;white&gt;- &lt;cyan&gt;&lt;b&gt;"..spellLength.."&lt;/b&gt;")
+	if GUI.castConsoleTimer then
+	  killTimer(GUI.castConsoleTimer)
+	end
 end
 
 function GUI.castConsole_completeCast()
   GUI.castConsole:cecho("\n&lt;b&gt;&lt;white&gt;Spell:&lt;/b&gt; &lt;b&gt;&lt;yellow&gt;"..GUI.currentlyCasting:title().."&lt;/b&gt; &lt;white&gt;- &lt;b&gt;&lt;green&gt;✓ CAST COMPLETE&lt;/b&gt;")
-		clearCastConsoleLater()
+	GUI.castConsoleTimer = tempTimer(10, [[clearUserWindow("GUI.castConsole")]])
 end
 
 function GUI.castConsole_abortedCast()
-	  GUI.castConsole:cecho("\n&lt;b&gt;&lt;white&gt;Spell:&lt;/b&gt; &lt;b&gt;&lt;yellow&gt;"..GUI.currentlyCasting:title().."&lt;/b&gt; &lt;white&gt;- &lt;b&gt;&lt;red&gt;✗ ABORTED&lt;/b&gt;")
-		GUI.castingNow = false
-		clearCastConsoleLater()
+  GUI.castConsole:cecho("\n&lt;b&gt;&lt;white&gt;Spell:&lt;/b&gt; &lt;b&gt;&lt;yellow&gt;"..GUI.currentlyCasting:title().."&lt;/b&gt; &lt;white&gt;- &lt;b&gt;&lt;red&gt;✗ ABORTED&lt;/b&gt;")
+	GUI.castingNow = false
+	GUI.castConsoleTimer = tempTimer(10, [[clearUserWindow("GUI.castConsole")]])
 end
 
 
 function GUI.castConsole_canceledCast()
-	  GUI.castConsole:cecho("\n&lt;b&gt;&lt;white&gt;Spell:&lt;/b&gt; &lt;b&gt;&lt;yellow&gt;"..GUI.currentlyCasting:title().."&lt;/b&gt; &lt;white&gt;- &lt;b&gt;&lt;red&gt;✗ CANCELED&lt;/b&gt;")
-		GUI.castingNow = false
-		clearCastConsoleLater()
+  GUI.castConsole:cecho("\n&lt;b&gt;&lt;white&gt;Spell:&lt;/b&gt; &lt;b&gt;&lt;yellow&gt;"..GUI.currentlyCasting:title().."&lt;/b&gt; &lt;white&gt;- &lt;b&gt;&lt;red&gt;✗ CANCELED&lt;/b&gt;")
+	GUI.castingNow = false
+	GUI.castConsoleTimer = tempTimer(10, [[clearUserWindow("GUI.castConsole")]])
 end
 
 </script>
@@ -3626,7 +3412,7 @@ function GUI.buttonWindow.mapClick()
 		GUI.buttonWindow.Mapbutton:echo("Mudlet/ASCII", "white", "c")
 
 		-- Ensure mapper is visible and properly refreshed with a small delay
-		GUI.setOwnedTimer("buttons.mapRefresh", 0.1, function()
+		tempTimer(0.1, function()
 			if map.mapwindow then
 				map.mapwindow:show()
 				map.mapwindow:resize()
@@ -3650,7 +3436,7 @@ function GUI.buttonWindow.mudletClick()
 		GUI.buttonWindow.ASCIIbutton:echo("ASCII", "white", "c")
 		
 		-- Ensure mapper is visible and properly refreshed with a small delay
-		GUI.setOwnedTimer("buttons.mapRefresh", 0.1, function()
+		tempTimer(0.1, function()
 		  if map.mapwindow then
 		    map.mapwindow:show()
 		    map.mapwindow:resize()
@@ -3947,9 +3733,13 @@ function GUI.requestMSDPReports()
     return true
   end
   GUI.msdpReportRequestPending = true
-  GUI.setOwnedTimer("msdp.reportRequestPending", 0.5, function()
+  if type(tempTimer) == "function" then
+    tempTimer(0.5, function()
+      GUI.msdpReportRequestPending = false
+    end)
+  else
     GUI.msdpReportRequestPending = false
-  end)
+  end
 
   GUI.debug("MSDP/REPORT", "subscription request started", {
     sendMSDP = type(sendMSDP),
@@ -3989,7 +3779,7 @@ function GUI.onProtocolEnabled(_, protocol)
     GUI.requestMSDPReports()
 
     -- Debug: Show what variables are available after a short delay
-    GUI.setOwnedTimer("msdp.protocolInventory", 2, GUI.debugWrap("MSDP/PROTOCOL/two-second inventory", function()
+    tempTimer(2, GUI.debugWrap("MSDP/PROTOCOL/two-second inventory", function()
       GUI.debug("MSDP/PROTOCOL", "MSDP variables received")
       local count = 0
       for k, v in pairs(msdp) do
@@ -4011,7 +3801,7 @@ function GUI.onProtocolEnabled(_, protocol)
     end))
     
     -- Initialize or refresh GUI after a short delay to ensure MSDP data arrives
-    GUI.setOwnedTimer("msdp.protocolRefresh", 0.5, GUI.debugWrap("MSDP/PROTOCOL/GUI refresh", function()
+    tempTimer(0.5, GUI.debugWrap("MSDP/PROTOCOL/GUI refresh", function()
       GUI.initializeOrRefresh("MSDP protocol enabled")
     end))
   end
@@ -4391,9 +4181,13 @@ function GUI.init()
     return true
   end
   GUI.initCallPending = true
-  GUI.setOwnedTimer("gui.initCallPending", 0.5, function()
+  if type(tempTimer) == "function" then
+    tempTimer(0.5, function()
+      GUI.initCallPending = false
+    end)
+  else
     GUI.initCallPending = false
-  end)
+  end
 
   GUI.debug("GUI/INIT", "initialization sequence starting", {
     alreadyInitialized = GUI.initialized,
@@ -4441,7 +4235,7 @@ function GUI.init()
   end
 
   -- Ensure proper z-order of adjustable containers
-  GUI.setOwnedTimer("gui.initZOrder", 0.5, GUI.debugWrap("GUI/INIT/z-order timer", function()
+  tempTimer(0.5, GUI.debugWrap("GUI/INIT/z-order timer", function()
     -- Bring containers to front in correct order
     -- Map should be at the back
     if map and map.container then
@@ -4481,7 +4275,9 @@ end
 						<name>GUI Event Registry</name>
 						<packageName></packageName>
 						<script>-- Robust event handler registration with error handling and verification
-GUI.EVENT_HANDLERS = {
+function GUI.registerEventHandlers()
+  -- Define all event handlers in a table for easy management
+  local eventHandlers = {
     -- GUI event handlers
     ["msdp.GROUP"] = "GUI.updateGroup",
     ["msdp.AFFECTS"] = "GUI.updateAffectIcons",
@@ -4516,18 +4312,7 @@ GUI.EVENT_HANDLERS = {
     -- allows multiple handlers per event, so listing it twice made the mapper
     -- process every room change twice.
     ["msdp.ROOM"] = "GUI.updateRoom"
-}
-
-function GUI.unregisterEventHandlers()
-  GUI.eventHandlerIds = GUI.eventHandlerIds or {}
-  return GUI.unregisterOwnedHandlers(
-    GUI.eventHandlerIds,
-    GUI.EVENT_HANDLERS
-  )
-end
-
-function GUI.registerEventHandlers()
-  local eventHandlers = GUI.EVENT_HANDLERS
+  }
 
   -- Events deliberately NOT listed above, because 00_msdpmapper.xml already
   -- registers them at file scope (which runs at script-compile time, earlier
@@ -4535,7 +4320,8 @@ function GUI.registerEventHandlers()
   --   msdp.ROOM / shiftRoom / sysConnectionEvent / sysDownloadDone
   --       -> map.eventHandler
   --   sysProtocolEnabled  -> map.onProtocolEnabled
-  -- GUI.onProtocolEnabled is separately owned by the lifecycle registry.
+  -- And sysProtocolEnabled -> GUI.onProtocolEnabled is registered at file
+  -- scope further down in this script, for the same reason.
 
   -- Store handler IDs so repeat calls can clean up after themselves.
   GUI.eventHandlerIds = GUI.eventHandlerIds or {}
@@ -4546,11 +4332,24 @@ function GUI.registerEventHandlers()
   -- handlers (duplicate REPORT storms, redundant redraws, growing latency).
   --
   -- Only clean up events owned by eventHandlers. Older releases also stored
-  -- the five mapper handlers and a legacy GUI protocol handler in this table.
-  -- Mudlet 4.21 can reuse those handler IDs when the same string handler
+  -- the five mapper handlers and the file-scope GUI protocol handler in this
+  -- table. Mudlet 4.21 can reuse those handler IDs when the same string handler
   -- is registered during an in-place upgrade; sweeping every legacy entry here
   -- would therefore kill the newly compiled file-scope handlers.
-  local killed = GUI.unregisterEventHandlers()
+  local killed = 0
+  for event in pairs(eventHandlers) do
+    local handlerId = GUI.eventHandlerIds[event]
+    if handlerId then
+      local ok = pcall(killAnonymousEventHandler, handlerId)
+      GUI.debug("EVENT/REGISTER", "remove owned handler", {
+        event = event,
+        handlerId = handlerId,
+        success = ok,
+      })
+      if ok then killed = killed + 1 end
+    end
+    GUI.eventHandlerIds[event] = nil
+  end
   GUI.debug("EVENT/REGISTER", "owned handler cleanup complete", {
     killed = killed,
   })
@@ -4581,14 +4380,13 @@ function GUI.registerEventHandlers()
       end
     end
 
-    local handlerId, handlerError = GUI.registerOwnedHandler(
-      GUI.eventHandlerIds,
+    local success, handlerId = pcall(
+      registerAnonymousEventHandler,
       eventName,
-      eventName,
-      callback,
-      "GUI/" .. eventName
+      callback
     )
-    if handlerId then
+    if success then
+      GUI.eventHandlerIds[eventName] = handlerId
       GUI.debug("EVENT/REGISTER", "registered GUI handler", {
         event = eventName,
         handler = handlerName,
@@ -4598,14 +4396,14 @@ function GUI.registerEventHandlers()
     else
       GUI.debugError(
         "EVENT/REGISTER/" .. eventName,
-        "failed to register " .. handlerName .. ": " .. tostring(handlerError)
+        "failed to register " .. handlerName .. ": " .. tostring(handlerId)
       )
-      print(string.format("✗ Failed to register GUI handler for %s: %s", eventName, handlerError))
+      print(string.format("✗ Failed to register GUI handler for %s: %s", eventName, handlerId))
     end
   end
 
   -- Verify critical handlers are working and refresh displays
-  GUI.setOwnedTimer("gui.eventVerification", 2, GUI.debugWrap("EVENT/VERIFY/two-second refresh", function()
+  tempTimer(2, GUI.debugWrap("EVENT/VERIFY/two-second refresh", function()
     GUI.debug("EVENT/VERIFY", "checking current MSDP-backed displays", {
       msdpCount = GUI.debugCountEntries(msdp),
     })
@@ -4650,7 +4448,7 @@ function GUI.registerEventHandlers()
   end))
   
   -- Initialize chat system if it's enabled but not created
-  GUI.setOwnedTimer("gui.chatStartup", 1, GUI.debugWrap("EVENT/VERIFY/chat startup", function()
+  tempTimer(1, GUI.debugWrap("EVENT/VERIFY/chat startup", function()
     GUI.debug("EVENT/VERIFY", "chat startup check", {
       demonnic = type(demonnic),
       chat = type(demonnic and demonnic.chat),
@@ -4703,9 +4501,13 @@ function GUI.initializeOrRefresh(context)
     return true
   end
   GUI.refreshCallsPending[context] = true
-  GUI.setOwnedTimer("gui.refreshCallPending." .. context, 0.5, function()
+  if type(tempTimer) == "function" then
+    tempTimer(0.5, function()
+      GUI.refreshCallsPending[context] = nil
+    end)
+  else
     GUI.refreshCallsPending[context] = nil
-  end)
+  end
 
   -- resetProfile() clears Mudlet's protocol tables before sysLoadEvent fires.
   -- Recreate the MSDP table so an in-place GUI refresh remains safe while the
@@ -4804,7 +4606,7 @@ function GUI.initializeOrRefresh(context)
     map.mapwindow:show()
     map.mapwindow:resize()
     -- Force refresh with delayed operations
-    GUI.setOwnedTimer("gui.refreshMapperResize", 0.1, GUI.debugWrap("GUI/REFRESH/mapper delayed resize", function()
+    tempTimer(0.1, GUI.debugWrap("GUI/REFRESH/mapper delayed resize", function()
       if map.mapwindow then
         map.mapwindow:resize()
         if map.mapwindow.raise then
@@ -4879,7 +4681,7 @@ function GUI.initializeOrRefresh(context)
   end
   
   -- Ensure proper z-order (delayed to allow all components to initialize)
-  GUI.setOwnedTimer("gui.refreshZOrder", 0.5, GUI.debugWrap("GUI/REFRESH/z-order timer", function()
+  tempTimer(0.5, GUI.debugWrap("GUI/REFRESH/z-order timer", function()
     -- Let Adjustable Containers manage their own z-order
     -- Only raise containers that need to be on top of others
     if GUI.chatContainer then GUI.chatContainer:raise() end
@@ -4917,27 +4719,6 @@ end
 -- The main initialization handlers are registered at the bottom of this script
 -- along with the original GUI.init() registration to ensure proper order
 
-local function runLifecycleStep(scope, callable)
-  if type(callable) ~= "function" then
-    GUI.debugError("LIFECYCLE/" .. scope, "required function is unavailable")
-    return false
-  end
-  local ok, result = pcall(callable)
-  if not ok then
-    GUI.debugError("LIFECYCLE/" .. scope, result)
-  end
-  return ok, result
-end
-
-local function prepareLoadedState()
-  runLifecycleStep("load preferences", GUI.loadToggles)
-  runLifecycleStep(
-    "initialize layout profiles",
-    GUI.AdjustableContainers and GUI.AdjustableContainers.init
-  )
-  runLifecycleStep("apply preferences", GUI.applyPreferencesAfterLoad)
-end
-
 -- Since Mudlet 4.20, sysLoadEvent passes a boolean: true for a fresh profile
 -- load, false when it fires after resetProfile(). That distinction matters:
 -- after a resetProfile() the connection is usually still up and MSDP was
@@ -4948,7 +4729,6 @@ function GUI.onSysLoadEvent(_, isNewLoad)
     isNewLoad = isNewLoad,
     initializedBefore = GUI.initialized,
   })
-  prepareLoadedState()
   GUI.init()
   if type(GUI.debugSnapshot) == "function" then
     GUI.debugCall(
@@ -4956,7 +4736,7 @@ function GUI.onSysLoadEvent(_, isNewLoad)
       GUI.debugSnapshot,
       "sysLoadEvent immediate"
     )
-    GUI.setOwnedTimer("lifecycle.loadSnapshot", 2, GUI.debugWrap("LIFECYCLE/sysLoad delayed snapshot", function()
+    tempTimer(2, GUI.debugWrap("LIFECYCLE/sysLoad delayed snapshot", function()
       GUI.debugCall(
         "SNAPSHOT/sysLoad delayed",
         GUI.debugSnapshot,
@@ -4968,7 +4748,7 @@ function GUI.onSysLoadEvent(_, isNewLoad)
   -- isNewLoad == false means we came from resetProfile(). Older Mudlet
   -- versions pass nil here, so only take this path on an explicit false.
   if isNewLoad == false then
-    GUI.setOwnedTimer("lifecycle.profileReset", 0.5, GUI.debugWrap("LIFECYCLE/profile reset recovery", function()
+    tempTimer(0.5, GUI.debugWrap("LIFECYCLE/profile reset recovery", function()
       if map and map.initialize then
         local ok, initialized = GUI.debugCall(
           "LIFECYCLE/profile reset/map.initialize",
@@ -4988,18 +4768,9 @@ function GUI.onSysLoadEvent(_, isNewLoad)
   end
 end
 
-function GUI.onSysInstallEvent(_, packageName)
-  if packageName ~= "LuminariGUI" then
-    return
-  end
-  GUI.debug("LIFECYCLE", "LuminariGUI sysInstall fired")
-  prepareLoadedState()
-  GUI.init()
-end
-
 function GUI.onConnectionEvent(...)
   GUI.debug("LIFECYCLE", "sysConnectionEvent fired", {...})
-  GUI.setOwnedTimer("lifecycle.connectionRefresh", 1, GUI.debugWrap("LIFECYCLE/connection refresh timer", function()
+  tempTimer(1, GUI.debugWrap("LIFECYCLE/connection refresh timer", function()
     GUI.initializeOrRefresh("connection established")
     if type(GUI.debugSnapshot) == "function" then
       GUI.debugCall(
@@ -5011,72 +4782,38 @@ function GUI.onConnectionEvent(...)
   end))
 end
 
-function GUI.onExitEvent()
-  runLifecycleStep("profile exit cleanup", GUI.cleanup)
-end
-
-function GUI.onUninstallPackage(_, packageName)
-  if packageName ~= "LuminariGUI" then
-    return
-  end
-  local ok, cleaned = runLifecycleStep(
-    "package uninstall cleanup",
-    GUI.cleanupPackageResources
-  )
-  if ok then
-    GUI.debug("LIFECYCLE", "package resources removed", cleaned)
-  end
-end
-
 -- Keep lifecycle registration idempotent when scripts are recompiled or a
 -- fixed release is upgraded again in the same Mudlet session. The legacy
 -- anonymous closures from pre-split releases did not expose IDs; the guarded
 -- GUI entry points above coalesce their one unavoidable migration overlap.
 GUI.lifecycleHandlerIds = GUI.lifecycleHandlerIds or {}
-GUI.LIFECYCLE_HANDLERS = {
-  ["sysLoadEvent"] = "GUI.onSysLoadEvent",
-  ["sysInstall"] = "GUI.onSysInstallEvent",
-  ["sysProtocolEnabled"] = "GUI.onProtocolEnabled",
-  ["sysConnectionEvent"] = "GUI.onConnectionEvent",
-  ["sysExitEvent"] = "GUI.onExitEvent",
-  ["sysUninstallPackage"] = "GUI.onUninstallPackage",
-}
-
-function GUI.unregisterLifecycleHandlers()
-  return GUI.unregisterOwnedHandlers(
-    GUI.lifecycleHandlerIds,
-    GUI.LIFECYCLE_HANDLERS
-  )
-end
-
 local function registerLifecycleHandler(event, handler)
-  local handlerId, handlerError = GUI.registerOwnedHandler(
-    GUI.lifecycleHandlerIds,
-    event,
-    event,
-    handler,
-    "LIFECYCLE/" .. event
-  )
-  if not handlerId then
+  local previousId = GUI.lifecycleHandlerIds[event]
+  if previousId then
+    pcall(killAnonymousEventHandler, previousId)
+    GUI.lifecycleHandlerIds[event] = nil
+  end
+
+  local ok, handlerId = pcall(registerAnonymousEventHandler, event, handler)
+  if ok then
+    GUI.lifecycleHandlerIds[event] = handlerId
+  else
     GUI.debugError(
       "LIFECYCLE/register/" .. event,
-      "failed to register " .. tostring(handler) .. ": " .. tostring(handlerError)
+      "failed to register " .. tostring(handler) .. ": " .. tostring(handlerId)
     )
   end
-  return handlerId
 end
 
 registerLifecycleHandler("sysLoadEvent", "GUI.onSysLoadEvent")
-registerLifecycleHandler("sysInstall", "GUI.onSysInstallEvent")
+registerLifecycleHandler("sysInstall", "GUI.init")
 
 -- Register protocol handler early to ensure it catches MSDP enablement
 -- This is critical because MSDP can be enabled before GUI.init() completes
 registerLifecycleHandler("sysProtocolEnabled", "GUI.onProtocolEnabled")
 
 -- Add connection-based refresh
-registerLifecycleHandler("sysConnectionEvent", "GUI.onConnectionEvent")
-registerLifecycleHandler("sysExitEvent", "GUI.onExitEvent")
-registerLifecycleHandler("sysUninstallPackage", "GUI.onUninstallPackage")</script>
+registerLifecycleHandler("sysConnectionEvent", "GUI.onConnectionEvent")</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
@@ -5259,7 +4996,10 @@ function GUI.AdjustableContainers.init()
   print("  Save Directory: " .. GUI.AdjustableContainers.saveDir)
   print("  Current Profile: " .. GUI.AdjustableContainers.currentProfile)
 end
-</script>
+
+-- Register initialization
+registerAnonymousEventHandler("sysLoadEvent", "GUI.AdjustableContainers.init")
+registerAnonymousEventHandler("sysInstall", "GUI.AdjustableContainers.init")</script>
 						<eventHandlerList />
 					</Script>
 					<Script isActive="yes" isFolder="no">
@@ -6092,15 +5832,12 @@ function demonnic.chat:append(chat)
   })
 end
 
-function demonnic.chat:stopBlinking()
-  GUI.cancelOwnedTimer("yatco.blink")
-  demonnic.chat.blinkID = nil
-  demonnic.chat.blinkTimerOn = false
-end
+
 
 function demonnic.chat:blink()
+  if demonnic.chat.blinkID then killTimer(demonnic.chat.blinkID) end
   if not demonnic.chat.config.blink then 
-    demonnic.chat:stopBlinking()
+    demonnic.chat.blinkTimerOn = false
     return 
   end
   if not demonnic.chat.container.hidden then
@@ -6108,15 +5845,7 @@ function demonnic.chat:blink()
       demonnic.chat.tabs[tab]:flash()
     end
   end
-  demonnic.chat.blinkTimerOn = true
-  demonnic.chat.blinkID = GUI.setOwnedTimer(
-    "yatco.blink",
-    demonnic.chat.config.blinkTime,
-    function()
-      demonnic.chat.blinkID = nil
-      demonnic.chat:blink()
-    end
-  )
+  demonnic.chat.blinkID = tempTimer(demonnic.chat.config.blinkTime, function () demonnic.chat:blink() end)
 end
 
 function demonnic.chat:topright()
@@ -6402,9 +6131,6 @@ function GUI.debugSnapshot(reason)
 
   GUI.debug("SNAPSHOT", "handler and container counts", {
     eventHandlerIds = GUI.debugCountEntries(GUI.eventHandlerIds),
-    lifecycleHandlerIds = GUI.debugCountEntries(GUI.lifecycleHandlerIds),
-    mapperHandlerIds = GUI.debugCountEntries(map and map.fileScopeHandlerIds),
-    ownedTimerIds = GUI.debugCountEntries(GUI.ownedTimerIds),
     adjustableContainers = GUI.debugCountEntries(
       GUI.AdjustableContainers and GUI.AdjustableContainers.containers
     ),
@@ -6518,8 +6244,8 @@ GUI.debugCall(
   "instrumentation fragment loaded"
 )
 
-if type(GUI.setOwnedTimer) == "function" then
-  GUI.setOwnedTimer("debug.instrumentationSnapshot", 2, GUI.debugWrap("SNAPSHOT/instrumentation delayed timer", function()
+if type(tempTimer) == "function" then
+  tempTimer(2, GUI.debugWrap("SNAPSHOT/instrumentation delayed timer", function()
     GUI.debugCall(
       "SNAPSHOT/instrumentation delayed",
       GUI.debugSnapshot,

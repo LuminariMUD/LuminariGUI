@@ -36,6 +36,14 @@ Begin Changelog entries below
   `GUI.initializeOrRefresh` and the YATCO configuration boundary now report
   full stack traces and allow later diagnostics to load while debug mode is
   enabled. With debugging disabled, original error propagation is preserved.
+- **Central runtime resource ownership.** A first-loaded resource layer now
+  provides replace-before-register handler ownership, named temporary timers,
+  one-shot ID retirement, recurring-timer replacement, and complete profile
+  exit/package uninstall cleanup.
+- **Ownership-aware resource audit.** `scripts/analyze_handlers.py` now
+  assembles current source in memory, separates runtime and package-XML
+  handlers, reports named timer creation sites, supports JSON and explicit XML
+  input, and fails on raw unowned registrations.
 
 ### Fixed
 
@@ -67,6 +75,10 @@ Begin Changelog entries below
   `map.window` and `map.asciiwindow` fields and therefore reported both map
   views as `nil` after successful construction. They now inspect the actual
   `map.mapwindow` and `map.minimap` objects.
+- **Long-lived timer and handler cleanup.** All package-created anonymous
+  handlers and temporary timers now have explicit owners. Reconnect,
+  `resetProfile()`, rapid refresh, sequential refresh, profile exit, and
+  package uninstall no longer leave stacked or stale resource IDs.
 
 ### Changed
 
@@ -78,6 +90,10 @@ Begin Changelog entries below
   memory, find Lua by Mudlet script name, enforce script order/size bounds,
   and cover lifecycle ownership, legacy callback coalescing, reset recovery,
   and real Adjustable.Container `.Inside` parenting semantics.
+- **Exact lifecycle regression baseline.** Production Lua mocks and an
+  isolated Mudlet 4.22 run now verify stable 5 mapper + 26 GUI + 6 lifecycle
+  handlers, one bounded recurring timer, balanced refresh replacement, single
+  event multiplicity, and zero owned resources after uninstall.
 - **Release now means published.** `python3 theGUI/package.py release`
   atomically pushes `master`, the release branch, and annotated tag to
   `origin`, verifies each remote ref, publishes the GitHub Release page,

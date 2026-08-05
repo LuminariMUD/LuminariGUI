@@ -33,6 +33,9 @@ class LifecycleRegressionTester:
         self.debug_source_path = (
             self.repo_root / "theGUI" / "src" / "scripts" / "00_debug.xml"
         )
+        self.resource_source_path = (
+            self.repo_root / "theGUI" / "src" / "scripts" / "00_resources.xml"
+        )
         self.adjustable_source_path = (
             self.repo_root
             / "theGUI"
@@ -141,6 +144,14 @@ class LifecycleRegressionTester:
         scripts = self._load_gui_scripts()
         return "\n".join(scripts[name] for name in self._gui_script_order_cache)
 
+    @staticmethod
+    def _fragment_script(path, script_name):
+        root = ET.fromstring("<root>" + path.read_text(encoding="utf-8") + "</root>")
+        for script in root.iter("Script"):
+            if script.findtext("name") == script_name:
+                return script.findtext("script") or ""
+        raise AssertionError(f"fragment script was not found: {script_name}")
+
     def _run_lua(self, script):
         result = subprocess.run(
             [self.lua_path, "-"],
@@ -160,7 +171,11 @@ class LifecycleRegressionTester:
 
     def _test_upgrade_preserves_file_scope_handler_ids(self):
         source = self._gui_script("GUI Event Registry")
-        register_function = source[source.index("function GUI.registerEventHandlers()"):]
+        register_function = source[source.index("GUI.EVENT_HANDLERS ="):]
+        resource_source = self._fragment_script(
+            self.resource_source_path,
+            "Resource Ownership",
+        )
 
         script = f'''
 GUI = {{
@@ -194,7 +209,10 @@ function registerAnonymousEventHandler()
   return next_id
 end
 
-function tempTimer() end
+function tempTimer() return 1 end
+function killTimer() return true end
+
+{resource_source}
 
 {register_function}
 
@@ -210,6 +228,508 @@ assert(GUI.eventHandlerIds["msdp.ROOM_map"] == 105)
 assert(GUI.eventHandlerIds["msdp.HEALTH"] ~= 201)
 '''
         self._run_lua(script)
+
+    def _test_resource_ownership_manager(self):
+        resource_source = self._fragment_script(
+            self.resource_source_path,
+            "Resource Ownership",
+        )
+
+        script = f'''
+activeTimers = {{}}
+activeHandlers = {{}}
+nextTimerId = 0
+nextHandlerId = 0
+
+function tempTimer(_, callback)
+  nextTimerId = nextTimerId + 1
+  activeTimers[nextTimerId] = callback
+  return nextTimerId
+end
+
+function killTimer(timerId)
+  if not activeTimers[timerId] then return false end
+  activeTimers[timerId] = nil
+  return true
+end
+
+function registerAnonymousEventHandler(event, handler)
+  nextHandlerId = nextHandlerId + 1
+  activeHandlers[nextHandlerId] = {{event = event, handler = handler}}
+  return nextHandlerId
+end
+
+function killAnonymousEventHandler(handlerId)
+  if not activeHandlers[handlerId] then return false end
+  activeHandlers[handlerId] = nil
+  return true
+end
+
+local function countEntries(values)
+  local count = 0
+  for _ in pairs(values) do count = count + 1 end
+  return count
+end
+
+local function fireTimer(name)
+  local timerId = GUI.ownedTimerIds[name]
+  assert(timerId, "owned timer was not registered: " .. name)
+  local callback = activeTimers[timerId]
+  assert(callback, "timer callback was not active: " .. name)
+  activeTimers[timerId] = nil
+  callback()
+end
+
+GUI = {{debugError = function(_, message) error(message) end}}
+{resource_source}
+
+local firstTimer = GUI.setOwnedTimer("replaceable", 1, function() end)
+local secondTimer = GUI.setOwnedTimer("replaceable", 1, function() end)
+assert(firstTimer ~= secondTimer)
+assert(activeTimers[firstTimer] == nil, "replaced timer remained active")
+assert(countEntries(activeTimers) == 1, "timer replacement stacked")
+fireTimer("replaceable")
+assert(GUI.ownedTimerIds.replaceable == nil,
+  "completed one-shot timer retained a stale ID")
+assert(countEntries(activeTimers) == 0)
+
+local ticks = 0
+local function recurringProbe()
+  ticks = ticks + 1
+  if ticks < 2 then
+    GUI.setOwnedTimer("recurring", 1, recurringProbe)
+  end
+end
+GUI.setOwnedTimer("recurring", 1, recurringProbe)
+fireTimer("recurring")
+assert(countEntries(activeTimers) == 1,
+  "recurring timer did not retain exactly one successor")
+fireTimer("recurring")
+assert(countEntries(activeTimers) == 0)
+
+GUI.setOwnedTimer("cleanup-a", 1, function() end)
+GUI.setOwnedTimer("cleanup-b", 1, function() end)
+assert(GUI.cancelAllOwnedTimers() == 2)
+assert(countEntries(activeTimers) == 0)
+assert(countEntries(GUI.ownedTimerIds) == 0)
+
+local owner = {{}}
+local firstHandler = GUI.registerOwnedHandler(
+  owner, "probe", "event.one", "handler.one", "test"
+)
+local secondHandler = GUI.registerOwnedHandler(
+  owner, "probe", "event.two", "handler.two", "test"
+)
+assert(firstHandler ~= secondHandler)
+assert(activeHandlers[firstHandler] == nil,
+  "replaced handler remained active")
+assert(countEntries(activeHandlers) == 1, "handler replacement stacked")
+assert(GUI.unregisterOwnedHandlers(owner) == 1)
+assert(countEntries(activeHandlers) == 0)
+'''
+        self._run_lua(script)
+
+    def _test_package_cleanup_removes_owned_resources(self):
+        resource_source = self._fragment_script(
+            self.resource_source_path,
+            "Resource Ownership",
+        )
+        preferences_source = self._gui_script("Toggles")
+        cleanup_source = preferences_source[
+            preferences_source.index("function GUI.cleanup()") :
+        ]
+
+        script = f'''
+activeTimers = {{}}
+activeHandlers = {{}}
+activeAliases = {{[701] = true, [702] = true}}
+activeTriggers = {{[801] = true}}
+nextTimerId = 0
+nextHandlerId = 0
+
+function tempTimer(_, callback)
+  nextTimerId = nextTimerId + 1
+  activeTimers[nextTimerId] = callback
+  return nextTimerId
+end
+
+function killTimer(timerId)
+  if not activeTimers[timerId] then return false end
+  activeTimers[timerId] = nil
+  return true
+end
+
+function registerAnonymousEventHandler(event, handler)
+  nextHandlerId = nextHandlerId + 1
+  activeHandlers[nextHandlerId] = {{event = event, handler = handler}}
+  return nextHandlerId
+end
+
+function killAnonymousEventHandler(handlerId)
+  if not activeHandlers[handlerId] then return false end
+  activeHandlers[handlerId] = nil
+  return true
+end
+
+function killAlias(aliasId)
+  if not activeAliases[aliasId] then return false end
+  activeAliases[aliasId] = nil
+  return true
+end
+
+function exists(itemId, itemType)
+  if itemType == "trigger" and activeTriggers[itemId] then return 1 end
+  return 0
+end
+
+function killTrigger(triggerId)
+  if not activeTriggers[triggerId] then return false end
+  activeTriggers[triggerId] = nil
+  return true
+end
+
+local function countEntries(values)
+  local count = 0
+  for _ in pairs(values or {{}}) do count = count + 1 end
+  return count
+end
+
+local saves = 0
+local blinkStops = 0
+GUI = {{
+  debugError = function(_, message) error(message) end,
+  saveToggles = function() saves = saves + 1 end,
+  eventHandlerIds = {{}},
+  lifecycleHandlerIds = {{}},
+}}
+{resource_source}
+
+GUI.EVENT_HANDLERS = {{["msdp.ONE"] = true, ["msdp.TWO"] = true}}
+GUI.LIFECYCLE_HANDLERS = {{sysLoadEvent = true}}
+map = {{
+  aliases = {{first = 701, second = 702}},
+  fileScopeHandlerIds = {{}},
+  fileScopeHandlerEvents = {{["msdp.ROOM"] = true}},
+  maplineTrig = 801,
+}}
+demonnic = {{chat = {{stopBlinking = function()
+  blinkStops = blinkStops + 1
+end}}}}
+
+GUI.registerOwnedHandler(
+  GUI.eventHandlerIds, "msdp.ONE", "msdp.ONE", "handler.one"
+)
+GUI.registerOwnedHandler(
+  GUI.eventHandlerIds, "msdp.TWO", "msdp.TWO", "handler.two"
+)
+GUI.registerOwnedHandler(
+  map.fileScopeHandlerIds, "msdp.ROOM", "msdp.ROOM", "map.eventHandler"
+)
+GUI.registerOwnedHandler(
+  GUI.lifecycleHandlerIds,
+  "sysLoadEvent",
+  "sysLoadEvent",
+  "GUI.onSysLoadEvent"
+)
+GUI.setOwnedTimer("cleanup.one", 1, function() end)
+GUI.setOwnedTimer("cleanup.two", 1, function() end)
+
+function GUI.unregisterEventHandlers()
+  return GUI.unregisterOwnedHandlers(GUI.eventHandlerIds, GUI.EVENT_HANDLERS)
+end
+function GUI.unregisterLifecycleHandlers()
+  return GUI.unregisterOwnedHandlers(
+    GUI.lifecycleHandlerIds,
+    GUI.LIFECYCLE_HANDLERS
+  )
+end
+function map.unregisterFileScopeHandlers()
+  return GUI.unregisterOwnedHandlers(
+    map.fileScopeHandlerIds,
+    map.fileScopeHandlerEvents
+  )
+end
+
+{cleanup_source}
+
+local cleaned = GUI.cleanupPackageResources()
+assert(cleaned.timers == 2)
+assert(cleaned.guiHandlers == 2)
+assert(cleaned.mapperHandlers == 1)
+assert(cleaned.lifecycleHandlers == 1)
+assert(cleaned.aliases == 2)
+assert(countEntries(activeTimers) == 0)
+assert(countEntries(activeHandlers) == 0)
+assert(countEntries(activeAliases) == 0)
+assert(countEntries(activeTriggers) == 0)
+assert(countEntries(GUI.ownedTimerIds) == 0)
+assert(countEntries(GUI.eventHandlerIds) == 0)
+assert(countEntries(map.fileScopeHandlerIds) == 0)
+assert(countEntries(GUI.lifecycleHandlerIds) == 0)
+assert(map.maplineTrig == nil)
+assert(saves == 1)
+assert(blinkStops == 1)
+'''
+        self._run_lua(script)
+
+    def _test_handler_counts_across_lifecycle_paths(self):
+        resource_source = self._fragment_script(
+            self.resource_source_path,
+            "Resource Ownership",
+        )
+        mapper_xml = self.mapper_source_path.read_text(encoding="utf-8")
+        mapper_registration = self._extract(
+            mapper_xml,
+            "map.fileScopeHandlerIds = map.fileScopeHandlerIds or {}",
+            "</script>",
+        )
+        registry_source = self._gui_script("GUI Event Registry")
+        refresh_source = self._gui_script("GUI Refresh")
+        lifecycle_source = self._gui_script("GUI Lifecycle")
+
+        script = f'''
+activeHandlers = {{}}
+activeTimers = {{}}
+nextHandlerId = 0
+nextTimerId = 0
+
+function registerAnonymousEventHandler(event, handler)
+  nextHandlerId = nextHandlerId + 1
+  activeHandlers[nextHandlerId] = {{event = event, handler = handler}}
+  return nextHandlerId
+end
+
+function killAnonymousEventHandler(handlerId)
+  if not activeHandlers[handlerId] then return false end
+  activeHandlers[handlerId] = nil
+  return true
+end
+
+function tempTimer(_, callback)
+  nextTimerId = nextTimerId + 1
+  activeTimers[nextTimerId] = callback
+  return nextTimerId
+end
+
+function killTimer(timerId)
+  if not activeTimers[timerId] then return false end
+  activeTimers[timerId] = nil
+  return true
+end
+
+local function countEntries(values)
+  local count = 0
+  for _ in pairs(values or {{}}) do count = count + 1 end
+  return count
+end
+
+local function runAllTimers()
+  local passes = 0
+  while next(activeTimers) do
+    passes = passes + 1
+    assert(passes < 100, "timer queue did not settle")
+    local pending = {{}}
+    for timerId, callback in pairs(activeTimers) do
+      pending[#pending + 1] = {{id = timerId, callback = callback}}
+    end
+    for _, timer in ipairs(pending) do
+      if activeTimers[timer.id] then
+        activeTimers[timer.id] = nil
+        timer.callback()
+      end
+    end
+  end
+end
+
+function cecho() end
+function print() end
+
+GUI = {{
+  DEBUG = false,
+  initialized = true,
+  debug = function() end,
+  debugError = function(_, message) error(message) end,
+  debugCountEntries = countEntries,
+  debugWrap = function(_, callable) return callable end,
+  debugCall = function(_, callable, ...)
+    return true, callable(...)
+  end,
+}}
+{resource_source}
+
+map = {{
+  eventHandler = function() end,
+  onProtocolEnabled = function() end,
+  initialize = function() return true end,
+}}
+{mapper_registration}
+
+msdp = {{}}
+demonnic = {{chat = {{use = false}}}}
+{registry_source}
+{refresh_source}
+
+GUI.loadToggles = function() end
+GUI.applyPreferencesAfterLoad = function() end
+GUI.AdjustableContainers = {{init = function() end}}
+GUI.requestMSDPReports = function() return true end
+GUI.init = function()
+  GUI.registerEventHandlers()
+  GUI.initialized = true
+end
+GUI.cleanup = function() end
+GUI.cleanupPackageResources = function() return {{}} end
+
+{lifecycle_source}
+GUI.registerEventHandlers()
+runAllTimers()
+
+local expectedHandlers = 37
+local function assertStable(stage)
+  assert(countEntries(map.fileScopeHandlerIds) == 5,
+    stage .. ": mapper handler count changed")
+  assert(countEntries(GUI.eventHandlerIds) == 26,
+    stage .. ": GUI handler count changed")
+  assert(countEntries(GUI.lifecycleHandlerIds) == 6,
+    stage .. ": lifecycle handler count changed")
+  assert(countEntries(activeHandlers) == expectedHandlers,
+    stage .. ": live handler count was " .. countEntries(activeHandlers))
+  assert(countEntries(activeTimers) == 0,
+    stage .. ": one-shot timers did not settle")
+  assert(countEntries(GUI.ownedTimerIds) == 0,
+    stage .. ": completed timers retained IDs")
+end
+
+assertStable("initial load")
+
+do
+{mapper_registration}
+end
+do
+{lifecycle_source}
+end
+GUI.registerEventHandlers()
+runAllTimers()
+assertStable("in-session reload")
+
+GUI.onSysLoadEvent("sysLoadEvent", true)
+runAllTimers()
+assertStable("fresh sysLoadEvent")
+
+GUI.onConnectionEvent("sysConnectionEvent")
+runAllTimers()
+assertStable("reconnect")
+
+GUI.onSysLoadEvent("sysLoadEvent", false)
+runAllTimers()
+assertStable("resetProfile")
+
+for _ = 1, 10 do
+  GUI.initializeOrRefresh("fix gui command")
+  runAllTimers()
+  assertStable("repeated fix gui")
+end
+
+for _ = 1, 10 do
+  GUI.initializeOrRefresh("fix gui command")
+end
+assert(countEntries(activeHandlers) == expectedHandlers,
+  "rapid fix gui calls stacked handlers")
+runAllTimers()
+assertStable("rapid fix gui")
+'''
+        self._run_lua(script)
+
+    def _test_handler_analyzer_reports_owned_resources(self):
+        analyzer = self.repo_root / "scripts" / "analyze_handlers.py"
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(analyzer),
+                "--json",
+                "--fail-on-unowned",
+            ],
+            cwd=self.repo_root,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        self._require(result.returncode == 0, result.stdout + result.stderr)
+        report = json.loads(result.stdout)
+        totals = report["totals"]
+        self._require(
+            totals["owned_handlers"] == 37,
+            f"unexpected runtime handler total: {totals}",
+        )
+        self._require(
+            totals["xml_handlers"] == 2,
+            f"unexpected package/XML handler total: {totals}",
+        )
+        self._require(
+            totals["recurring_timers"] == 1,
+            f"unexpected recurring timer total: {totals}",
+        )
+        self._require(
+            totals["unowned_handlers"] == 0
+            and totals["unowned_timers"] == 0,
+            f"analyzer reported unowned resources: {totals}",
+        )
+
+        built_xml = (self.repo_root / "LuminariGUI.xml").read_text(
+            encoding="utf-8"
+        )
+        probe = '''<Script isActive="yes" isFolder="no">
+  <name>Unowned Probe</name>
+  <packageName></packageName>
+  <script>tempTimer(1, function() end)</script>
+  <eventHandlerList />
+</Script>
+'''
+        self._require(
+            "</ScriptPackage>" in built_xml,
+            "built XML has no ScriptPackage terminator",
+        )
+        probe_xml = built_xml.replace(
+            "</ScriptPackage>",
+            probe + "</ScriptPackage>",
+            1,
+        )
+        with tempfile.TemporaryDirectory() as temp_dir:
+            probe_path = Path(temp_dir) / "unowned.xml"
+            probe_path.write_text(probe_xml, encoding="utf-8")
+            failed = subprocess.run(
+                [
+                    sys.executable,
+                    str(analyzer),
+                    "--xml",
+                    str(probe_path),
+                    "--json",
+                    "--fail-on-unowned",
+                ],
+                cwd=self.repo_root,
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+        self._require(
+            failed.returncode == 1,
+            "analyzer accepted an unowned tempTimer call:\n"
+            + failed.stdout
+            + failed.stderr,
+        )
+        failed_report = json.loads(failed.stdout)
+        probe_report = next(
+            (
+                script
+                for script in failed_report["scripts"]
+                if script["script"] == "Unowned Probe"
+            ),
+            None,
+        )
+        self._require(
+            probe_report is not None and probe_report["unowned_timers"] == 1,
+            "analyzer did not identify the injected Unowned Probe timer",
+        )
 
     def _test_mapper_initializer_is_exported(self):
         source = self.mapper_source_path.read_text(encoding="utf-8")
@@ -249,6 +769,7 @@ GUI = {{
   debug = function() end,
   debugCountEntries = function() return 0 end,
   debugWrap = function(_, callable) return callable end,
+  setOwnedTimer = function(_, _, callback) callback() end,
   AdjustableContainers = {{
     defaultStyle = {{}},
     saveDir = "/tmp/luminari-layouts/",
@@ -332,6 +853,13 @@ GUI = {{
   debugWrap = function(_, callable)
     return callable
   end,
+  setOwnedTimer = function(_, _, callback) return tempTimer(0, callback) end,
+  registerOwnedHandler = function(owner, key, event, handler)
+    local handlerId = registerAnonymousEventHandler(event, handler)
+    owner[key] = handlerId
+    return handlerId
+  end,
+  unregisterOwnedHandlers = function() return 0 end,
   init = function() calls.gui = calls.gui + 1 end,
   requestMSDPReports = function()
     calls.reports = calls.reports + 1
@@ -387,6 +915,13 @@ end
 GUI = {{
   debug = function() end,
   debugError = function() end,
+  registerOwnedHandler = function(owner, key, event, handler)
+    if owner[key] then killAnonymousEventHandler(owner[key]) end
+    local handlerId = registerAnonymousEventHandler(event, handler)
+    owner[key] = handlerId
+    return handlerId
+  end,
+  unregisterOwnedHandlers = function() return 0 end,
 }}
 
 do
@@ -399,7 +934,7 @@ local function activeCount()
   return count
 end
 
-assert(activeCount() == 4, "initial lifecycle registration count is wrong")
+assert(activeCount() == 6, "initial lifecycle registration count is wrong")
 local firstIds = {{}}
 for event, handlerId in pairs(GUI.lifecycleHandlerIds) do
   firstIds[event] = handlerId
@@ -409,8 +944,8 @@ do
 {source}
 end
 
-assert(activeCount() == 4, "lifecycle handlers stacked after recompilation")
-assert(killed == 4, "owned lifecycle handlers were not replaced")
+assert(activeCount() == 6, "lifecycle handlers stacked after recompilation")
+assert(killed == 6, "owned lifecycle handlers were not replaced")
 for event, oldId in pairs(firstIds) do
   assert(GUI.lifecycleHandlerIds[event] ~= oldId,
     "lifecycle handler ID was not replaced for " .. event)
@@ -441,6 +976,7 @@ GUI = {{
   debug = function() end,
   debugCountEntries = function() return 0 end,
   debugWrap = function(_, callable) return callable end,
+  setOwnedTimer = function(_, _, callback) return tempTimer(0, callback) end,
   registerEventHandlers = function()
     registrationCalls = registrationCalls + 1
   end,
@@ -479,6 +1015,7 @@ GUI = {{
   debug = function() end,
   debugError = function() end,
   debugWrap = function(_, callable) return callable end,
+  setOwnedTimer = function(_, _, callback) return tempTimer(0, callback) end,
   debugCall = function(_, callable, ...)
     return true, callable(...)
   end,
@@ -527,6 +1064,7 @@ end
 GUI = {{
   debug = function() end,
   debugError = function() end,
+  setOwnedTimer = function(_, _, callback) return tempTimer(0, callback) end,
   debugCall = function(_, callable, ...)
     return true, callable(...)
   end,
@@ -561,6 +1099,7 @@ GUI = {{
     return count
   end,
   debugWrap = function(_, callable) return callable end,
+  setOwnedTimer = function(_, _, callback) callback() end,
   registerEventHandlers = function() end,
 }}
 
@@ -982,7 +1521,11 @@ assert(propagated == false,
 
     def _test_debug_event_callbacks_keep_their_event_and_handler(self):
         source = self._gui_script("GUI Event Registry")
-        register_function = source[source.index("function GUI.registerEventHandlers()"):]
+        register_function = source[source.index("GUI.EVENT_HANDLERS ="):]
+        resource_source = self._fragment_script(
+            self.resource_source_path,
+            "Resource Ownership",
+        )
 
         script = f'''
 handlers = {{}}
@@ -1025,7 +1568,10 @@ function registerAnonymousEventHandler(event, callback)
   return next_id
 end
 function killAnonymousEventHandler() return true end
-function tempTimer() end
+function tempTimer() return 1 end
+function killTimer() return true end
+
+{resource_source}
 
 {register_function}
 
@@ -1884,6 +2430,22 @@ raise SystemExit(1)
             (
                 "upgrade_handler_ownership",
                 self._test_upgrade_preserves_file_scope_handler_ids,
+            ),
+            (
+                "resource_ownership_manager",
+                self._test_resource_ownership_manager,
+            ),
+            (
+                "package_cleanup_owned_resources",
+                self._test_package_cleanup_removes_owned_resources,
+            ),
+            (
+                "handler_counts_across_lifecycle_paths",
+                self._test_handler_counts_across_lifecycle_paths,
+            ),
+            (
+                "handler_analyzer_owned_resources",
+                self._test_handler_analyzer_reports_owned_resources,
             ),
             ("mapper_initializer_exported", self._test_mapper_initializer_is_exported),
             ("mapper_initializer_idempotent", self._test_mapper_initializer_is_idempotent),

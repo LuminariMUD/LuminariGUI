@@ -1,0 +1,150 @@
+			<ScriptGroup isActive="yes" isFolder="yes">
+				<name>LuminariResources</name>
+				<packageName>LuminariGUI</packageName>
+				<script></script>
+				<eventHandlerList />
+				<Script isActive="yes" isFolder="no">
+					<name>Resource Ownership</name>
+					<packageName></packageName>
+					<script>-- Central ownership for runtime-created handlers and timers.
+-- This fragment loads before the mapper and GUI so every subsystem can use
+-- the same replace-before-register behavior.
+GUI = GUI or {}
+GUI.ownedTimerIds = GUI.ownedTimerIds or {}
+
+local function resourceError(scope, message)
+  if type(GUI.debugError) == "function" then
+    GUI.debugError("RESOURCE/" .. scope, message)
+  else
+    print("[LuminariGUI resource error] " .. tostring(message))
+  end
+end
+
+function GUI.cancelOwnedTimer(name)
+  local timerId = GUI.ownedTimerIds[name]
+  if not timerId then
+    return false
+  end
+
+  GUI.ownedTimerIds[name] = nil
+  local ok, result = pcall(killTimer, timerId)
+  if not ok then
+    resourceError("TIMER/CANCEL/" .. tostring(name), result)
+    return false
+  end
+  return result ~= false
+end
+
+function GUI.setOwnedTimer(name, delay, callback)
+  if type(name) ~= "string" or name == "" then
+    error("GUI.setOwnedTimer requires a non-empty timer name")
+  end
+  if type(callback) ~= "function" then
+    error("GUI.setOwnedTimer requires a function callback")
+  end
+
+  GUI.cancelOwnedTimer(name)
+
+  local timerId
+  local completedSynchronously = false
+  local function runOwnedTimer(...)
+    completedSynchronously = true
+    if GUI.ownedTimerIds[name] == timerId then
+      GUI.ownedTimerIds[name] = nil
+    end
+    return callback(...)
+  end
+
+  local ok, result = pcall(tempTimer, delay, runOwnedTimer)
+  if not ok or result == nil then
+    resourceError("TIMER/CREATE/" .. name, result)
+    return nil, result
+  end
+
+  timerId = result
+  if not completedSynchronously then
+    GUI.ownedTimerIds[name] = timerId
+  end
+  return timerId
+end
+
+function GUI.cancelAllOwnedTimers()
+  local names = {}
+  for name in pairs(GUI.ownedTimerIds) do
+    names[#names + 1] = name
+  end
+
+  local canceled = 0
+  for _, name in ipairs(names) do
+    if GUI.cancelOwnedTimer(name) then
+      canceled = canceled + 1
+    end
+  end
+  return canceled
+end
+
+function GUI.registerOwnedHandler(ownerTable, key, event, handler, scope)
+  if type(ownerTable) ~= "table" then
+    error("GUI.registerOwnedHandler requires an owner table")
+  end
+
+  local previousId = ownerTable[key]
+  if previousId then
+    local removed, removeResult = pcall(
+      killAnonymousEventHandler,
+      previousId
+    )
+    if not removed then
+      resourceError(
+        "HANDLER/REMOVE/" .. tostring(scope or key),
+        removeResult
+      )
+    end
+    ownerTable[key] = nil
+  end
+
+  local ok, handlerId = pcall(registerAnonymousEventHandler, event, handler)
+  if not ok or handlerId == nil then
+    resourceError(
+      "HANDLER/CREATE/" .. tostring(scope or key),
+      handlerId
+    )
+    return nil, handlerId
+  end
+
+  ownerTable[key] = handlerId
+  return handlerId
+end
+
+function GUI.unregisterOwnedHandlers(ownerTable, keys)
+  if type(ownerTable) ~= "table" then
+    return 0
+  end
+
+  local ownedKeys = {}
+  if type(keys) == "table" then
+    for key in pairs(keys) do
+      ownedKeys[#ownedKeys + 1] = key
+    end
+  else
+    for key in pairs(ownerTable) do
+      ownedKeys[#ownedKeys + 1] = key
+    end
+  end
+
+  local removed = 0
+  for _, key in ipairs(ownedKeys) do
+    local handlerId = ownerTable[key]
+    if handlerId then
+      local ok, result = pcall(killAnonymousEventHandler, handlerId)
+      if ok and result ~= false then
+        removed = removed + 1
+      end
+      ownerTable[key] = nil
+    end
+  end
+  return removed
+end</script>
+					<eventHandlerList />
+				</Script>
+			</ScriptGroup>

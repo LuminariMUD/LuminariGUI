@@ -58,7 +58,9 @@ Updates happen automatically when MSDP data changes, but manual refresh is possi
    `GUI.initializeOrRefresh("fix gui command")`. It idempotently replaces the
    GUI-owned event handlers, refreshes available MSDP-backed displays, restores
    container visibility and z-order, and starts chat if needed. File-scope
-   mapper/protocol handlers are deliberately outside this cleanup boundary.
+   mapper/protocol handlers are deliberately outside this refresh boundary but
+   remain explicitly owned and are removed during package uninstall. See
+   [Runtime Resource Ownership](RESOURCE_LIFECYCLE.md).
 
 #### 5. Example MSDP Variables for GUI
 

@@ -446,7 +446,7 @@ function map.initialize()
     end
     
     -- Single initialization timer to ensure proper rendering
-    tempTimer(0.2, GUI.debugWrap("MAPPER/INIT/render timer", function()
+    GUI.setOwnedTimer("mapper.render", 0.2, GUI.debugWrap("MAPPER/INIT/render timer", function()
       if map.mapwindow then
         map.mapwindow:show()
         map.mapwindow:resize()
@@ -530,7 +530,7 @@ function map.eventHandler(event,...)
 					 if map.container then 
 					   map.container:show()
 					   -- Delay mapper refresh to ensure container is visible
-					   tempTimer(0.1, GUI.debugWrap("MAPPER/EVENT/room transition resize", function()
+					   GUI.setOwnedTimer("mapper.roomTransitionResize", 0.1, GUI.debugWrap("MAPPER/EVENT/room transition resize", function()
 					     if map.mapwindow then
 					       map.mapwindow:show()
 					       map.mapwindow:resize()
@@ -581,18 +581,34 @@ function map.onProtocolEnabled(_, protocol)
 end
 
 map.fileScopeHandlerIds = map.fileScopeHandlerIds or {}
+map.fileScopeHandlerEvents = {
+  ["msdp.ROOM"] = true,
+  ["shiftRoom"] = true,
+  ["sysConnectionEvent"] = true,
+  ["sysProtocolEnabled"] = true,
+  ["sysDownloadDone"] = true,
+}
 local function registerFileScopeHandler(event, handler)
-  local ok, handlerId = GUI.debugCall(
-    "MAPPER/EVENT/register/" .. event,
-    registerAnonymousEventHandler,
+  local handlerId = GUI.registerOwnedHandler(
+    map.fileScopeHandlerIds,
     event,
-    handler
+    event,
+    handler,
+    "MAPPER/" .. event
   )
-  if ok then
-    map.fileScopeHandlerIds[event] = handlerId
-  else
-    map.fileScopeHandlerIds[event] = nil
-  end
+  GUI.debug("MAPPER/EVENT", "file-scope handler registration", {
+    event = event,
+    handler = handler,
+    handlerId = handlerId,
+  })
+  return handlerId
+end
+
+function map.unregisterFileScopeHandlers()
+  return GUI.unregisterOwnedHandlers(
+    map.fileScopeHandlerIds,
+    map.fileScopeHandlerEvents
+  )
 end
 
 registerFileScopeHandler("msdp.ROOM", "map.eventHandler")

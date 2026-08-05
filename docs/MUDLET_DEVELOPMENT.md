@@ -658,6 +658,9 @@ a supported Mudlet release for this hands-on smoke test:
   modifier keys.
 - Run `fix gui` repeatedly and confirm there is no duplicated output,
   handler growth, or progressively slower refresh.
+- Run `python3 scripts/analyze_handlers.py --fail-on-unowned` and compare any
+  live handler/timer observations with the exact ownership baseline in
+  [RESOURCE_LIFECYCLE.md](RESOURCE_LIFECYCLE.md).
 - Save and reload Adjustable.Container profiles; resize the window and
   confirm parenting, visibility, and z-order remain correct.
 - Test the supported in-place upgrade path. Consult

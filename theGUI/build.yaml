@@ -5,7 +5,7 @@
 
 package:
   name: "LuminariGUI"
-  version: "2.0.4.038"
+  version: "2.0.4.039"
 
 output:
   file: "../LuminariGUI.xml"
@@ -28,6 +28,7 @@ aliases:
 
 scripts:
   - src/scripts/00_debug.xml
+  - src/scripts/00_resources.xml
   - src/scripts/00_adjustablecontainers.xml
   - src/scripts/00_msdpmapper.xml
   - src/scripts/01_gui.xml

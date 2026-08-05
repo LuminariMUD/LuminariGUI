@@ -1,64 +1,247 @@
 #!/usr/bin/env python3
-"""
-Handler Analysis Script for LuminariGUI
-Analyzes Lua scripts within the XML package to track event handler and timer usage.
-Reports on creation vs cleanup of handlers/timers to help identify potential memory leaks.
+"""Audit runtime handler and timer ownership in assembled package sources.
+
+The old report compared lexical create/kill counts. That incorrectly labeled
+every Mudlet one-shot timer as a leak and missed registrations made through
+wrapper functions. This analyzer assembles the current source tree in memory,
+classifies package/XML-owned and runtime-owned resources, and reports only raw
+runtime registrations outside the central ownership manager as unowned.
 """
 
-import xml.etree.ElementTree as ET
+import argparse
+import importlib.util
+import io
+import json
 import re
-import os
+import sys
+import xml.etree.ElementTree as ET
+from contextlib import redirect_stdout
+from pathlib import Path
 
-# Get script directory for relative path calculations
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)
 
-def get_project_path(relative_path):
-    """Get absolute path relative to project root"""
-    return os.path.join(PROJECT_ROOT, relative_path)
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+BUILD_SCRIPT = PROJECT_ROOT / "theGUI" / "build.py"
+RESOURCE_MANAGER_SCRIPT = "Resource Ownership"
+RECURRING_TIMER_NAMES = {"yatco.blink"}
 
-tree = ET.parse(get_project_path('LuminariGUI.xml'))
-root = tree.getroot()
 
-# Find all Script elements with their names
-def find_script_name(elem):
-    # Look for name element in Script
-    if elem.tag == 'Script':
-        name_elem = elem.find('name')
-        if name_elem is not None and name_elem.text:
-            return name_elem.text
-    return None
+def assemble_source_xml():
+    """Build current fragments in memory without changing the repository."""
+    spec = importlib.util.spec_from_file_location(
+        "luminari_handler_audit_build",
+        BUILD_SCRIPT,
+    )
+    if spec is None or spec.loader is None:
+        raise RuntimeError("could not load theGUI/build.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
 
-# Analyze each script
-results = {}
+    build_log = io.StringIO()
+    with redirect_stdout(build_log):
+        success, assembled = module.Builder(module.BuildConfig()).build(
+            validate_only=True
+        )
+    if not success:
+        raise RuntimeError(
+            "source assembly failed:\n" + build_log.getvalue().strip()
+        )
+    return assembled
 
-for script_elem in root.iter('Script'):
-    script_name = find_script_name(script_elem)
-    if not script_name:
-        continue
-    
-    script_text_elem = script_elem.find('script')
-    if script_text_elem is None or not script_text_elem.text:
-        continue
-    
-    script_text = script_text_elem.text
-    
-    # Count handlers and timers
-    handler_creates = len(re.findall(r'registerAnonymousEventHandler\s*\(', script_text))
-    handler_kills = len(re.findall(r'killAnonymousEventHandler\s*\(', script_text))
-    timer_creates = len(re.findall(r'tempTimer\s*\(', script_text))
-    timer_kills = len(re.findall(r'killTimer\s*\(', script_text))
-    
-    if handler_creates > 0 or timer_creates > 0:
-        results[script_name] = {
-            'handlers': {'created': handler_creates, 'killed': handler_kills},
-            'timers': {'created': timer_creates, 'killed': timer_kills}
-        }
 
-print(f"{'Script Name':<30} | {'Handlers (New/Kill)':<20} | {'Timers (New/Kill)':<20}")
-print("-" * 80)
+def load_root(xml_path=None):
+    if xml_path:
+        return ET.parse(xml_path).getroot()
+    return ET.fromstring(assemble_source_xml())
 
-for name, data in sorted(results.items()):
-    handlers = f"{data['handlers']['created']}/{data['handlers']['killed']}"
-    timers = f"{data['timers']['created']}/{data['timers']['killed']}"
-    print(f"{name:<30} | {handlers:<20} | {timers:<20}")
+
+def logical_handler_count(script_name, source):
+    """Count registrations hidden behind the package's ownership wrappers."""
+    if script_name == "MSDPMapper":
+        return len(
+            re.findall(r'registerFileScopeHandler\s*\(\s*["\']', source)
+        )
+    if script_name == "GUI Lifecycle":
+        return len(
+            re.findall(r'registerLifecycleHandler\s*\(\s*["\']', source)
+        )
+    if script_name == "GUI Event Registry":
+        table_source = source.split(
+            "function GUI.unregisterEventHandlers", 1
+        )[0]
+        return len(
+            re.findall(r'^\s*\[["\'][^"\']+["\']\]\s*=', table_source, re.M)
+        )
+    return 0
+
+
+def timer_names(source):
+    return re.findall(
+        r'GUI\.setOwnedTimer\s*\(\s*["\']([^"\']+)["\']',
+        source,
+    )
+
+
+def raw_registration_count(source, primitive):
+    direct = rf'\b{primitive}\s*\('
+    through_pcall = rf'\bpcall\s*\(\s*{primitive}\b'
+    return len(re.findall(direct, source)) + len(
+        re.findall(through_pcall, source)
+    )
+
+
+def classify_script(script):
+    name = script.findtext("name") or "unnamed"
+    source = script.findtext("script") or ""
+    xml_handlers = len(script.findall("./eventHandlerList/string"))
+    owned_handlers = logical_handler_count(name, source)
+    owned_timer_names = timer_names(source)
+    recurring_timers = sum(
+        timer_name in RECURRING_TIMER_NAMES
+        for timer_name in owned_timer_names
+    )
+
+    raw_handlers = raw_registration_count(
+        source,
+        "registerAnonymousEventHandler",
+    )
+    raw_timers = raw_registration_count(source, "tempTimer")
+    manager = name == RESOURCE_MANAGER_SCRIPT
+    unowned_handlers = 0 if manager else raw_handlers
+    unowned_timers = 0 if manager else raw_timers
+
+    if unowned_handlers or unowned_timers:
+        status = "UNOWNED"
+    elif manager:
+        status = "ownership manager"
+    elif recurring_timers:
+        status = "owned recurring"
+    elif owned_timer_names:
+        status = "owned one-shot"
+    elif xml_handlers:
+        status = "package XML"
+    else:
+        status = "owned handlers"
+
+    return {
+        "script": name,
+        "owned_handlers": owned_handlers,
+        "xml_handlers": xml_handlers,
+        "owned_timers": len(owned_timer_names),
+        "recurring_timers": recurring_timers,
+        "timer_names": owned_timer_names,
+        "unowned_handlers": unowned_handlers,
+        "unowned_timers": unowned_timers,
+        "status": status,
+    }
+
+
+def analyze(root):
+    results = []
+    for script in root.iter("Script"):
+        result = classify_script(script)
+        if any(
+            result[key]
+            for key in (
+                "owned_handlers",
+                "xml_handlers",
+                "owned_timers",
+                "unowned_handlers",
+                "unowned_timers",
+            )
+        ) or result["script"] == RESOURCE_MANAGER_SCRIPT:
+            results.append(result)
+
+    totals = {
+        key: sum(result[key] for result in results)
+        for key in (
+            "owned_handlers",
+            "xml_handlers",
+            "owned_timers",
+            "recurring_timers",
+            "unowned_handlers",
+            "unowned_timers",
+        )
+    }
+    return {"scripts": results, "totals": totals}
+
+
+def print_text(report):
+    header = (
+        f"{'Script':<30} | {'Handlers owned/XML':<20} | "
+        f"{'Timer sites/unowned':<20} | Status"
+    )
+    print(header)
+    print("-" * len(header))
+    for result in report["scripts"]:
+        handlers = (
+            f"{result['owned_handlers']}/{result['xml_handlers']}"
+        )
+        timers = (
+            f"{result['owned_timers']}/{result['unowned_timers']}"
+        )
+        print(
+            f"{result['script']:<30} | {handlers:<20} | "
+            f"{timers:<20} | {result['status']}"
+        )
+
+    totals = report["totals"]
+    print()
+    print(
+        "Owned runtime handlers: "
+        f"{totals['owned_handlers']} "
+        f"(+ {totals['xml_handlers']} package/XML-owned)"
+    )
+    print(
+        "Owned timer creation sites: "
+        f"{totals['owned_timers']} "
+        f"({totals['recurring_timers']} recurring)"
+    )
+    print(f"Unowned runtime handlers: {totals['unowned_handlers']}")
+    print(f"Unowned runtime timers: {totals['unowned_timers']}")
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Audit LuminariGUI handler and timer ownership"
+    )
+    parser.add_argument(
+        "--xml",
+        type=Path,
+        help="analyze an explicit built XML instead of assembling sources",
+    )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="emit machine-readable JSON",
+    )
+    parser.add_argument(
+        "--fail-on-unowned",
+        action="store_true",
+        help="exit non-zero when a raw unowned registration is found",
+    )
+    return parser.parse_args()
+
+
+def main():
+    args = parse_args()
+    try:
+        report = analyze(load_root(args.xml))
+    except (ET.ParseError, OSError, RuntimeError) as error:
+        print(f"ERROR: {error}", file=sys.stderr)
+        return 2
+
+    if args.json:
+        print(json.dumps(report, indent=2, sort_keys=True))
+    else:
+        print_text(report)
+
+    totals = report["totals"]
+    if args.fail_on_unowned and (
+        totals["unowned_handlers"] or totals["unowned_timers"]
+    ):
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

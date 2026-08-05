@@ -45,6 +45,7 @@ Detailed documentation is available in the `docs/` directory:
 *   **[Build System Guide](theGUI/README_theGUI.md)**: How to use the source-to-build system for modular XML development.
 *   **[Python Tools](docs/PYTHON_TOOLS.md)**: Guide to the automated build and testing tools (`validate_package.py`, `run_tests.py`, etc.).
 *   **[Protocol Reference](docs/PROTOCOL_REFERENCE.md)**: Details on MSDP variables and how they map to the GUI.
+*   **[Runtime Resource Ownership](docs/RESOURCE_LIFECYCLE.md)**: Handler/timer ownership, cleanup boundaries, audit commands, and verified lifecycle counts.
 *   **[Sound Usage](docs/SOUND_USAGE.md)**: Configuration for sound triggers and audio assets.
 *   **[Changelog](docs/CHANGELOG.md)**: History of changes and updates.
 *   **[Historical Changelog](docs/HISTORICAL_CHANGELOG.md)**: Preserved release history through v2.0.4.016.

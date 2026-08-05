@@ -35,13 +35,9 @@ function GUI.initializeOrRefresh(context)
     return true
   end
   GUI.refreshCallsPending[context] = true
-  if type(tempTimer) == "function" then
-    tempTimer(0.5, function()
-      GUI.refreshCallsPending[context] = nil
-    end)
-  else
+  GUI.setOwnedTimer("gui.refreshCallPending." .. context, 0.5, function()
     GUI.refreshCallsPending[context] = nil
-  end
+  end)
 
   -- resetProfile() clears Mudlet's protocol tables before sysLoadEvent fires.
   -- Recreate the MSDP table so an in-place GUI refresh remains safe while the
@@ -140,7 +136,7 @@ function GUI.initializeOrRefresh(context)
     map.mapwindow:show()
     map.mapwindow:resize()
     -- Force refresh with delayed operations
-    tempTimer(0.1, GUI.debugWrap("GUI/REFRESH/mapper delayed resize", function()
+    GUI.setOwnedTimer("gui.refreshMapperResize", 0.1, GUI.debugWrap("GUI/REFRESH/mapper delayed resize", function()
       if map.mapwindow then
         map.mapwindow:resize()
         if map.mapwindow.raise then
@@ -215,7 +211,7 @@ function GUI.initializeOrRefresh(context)
   end
   
   -- Ensure proper z-order (delayed to allow all components to initialize)
-  tempTimer(0.5, GUI.debugWrap("GUI/REFRESH/z-order timer", function()
+  GUI.setOwnedTimer("gui.refreshZOrder", 0.5, GUI.debugWrap("GUI/REFRESH/z-order timer", function()
     -- Let Adjustable Containers manage their own z-order
     -- Only raise containers that need to be on top of others
     if GUI.chatContainer then GUI.chatContainer:raise() end

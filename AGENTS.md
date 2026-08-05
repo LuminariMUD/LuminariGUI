@@ -208,13 +208,13 @@ local health = tonumber(msdp.HEALTH) or 0
 ### Event Registration
 
 Most handlers are **not** registered with scattered direct calls.
-`GUI.registerEventHandlers()` in `scripts/gui/51_event_registry.xml` holds a
-central `eventHandlers` table and registers each entry through `pcall` so a bad
-handler logs instead of aborting the loop. **Add new MSDP-driven handlers to
-that table**, not as standalone calls:
+`GUI.registerEventHandlers()` in `scripts/gui/51_event_registry.xml` holds the
+central `GUI.EVENT_HANDLERS` table. The shared ownership functions in
+`src/scripts/00_resources.xml` replace prior IDs and log registration errors.
+**Add new MSDP-driven handlers to that table**, not as standalone calls:
 
 ```lua
-local eventHandlers = {
+GUI.EVENT_HANDLERS = {
     ["msdp.HEALTH"]        = "GUI.updateHealthGauge",
     ["msdp.HEALTH_MAX"]    = "GUI.updateHealthGauge",
     ["msdp.MOVEMENT"]      = "GUI.updateMovesGauge",
@@ -223,17 +223,25 @@ local eventHandlers = {
 }
 ```
 
-**`GUI.registerEventHandlers()` is called on every `GUI.init()` and every `GUI.initializeOrRefresh()`, so it must stay idempotent.** It kills only the table entries for events owned by its local `eventHandlers` table before re-registering. Do not sweep every ID in `GUI.eventHandlerIds`: older installations retain IDs for the file-scope mapper/protocol handlers, and Mudlet 4.21 can reuse those IDs during an in-place upgrade. Without cleanup of the owned entries, handlers stack on every refresh — this was a real bug (36 → 324 live handlers over ten refreshes). If you add an owned registration path, record its ID there too.
+**`GUI.registerEventHandlers()` is called on every `GUI.init()` and every `GUI.initializeOrRefresh()`, so it must stay idempotent.** It kills only the table entries for events owned by `GUI.EVENT_HANDLERS` before re-registering. Do not sweep every ID in `GUI.eventHandlerIds`: older installations retain IDs for the file-scope mapper/protocol handlers, and Mudlet 4.21 can reuse those IDs during an in-place upgrade. Without cleanup of the owned entries, handlers stack on every refresh — this was a real bug (36 → 324 live handlers over ten refreshes). If you add an owned registration path, record its ID there too.
 
 **Do not add an event to the table if it is already registered at file scope** — Mudlet allows multiple handlers per event, so duplicates silently double the work. `map.eventHandler` and `map.onProtocolEnabled` are registered at file scope in `00_msdpmapper.xml` (`msdp.ROOM`, `shiftRoom`, `sysConnectionEvent`, `sysDownloadDone`, `sysProtocolEnabled`) and must **not** be repeated in the GUI tables. Note `msdp.ROOM` legitimately has two *different* handlers: `GUI.updateRoom` (table) and `map.eventHandler` (file scope).
 
-Lifecycle events are still registered at file scope, but
-`scripts/gui/53_lifecycle.xml` owns their IDs in
+Lifecycle events are registered at file scope, but
+`scripts/gui/53_lifecycle.xml` owns all six IDs in
 `GUI.lifecycleHandlerIds` and replaces them through its
 `registerLifecycleHandler()` helper. Do not add an untracked lifecycle
 registration: Mudlet can retain function-reference handlers across an
 in-session package replacement, which otherwise duplicates load/connection
-work. `sysExitEvent` registrations outside that fragment remain direct.
+work. `sysExitEvent` and `sysUninstallPackage` also belong in this registry.
+
+All runtime timers use stable names through `GUI.setOwnedTimer()`. Do not add
+raw `tempTimer()` calls. One-shot callbacks remove their ID before invoking
+application code, recurring callbacks replace their previous ID, and package
+uninstall cancels the complete `GUI.ownedTimerIds` registry. Run
+`python3 scripts/analyze_handlers.py --fail-on-unowned` after changing handler
+or timer ownership. The full contract and current exact counts are documented
+in `docs/RESOURCE_LIFECYCLE.md`.
 
 Since Mudlet 4.20, `sysLoadEvent` passes a boolean second argument (`true` = fresh load, `false` = after `resetProfile()`). The package uses this: after a reset, neither `sysConnectionEvent` nor `sysProtocolEnabled` fires again, so it calls `map.initialize()` to recreate both map views, then `GUI.requestMSDPReports()` and `GUI.initializeOrRefresh()`.
 Mudlet also clears the global `msdp` table during a reset, so the refresh path

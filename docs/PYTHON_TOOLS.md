@@ -8,6 +8,7 @@ The LuminariGUI project includes a sophisticated Python toolchain that provides 
 - **[`theGUI/build.py`](#theguibuildpy---source-to-build-system)** - Assembles source fragments into LuminariGUI.xml
 - **[`theGUI/package.py`](#theguipackagepy---package-manager)** - Creates .mpackage files and manages releases
 - **[`scripts/validate_package.py`](#scriptsvalidate_packagepy---package-validation)** - Package validation with Lua syntax checking
+- **[`scripts/analyze_handlers.py`](#scriptsanalyze_handlerspy---runtime-resource-audit)** - Audits handler/timer ownership
 - **[`tests/run_tests.py`](#testsrun_testspy---testing-orchestration)** - Comprehensive testing framework
 
 ### Key Benefits
@@ -184,6 +185,32 @@ python3 scripts/validate_package.py --no-lua-syntax
 - **XML Validation**: Checks structure and required elements
 - **Lua Syntax**: Validates all embedded Lua code using luac
 - **Issue Detection**: Finds common problems like unescaped characters
+
+### scripts/analyze_handlers.py - Runtime Resource Audit
+
+**Purpose**: Assembles current source in memory, reports owned runtime
+handlers and timer creation sites, and rejects direct registrations outside
+the central ownership manager.
+
+```bash
+# Human-readable source audit
+python3 scripts/analyze_handlers.py
+
+# CI/pre-commit gate
+python3 scripts/analyze_handlers.py --fail-on-unowned
+
+# Machine-readable report
+python3 scripts/analyze_handlers.py --json --fail-on-unowned
+
+# Audit one explicit package XML
+python3 scripts/analyze_handlers.py --xml LuminariGUI.xml
+```
+
+The report distinguishes anonymous runtime handlers, Mudlet-owned
+`<eventHandlerList>` entries, owned timer call sites, the intentional
+`yatco.blink` recurrence, and raw unowned registrations. See
+[RESOURCE_LIFECYCLE.md](RESOURCE_LIFECYCLE.md) for the ownership contract and
+verified baseline.
 
 ### tests/run_tests.py - Testing Orchestration
 

@@ -110,6 +110,9 @@ function GUI.debugSnapshot(reason)
 
   GUI.debug("SNAPSHOT", "handler and container counts", {
     eventHandlerIds = GUI.debugCountEntries(GUI.eventHandlerIds),
+    lifecycleHandlerIds = GUI.debugCountEntries(GUI.lifecycleHandlerIds),
+    mapperHandlerIds = GUI.debugCountEntries(map and map.fileScopeHandlerIds),
+    ownedTimerIds = GUI.debugCountEntries(GUI.ownedTimerIds),
     adjustableContainers = GUI.debugCountEntries(
       GUI.AdjustableContainers and GUI.AdjustableContainers.containers
     ),
@@ -223,8 +226,8 @@ GUI.debugCall(
   "instrumentation fragment loaded"
 )
 
-if type(tempTimer) == "function" then
-  tempTimer(2, GUI.debugWrap("SNAPSHOT/instrumentation delayed timer", function()
+if type(GUI.setOwnedTimer) == "function" then
+  GUI.setOwnedTimer("debug.instrumentationSnapshot", 2, GUI.debugWrap("SNAPSHOT/instrumentation delayed timer", function()
     GUI.debugCall(
       "SNAPSHOT/instrumentation delayed",
       GUI.debugSnapshot,

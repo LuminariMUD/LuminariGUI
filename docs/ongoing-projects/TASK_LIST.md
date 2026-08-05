@@ -14,11 +14,19 @@ in this folder.
   - Verified: all archived release headings are present, the old directory is
     gone, `git -c core.whitespace=cr-at-eol diff --check` passes, and
     `python3 theGUI/build.py --validate` passes.
-- [ ] Audit the long-lived handlers and timers reported by
+- [x] Audit the long-lived handlers and timers reported by
   `scripts/analyze_handlers.py`. Distinguish intentional file-scope/lifecycle
   registrations from real leaks, add ownership/cleanup where needed, and
   verify handler counts across load, reconnect, `resetProfile()`, and repeated
   `fix gui` calls.
+  - Completed 2026-08-05: centralized runtime handlers and named timers in
+    `theGUI/src/scripts/00_resources.xml`, added exit/uninstall cleanup, and
+    made the analyzer ownership-aware with a blocking unowned-resource mode.
+  - Verified: lifecycle regressions pass 33/33; Mudlet 4.22 holds exactly
+    5 mapper + 26 GUI + 6 lifecycle handlers across load, reconnect,
+    `resetProfile()`, ten rapid and ten settled refreshes, with at most one
+    recurring timer and zero owned resources after uninstall. See
+    `docs/RESOURCE_LIFECYCLE.md`.
 - [ ] Implement the phased
   [comprehensive CI pipeline plan](CI_PIPELINE_PLAN.md), beginning with the
   non-mutating `python3 theGUI/build.py --diff --fail-on-diff` source/output

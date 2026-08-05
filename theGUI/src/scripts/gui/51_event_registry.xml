@@ -2,9 +2,7 @@
 						<name>GUI Event Registry</name>
 						<packageName></packageName>
 						<script>-- Robust event handler registration with error handling and verification
-function GUI.registerEventHandlers()
-  -- Define all event handlers in a table for easy management
-  local eventHandlers = {
+GUI.EVENT_HANDLERS = {
     -- GUI event handlers
     ["msdp.GROUP"] = "GUI.updateGroup",
     ["msdp.AFFECTS"] = "GUI.updateAffectIcons",
@@ -39,7 +37,18 @@ function GUI.registerEventHandlers()
     -- allows multiple handlers per event, so listing it twice made the mapper
     -- process every room change twice.
     ["msdp.ROOM"] = "GUI.updateRoom"
-  }
+}
+
+function GUI.unregisterEventHandlers()
+  GUI.eventHandlerIds = GUI.eventHandlerIds or {}
+  return GUI.unregisterOwnedHandlers(
+    GUI.eventHandlerIds,
+    GUI.EVENT_HANDLERS
+  )
+end
+
+function GUI.registerEventHandlers()
+  local eventHandlers = GUI.EVENT_HANDLERS
 
   -- Events deliberately NOT listed above, because 00_msdpmapper.xml already
   -- registers them at file scope (which runs at script-compile time, earlier
@@ -47,8 +56,7 @@ function GUI.registerEventHandlers()
   --   msdp.ROOM / shiftRoom / sysConnectionEvent / sysDownloadDone
   --       -> map.eventHandler
   --   sysProtocolEnabled  -> map.onProtocolEnabled
-  -- And sysProtocolEnabled -> GUI.onProtocolEnabled is registered at file
-  -- scope further down in this script, for the same reason.
+  -- GUI.onProtocolEnabled is separately owned by the lifecycle registry.
 
   -- Store handler IDs so repeat calls can clean up after themselves.
   GUI.eventHandlerIds = GUI.eventHandlerIds or {}
@@ -59,24 +67,11 @@ function GUI.registerEventHandlers()
   -- handlers (duplicate REPORT storms, redundant redraws, growing latency).
   --
   -- Only clean up events owned by eventHandlers. Older releases also stored
-  -- the five mapper handlers and the file-scope GUI protocol handler in this
-  -- table. Mudlet 4.21 can reuse those handler IDs when the same string handler
+  -- the five mapper handlers and a legacy GUI protocol handler in this table.
+  -- Mudlet 4.21 can reuse those handler IDs when the same string handler
   -- is registered during an in-place upgrade; sweeping every legacy entry here
   -- would therefore kill the newly compiled file-scope handlers.
-  local killed = 0
-  for event in pairs(eventHandlers) do
-    local handlerId = GUI.eventHandlerIds[event]
-    if handlerId then
-      local ok = pcall(killAnonymousEventHandler, handlerId)
-      GUI.debug("EVENT/REGISTER", "remove owned handler", {
-        event = event,
-        handlerId = handlerId,
-        success = ok,
-      })
-      if ok then killed = killed + 1 end
-    end
-    GUI.eventHandlerIds[event] = nil
-  end
+  local killed = GUI.unregisterEventHandlers()
   GUI.debug("EVENT/REGISTER", "owned handler cleanup complete", {
     killed = killed,
   })
@@ -107,13 +102,14 @@ function GUI.registerEventHandlers()
       end
     end
 
-    local success, handlerId = pcall(
-      registerAnonymousEventHandler,
+    local handlerId, handlerError = GUI.registerOwnedHandler(
+      GUI.eventHandlerIds,
       eventName,
-      callback
+      eventName,
+      callback,
+      "GUI/" .. eventName
     )
-    if success then
-      GUI.eventHandlerIds[eventName] = handlerId
+    if handlerId then
       GUI.debug("EVENT/REGISTER", "registered GUI handler", {
         event = eventName,
         handler = handlerName,
@@ -123,14 +119,14 @@ function GUI.registerEventHandlers()
     else
       GUI.debugError(
         "EVENT/REGISTER/" .. eventName,
-        "failed to register " .. handlerName .. ": " .. tostring(handlerId)
+        "failed to register " .. handlerName .. ": " .. tostring(handlerError)
       )
-      print(string.format("✗ Failed to register GUI handler for %s: %s", eventName, handlerId))
+      print(string.format("✗ Failed to register GUI handler for %s: %s", eventName, handlerError))
     end
   end
 
   -- Verify critical handlers are working and refresh displays
-  tempTimer(2, GUI.debugWrap("EVENT/VERIFY/two-second refresh", function()
+  GUI.setOwnedTimer("gui.eventVerification", 2, GUI.debugWrap("EVENT/VERIFY/two-second refresh", function()
     GUI.debug("EVENT/VERIFY", "checking current MSDP-backed displays", {
       msdpCount = GUI.debugCountEntries(msdp),
     })
@@ -175,7 +171,7 @@ function GUI.registerEventHandlers()
   end))
   
   -- Initialize chat system if it's enabled but not created
-  tempTimer(1, GUI.debugWrap("EVENT/VERIFY/chat startup", function()
+  GUI.setOwnedTimer("gui.chatStartup", 1, GUI.debugWrap("EVENT/VERIFY/chat startup", function()
     GUI.debug("EVENT/VERIFY", "chat startup check", {
       demonnic = type(demonnic),
       chat = type(demonnic and demonnic.chat),

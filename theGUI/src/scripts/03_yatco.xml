@@ -423,12 +423,15 @@ function demonnic.chat:append(chat)
   })
 end
 
-
+function demonnic.chat:stopBlinking()
+  GUI.cancelOwnedTimer("yatco.blink")
+  demonnic.chat.blinkID = nil
+  demonnic.chat.blinkTimerOn = false
+end
 
 function demonnic.chat:blink()
-  if demonnic.chat.blinkID then killTimer(demonnic.chat.blinkID) end
   if not demonnic.chat.config.blink then 
-    demonnic.chat.blinkTimerOn = false
+    demonnic.chat:stopBlinking()
     return 
   end
   if not demonnic.chat.container.hidden then
@@ -436,7 +439,15 @@ function demonnic.chat:blink()
       demonnic.chat.tabs[tab]:flash()
     end
   end
-  demonnic.chat.blinkID = tempTimer(demonnic.chat.config.blinkTime, function () demonnic.chat:blink() end)
+  demonnic.chat.blinkTimerOn = true
+  demonnic.chat.blinkID = GUI.setOwnedTimer(
+    "yatco.blink",
+    demonnic.chat.config.blinkTime,
+    function()
+      demonnic.chat.blinkID = nil
+      demonnic.chat:blink()
+    end
+  )
 end
 
 function demonnic.chat:topright()

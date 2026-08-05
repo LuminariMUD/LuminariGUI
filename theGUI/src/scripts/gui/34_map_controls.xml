@@ -73,7 +73,7 @@ function GUI.buttonWindow.mapClick()
 		GUI.buttonWindow.Mapbutton:echo("Mudlet/ASCII", "white", "c")
 
 		-- Ensure mapper is visible and properly refreshed with a small delay
-		tempTimer(0.1, function()
+		GUI.setOwnedTimer("buttons.mapRefresh", 0.1, function()
 			if map.mapwindow then
 				map.mapwindow:show()
 				map.mapwindow:resize()
@@ -97,7 +97,7 @@ function GUI.buttonWindow.mudletClick()
 		GUI.buttonWindow.ASCIIbutton:echo("ASCII", "white", "c")
 		
 		-- Ensure mapper is visible and properly refreshed with a small delay
-		tempTimer(0.1, function()
+		GUI.setOwnedTimer("buttons.mapRefresh", 0.1, function()
 		  if map.mapwindow then
 		    map.mapwindow:show()
 		    map.mapwindow:resize()

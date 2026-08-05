@@ -178,9 +178,6 @@ function GUI.AdjustableContainers.init()
   print("  Save Directory: " .. GUI.AdjustableContainers.saveDir)
   print("  Current Profile: " .. GUI.AdjustableContainers.currentProfile)
 end
-
--- Register initialization
-registerAnonymousEventHandler("sysLoadEvent", "GUI.AdjustableContainers.init")
-registerAnonymousEventHandler("sysInstall", "GUI.AdjustableContainers.init")</script>
+</script>
 						<eventHandlerList />
 					</Script>
