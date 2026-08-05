@@ -370,7 +370,7 @@ canary PRs were closed and their remote branches deleted. Phase 2 is accepted.
 Bridge baseline implemented 2026-08-05. The adapter reuses the builder's
 manifest, fragment validation, and composite-include semantics; writes only to
 an absent or empty caller workspace; and emits stable decoded Lua plus a JSON
-source map. It currently extracts 79/79 nonempty assembled scripts across 38
+source map. It currently extracts 79/79 nonempty assembled scripts across 40
 physical source occurrences, byte-for-byte and in package order. The new
 `extractor` regression suite covers entities, empty scripts, duplicate names
 and includes, multiple scripts, malformed XML, source/output traversal,

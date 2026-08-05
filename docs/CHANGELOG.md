@@ -56,6 +56,10 @@ Begin Changelog entries below
   current `LuminariGUI.xml` line to the exact skeleton, wrapper, or recursively
   included physical fragment line, reports manifest context, emits optional
   JSON, and rejects stale generated output.
+- **Composite YATCO source assembly.** The outer YATCO/Demonnic hierarchy is
+  now a small ordered wrapper over independently valid Shared and Tabbed Chat
+  group subtrees, without changing one byte of generated package topology or
+  Lua load order.
 
 ### Fixed
 
@@ -97,6 +101,10 @@ Begin Changelog entries below
 - **Historical changelogs consolidated.** The two legacy changelog snapshots
   now live in one `docs/HISTORICAL_CHANGELOG.md` document with their original
   filenames and introducing commit recorded for provenance.
+- **Oversized mapper reviewed and bounded.** The mapper remains one script so
+  its internal tables and helpers retain their private shared lexical scope;
+  regression coverage caps the documented exception instead of changing
+  reload semantics solely to meet an approximate physical-line target.
 
 - **Source-aware lifecycle tests.** Tests assemble the composite source in
   memory, find Lua by Mudlet script name, enforce script order/size bounds,

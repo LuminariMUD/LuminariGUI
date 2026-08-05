@@ -1,0 +1,122 @@
+					<ScriptGroup isActive="yes" isFolder="yes">
+						<name>Shared</name>
+						<packageName></packageName>
+						<script>--Bootstrapping variables/etc. Don't touch this unless you really know what you're doing
+
+--I mean it. I'll point. AND laugh. loudly. 
+demonnic = demonnic or {}
+demonnic.config = demonnic.config or {}
+demonnic.balances = demonnic.balances or {}
+demonnic.balances.balance = demonnic.balances.balance or 1
+demonnic.balances.equilibrium = demonnic.balances.equilibrium or 1
+demonnic.debug = demonnic.debug or {}
+-- Mirror the one package-wide switch. This is not an independent toggle.
+demonnic.debug.active = (GUI.DEBUG == true)
+demonnic.debug.categories = demonnic.debug.categories or { }
+
+GUI.debug("YATCO/BOOT", "Demonnic shared namespace loaded", {
+  demonnic = type(demonnic),
+  debugActive = demonnic.debug.active,
+})
+
+function demonnic:echo(msg)
+ cecho(string.format("\n&lt;blue&gt;(&lt;green&gt;Demonnic&lt;blue&gt;):&lt;white&gt; %s", msg))
+end</script>
+						<eventHandlerList />
+						<Script isActive="yes" isFolder="no">
+							<name>Debugging</name>
+							<packageName></packageName>
+							<script>--Adds debugging functionality 
+
+function demonnic:Debug(category,debugData)
+   -- Route the legacy YATCO debugger through the single package-wide switch.
+   -- Debug mode intentionally ignores category filtering so no evidence is
+   -- lost during this end-to-end diagnostic build.
+   if GUI and type(GUI.debug) == "function" then
+      GUI.debug("YATCO/" .. tostring(category or "GENERAL"), "legacy debug", debugData)
+      return
+   end
+   if category then
+      if table.contains(demonnic.debug.categories, category) then
+         if type(debugData) == "table" then
+            demonnic:echo("&lt;red&gt;DEBUG " .. category .. ":&lt;white&gt;")
+            display(debugData)
+         elseif type(debugData) == "string" or type(debugData) == "number" then
+            demonnic:echo("&lt;red&gt;DEBUG " .. category .. ":&lt;white&gt; " .. debugData .. "\n" )
+         else
+            demonnic:echo("&lt;red&gt;DEBUG " .. category .. ":&lt;white&gt; " .. tostring(debugData) .. "\n" )
+         end
+      end
+   else
+      if type(debugData) == "table" then
+         demonnic:echo("&lt;red&gt;DEBUG:&lt;white&gt;")
+         display(debugData)
+      elseif type(debugData) == "string" or type(debugData) == "number" then
+         demonnic:echo("&lt;red&gt;DEBUG:&lt;white&gt; " .. debugData)
+      else
+         demonnic:echo("&lt;red&gt;DEBUG:&lt;white&gt; " .. tostring(debugData))
+      end
+   end
+end
+
+function demonnic:printDebug(category, debugData)
+   demonnic.debug.active = (GUI and GUI.DEBUG == true)
+   if not demonnic.debug.active then return end
+   demonnic:Debug(category, debugData)
+end
+
+function demonnic:toggleDebug()
+   if GUI then
+      GUI.DEBUG = not (GUI.DEBUG == true)
+      demonnic.debug.active = GUI.DEBUG
+   else
+      demonnic.debug.active = not demonnic.debug.active
+   end
+   demonnic:echo("Debugging is currently " .. (( demonnic.debug.active and "&lt;green&gt;ON&lt;white&gt;") or "&lt;red&gt;OFF&lt;white&gt;"))
+   if GUI and GUI.DEBUG and type(GUI.debugSnapshot) == "function" then
+      GUI.debugCall(
+         "SNAPSHOT/debug toggle",
+         GUI.debugSnapshot,
+         "debug command toggled mode ON"
+      )
+   end
+end
+
+function demonnic:watchCategory( category )
+   if table.contains(demonnic.debug.categories, category) then
+      for i,v in ipairs(demonnic.debug.categories) do
+         if v == category then
+            table.remove(demonnic.debug.categories, i)
+         end
+      end
+      demonnic:echo("No longer watching the '&lt;red&gt;"..category.."&lt;white&gt;' category.") 
+   else
+      table.insert(demonnic.debug.categories, category)
+      demonnic:echo("Now watching the '&lt;red&gt;"..category.."&lt;white&gt;' category.")
+   end
+   demonnic:echo("Debugging is currently " .. (( demonnic.debug.active and "&lt;green&gt;ON&lt;white&gt;") or "&lt;red&gt;OFF&lt;white&gt;"))
+end
+
+function demonnic:listCategories()
+   if #demonnic.debug.categories &gt; 0 then
+      demonnic:echo("You are currently watching the following categories:\n" .. table.concat(demonnic.debug.categories,", ") )
+   else
+      demonnic:echo("You are not watching any debugs.")
+   end
+end
+</script>
+							<eventHandlerList />
+						</Script>
+						<Script isActive="yes" isFolder="no">
+							<name>Geyser Additions</name>
+							<packageName></packageName>
+							<script>function Geyser.MiniConsole:clear()
+   clearWindow(self.name)
+end
+
+function Geyser.MiniConsole:append()
+  appendBuffer(self.name)
+end</script>
+							<eventHandlerList />
+						</Script>
+					</ScriptGroup>

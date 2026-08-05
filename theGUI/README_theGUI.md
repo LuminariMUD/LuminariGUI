@@ -24,7 +24,8 @@ theGUI/
     ├── triggers/     # Trigger definitions
     ├── aliases/      # Alias definitions
     ├── scripts/      # Script definitions and composite wrappers
-    │   └── gui/      # Focused children of the composite GUI wrapper
+    │   ├── gui/      # Focused children of the composite GUI wrapper
+    │   └── yatco/    # Shared and Tabbed Chat children of the YATCO wrapper
     └── keys/         # Key binding definitions
 ```
 
@@ -191,6 +192,22 @@ The inner GUI scripts are intentionally ordered. Protocol definitions precede
 their lifecycle registration, component constructors precede `GUI Boot`, and
 the event registry and refresh functions precede `GUI Lifecycle`. Add or move
 GUI children by editing the wrapper's include list, not `build.yaml`.
+
+`src/scripts/03_yatco.xml` uses the same hierarchy-preserving mechanism for
+the two existing `Demonnic` child groups. `yatco/00_shared.xml` must load before
+`yatco/10_tabbed_chat.xml`; the latter depends on the namespace and debug
+helpers initialized by the former. Both children remain complete Mudlet group
+subtrees, so the assembled item topology and runtime script order are
+byte-for-byte unchanged.
+
+`src/scripts/00_msdpmapper.xml` is the reviewed exception to the old
+approximate 500-line target. Its one Mudlet `Script` deliberately keeps the
+terrain/direction tables and room, shift, move, alias, view, and event helpers
+in one private Lua lexical scope. A physical composite split cannot divide a
+single script while preserving the extraction/source-map contract; separate
+Mudlet scripts would require promoting private state and would change reload
+semantics. The current 622-line fragment is therefore capped by regression
+coverage until a functional mapper-module redesign is justified.
 
 #### Duplicate-name validation
 

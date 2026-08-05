@@ -104,10 +104,17 @@ in this folder.
     `MSDPMapper` names. Regression coverage proves allowed cross-scope/case
     variants, rejects a leaf/group sibling collision with its full parent
     scope, and validates the current package.
-- [ ] Review the remaining top-level source fragments over the old approximate
+- [x] Review the remaining top-level source fragments over the old approximate
   500-line target (`00_msdpmapper.xml` and `03_yatco.xml`). Either split them
   with hierarchy-preserving composite wrappers or document why each should
   remain intact.
+  - Completed 2026-08-05: `03_yatco.xml` is now a 14-line ordered wrapper over
+    complete `Shared` (122 lines) and `Tabbed Chat` (489 lines) group subtrees;
+    the generated package is byte-for-byte unchanged. `00_msdpmapper.xml`
+    remains one reviewed 622-line Mudlet script because its private tables and
+    helpers intentionally share one Lua lexical scope; splitting it into items
+    would expose internals and change in-session reload semantics. Regression
+    tests cap that exception and enforce YATCO child order, validity, and size.
 - [x] Add a source-line mapping facility (`--map` or an equivalent) for
   correlating errors in generated `LuminariGUI.xml` with physical fragments,
   unless embedded markers and screen diagnostics are first shown to cover the

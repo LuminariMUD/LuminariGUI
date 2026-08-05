@@ -189,7 +189,8 @@ theGUI/
     ├── triggers/     # Trigger definitions
     ├── aliases/      # Alias definitions
     ├── scripts/      # Lua scripts and composite wrappers
-    │   └── gui/      # Focused children included by 01_gui.xml
+    │   ├── gui/      # Focused children included by 01_gui.xml
+    │   └── yatco/    # Group subtrees included by 03_yatco.xml
     └── keys/         # Key bindings
 ```
 
@@ -207,7 +208,9 @@ The build system assembles `theGUI/src/` fragments into `LuminariGUI.xml`. Each 
   initialization, event ownership, refresh, and lifecycle scripts; no child is
   intended to exceed roughly 300 Lua lines
 - **YATCOConfig** (`02_yatcoconfig.xml`): Chat system configuration
-- **YATCO** (`03_yatco.xml`): Tabbed chat organization
+- **YATCO wrapper** (`03_yatco.xml`): Preserves the outer YATCO/Demonnic
+  hierarchy and explicitly includes the `scripts/yatco/` Shared and Tabbed Chat
+  group subtrees
 
 Other fragments: `triggers/` (`00_yatcoconfig.xml`, `01_gui.xml`), `aliases/` (`00_toggles.xml`, `01_yatco.xml`), `keys/` (`00_movement.xml`). The full assembly order is defined in `theGUI/build.yaml`.
 

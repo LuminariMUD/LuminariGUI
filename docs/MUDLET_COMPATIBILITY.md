@@ -117,7 +117,7 @@ creation sites are owned and only `yatco.blink` is recurring. See
 
 ### 1. Legacy string-name callbacks with arguments — *high priority*
 ```lua
-theGUI/src/scripts/03_yatco.xml:187  demonnic.chat.tabs[tab]:setClickCallback("demonnicChatSwitch", tab)
+theGUI/src/scripts/yatco/10_tabbed_chat.xml (`demonnic.chat:create`)  demonnic.chat.tabs[tab]:setClickCallback("demonnicChatSwitch", tab)
 theGUI/src/scripts/gui/30_tab_shell.xml (`GUI.tabbedInfoWindow.init`)  tab:setClickCallback("GUI.tabbedInfoWindow.click", v)
 theGUI/src/scripts/gui/34_map_controls.xml (`GUI.buttonWindow.init`)  Legendbutton:setClickCallback("GUI.buttonWindow.legendClick")
 theGUI/src/scripts/gui/34_map_controls.xml (`GUI.buttonWindow.init`)  Mapbutton:setClickCallback("GUI.buttonWindow.mapClick")

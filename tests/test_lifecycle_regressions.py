@@ -1333,6 +1333,43 @@ assert(type(msdp) == "table",
                     f"GUI child {name} exceeds 300 Lua lines: {lua_lines}",
                 )
 
+    def _test_remaining_fragment_size_review(self):
+        scripts_root = self.repo_root / "theGUI" / "src" / "scripts"
+        yatco_wrapper = scripts_root / "03_yatco.xml"
+        wrapper = yatco_wrapper.read_text(encoding="utf-8")
+        include_paths = re.findall(
+            r"<!--\s*BUILD_INCLUDE:\s*(yatco/[^\s]+)\s*-->",
+            wrapper,
+        )
+        self._require(
+            include_paths == ["yatco/00_shared.xml", "yatco/10_tabbed_chat.xml"],
+            f"unexpected YATCO composite order: {include_paths}",
+        )
+        self._require(
+            len(wrapper.splitlines()) < 30,
+            "YATCO composite wrapper grew beyond its reviewed boundary",
+        )
+        for rel_path in include_paths:
+            child_path = scripts_root / rel_path
+            self._require(child_path.is_file(), f"YATCO child is missing: {rel_path}")
+            child = child_path.read_text(encoding="utf-8")
+            ET.fromstring("<root>" + child + "</root>")
+            self._require(
+                len(child.splitlines()) <= 500,
+                f"YATCO child exceeds the reviewed 500-line target: {rel_path}",
+            )
+
+        mapper = self.mapper_source_path.read_text(encoding="utf-8")
+        mapper_root = ET.fromstring("<root>" + mapper + "</root>")
+        self._require(
+            len(mapper_root.findall(".//Script")) == 1,
+            "the reviewed single-scope mapper unexpectedly changed item topology",
+        )
+        self._require(
+            len(mapper.splitlines()) <= 625,
+            "the reviewed single-scope mapper grew without a new split decision",
+        )
+
     def _test_core_parent_load_order_and_orphan_guard(self):
         foundation_script = self._fragment_script(
             self.adjustable_source_path,
@@ -1541,9 +1578,14 @@ assert(propagated == false,
         boot_source = self._gui_script("GUI Boot")
         refresh_source = self._gui_script("GUI Refresh")
         mapper_source = self.mapper_source_path.read_text(encoding="utf-8")
-        yatco_source = (
-            self.repo_root / "theGUI" / "src" / "scripts" / "03_yatco.xml"
-        ).read_text(encoding="utf-8")
+        yatco_wrapper = self.repo_root / "theGUI" / "src" / "scripts" / "03_yatco.xml"
+        yatco_sources = [
+            yatco_wrapper,
+            *sorted((yatco_wrapper.parent / "yatco").glob("*.xml")),
+        ]
+        yatco_source = "\n".join(
+            path.read_text(encoding="utf-8") for path in yatco_sources
+        )
         trigger_source = (
             self.repo_root / "theGUI" / "src" / "triggers" / "01_gui.xml"
         ).read_text(encoding="utf-8")
@@ -2500,6 +2542,10 @@ raise SystemExit(1)
             (
                 "gui_wrapper_and_fragment_sizes",
                 self._test_gui_wrapper_and_fragment_sizes,
+            ),
+            (
+                "remaining_fragment_size_review",
+                self._test_remaining_fragment_size_review,
             ),
             (
                 "core_parent_load_order_and_orphan_guard",
