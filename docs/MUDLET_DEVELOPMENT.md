@@ -120,9 +120,15 @@ An `.mpackage` is a ZIP archive containing the package XML, a `config.lua` manif
 | `dependencies` | **A comma-separated string**, not a Lua table |
 | `created` | ISO-8601 timestamp |
 
+Mudlet's exporter writes only the icon basename to `config.lua` and stores the
+file at `.mudlet/Icon/<basename>` inside the archive. LuminariGUI's package
+manager mirrors that layout and fails rather than emit a manifest naming a
+missing icon.
+
 ```lua
 mpackage = "MyMudPackage"
 author = "YourName"
+icon = "MyMudPackage.png"
 title = "My MUD Enhancement Package"
 version = "1.0.0"
 dependencies = "generic_mapper"

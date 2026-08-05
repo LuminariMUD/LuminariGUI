@@ -41,6 +41,8 @@ SCRIPT_DIR = Path(__file__).parent.resolve()
 PROJECT_ROOT = SCRIPT_DIR.parent
 
 VERSION_PATTERN = re.compile(r"^[0-9A-Za-z]+(?:[._+-][0-9A-Za-z]+)*$")
+PACKAGE_ICON_NAME = "LuminariGUI.png"
+PACKAGE_ICON_PATH = PROJECT_ROOT / "images" / PACKAGE_ICON_NAME
 
 
 def parse_version_argument(value: str) -> str:
@@ -295,13 +297,13 @@ class Packager:
             version, helpURL, dependencies, created
 
         Note: `dependencies` must be a comma-separated STRING, not a Lua
-        table. `icon` is omitted because no icon asset is bundled; since
-        Mudlet 4.20 an icon-less package simply gets no icon, whereas
-        naming a missing file would be worse.
+        table. Mudlet's exporter stores the icon under
+        `.mudlet/Icon/<filename>` and records only its basename here.
         """
         today = datetime.now().strftime("%Y-%m-%d")
         return f'''mpackage = "LuminariGUI"
 author = "LuminariMUD Team"
+icon = "{PACKAGE_ICON_NAME}"
 title = "LuminariGUI"
 description = [[
 Enhanced MUD client interface for LuminariMUD with advanced features
@@ -361,6 +363,16 @@ dependencies = ""
             if images_dir.exists() and images_dir.is_dir():
                 shutil.copytree(images_dir, temp_path / "images")
                 print("  Added: images/")
+
+            # Match Mudlet's package exporter layout. The package manager
+            # resolves config.lua's basename beneath `.mudlet/Icon/`.
+            if not PACKAGE_ICON_PATH.is_file():
+                print(f"ERROR: Package icon not found: {PACKAGE_ICON_PATH}")
+                return None
+            icon_dir = temp_path / ".mudlet" / "Icon"
+            icon_dir.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(PACKAGE_ICON_PATH, icon_dir / PACKAGE_ICON_NAME)
+            print(f"  Added: .mudlet/Icon/{PACKAGE_ICON_NAME}")
 
             # Copy audio directory
             audio_dir = PROJECT_ROOT / "audio"

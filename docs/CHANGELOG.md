@@ -60,6 +60,9 @@ Begin Changelog entries below
   now a small ordered wrapper over independently valid Shared and Tabbed Chat
   group subtrees, without changing one byte of generated package topology or
   Lua load order.
+- **Package icon.** A 512×512 compass-and-portal mark now ships in Mudlet's
+  native `.mudlet/Icon/` archive layout and is declared by basename in the
+  generated `config.lua`; package tests verify the asset and dimensions.
 
 ### Fixed
 

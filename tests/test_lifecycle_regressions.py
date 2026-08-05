@@ -14,6 +14,7 @@ import json
 import os
 import re
 import shutil
+import struct
 import subprocess
 import sys
 import tempfile
@@ -1716,6 +1717,12 @@ assert(calls.room == 1, "ROOM callback lost its loop-local handler")
     def _copy_build_tree(self, destination):
         project_root = destination / "project"
         shutil.copytree(self.repo_root / "theGUI", project_root / "theGUI")
+        icon_dir = project_root / "images"
+        icon_dir.mkdir()
+        shutil.copy2(
+            self.repo_root / "images" / "LuminariGUI.png",
+            icon_dir / "LuminariGUI.png",
+        )
         return project_root
 
     @staticmethod
@@ -1969,6 +1976,7 @@ assert(calls.room == 1, "ROOM callback lost its loop-local handler")
         with zipfile.ZipFile(package_path) as package:
             config = package.read("config.lua").decode("utf-8")
             packaged_xml = ET.fromstring(package.read("LuminariGUI.xml"))
+            icon = package.read(".mudlet/Icon/LuminariGUI.png")
 
         self._require(
             f'version = "{expected_version}"' in config,
@@ -1977,6 +1985,19 @@ assert(calls.room == 1, "ROOM callback lost its loop-local handler")
         self._require(
             packaged_xml.attrib.get("version") == expected_version,
             "packaged XML version does not match package version",
+        )
+        self._require(
+            'icon = "LuminariGUI.png"' in config,
+            "config.lua does not name the bundled package icon",
+        )
+        self._require(
+            icon.startswith(b"\x89PNG\r\n\x1a\n") and len(icon) >= 24,
+            "packaged icon is not a valid PNG header",
+        )
+        width, height = struct.unpack(">II", icon[16:24])
+        self._require(
+            (width, height) == (512, 512),
+            f"packaged icon dimensions changed: {width}x{height}",
         )
 
     def _test_create_version_override_is_consistent(self):

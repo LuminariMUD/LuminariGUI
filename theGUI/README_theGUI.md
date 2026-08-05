@@ -107,6 +107,10 @@ uploads the `.mpackage` and JSON metadata, and verifies both assets. Use
 `create` when only a local artifact is wanted. See
 [`docs/PYTHON_TOOLS.md`](../docs/PYTHON_TOOLS.md).
 
+Every package includes the 512×512 `images/LuminariGUI.png` mark at Mudlet's
+native `.mudlet/Icon/LuminariGUI.png` location. Generated `config.lua` records
+the basename `LuminariGUI.png`; packaging fails if the source icon is missing.
+
 ## Configuration (build.yaml)
 
 ```yaml

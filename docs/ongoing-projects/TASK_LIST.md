@@ -129,8 +129,13 @@ in this folder.
 
 ## Compatibility and release polish
 
-- [ ] Create and bundle a 512×512 package icon, then populate the `icon` field
+- [x] Create and bundle a 512×512 package icon, then populate the `icon` field
   in generated `config.lua`.
+  - Completed 2026-08-05: `images/LuminariGUI.png` provides a text-free
+    charcoal, bronze, violet, and cyan compass/portal mark that remains legible
+    at 32px. Packaging mirrors Mudlet's exporter with
+    `.mudlet/Icon/LuminariGUI.png` plus `icon = "LuminariGUI.png"`; regression
+    tests inspect the archive, PNG signature, and exact 512×512 IHDR.
 - [ ] Visually re-verify the remaining QSS `background` shorthand and
   `vertical-align` declarations under supported Qt6/Mudlet releases; replace
   any declarations that render inconsistently.
