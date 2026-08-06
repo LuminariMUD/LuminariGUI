@@ -3,7 +3,7 @@
 						<packageName></packageName>
 						<script>-- All MSDP variables the GUI subscribes to.
 GUI.MSDP_REPORT_VARS = {
-  "CHARACTER_NAME", "RACE", "CLASS", "ALIGNMENT", "LEVEL",
+  "CHARACTER_NAME", "RACE", "CLASS", "LEVEL",
   "STR", "DEX", "CON", "INT", "WIS", "CHA", "AC", "MONEY",
   "HEALTH", "HEALTH_MAX",
   "OPPONENT_HEALTH", "OPPONENT_HEALTH_MAX", "OPPONENT_NAME",
@@ -12,7 +12,7 @@ GUI.MSDP_REPORT_VARS = {
   "EXPERIENCE", "EXPERIENCE_TNL",
   "ACTIONS", "GROUP", "AFFECTS",
   -- "INVENTORY",
-  "ROOM", "AREA_NAME", "ROOM_EXITS", "ROOM_NAME", "ROOM_VNUM",
+  "ROOM", "ROOM_EXITS", "ROOM_VNUM",
   "WORLD_TIME",
 }
 

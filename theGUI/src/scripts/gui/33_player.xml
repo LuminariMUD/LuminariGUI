@@ -25,7 +25,6 @@ function GUI.updatePlayer()
     level = msdp and msdp.LEVEL,
     class = msdp and msdp.CLASS,
     race = msdp and msdp.RACE,
-    alignment = msdp and msdp.ALIGNMENT,
     stats = {
       STR = msdp and msdp.STR,
       DEX = msdp and msdp.DEX,

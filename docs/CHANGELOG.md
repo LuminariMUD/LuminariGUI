@@ -14,6 +14,13 @@ Begin Changelog entries below
 
 ## [Unreleased]
 
+### Changed
+
+- **Narrowed MSDP subscriptions.** The package no longer reports the unused
+  scalar `ALIGNMENT`, `AREA_NAME`, or `ROOM_NAME` variables. Room diagnostics,
+  the visible room panel, and the mapper use the structured `ROOM` value, and
+  the obsolete alignment-only player refresh handler has been removed.
+
 ### Added
 
 - **Composite GUI source assembly.** `theGUI/src/scripts/01_gui.xml` is now a

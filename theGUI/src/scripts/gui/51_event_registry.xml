@@ -21,7 +21,6 @@ GUI.EVENT_HANDLERS = {
     ["msdp.CHARACTER_NAME"] = "GUI.updatePlayer",
     ["msdp.RACE"] = "GUI.updatePlayer",
     ["msdp.CLASS"] = "GUI.updatePlayer",
-    ["msdp.ALIGNMENT"] = "GUI.updatePlayer",
     ["msdp.LEVEL"] = "GUI.updatePlayer",
     ["msdp.STR"] = "GUI.updatePlayer",
     ["msdp.DEX"] = "GUI.updatePlayer",

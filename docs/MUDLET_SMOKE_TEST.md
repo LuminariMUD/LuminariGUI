@@ -76,7 +76,8 @@ Qt-only rendering differences belong in section 9, with screenshots.
 1. Connect to an MSDP-capable local fixture or LuminariMUD and confirm Mudlet
    prints the package's protocol-enabled message.
 2. Inspect `GUI.MSDP_REPORT_VARS` in the Lua console and confirm the expected
-   subscription set is present.
+   subscription set is present. Confirm `ROOM` is included and the unused
+   scalar `ALIGNMENT`, `AREA_NAME`, and `ROOM_NAME` reports are absent.
 3. Observe live room, health/mana/movement, opponent, group, affect, action,
    and character updates where the test account can produce them.
 4. Confirm a room update reaches both `map.eventHandler` and `GUI.updateRoom`

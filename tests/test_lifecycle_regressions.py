@@ -674,11 +674,11 @@ GUI.cleanupPackageResources = function() return {{}} end
 GUI.registerEventHandlers()
 runAllTimers()
 
-local expectedHandlers = 37
+local expectedHandlers = 36
 local function assertStable(stage)
   assert(countEntries(map.fileScopeHandlerIds) == 5,
     stage .. ": mapper handler count changed")
-  assert(countEntries(GUI.eventHandlerIds) == 26,
+  assert(countEntries(GUI.eventHandlerIds) == 25,
     stage .. ": GUI handler count changed")
   assert(countEntries(GUI.lifecycleHandlerIds) == 6,
     stage .. ": lifecycle handler count changed")
@@ -748,7 +748,7 @@ assertStable("rapid fix gui")
         report = json.loads(result.stdout)
         totals = report["totals"]
         self._require(
-            totals["owned_handlers"] == 37,
+            totals["owned_handlers"] == 36,
             f"unexpected runtime handler total: {totals}",
         )
         self._require(
@@ -1201,6 +1201,75 @@ msdp = nil
 GUI.initializeOrRefresh("profile reset without protocol values")
 assert(type(msdp) == "table",
   "refresh did not recreate the MSDP table cleared by resetProfile()")
+"""
+        self._run_lua(script)
+
+    def _test_msdp_subscription_contract(self):
+        protocol_source = self._gui_script("MSDP Protocol")
+        player_source = self._gui_script("Player")
+        room_source = self._gui_script("Room Info/Legend")
+        event_source = self._gui_script("GUI Event Registry")
+
+        for variable in ("ALIGNMENT", "AREA_NAME", "ROOM_NAME"):
+            self._require(
+                f'"{variable}"' not in protocol_source,
+                f"unused scalar {variable} remained in the REPORT set",
+            )
+        self._require(
+            "msdp.ALIGNMENT" not in player_source,
+            "player diagnostics still consume the unused ALIGNMENT scalar",
+        )
+        self._require(
+            "msdp.ROOM_NAME" not in room_source
+            and "msdp.AREA_NAME" not in room_source,
+            "room diagnostics still consume unused scalar room names",
+        )
+        self._require(
+            "msdp.ROOM.NAME" in room_source and "msdp.ROOM.AREA" in room_source,
+            "room diagnostics do not use the structured ROOM value",
+        )
+        self._require(
+            "msdp.ALIGNMENT" not in event_source,
+            "unused ALIGNMENT event handler remained registered",
+        )
+
+        script = f"""
+sentReports = {{}}
+
+function sendMSDP(command, variable)
+  assert(command == "REPORT", "subscription used a non-REPORT command")
+  sentReports[#sentReports + 1] = variable
+end
+
+GUI = {{
+  debug = function() end,
+  debugError = function() end,
+  setOwnedTimer = function() end,
+  debugCall = function(_, callable, ...)
+    return true, callable(...)
+  end,
+}}
+
+{protocol_source}
+
+local excluded = {{ALIGNMENT = true, AREA_NAME = true, ROOM_NAME = true}}
+local seen = {{}}
+local hasRoom = false
+for _, variable in ipairs(GUI.MSDP_REPORT_VARS) do
+  assert(not excluded[variable], "unused scalar remained subscribed: " .. variable)
+  assert(not seen[variable], "duplicate REPORT variable: " .. variable)
+  seen[variable] = true
+  if variable == "ROOM" then hasRoom = true end
+end
+assert(hasRoom, "structured ROOM report is missing")
+
+assert(GUI.requestMSDPReports(), "REPORT request failed")
+assert(#sentReports == #GUI.MSDP_REPORT_VARS,
+  "REPORT request count did not match the declared contract")
+for index, variable in ipairs(GUI.MSDP_REPORT_VARS) do
+  assert(sentReports[index] == variable,
+    "REPORT request order diverged from the declared contract")
+end
 """
         self._run_lua(script)
 
@@ -2814,6 +2883,10 @@ raise SystemExit(1)
             (
                 "profile_reset_missing_msdp",
                 self._test_refresh_recovers_missing_msdp_table,
+            ),
+            (
+                "msdp_subscription_contract",
+                self._test_msdp_subscription_contract,
             ),
             (
                 "lifecycle_registration_idempotent",

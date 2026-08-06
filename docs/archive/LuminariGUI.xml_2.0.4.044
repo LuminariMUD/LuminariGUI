@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE MudletPackage>
-<MudletPackage version="2.0.4.045">
+<MudletPackage version="2.0.4.044">
 	<TriggerPackage>
 		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 			<name>LuminariGUI</name>
@@ -3391,6 +3391,7 @@ function GUI.updatePlayer()
     level = msdp and msdp.LEVEL,
     class = msdp and msdp.CLASS,
     race = msdp and msdp.RACE,
+    alignment = msdp and msdp.ALIGNMENT,
     stats = {
       STR = msdp and msdp.STR,
       DEX = msdp and msdp.DEX,
@@ -3734,9 +3735,9 @@ end </script>
 function GUI.updateRoom()
   GUI.debug("GUI/ROOM", "updating room display", {
     room = msdp and msdp.ROOM,
-    roomName = msdp and msdp.ROOM and msdp.ROOM.NAME,
+    roomName = msdp and msdp.ROOM_NAME,
     roomVnum = msdp and msdp.ROOM_VNUM,
-    areaName = msdp and msdp.ROOM and msdp.ROOM.AREA,
+    areaName = msdp and msdp.AREA_NAME,
     roomExits = msdp and msdp.ROOM_EXITS,
   })
   local roomInfo = [[&lt;div style="padding: 5px;"&gt;]]
@@ -3821,7 +3822,7 @@ end</script>
 						<packageName></packageName>
 						<script>-- All MSDP variables the GUI subscribes to.
 GUI.MSDP_REPORT_VARS = {
-  "CHARACTER_NAME", "RACE", "CLASS", "LEVEL",
+  "CHARACTER_NAME", "RACE", "CLASS", "ALIGNMENT", "LEVEL",
   "STR", "DEX", "CON", "INT", "WIS", "CHA", "AC", "MONEY",
   "HEALTH", "HEALTH_MAX",
   "OPPONENT_HEALTH", "OPPONENT_HEALTH_MAX", "OPPONENT_NAME",
@@ -3830,7 +3831,7 @@ GUI.MSDP_REPORT_VARS = {
   "EXPERIENCE", "EXPERIENCE_TNL",
   "ACTIONS", "GROUP", "AFFECTS",
   -- "INVENTORY",
-  "ROOM", "ROOM_EXITS", "ROOM_VNUM",
+  "ROOM", "AREA_NAME", "ROOM_EXITS", "ROOM_NAME", "ROOM_VNUM",
   "WORLD_TIME",
 }
 
@@ -4908,6 +4909,7 @@ GUI.EVENT_HANDLERS = {
     ["msdp.CHARACTER_NAME"] = "GUI.updatePlayer",
     ["msdp.RACE"] = "GUI.updatePlayer",
     ["msdp.CLASS"] = "GUI.updatePlayer",
+    ["msdp.ALIGNMENT"] = "GUI.updatePlayer",
     ["msdp.LEVEL"] = "GUI.updatePlayer",
     ["msdp.STR"] = "GUI.updatePlayer",
     ["msdp.DEX"] = "GUI.updatePlayer",

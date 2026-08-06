@@ -5,9 +5,9 @@
 function GUI.updateRoom()
   GUI.debug("GUI/ROOM", "updating room display", {
     room = msdp and msdp.ROOM,
-    roomName = msdp and msdp.ROOM_NAME,
+    roomName = msdp and msdp.ROOM and msdp.ROOM.NAME,
     roomVnum = msdp and msdp.ROOM_VNUM,
-    areaName = msdp and msdp.AREA_NAME,
+    areaName = msdp and msdp.ROOM and msdp.ROOM.AREA,
     roomExits = msdp and msdp.ROOM_EXITS,
   })
   local roomInfo = [[&lt;div style="padding: 5px;"&gt;]]

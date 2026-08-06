@@ -5,7 +5,7 @@ timer as an owned resource. The ownership layer is defined in
 `theGUI/src/scripts/00_resources.xml` and loads before the mapper and GUI.
 
 This document records the ownership contract, cleanup boundaries, and the
-verification baseline for package version `2.0.4.039`.
+verification baseline for package version `2.0.4.045`.
 
 ## Invariants
 
@@ -30,11 +30,11 @@ verification baseline for package version `2.0.4.039`.
 | Owner | Registry | Count | Events |
 |---|---|---:|---|
 | Mapper | `map.fileScopeHandlerIds` | 5 | `msdp.ROOM`, `shiftRoom`, `sysConnectionEvent`, `sysProtocolEnabled`, `sysDownloadDone` |
-| GUI MSDP updates | `GUI.eventHandlerIds` | 26 | Entries in `GUI.EVENT_HANDLERS` |
+| GUI MSDP updates | `GUI.eventHandlerIds` | 25 | Entries in `GUI.EVENT_HANDLERS` |
 | Lifecycle | `GUI.lifecycleHandlerIds` | 6 | `sysLoadEvent`, `sysInstall`, `sysProtocolEnabled`, `sysConnectionEvent`, `sysExitEvent`, `sysUninstallPackage` |
 | Package XML | `<eventHandlerList>` | 2 | YATCO start and install hooks |
 
-The runtime baseline is therefore 37 anonymous handlers plus two handlers
+The runtime baseline is therefore 36 anonymous handlers plus two handlers
 owned by Mudlet's imported package XML. `msdp.ROOM` intentionally has two
 different callbacks: `map.eventHandler` and `GUI.updateRoom`.
 
@@ -74,7 +74,7 @@ collapse into one refresh and completed entries disappear from the registry.
 
 `GUI.cleanupPackageResources()` extends that sequence for package uninstall:
 
-1. Unregister the 26 GUI handlers.
+1. Unregister the 25 GUI handlers.
 2. Unregister the five mapper handlers.
 3. Remove the mapper's temporary aliases.
 4. Unregister the six lifecycle handlers last.
@@ -116,6 +116,11 @@ and a local MSDP server. It confirmed:
   and
 - zero owned timers, GUI handlers, mapper handlers, lifecycle handlers, and
   mapper aliases after actual package uninstall.
+
+The current automated baseline is one GUI handler lower because version
+`2.0.4.045` removed the unused `msdp.ALIGNMENT` player-refresh registration.
+The live Mudlet check above remains the historical evidence for version
+`2.0.4.039`; section 2 of the smoke test now verifies the narrowed report set.
 
 Run the permanent gates with:
 
