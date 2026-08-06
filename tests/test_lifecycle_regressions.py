@@ -1220,8 +1220,7 @@ assert(type(msdp) == "table",
             "player diagnostics still consume the unused ALIGNMENT scalar",
         )
         self._require(
-            "msdp.ROOM_NAME" not in room_source
-            and "msdp.AREA_NAME" not in room_source,
+            "msdp.ROOM_NAME" not in room_source and "msdp.AREA_NAME" not in room_source,
             "room diagnostics still consume unused scalar room names",
         )
         self._require(
