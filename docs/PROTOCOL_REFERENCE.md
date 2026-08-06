@@ -533,7 +533,7 @@ const char *ColourRGB(descriptor_t *apDescriptor, const char *apRGB);
 | `EXPERIENCE_MAX` | Number | Experience needed for next level | 1-999999999 |
 | `EXPERIENCE_TNL` | Number | Experience to next level | 0-999999999 |
 | `LEVEL` | Number | Character level | 1-30 |
-| `ALIGNMENT` | Number | Character alignment | -1000 to 1000 |
+| `ALIGNMENT` | String | Plain-text display alignment | "True Neutral" |
 | `WIMPY` | Number | Wimpy setting | 0-100 |
 | `PRACTICE` | Number | Practice sessions available | 0-999 |
 | `MONEY` | Number | Gold pieces | 0-999999999 |
@@ -773,7 +773,8 @@ end
 -- Example usage
 local health = getSafeMSDPValue("HEALTH", 0, "number")
 local affects = getSafeMSDPValue("AFFECTS", {}, "json")
-local roomName = getSafeMSDPValue("ROOM_NAME", "Unknown", "string")
+local room = msdp.ROOM or {}
+local roomName = tostring(room.NAME or "Unknown")
 ```
 
 ## Integration Guide
@@ -781,7 +782,8 @@ local roomName = getSafeMSDPValue("ROOM_NAME", "Unknown", "string")
 ### Setting Up MSDP
 
 1. **Enable MSDP in client**: Send MSDP negotiation sequence
-2. **Request variables**: Use `MSDP_REQUEST` to subscribe to specific variables
+2. **Request variables**: Use `sendMSDP("REPORT", variable)` to subscribe to
+   specific variables
 3. **Handle updates**: Register event handlers for variable changes
 4. **Parse data**: Convert JSON strings to usable data structures
 
@@ -792,6 +794,10 @@ local roomName = getSafeMSDPValue("ROOM_NAME", "Unknown", "string")
 3. **Cache frequently used data**: Store processed data to avoid repeated parsing
 4. **Handle disconnections**: Reset MSDP data when connection is lost
 5. **Error boundaries**: Isolate MSDP processing to prevent crashes
+
+LuminariGUI intentionally does not report the redundant scalar `ALIGNMENT`,
+`AREA_NAME`, or `ROOM_NAME` variables. Its visible room consumers use the
+structured `ROOM` value, which includes both `NAME` and `AREA`.
 
 ### Performance Considerations
 
