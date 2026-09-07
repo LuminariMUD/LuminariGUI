@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "policy": "Informational history only; these values are not thresholds.",
+  "history": [
+    {
+      "date": "2026-08-05",
+      "label": "Phase 4 initial local baseline",
+      "lua": {
+        "covered_lines": 860,
+        "num_statements": 2833,
+        "percent_covered": 30.36
+      },
+      "python": {
+        "covered_lines": 1489,
+        "num_statements": 2892,
+        "percent_covered": 51.49
+      }
+    }
+  ]
+}

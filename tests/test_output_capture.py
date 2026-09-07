@@ -12,6 +12,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 class OutputCaptureTester:
     def __init__(self, _xml_file=None):
+        """Load the capture source and initialize regression-test state."""
         self.repo_root = PROJECT_ROOT
         self.capture_path = (
             self.repo_root
@@ -32,6 +33,7 @@ class OutputCaptureTester:
 
     @staticmethod
     def _find_lua():
+        """Return the first supported Lua interpreter available on PATH."""
         for executable in ("lua", "lua5.1", "lua5.2", "lua5.3", "lua5.4", "luajit"):
             path = shutil.which(executable)
             if path:
@@ -39,6 +41,7 @@ class OutputCaptureTester:
         return None
 
     def _capture_source(self):
+        """Extract the authored ASCII map capture Lua from its XML fragment."""
         fragment = ET.fromstring(
             "<root>" + self.capture_path.read_text(encoding="utf-8") + "</root>"
         )
@@ -49,6 +52,7 @@ class OutputCaptureTester:
 
     @staticmethod
     def _mocks():
+        """Provide the minimal Mudlet Lua API used by the capture parser."""
         return r"""
 destination = {}
 destinationStyles = {}
@@ -194,6 +198,7 @@ end
 """
 
     def _run_lua(self, body):
+        """Execute one Lua assertion body with the production parser and mocks."""
         source = self._mocks() + "\n" + self.capture_source + "\n" + body
         result = subprocess.run(
             [self.lua_path, "-"],
@@ -207,6 +212,7 @@ end
             raise AssertionError((result.stderr or result.stdout).strip())
 
     def _test_permanent_trigger_and_spacing_contract(self):
+        """Verify the permanent dispatcher and preservation of ordinary spacing."""
         root = ET.fromstring(
             "<root>" + self.trigger_path.read_text(encoding="utf-8") + "</root>"
         )
@@ -257,6 +263,7 @@ assert(#main == 3 and main[2].text == "" and main[3].text == "   indented   word
         )
 
     def _test_exact_room_fixture_and_formatting(self):
+        """Capture the reported room fixture without losing rows or ANSI styles."""
         self._run_lua(
             r"""
 local rows = {
@@ -297,6 +304,7 @@ assert(timers["asciiMapCapture.inactivity"] == nil)
         )
 
     def _test_supported_heights_and_blank_rows(self):
+        """Accept supported map heights, blank rows, and ragged row widths."""
         self._run_lua(
             r"""
 for _, height in ipairs({3, 9, 11, 13, 25}) do
@@ -322,22 +330,36 @@ assert(feedLine("</ROOM_MAP>") == "finished")
 assert(#destination == 3)
 assert(destination[1] == " " and destination[2] == " .      " and destination[3] == " ")
 assert(fitCalls[#fitCalls].rows == 3 and fitCalls[#fitCalls].columns == 8)
+
+assert(feedLine("<ROOM_MAP>") == "started")
+assert(feedLine(repeatedRow(19, ".")) == "row")
+assert(feedLine(repeatedRow(18, "|")) == "row")
+assert(feedLine(repeatedRow(21, "Y")) == "row")
+assert(feedLine("</ROOM_MAP>") == "finished")
+assert(#destination == 3, "ragged map row count changed")
+assert(destination[2] == " " .. repeatedRow(18, "|"))
+assert(fitCalls[#fitCalls].rows == 3 and fitCalls[#fitCalls].columns == 22)
 """
         )
 
     def _test_wilderness_and_multiple_blocks(self):
+        """Capture consecutive maps and every shared wilderness terrain glyph."""
         self._run_lua(
             r"""
 assert(feedLine("<ROOM_MAP>") == "started")
 assert(feedLine(repeatedRow(19, ".")) == "row")
 assert(feedLine("<WILDERNESS_MAP>") == "started", "new opener did not replace capture")
+local terrainSymbols = {"o", "m", "i", "`"}
 for row = 1, 21 do
-  assert(feedLine(repeatedRow(21, row == 11 and "*" or "~")) == "row")
+  local symbol = terrainSymbols[((row - 1) % #terrainSymbols) + 1]
+  assert(feedLine(repeatedRow(21, symbol)) == "row")
 end
 assert(feedLine("</WILDERNESS_MAP>") == "finished")
-assert(#destination == 21 and destination[1] == "  " .. repeatedRow(21, "~"))
-assert(destination[11] == "  " .. repeatedRow(21, "*"))
-assert(destination[21] == "  " .. repeatedRow(21, "~"))
+assert(#destination == 21 and destination[1] == "  " .. repeatedRow(21, "o"))
+assert(destination[2] == "  " .. repeatedRow(21, "m"))
+assert(destination[3] == "  " .. repeatedRow(21, "i"))
+assert(destination[4] == "  " .. repeatedRow(21, "`"))
+assert(destination[21] == "  " .. repeatedRow(21, "o"))
 assert(clearCount == 2, "each opening marker must clear exactly once")
 assert(#fitCalls == 1 and fitCalls[1].kind == "wilderness")
 assert(fitCalls[1].columns == 23 and fitCalls[1].rows == 21)
@@ -346,26 +368,27 @@ assert(#main == 0, "successful maps leaked into main output")
         )
 
     def _test_invalid_and_mismatched_recovery(self):
+        """Keep failed blocks bounded until their matching close marker arrives."""
         self._run_lua(
             r"""
 assert(feedLine("<ROOM_MAP>") == "started")
 assert(feedLine(repeatedRow(19, ".")) == "row")
 assert(feedLine("This is ordinary prose.") == "aborted")
 assert(main[#main].text == "This is ordinary prose.")
+assert(GUI.AsciiMapCapture.state.failed == true)
 assert(feedLine("Prompt> ") == "ignored")
 assert(main[#main].text == "Prompt> ")
+local mainBeforeClose = #main
+assert(feedLine("</ROOM_MAP>") == "aborted")
+assert(#main == mainBeforeClose, "failed block closing marker leaked")
 assert(GUI.AsciiMapCapture.state == nil)
+assert(timers["asciiMapCapture.inactivity"] == nil)
 
 assert(feedLine("<ROOM_MAP>") == "started")
 assert(feedLine(repeatedRow(19, ".")) == "row")
 assert(feedLine("</WILDERNESS_MAP>") == "aborted")
 assert(main[#main].text == "</WILDERNESS_MAP>")
 assert(feedLine("after mismatch") == "ignored")
-
-assert(feedLine("<ROOM_MAP>") == "started")
-assert(feedLine(repeatedRow(19, ".")) == "row")
-assert(feedLine(repeatedRow(18, ".")) == "aborted")
-assert(main[#main].text == repeatedRow(18, "."))
 
 assert(feedLine("<ROOM_MAP>") == "started")
 fireTimer("asciiMapCapture.inactivity")
@@ -376,6 +399,7 @@ assert(main[#main].text == "after timeout")
         )
 
     def _test_destination_failures_preserve_current_line(self):
+        """Leave failed transfer rows visible while hiding their closing marker."""
         self._run_lua(
             r"""
 map.minimap = nil
@@ -389,7 +413,13 @@ assert(feedLine("<ROOM_MAP>") == "started")
 failAppend = true
 assert(feedLine(repeatedRow(19, ".")) == "aborted")
 assert(main[#main].text == repeatedRow(19, "."), "append failure consumed row")
+assert(GUI.AsciiMapCapture.state.failed == true)
+assert(timers["asciiMapCapture.inactivity"] ~= nil)
+local mainBeforeClose = #main
+assert(feedLine("</ROOM_MAP>") == "aborted")
+assert(#main == mainBeforeClose, "failed destination closing marker leaked")
 assert(GUI.AsciiMapCapture.state == nil)
+assert(timers["asciiMapCapture.inactivity"] == nil)
 
 failAppend = false
 failClear = true
@@ -399,6 +429,7 @@ assert(main[#main].text == "<ROOM_MAP>", "clear failure consumed opener")
         )
 
     def _test_safety_limit_and_next_map_recovery(self):
+        """Enforce row and column limits, then recover for the next map."""
         self._run_lua(
             r"""
 local row = repeatedRow(19, ".")
@@ -408,6 +439,16 @@ assert(feedLine(row) == "aborted")
 assert(main[#main].text == row, "oversized row was consumed")
 assert(feedLine("ordinary after limit") == "ignored")
 assert(main[#main].text == "ordinary after limit")
+local mainBeforeClose = #main
+assert(feedLine("</ROOM_MAP>") == "aborted")
+assert(#main == mainBeforeClose, "limited block closing marker leaked")
+
+assert(feedLine("<ROOM_MAP>") == "started")
+assert(feedLine(repeatedRow(257, ".")) == "aborted")
+assert(GUI.AsciiMapCapture.state.failed == true)
+mainBeforeClose = #main
+assert(feedLine("</ROOM_MAP>") == "aborted")
+assert(#main == mainBeforeClose, "wide block closing marker leaked")
 
 assert(feedLine("<ROOM_MAP>") == "started")
 assert(feedLine(row) == "row")
@@ -417,6 +458,7 @@ assert(#destination == 1 and destination[1] == " " .. row)
         )
 
     def _test_lifecycle_reset_hooks(self):
+        """Require every lifecycle boundary to clear capture state and timers."""
         sources = {
             "cleanup": self.repo_root
             / "theGUI"
@@ -455,6 +497,7 @@ assert(main[#main].text == "ordinary after lifecycle reset")
         )
 
     def run_tests(self):
+        """Run every output-capture regression and collect structured results."""
         print("Running output capture regression tests...")
         if not self.lua_path:
             self.errors.append("lua interpreter not found in PATH")
@@ -510,6 +553,7 @@ assert(main[#main].text == "ordinary after lifecycle reset")
         return passed == len(tests)
 
     def get_results(self):
+        """Return results in the shared test-runner format."""
         return {
             "test_results": self.test_results,
             "errors": self.errors,
@@ -518,6 +562,7 @@ assert(main[#main].text == "ordinary after lifecycle reset")
 
 
 def main():
+    """Run the output-capture regression suite as a standalone command."""
     tester = OutputCaptureTester()
     success = tester.run_tests()
     return 0 if success else 1

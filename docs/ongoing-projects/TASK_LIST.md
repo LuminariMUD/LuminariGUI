@@ -162,13 +162,18 @@ in this folder.
 
 ## Feature backlog
 
-- [ ] Restore normal output spacing and capture complete ASCII maps using
+- [x] Restore normal output spacing and capture complete ASCII maps using
   [the investigation and fix plan](OUTPUT_SPACING_AND_ASCII_MAP_PLAN.md).
-  - Investigated 2026-09-07: the global blank-line gag overrides compact mode;
-    native Mudlet 4.22.0 replay of local room `145202` captures 8 of 9 map
-    rows, with the first row leaking into the main console. Fixed capture
-    lengths also truncate taller maps. Implementation and regression coverage
-    remain pending.
+  - Completed 2026-09-07: removed the unconditional blank-line gag and replaced
+    fixed, version-sensitive line capture with a tagged boundary parser.
+    Regression coverage verifies complete room and wilderness maps, whitespace
+    and ANSI preservation, malformed-block recovery, safety limits, and
+    lifecycle cleanup. The focused Mudlet 4.22.0 smoke validated both compact
+    settings against local room `145202` but was not release approval.
+- [ ] Complete release validation for output spacing and tagged ASCII maps.
+  - Run every section of [`MUDLET_SMOKE_TEST.md`](../MUDLET_SMOKE_TEST.md) for
+    the release candidate; treat the September 7 focused smoke as supporting
+    validation rather than a substitute for the full checklist.
 - [x] Expand sound support beyond chat notifications using a small native subsystem
   - Completed 2026-08-05: `GUI.Sound` centralizes tagged Mudlet media playback,
     safe profile/package file resolution, persistence, master/per-channel

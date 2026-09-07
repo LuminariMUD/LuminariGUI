@@ -145,7 +145,7 @@ number-row events. Record the keyboard layout and platform with this section.
 3. Disconnect and reconnect. Confirm one refresh, one MSDP subscription batch,
    stable maps, and stable callbacks.
 4. Compare live handler/timer observations with
-   [`RESOURCE_LIFECYCLE.md`](RESOURCE_LIFECYCLE.md): 5 mapper, 26 GUI, and 6
+   [`RESOURCE_LIFECYCLE.md`](RESOURCE_LIFECYCLE.md): 5 mapper, 25 GUI, and 6
    lifecycle anonymous handlers; at most one recurring `yatco.blink` timer
    after one-shot work settles.
 

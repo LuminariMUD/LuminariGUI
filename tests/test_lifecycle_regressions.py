@@ -417,6 +417,7 @@ assert(countEntries(activeHandlers) == 0)
         self._run_lua(script)
 
     def _test_package_cleanup_removes_owned_resources(self):
+        """Verify package cleanup removes active capture state and owned resources."""
         resource_source = self._fragment_script(
             self.resource_source_path,
             "Resource Ownership",
@@ -565,6 +566,7 @@ assert(blinkStops == 1)
         self._run_lua(script)
 
     def _test_handler_counts_across_lifecycle_paths(self):
+        """Keep handler and capture-reset counts stable across lifecycle paths."""
         resource_source = self._fragment_script(
             self.resource_source_path,
             "Resource Ownership",
@@ -747,6 +749,7 @@ assertStable("rapid fix gui")
         self._run_lua(script)
 
     def _test_handler_analyzer_reports_owned_resources(self):
+        """Require the resource analyzer to report every owned capture timer."""
         analyzer = self.repo_root / "scripts" / "analyze_handlers.py"
         result = subprocess.run(
             [
@@ -1357,6 +1360,7 @@ end
         )
 
     def _test_gui_script_names_and_order(self):
+        """Keep the capture script in the required GUI initialization order."""
         self._load_gui_scripts()
         expected = [
             "Toggles",
@@ -1844,6 +1848,7 @@ assert(propagated == false,
         self._run_lua(script)
 
     def _test_debug_startup_boundary_and_system_coverage(self):
+        """Require capture diagnostics in the startup debug coverage map."""
         gui_source = self._gui_lua_source()
         boot_source = self._gui_script("GUI Boot")
         refresh_source = self._gui_script("GUI Refresh")

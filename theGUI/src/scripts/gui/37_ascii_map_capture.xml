@@ -33,7 +33,7 @@ local MAP_KINDS = {
   wilderness = {
     opening = "&lt;WILDERNESS_MAP&gt;",
     closing = "&lt;/WILDERNESS_MAP&gt;",
-    allowed = allowedCharacters([[ [].,Yn^~=UX|-+M*CA:&amp;S?#\/]]),
+    allowed = allowedCharacters([[ [].,Yn^m~=UX|-+oM*CAi:&amp;S?#\/`]]),
     padding = function()
       if not map or type(map.calcMinimapPadding) ~= "function" then
         return 0
@@ -190,9 +190,6 @@ local function validRow(state, text)
       return false, "row contains a character that is invalid for " .. state.kind .. " maps"
     end
   end
-  if text ~= "" and state.width ~= 0 and #text ~= state.width then
-    return false, "row width changed inside map block"
-  end
   return true
 end
 
@@ -274,6 +271,10 @@ function Capture.processLine(text)
       logError("could not consume closing marker: " .. tostring(deleteError))
       return "aborted"
     end
+    if state.failed then
+      Capture.reset("failed map block closed")
+      return "aborted"
+    end
     finishCapture(state)
     return "finished"
   end
@@ -285,10 +286,12 @@ function Capture.processLine(text)
     end
   end
 
+  if state.failed then return "ignored" end
+
   local transferred, transferError = transferRow(state, text)
   if not transferred then
-    Capture.reset(transferError)
-    logError(transferError .. "; leaving current line visible")
+    state.failed = true
+    logError(tostring(transferError) .. "; leaving current line visible")
     return "aborted"
   end
   return "row"
