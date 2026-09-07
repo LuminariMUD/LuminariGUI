@@ -1,6 +1,6 @@
 # Mudlet Compatibility Reference (4.19 → 4.22)
 
-**Last researched:** 2026-07-31
+**Last researched:** 2026-09-07
 **Current Mudlet release:** 4.22.0 (released 2026-07-06)
 **Package target declared in `theGUI/package.py`:** `mudlet_version = "4.21+"` (raised from `4.0+` in v2.0.4.028).
 
@@ -64,6 +64,24 @@ Released 2026-07-06.
 
 The Windows same-named-items fix is the only entry with plausible relevance — LuminariGUI has many similarly-named triggers/aliases across groups.
 
+### Line-trigger scheduling across released runtimes
+
+Native probes found a version-sensitive edge when `tempLineTrigger()` is
+created inside the trigger that is processing a map's opening marker. On the
+official 4.21.0 and 4.22.0 Linux builds, `tempLineTrigger(1, 1, callback)`
+started at the second following line; a 5.0.1 comparison started at the first
+following line, matching the manual. Changing the offset from 1 to 0 would
+therefore fix one runtime and consume the opening marker on the other.
+
+LuminariGUI 2.0.4.046 removes that timing dependency. One permanent `^.*$`
+trigger dispatches logical lines to a boundary-driven parser already present
+before `<ROOM_MAP>` or `<WILDERNESS_MAP>` arrives. Native production-trigger
+replays on 4.21.0, 4.22.0, and the observed 5.0.1 comparison all preserve the
+first and last rows, true blank rows, ANSI formatting, and ordinary output
+spacing. The declared release target remains 4.22.0 until the full release
+checklist is intentionally moved; the 5.0.1 run is compatibility evidence, not
+a support-policy change.
+
 ---
 
 ## Known upstream Mudlet issues relevant to this package
@@ -110,8 +128,8 @@ own entries. Initialization, refresh, and REPORT entry points briefly coalesce
 the single unidentifiable legacy callback during the first upgrade. Mudlet 4.22
 runtime probes confirm one effective refresh, one REPORT batch after reset,
 and stable registrations. The later complete resource audit centralized all
-runtime handler and timer creation. The current baseline is 5 mapper + 26 GUI
-+ 6 lifecycle anonymous handlers, plus two package-XML handlers; all 21 timer
+runtime handler and timer creation. The current baseline is 5 mapper + 25 GUI
++ 6 lifecycle anonymous handlers, plus two package-XML handlers; all 22 timer
 creation sites are owned and only `yatco.blink` is recurring. See
 [`RESOURCE_LIFECYCLE.md`](RESOURCE_LIFECYCLE.md).
 

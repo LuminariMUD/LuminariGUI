@@ -45,3 +45,6 @@ Thumbs.db
 
 # Local configuration
 *.local
+
+# Environment files
+.env

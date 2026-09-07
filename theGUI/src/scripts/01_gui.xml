@@ -68,6 +68,7 @@ GUI.debug("GUI/BOOT", "GUI namespace fragment loaded", {
 					<!-- BUILD_INCLUDE: gui/34_map_controls.xml -->
 					<!-- BUILD_INCLUDE: gui/35_room_info.xml -->
 					<!-- BUILD_INCLUDE: gui/36_draw_frames.xml -->
+					<!-- BUILD_INCLUDE: gui/37_ascii_map_capture.xml -->
 					<!-- BUILD_INCLUDE: gui/40_msdp_protocol.xml -->
 					<!-- BUILD_INCLUDE: gui/41_msdp_gauges.xml -->
 					<!-- BUILD_INCLUDE: gui/42_msdp_actions.xml -->

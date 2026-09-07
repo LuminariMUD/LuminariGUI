@@ -96,6 +96,9 @@ end
 
 function GUI.onConnectionEvent(...)
   GUI.debug("LIFECYCLE", "sysConnectionEvent fired", {...})
+  if GUI.AsciiMapCapture and type(GUI.AsciiMapCapture.reset) == "function" then
+    GUI.AsciiMapCapture.reset("connection established")
+  end
   GUI.setOwnedTimer("lifecycle.connectionRefresh", 1, GUI.debugWrap("LIFECYCLE/connection refresh timer", function()
     GUI.initializeOrRefresh("connection established")
     if type(GUI.debugSnapshot) == "function" then

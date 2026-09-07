@@ -417,10 +417,12 @@ assert(countEntries(activeHandlers) == 0)
         self._run_lua(script)
 
     def _test_package_cleanup_removes_owned_resources(self):
+        """Verify package cleanup removes active capture state and owned resources."""
         resource_source = self._fragment_script(
             self.resource_source_path,
             "Resource Ownership",
         )
+        capture_source = self._gui_script("ASCII Map Capture")
         preferences_source = self._gui_script("Toggles")
         cleanup_source = preferences_source[
             preferences_source.index("function GUI.cleanup()") :
@@ -490,6 +492,7 @@ GUI = {{
   lifecycleHandlerIds = {{}},
 }}
 {resource_source}
+{capture_source}
 
 GUI.EVENT_HANDLERS = {{["msdp.ONE"] = true, ["msdp.TWO"] = true}}
 GUI.LIFECYCLE_HANDLERS = {{sysLoadEvent = true}}
@@ -520,6 +523,8 @@ GUI.registerOwnedHandler(
 )
 GUI.setOwnedTimer("cleanup.one", 1, function() end)
 GUI.setOwnedTimer("cleanup.two", 1, function() end)
+GUI.AsciiMapCapture.state = {{kind = "room", rows = 1, bytes = 20}}
+GUI.setOwnedTimer("asciiMapCapture.inactivity", 5, function() end)
 
 function GUI.unregisterEventHandlers()
   return GUI.unregisterOwnedHandlers(GUI.eventHandlerIds, GUI.EVENT_HANDLERS)
@@ -554,12 +559,14 @@ assert(countEntries(GUI.eventHandlerIds) == 0)
 assert(countEntries(map.fileScopeHandlerIds) == 0)
 assert(countEntries(GUI.lifecycleHandlerIds) == 0)
 assert(map.maplineTrig == nil)
+assert(GUI.AsciiMapCapture.state == nil)
 assert(saves == 1)
 assert(blinkStops == 1)
 """
         self._run_lua(script)
 
     def _test_handler_counts_across_lifecycle_paths(self):
+        """Keep handler and capture-reset counts stable across lifecycle paths."""
         resource_source = self._fragment_script(
             self.resource_source_path,
             "Resource Ownership",
@@ -646,6 +653,11 @@ GUI = {{
 }}
 {resource_source}
 
+local captureResets = 0
+GUI.AsciiMapCapture = {{reset = function()
+  captureResets = captureResets + 1
+end}}
+
 map = {{
   eventHandler = function() end,
   onProtocolEnabled = function() end,
@@ -706,13 +718,19 @@ GUI.onSysLoadEvent("sysLoadEvent", true)
 runAllTimers()
 assertStable("fresh sysLoadEvent")
 
+local resetsBeforeReconnect = captureResets
 GUI.onConnectionEvent("sysConnectionEvent")
 runAllTimers()
 assertStable("reconnect")
+assert(captureResets == resetsBeforeReconnect + 2,
+  "reconnect did not reset capture immediately and during refresh")
 
+local resetsBeforeProfileReset = captureResets
 GUI.onSysLoadEvent("sysLoadEvent", false)
 runAllTimers()
 assertStable("resetProfile")
+assert(captureResets == resetsBeforeProfileReset + 1,
+  "resetProfile refresh did not reset capture")
 
 for _ = 1, 10 do
   GUI.initializeOrRefresh("fix gui command")
@@ -731,6 +749,7 @@ assertStable("rapid fix gui")
         self._run_lua(script)
 
     def _test_handler_analyzer_reports_owned_resources(self):
+        """Require the resource analyzer to report every owned capture timer."""
         analyzer = self.repo_root / "scripts" / "analyze_handlers.py"
         result = subprocess.run(
             [
@@ -758,6 +777,10 @@ assertStable("rapid fix gui")
         self._require(
             totals["recurring_timers"] == 1,
             f"unexpected recurring timer total: {totals}",
+        )
+        self._require(
+            totals["owned_timers"] == 22,
+            f"unexpected owned timer site total: {totals}",
         )
         self._require(
             totals["unowned_handlers"] == 0 and totals["unowned_timers"] == 0,
@@ -1337,6 +1360,7 @@ end
         )
 
     def _test_gui_script_names_and_order(self):
+        """Keep the capture script in the required GUI initialization order."""
         self._load_gui_scripts()
         expected = [
             "Toggles",
@@ -1353,6 +1377,7 @@ end
             "Buttons",
             "Room Info/Legend",
             "DrawFrames",
+            "ASCII Map Capture",
             "MSDP Protocol",
             "MSDP Gauges",
             "MSDP Actions",
@@ -1823,6 +1848,7 @@ assert(propagated == false,
         self._run_lua(script)
 
     def _test_debug_startup_boundary_and_system_coverage(self):
+        """Require capture diagnostics in the startup debug coverage map."""
         gui_source = self._gui_lua_source()
         boot_source = self._gui_script("GUI Boot")
         refresh_source = self._gui_script("GUI Refresh")
@@ -1835,9 +1861,6 @@ assert(propagated == false,
         yatco_source = "\n".join(
             path.read_text(encoding="utf-8") for path in yatco_sources
         )
-        trigger_source = (
-            self.repo_root / "theGUI" / "src" / "triggers" / "01_gui.xml"
-        ).read_text(encoding="utf-8")
         alias_source = "\n".join(
             path.read_text(encoding="utf-8")
             for path in (self.repo_root / "theGUI" / "src" / "aliases").glob("*.xml")
@@ -1876,7 +1899,7 @@ assert(propagated == false,
             "sound subsystem": (gui_source, "SOUND/PLAY"),
             "mapper events": (mapper_source, "MAPPER/EVENT"),
             "mapper initialization": (mapper_source, "MAPPER/INIT"),
-            "map triggers": (trigger_source, "TRIGGER/MAP"),
+            "map capture": (gui_source, "ASCII_MAP_CAPTURE"),
             "chat creation": (yatco_source, "YATCO/CREATE"),
             "chat capture": (yatco_source, "YATCO/APPEND"),
             "aliases": (alias_source, 'GUI.debug("ALIAS"'),

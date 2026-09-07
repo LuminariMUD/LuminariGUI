@@ -277,29 +277,29 @@ function map.load_map(use_local)
     end
 end
 
-function map.adjustMinimapFontSize()
+function map.adjustMinimapFontSize(columns, rows)
   local w = map.minimap.get_width()
   local h = map.minimap.get_height()
   local font_size = 8
   repeat
     font_size = font_size + 1
     local width, height = calcFontSize(font_size)
-    width = width * map.minimap_width
-    height = height * map.minimap_height
+    width = width * (columns or map.minimap_width)
+    height = height * (rows or map.minimap_height)
   until (w &lt; width) or (h &lt; height)
 	map.minimap_font_size = font_size - 1
   setMiniConsoleFontSize("map.minimap", map.minimap_font_size)
 end
 
-function map.adjustAsciimapFontSize()
+function map.adjustAsciimapFontSize(columns, rows)
   local w = map.minimap.get_width()
   local h = map.minimap.get_height()
   local font_size = 8
   repeat
     font_size = font_size + 1
     local width, height = calcFontSize(font_size)
-    width = width * 20
-    height = height * 11
+    width = width * (columns or 20)
+    height = height * (rows or 11)
   until (w &lt; width) or (h &lt; height)
 	map.minimap_font_size = font_size - 1
   setMiniConsoleFontSize("map.minimap", map.minimap_font_size)

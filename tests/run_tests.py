@@ -25,6 +25,7 @@ try:
     from test_lifecycle_regressions import LifecycleRegressionTester
     from test_lua_quality import LuaQualityAnalyzer
     from test_lua_syntax import LuaSyntaxTester
+    from test_output_capture import OutputCaptureTester
     from test_performance import PerformanceTester
     from test_system import SystemTester
 except ImportError as e:
@@ -149,6 +150,7 @@ class TestRunner:
             ("Function Tests", LuaFunctionTester),
             ("Event System", EventSystemTester),
             ("Lifecycle Regressions", LifecycleRegressionTester),
+            ("Output Capture", OutputCaptureTester),
             ("System Tests", SystemTester),
             ("Performance", PerformanceTester),
         ]
@@ -371,6 +373,7 @@ class TestRunner:
             "functions": ("Function Tests", LuaFunctionTester),
             "events": ("Event System", EventSystemTester),
             "lifecycle": ("Lifecycle Regressions", LifecycleRegressionTester),
+            "output": ("Output Capture", OutputCaptureTester),
             "system": ("System Tests", SystemTester),
             "performance": ("Performance", PerformanceTester),
         }
@@ -481,7 +484,7 @@ def main():
     )
     parser.add_argument(
         "--test",
-        help="Run specific test suite (coverage, extractor, syntax, quality, functions, events, lifecycle, system, performance)",
+        help="Run specific test suite (coverage, extractor, syntax, quality, functions, events, lifecycle, output, system, performance)",
     )
     parser.add_argument("--report", help="Generate report file")
     parser.add_argument(
