@@ -5,7 +5,7 @@ timer as an owned resource. The ownership layer is defined in
 `theGUI/src/scripts/00_resources.xml` and loads before the mapper and GUI.
 
 This document records the ownership contract, cleanup boundaries, and the
-verification baseline for package version `2.0.4.045`.
+verification baseline for package version `2.0.4.046`.
 
 ## Invariants
 
@@ -50,7 +50,7 @@ semantics for every temporary timer. `GUI.cancelOwnedTimer(name)` removes one
 timer, and `GUI.cancelAllOwnedTimers()` is the profile-exit and uninstall
 boundary.
 
-The source audit currently finds 21 owned timer creation sites. Twenty are
+The source audit currently finds 22 owned timer creation sites. Twenty-one are
 one-shot scheduling sites. `yatco.blink` is the one intentional recurring
 timer, and each tick schedules exactly one successor. Multiple call sites may
 share one name, such as the two mapper-mode controls that both schedule
@@ -66,10 +66,11 @@ collapse into one refresh and completed entries disappear from the registry.
 
 `GUI.cleanup()` performs profile-exit cleanup:
 
-1. Stop the YATCO blink loop.
-2. Cancel every timer in `GUI.ownedTimerIds`.
-3. Clear timer-backed coalescing flags.
-4. Remove the active temporary ASCII-map line trigger, if present.
+1. Stop active sound and the YATCO blink loop.
+2. Reset an active boundary-driven ASCII-map capture and retire any temporary
+   line-trigger ID retained from an older package version.
+3. Cancel every remaining timer in `GUI.ownedTimerIds`.
+4. Clear timer-backed coalescing flags.
 5. Save toggle preferences.
 
 `GUI.cleanupPackageResources()` extends that sequence for package uninstall:
@@ -101,7 +102,8 @@ Automated lifecycle regressions execute the production Lua through Mudlet API
 mocks and assert exact counts after package load, in-session recompilation,
 reconnect, `resetProfile()`, ten settled `fix gui` calls, and ten rapid calls.
 They also verify timer replacement, recurring-timer bounds, analyzer failure
-on an injected raw timer, and complete uninstall cleanup.
+on an injected raw timer, capture reset across reconnect/refresh/profile-reset
+paths, and complete uninstall cleanup while a capture and its timer are active.
 
 The 2026-08-05 Mudlet 4.22.0 runtime check used an isolated portable profile
 and a local MSDP server. It confirmed:

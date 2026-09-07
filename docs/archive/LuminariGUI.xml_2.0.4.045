@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE MudletPackage>
-<MudletPackage version="2.0.4.046">
+<MudletPackage version="2.0.4.045">
 	<TriggerPackage>
 		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 			<name>LuminariGUI</name>
@@ -255,9 +255,66 @@ end</script>
 				<regexCodeList />
 				<regexCodePropertyList />
 				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-					<name>Capture ASCII Maps</name>
-					<script>if GUI.AsciiMapCapture and type(GUI.AsciiMapCapture.processLine) == "function" then
-  GUI.AsciiMapCapture.processLine(line)
+					<name>Capture Wilderness Map</name>
+					<script>deleteLine()
+GUI.debug("TRIGGER/MAP", "Capture Wilderness Map matched", {
+  minimap = type(map and map.minimap),
+  mapContainer = type(map and map.container),
+  asciiMapContainer = type(GUI.asciiMapContainer),
+})
+clearUserWindow("map.minimap")
+
+map.container:hide()
+GUI.asciiMapContainer:show()
+
+map.maplineTrig = tempLineTrigger(1,23,[[onMapLine()]])  -- Edit the max lines to how many your MAP display shows.
+map.padding = map.calcMinimapPadding()
+
+-- Map Line Processing Handler
+-- Processes individual lines of ASCII map data and handles map display completion
+-- Enhanced with comprehensive error handling for robust map processing
+function onMapLine()
+  -- Validate that we have a valid line to process
+  if not line or line == "" then
+    print("Warning: Empty or invalid map line received")
+    GUI.debugError("TRIGGER/MAP/WILDERNESS", "empty or invalid map line")
+    return
+  end
+  -- Check for map completion marker
+  local isLastLine = string.findPattern(line, "&lt;/WILDERNESS_MAP&gt;")
+  if isLastLine then
+    deleteLine()
+    -- Safely cleanup trigger with validation
+    if map.maplineTrig and exists(map.maplineTrig, "trigger") ~= 0 then
+      killTrigger(map.maplineTrig)
+    end
+    map.maplineTrig = nil
+    GUI.debug("TRIGGER/MAP/WILDERNESS", "map completion marker received")
+    return
+  end
+  -- Process map line with error handling
+  local success, failure = xpcall(function()
+    selectCurrentLine()
+    copy()
+    if map.minimap and map.minimap.echo then
+      for i = 1, map.padding do
+        map.minimap:echo(" ")
+      end
+      map.adjustMinimapFontSize()
+      appendBuffer("map.minimap")
+    else
+      print("Warning: map.minimap not available for line processing")
+    end
+    deleteLine()
+  end, debug.traceback)
+  if success then
+    GUI.debug("TRIGGER/MAP/WILDERNESS", "map line appended", {
+      line = line,
+      padding = map.padding,
+    })
+  else
+    GUI.debugError("TRIGGER/MAP/WILDERNESS", failure)
+  end
 end</script>
 					<triggerType>0</triggerType>
 					<conditonLineDelta>0</conditonLineDelta>
@@ -270,7 +327,110 @@ end</script>
 					<colorTriggerFgColor>#000000</colorTriggerFgColor>
 					<colorTriggerBgColor>#000000</colorTriggerBgColor>
 					<regexCodeList>
-						<string>^.*$</string>
+						<string>&lt;WILDERNESS_MAP&gt;</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>2</integer>
+					</regexCodePropertyList>
+				</Trigger>
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>Capture Room Map</name>
+					<script>deleteLine()
+GUI.debug("TRIGGER/MAP", "Capture Room Map matched", {
+  mode = GUI.buttonWindow and GUI.buttonWindow.mudletOrAscii,
+  minimap = type(map and map.minimap),
+  mapContainer = type(map and map.container),
+  asciiMapContainer = type(GUI.asciiMapContainer),
+})
+clearUserWindow("map.minimap")
+
+if GUI.buttonWindow.mudletOrAscii == "ASCII" then
+  map.container:hide()
+  GUI.asciiMapContainer:show()
+elseif GUI.buttonWindow.mudletOrAscii == "Mudlet" then
+  map.container:show()
+  GUI.asciiMapContainer:hide()
+end
+map.minimap:echo("\n")
+map.maplineTrig = tempLineTrigger(1,11,[[onRoomMapLine()]])  -- Edit the max lines to how many your MAP display shows.
+map.padding = map.calcAsciimapPadding()
+
+-- Room Map Line Processing Handler
+-- Processes individual lines of room-specific ASCII map data
+-- Enhanced with comprehensive error handling for robust map processing
+function onRoomMapLine()
+  -- Validate that we have a valid line to process
+  if not line or line == "" then
+    print("Warning: Empty or invalid room map line received")
+    GUI.debugError("TRIGGER/MAP/ROOM", "empty or invalid room map line")
+    return
+  end
+  -- Check for room map completion marker
+  local isLastLine = string.findPattern(line, "&lt;/ROOM_MAP&gt;")
+  if isLastLine then
+    deleteLine()
+    -- Safely cleanup trigger with validation
+    if map.maplineTrig and exists(map.maplineTrig, "trigger") ~= 0 then
+      killTrigger(map.maplineTrig)
+    end
+    map.maplineTrig = nil
+    GUI.debug("TRIGGER/MAP/ROOM", "room map completion marker received")
+    return
+  end
+  -- Process room map line with error handling
+  local success, failure = xpcall(function()
+    selectCurrentLine()
+    copy()
+    if map.minimap and map.minimap.echo then
+      map.minimap:echo(" ")
+      map.adjustAsciimapFontSize()
+      appendBuffer("map.minimap")
+    else
+      print("Warning: map.minimap not available for room map line processing")
+    end
+    deleteLine()
+  end, debug.traceback)
+  if success then
+    GUI.debug("TRIGGER/MAP/ROOM", "room map line appended", {
+      line = line,
+      padding = map.padding,
+    })
+  else
+    GUI.debugError("TRIGGER/MAP/ROOM", failure)
+  end
+end</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>&lt;ROOM_MAP&gt;</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>2</integer>
+					</regexCodePropertyList>
+				</Trigger>
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>Gag blank lines</name>
+					<script>deleteLine()</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>^$</string>
 					</regexCodeList>
 					<regexCodePropertyList>
 						<integer>1</integer>
@@ -1446,29 +1606,29 @@ function map.load_map(use_local)
     end
 end
 
-function map.adjustMinimapFontSize(columns, rows)
+function map.adjustMinimapFontSize()
   local w = map.minimap.get_width()
   local h = map.minimap.get_height()
   local font_size = 8
   repeat
     font_size = font_size + 1
     local width, height = calcFontSize(font_size)
-    width = width * (columns or map.minimap_width)
-    height = height * (rows or map.minimap_height)
+    width = width * map.minimap_width
+    height = height * map.minimap_height
   until (w &lt; width) or (h &lt; height)
 	map.minimap_font_size = font_size - 1
   setMiniConsoleFontSize("map.minimap", map.minimap_font_size)
 end
 
-function map.adjustAsciimapFontSize(columns, rows)
+function map.adjustAsciimapFontSize()
   local w = map.minimap.get_width()
   local h = map.minimap.get_height()
   local font_size = 8
   repeat
     font_size = font_size + 1
     local width, height = calcFontSize(font_size)
-    width = width * (columns or 20)
-    height = height * (rows or 11)
+    width = width * 20
+    height = height * 11
   until (w &lt; width) or (h &lt; height)
 	map.minimap_font_size = font_size - 1
   setMiniConsoleFontSize("map.minimap", map.minimap_font_size)
@@ -2061,20 +2221,18 @@ function GUI.cleanup()
   if demonnic and demonnic.chat and demonnic.chat.stopBlinking then
     demonnic.chat:stopBlinking()
   end
-  if GUI.AsciiMapCapture and type(GUI.AsciiMapCapture.reset) == "function" then
-    pcall(GUI.AsciiMapCapture.reset, "GUI cleanup")
-  elseif map and map.maplineTrig then
-    if exists(map.maplineTrig, "trigger") ~= 0 then
-      pcall(killTrigger, map.maplineTrig)
-    end
-    map.maplineTrig = nil
-  end
-
   local timersCanceled = GUI.cancelAllOwnedTimers()
   GUI.castConsoleTimer = nil
   GUI.initCallPending = false
   GUI.msdpReportRequestPending = false
   GUI.refreshCallsPending = {}
+
+  if map and map.maplineTrig then
+    if exists(map.maplineTrig, "trigger") ~= 0 then
+      pcall(killTrigger, map.maplineTrig)
+    end
+    map.maplineTrig = nil
+  end
 
   GUI.saveToggles()
   return {timers = timersCanceled}
@@ -3658,307 +3816,6 @@ end</script>
 end</script>
 						<eventHandlerList />
 					</Script>
-						<Script isActive="yes" isFolder="no">
-							<name>ASCII Map Capture</name>
-							<packageName></packageName>
-							<script>-- Boundary-driven capture for server-tagged room and wilderness maps.
--- A permanent trigger calls processLine() for every logical line, avoiding the
--- version-dependent scheduling of temporary line triggers created mid-stream.
-GUI.AsciiMapCapture = GUI.AsciiMapCapture or {}
-local Capture = GUI.AsciiMapCapture
-local TIMEOUT_NAME = "asciiMapCapture.inactivity"
-local TIMEOUT_SECONDS = 5
-local MAX_ROWS = 64
-local MAX_COLUMNS = 256
-local MAX_BYTES = 131072
-local function allowedCharacters(characters)
-  local allowed = {}
-  for index = 1, #characters do
-    allowed[characters:sub(index, index)] = true
-  end
-  return allowed
-end
-local MAP_KINDS = {
-  room = {
-    opening = "&lt;ROOM_MAP&gt;",
-    closing = "&lt;/ROOM_MAP&gt;",
-    allowed = allowedCharacters([[ [].,Y^m~=UX|-+o`MCi&amp;A:*?\/S#]]),
-    padding = function() return 1 end,
-    fit = function(columns, rows)
-      if map and type(map.adjustAsciimapFontSize) == "function" then
-        return map.adjustAsciimapFontSize(columns, rows)
-      end
-    end,
-  },
-  wilderness = {
-    opening = "&lt;WILDERNESS_MAP&gt;",
-    closing = "&lt;/WILDERNESS_MAP&gt;",
-    allowed = allowedCharacters([[ [].,Yn^~=UX|-+M*CA:&amp;S?#\/]]),
-    padding = function()
-      if not map or type(map.calcMinimapPadding) ~= "function" then
-        return 0
-      end
-      local ok, value = pcall(map.calcMinimapPadding)
-      if not ok then return 0 end
-      return math.max(0, math.floor(tonumber(value) or 0))
-    end,
-    fit = function(columns, rows)
-      if map and type(map.adjustMinimapFontSize) == "function" then
-        return map.adjustMinimapFontSize(columns, rows)
-      end
-    end,
-  },
-}
-local function logDebug(message, detail)
-  if type(GUI.debug) == "function" then
-    GUI.debug("ASCII_MAP_CAPTURE", message, detail)
-  end
-end
-local function logError(message)
-  if type(GUI.debugError) == "function" then
-    GUI.debugError("ASCII_MAP_CAPTURE", message)
-  end
-end
-local function cancelLegacyTrigger()
-  if not map or not map.maplineTrig then return false end
-  local triggerId = map.maplineTrig
-  map.maplineTrig = nil
-  if type(exists) ~= "function" or type(killTrigger) ~= "function" then
-    return false
-  end
-  local checked, present = pcall(exists, triggerId, "trigger")
-  if checked and present ~= 0 then
-    local killed = pcall(killTrigger, triggerId)
-    return killed
-  end
-  return false
-end
-function Capture.reset(reason)
-  local previous = Capture.state
-  Capture.state = nil
-  if type(GUI.cancelOwnedTimer) == "function" then
-    GUI.cancelOwnedTimer(TIMEOUT_NAME)
-  end
-  cancelLegacyTrigger()
-  if previous then
-    logDebug("capture reset", {
-      reason = reason,
-      kind = previous.kind,
-      rows = previous.rows,
-      bytes = previous.bytes,
-    })
-  end
-  return previous ~= nil
-end
-local function destinationReady()
-  return map ~= nil
-    and map.minimap ~= nil
-    and type(map.minimap.echo) == "function"
-    and type(clearUserWindow) == "function"
-    and type(selectCurrentLine) == "function"
-    and type(copy) == "function"
-    and type(appendBuffer) == "function"
-    and type(deleteLine) == "function"
-end
-local function scheduleTimeout(state)
-  if type(GUI.setOwnedTimer) ~= "function" then
-    return false
-  end
-  local timerId = GUI.setOwnedTimer("asciiMapCapture.inactivity", TIMEOUT_SECONDS, function()
-    if Capture.state == state then
-      Capture.reset("inactivity timeout")
-    end
-  end)
-  return timerId ~= nil
-end
-local function setMapVisibility(kind)
-  if kind == "wilderness" then
-    if map.container and type(map.container.hide) == "function" then
-      pcall(map.container.hide, map.container)
-    end
-    if GUI.asciiMapContainer and type(GUI.asciiMapContainer.show) == "function" then
-      pcall(GUI.asciiMapContainer.show, GUI.asciiMapContainer)
-    end
-    return
-  end
-  local mode = GUI.buttonWindow and GUI.buttonWindow.mudletOrAscii
-  if mode == "ASCII" then
-    if map.container and type(map.container.hide) == "function" then
-      pcall(map.container.hide, map.container)
-    end
-    if GUI.asciiMapContainer and type(GUI.asciiMapContainer.show) == "function" then
-      pcall(GUI.asciiMapContainer.show, GUI.asciiMapContainer)
-    end
-  elseif mode == "Mudlet" then
-    if map.container and type(map.container.show) == "function" then
-      pcall(map.container.show, map.container)
-    end
-    if GUI.asciiMapContainer and type(GUI.asciiMapContainer.hide) == "function" then
-      pcall(GUI.asciiMapContainer.hide, GUI.asciiMapContainer)
-    end
-  end
-end
-
-local function beginCapture(kind)
-  Capture.reset("new " .. kind .. " map")
-  if not destinationReady() then
-    logError("map destination is unavailable; leaving opening marker visible")
-    return false
-  end
-
-  local config = MAP_KINDS[kind]
-  local state = {
-    kind = kind,
-    config = config,
-    rows = 0,
-    bytes = 0,
-    width = 0,
-    padding = config.padding(),
-  }
-  Capture.state = state
-  if not scheduleTimeout(state) then
-    Capture.reset("could not create inactivity timer")
-    logError("could not create map inactivity timer")
-    return false
-  end
-
-  local cleared, clearResult = pcall(clearUserWindow, "map.minimap")
-  if not cleared or clearResult == false then
-    Capture.reset("could not clear destination")
-    logError("could not clear map destination: " .. tostring(clearResult))
-    return false
-  end
-
-  setMapVisibility(kind)
-  local deleted, deleteError = pcall(deleteLine)
-  if not deleted then
-    Capture.reset("could not consume opening marker")
-    logError("could not consume opening marker: " .. tostring(deleteError))
-    return false
-  end
-
-  logDebug("capture started", {kind = kind, padding = state.padding})
-  return true
-end
-
-local function validRow(state, text)
-  if #text &gt; MAX_COLUMNS then
-    return false, "row width exceeds safety limit"
-  end
-  for index = 1, #text do
-    if not state.config.allowed[text:sub(index, index)] then
-      return false, "row contains a character that is invalid for " .. state.kind .. " maps"
-    end
-  end
-  if text ~= "" and state.width ~= 0 and #text ~= state.width then
-    return false, "row width changed inside map block"
-  end
-  return true
-end
-
-local function transferRow(state, text)
-  if not destinationReady() then
-    return false, "map destination disappeared"
-  end
-  if state.rows + 1 &gt; MAX_ROWS then
-    return false, "row count exceeds safety limit"
-  end
-  if state.bytes + #text + 1 &gt; MAX_BYTES then
-    return false, "map byte count exceeds safety limit"
-  end
-
-  local valid, validationError = validRow(state, text)
-  if not valid then return false, validationError end
-  if not scheduleTimeout(state) then
-    return false, "could not refresh inactivity timer"
-  end
-
-  local transferred, transferError = xpcall(function()
-    if text == "" then
-      map.minimap:echo(string.rep(" ", state.padding) .. "\n")
-    else
-      selectCurrentLine()
-      copy()
-      if state.padding &gt; 0 then
-        map.minimap:echo(string.rep(" ", state.padding))
-      end
-      local appended = appendBuffer("map.minimap")
-      if appended == false then error("appendBuffer returned false") end
-    end
-  end, debug.traceback)
-  if not transferred then return false, transferError end
-
-  local deleted, deleteError = pcall(deleteLine)
-  if not deleted then return false, deleteError end
-  state.rows = state.rows + 1
-  state.bytes = state.bytes + #text + 1
-  state.width = math.max(state.width, #text)
-  return true
-end
-
-local function finishCapture(state)
-  local columns = math.max(1, state.width + state.padding)
-  local rows = math.max(1, state.rows)
-  local fitted, fitError = pcall(state.config.fit, columns, rows)
-  if not fitted then
-    logError("could not fit completed map: " .. tostring(fitError))
-  end
-  logDebug("capture completed", {
-    kind = state.kind,
-    rows = state.rows,
-    width = state.width,
-    padding = state.padding,
-  })
-  Capture.reset("map completed")
-end
-
-function Capture.processLine(text)
-  if type(text) ~= "string" then
-    if Capture.state then Capture.reset("missing incoming line") end
-    return "ignored"
-  end
-
-  for kind, config in pairs(MAP_KINDS) do
-    if text == config.opening then
-      return beginCapture(kind) and "started" or "ignored"
-    end
-  end
-
-  local state = Capture.state
-  if not state then return "ignored" end
-
-  if text == state.config.closing then
-    local deleted, deleteError = pcall(deleteLine)
-    if not deleted then
-      Capture.reset("could not consume closing marker")
-      logError("could not consume closing marker: " .. tostring(deleteError))
-      return "aborted"
-    end
-    finishCapture(state)
-    return "finished"
-  end
-
-  for _, config in pairs(MAP_KINDS) do
-    if text == config.closing then
-      Capture.reset("mismatched closing marker")
-      return "aborted"
-    end
-  end
-
-  local transferred, transferError = transferRow(state, text)
-  if not transferred then
-    Capture.reset(transferError)
-    logError(transferError .. "; leaving current line visible")
-    return "aborted"
-  end
-  return "row"
-end
-
--- Installing or recompiling this script must retire state and temporary
--- triggers retained from an earlier package version.
-Capture.reset("parser loaded")</script>
-							<eventHandlerList />
-						</Script>
 					<Script isActive="yes" isFolder="no">
 						<name>MSDP Protocol</name>
 						<packageName></packageName>
@@ -5241,9 +5098,6 @@ end
 -- =============================================================================
 function GUI.initializeOrRefresh(context)
   context = context or "unknown"
-  if GUI.AsciiMapCapture and type(GUI.AsciiMapCapture.reset) == "function" then
-    GUI.AsciiMapCapture.reset("GUI refresh: " .. context)
-  end
   -- Coalesce matching callbacks from the legacy anonymous lifecycle handler
   -- and its replacement during a live package upgrade. Calls with different
   -- contexts still run independently (for example protocol enablement after
@@ -5553,9 +5407,6 @@ end
 
 function GUI.onConnectionEvent(...)
   GUI.debug("LIFECYCLE", "sysConnectionEvent fired", {...})
-  if GUI.AsciiMapCapture and type(GUI.AsciiMapCapture.reset) == "function" then
-    GUI.AsciiMapCapture.reset("connection established")
-  end
   GUI.setOwnedTimer("lifecycle.connectionRefresh", 1, GUI.debugWrap("LIFECYCLE/connection refresh timer", function()
     GUI.initializeOrRefresh("connection established")
     if type(GUI.debugSnapshot) == "function" then

@@ -94,6 +94,20 @@ calls; see the compatibility reference before attributing it.
 3. Move through several connected rooms and confirm room name, exits, terrain,
    and both map views remain synchronized.
 4. Confirm there is no callback error after hovering and clicking labels.
+5. With compact mode off, confirm the server's blank prompt/description
+   separation remains in the main console; repeat with compact mode on and
+   confirm only the server's own compacting changes. Leading indentation,
+   repeated spaces, and whitespace-only lines must not be broadly trimmed.
+6. In GUI mode, visit a tagged room map whose first row is visible (the local
+   fixture uses room `145202`) and one whose first rows are space-only
+   (`145201`). Confirm every row is transferred once, in order, with no tags or
+   map rows left in the main console.
+7. Exercise a wilderness map and the largest configured room-map size. Confirm
+   the first and last rows remain visible and the completed dimensions are used
+   when the ASCII view is resized.
+8. Interrupt one tagged block before its closing marker, then display ordinary
+   output and another valid map. Confirm ordinary output remains readable and
+   the next map recovers without stale rows or an active capture timer.
 
 ### 4. YATCO and callbacks
 
@@ -252,6 +266,33 @@ Mudlet's media log identified and decoded `health_warning.wav` and
 `chat_sound.mp3`. The saved `GUI.toggles.lua` contained the changed nested
 channel values, kept the rejected `../bad.wav` out, and ended with chat disabled
 after the second `dsound`. No Lua, stylesheet, or media rejection was logged.
+
+### 2026-09-07 — output spacing and tagged ASCII maps
+
+This was a focused acceptance pass for the new section 3 checks, not a full
+release approval. Production source and trigger fragments were replayed in
+disposable native profiles using the official Linux x86_64 Mudlet 4.21.0 and
+4.22.0 builds, plus a version-recorded 5.0.1 comparison. Each runtime preserved
+ordinary blank lines and repeated spaces; captured the exact nine-row `145202`
+fixture, true blank map rows, a 25-row room map, and a 21-row wilderness map;
+and recovered from a missing closing marker without consuming the following
+description or prompt.
+
+The generated 2.0.4.046 XML was then loaded as a complete disposable Mudlet
+4.22.0 profile and connected through Mudlet's real Telnet path to the local
+LuminariMUD listener. Moving from `145201` to `145202` and repeating `look`
+with compact mode on and off placed all nine rows in `map.minimap` both times.
+No marker or map row remained in the main console. Compact-off output retained
+one additional server-supplied blank line before the prompt, and indentation
+and repeated spaces in the room description were unchanged. The active capture
+state and timeout were clear after each map. The staff character was restored
+to room `1204` with GUI mode off, compact off, automap on, and brief off, then
+the character and account were logged out and independently rechecked.
+
+The isolated profiles intentionally omitted packaged image assets, so expected
+missing-texture warnings are not evidence for section 1 or section 9. Full
+asset, visual, keypad, replacement, and uninstall checks remain required for a
+release decision.
 
 ## Optional GitHub Xvfb experiment
 

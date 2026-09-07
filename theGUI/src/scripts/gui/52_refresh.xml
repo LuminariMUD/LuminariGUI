@@ -23,6 +23,9 @@
 -- =============================================================================
 function GUI.initializeOrRefresh(context)
   context = context or "unknown"
+  if GUI.AsciiMapCapture and type(GUI.AsciiMapCapture.reset) == "function" then
+    GUI.AsciiMapCapture.reset("GUI refresh: " .. context)
+  end
   -- Coalesce matching callbacks from the legacy anonymous lifecycle handler
   -- and its replacement during a live package upgrade. Calls with different
   -- contexts still run independently (for example protocol enablement after

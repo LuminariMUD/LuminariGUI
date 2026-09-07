@@ -149,18 +149,20 @@ function GUI.cleanup()
   if demonnic and demonnic.chat and demonnic.chat.stopBlinking then
     demonnic.chat:stopBlinking()
   end
-  local timersCanceled = GUI.cancelAllOwnedTimers()
-  GUI.castConsoleTimer = nil
-  GUI.initCallPending = false
-  GUI.msdpReportRequestPending = false
-  GUI.refreshCallsPending = {}
-
-  if map and map.maplineTrig then
+  if GUI.AsciiMapCapture and type(GUI.AsciiMapCapture.reset) == "function" then
+    pcall(GUI.AsciiMapCapture.reset, "GUI cleanup")
+  elseif map and map.maplineTrig then
     if exists(map.maplineTrig, "trigger") ~= 0 then
       pcall(killTrigger, map.maplineTrig)
     end
     map.maplineTrig = nil
   end
+
+  local timersCanceled = GUI.cancelAllOwnedTimers()
+  GUI.castConsoleTimer = nil
+  GUI.initCallPending = false
+  GUI.msdpReportRequestPending = false
+  GUI.refreshCallsPending = {}
 
   GUI.saveToggles()
   return {timers = timersCanceled}

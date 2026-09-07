@@ -1,0 +1,301 @@
+						<Script isActive="yes" isFolder="no">
+							<name>ASCII Map Capture</name>
+							<packageName></packageName>
+							<script>-- Boundary-driven capture for server-tagged room and wilderness maps.
+-- A permanent trigger calls processLine() for every logical line, avoiding the
+-- version-dependent scheduling of temporary line triggers created mid-stream.
+GUI.AsciiMapCapture = GUI.AsciiMapCapture or {}
+local Capture = GUI.AsciiMapCapture
+local TIMEOUT_NAME = "asciiMapCapture.inactivity"
+local TIMEOUT_SECONDS = 5
+local MAX_ROWS = 64
+local MAX_COLUMNS = 256
+local MAX_BYTES = 131072
+local function allowedCharacters(characters)
+  local allowed = {}
+  for index = 1, #characters do
+    allowed[characters:sub(index, index)] = true
+  end
+  return allowed
+end
+local MAP_KINDS = {
+  room = {
+    opening = "&lt;ROOM_MAP&gt;",
+    closing = "&lt;/ROOM_MAP&gt;",
+    allowed = allowedCharacters([[ [].,Y^m~=UX|-+o`MCi&amp;A:*?\/S#]]),
+    padding = function() return 1 end,
+    fit = function(columns, rows)
+      if map and type(map.adjustAsciimapFontSize) == "function" then
+        return map.adjustAsciimapFontSize(columns, rows)
+      end
+    end,
+  },
+  wilderness = {
+    opening = "&lt;WILDERNESS_MAP&gt;",
+    closing = "&lt;/WILDERNESS_MAP&gt;",
+    allowed = allowedCharacters([[ [].,Yn^~=UX|-+M*CA:&amp;S?#\/]]),
+    padding = function()
+      if not map or type(map.calcMinimapPadding) ~= "function" then
+        return 0
+      end
+      local ok, value = pcall(map.calcMinimapPadding)
+      if not ok then return 0 end
+      return math.max(0, math.floor(tonumber(value) or 0))
+    end,
+    fit = function(columns, rows)
+      if map and type(map.adjustMinimapFontSize) == "function" then
+        return map.adjustMinimapFontSize(columns, rows)
+      end
+    end,
+  },
+}
+local function logDebug(message, detail)
+  if type(GUI.debug) == "function" then
+    GUI.debug("ASCII_MAP_CAPTURE", message, detail)
+  end
+end
+local function logError(message)
+  if type(GUI.debugError) == "function" then
+    GUI.debugError("ASCII_MAP_CAPTURE", message)
+  end
+end
+local function cancelLegacyTrigger()
+  if not map or not map.maplineTrig then return false end
+  local triggerId = map.maplineTrig
+  map.maplineTrig = nil
+  if type(exists) ~= "function" or type(killTrigger) ~= "function" then
+    return false
+  end
+  local checked, present = pcall(exists, triggerId, "trigger")
+  if checked and present ~= 0 then
+    local killed = pcall(killTrigger, triggerId)
+    return killed
+  end
+  return false
+end
+function Capture.reset(reason)
+  local previous = Capture.state
+  Capture.state = nil
+  if type(GUI.cancelOwnedTimer) == "function" then
+    GUI.cancelOwnedTimer(TIMEOUT_NAME)
+  end
+  cancelLegacyTrigger()
+  if previous then
+    logDebug("capture reset", {
+      reason = reason,
+      kind = previous.kind,
+      rows = previous.rows,
+      bytes = previous.bytes,
+    })
+  end
+  return previous ~= nil
+end
+local function destinationReady()
+  return map ~= nil
+    and map.minimap ~= nil
+    and type(map.minimap.echo) == "function"
+    and type(clearUserWindow) == "function"
+    and type(selectCurrentLine) == "function"
+    and type(copy) == "function"
+    and type(appendBuffer) == "function"
+    and type(deleteLine) == "function"
+end
+local function scheduleTimeout(state)
+  if type(GUI.setOwnedTimer) ~= "function" then
+    return false
+  end
+  local timerId = GUI.setOwnedTimer("asciiMapCapture.inactivity", TIMEOUT_SECONDS, function()
+    if Capture.state == state then
+      Capture.reset("inactivity timeout")
+    end
+  end)
+  return timerId ~= nil
+end
+local function setMapVisibility(kind)
+  if kind == "wilderness" then
+    if map.container and type(map.container.hide) == "function" then
+      pcall(map.container.hide, map.container)
+    end
+    if GUI.asciiMapContainer and type(GUI.asciiMapContainer.show) == "function" then
+      pcall(GUI.asciiMapContainer.show, GUI.asciiMapContainer)
+    end
+    return
+  end
+  local mode = GUI.buttonWindow and GUI.buttonWindow.mudletOrAscii
+  if mode == "ASCII" then
+    if map.container and type(map.container.hide) == "function" then
+      pcall(map.container.hide, map.container)
+    end
+    if GUI.asciiMapContainer and type(GUI.asciiMapContainer.show) == "function" then
+      pcall(GUI.asciiMapContainer.show, GUI.asciiMapContainer)
+    end
+  elseif mode == "Mudlet" then
+    if map.container and type(map.container.show) == "function" then
+      pcall(map.container.show, map.container)
+    end
+    if GUI.asciiMapContainer and type(GUI.asciiMapContainer.hide) == "function" then
+      pcall(GUI.asciiMapContainer.hide, GUI.asciiMapContainer)
+    end
+  end
+end
+
+local function beginCapture(kind)
+  Capture.reset("new " .. kind .. " map")
+  if not destinationReady() then
+    logError("map destination is unavailable; leaving opening marker visible")
+    return false
+  end
+
+  local config = MAP_KINDS[kind]
+  local state = {
+    kind = kind,
+    config = config,
+    rows = 0,
+    bytes = 0,
+    width = 0,
+    padding = config.padding(),
+  }
+  Capture.state = state
+  if not scheduleTimeout(state) then
+    Capture.reset("could not create inactivity timer")
+    logError("could not create map inactivity timer")
+    return false
+  end
+
+  local cleared, clearResult = pcall(clearUserWindow, "map.minimap")
+  if not cleared or clearResult == false then
+    Capture.reset("could not clear destination")
+    logError("could not clear map destination: " .. tostring(clearResult))
+    return false
+  end
+
+  setMapVisibility(kind)
+  local deleted, deleteError = pcall(deleteLine)
+  if not deleted then
+    Capture.reset("could not consume opening marker")
+    logError("could not consume opening marker: " .. tostring(deleteError))
+    return false
+  end
+
+  logDebug("capture started", {kind = kind, padding = state.padding})
+  return true
+end
+
+local function validRow(state, text)
+  if #text &gt; MAX_COLUMNS then
+    return false, "row width exceeds safety limit"
+  end
+  for index = 1, #text do
+    if not state.config.allowed[text:sub(index, index)] then
+      return false, "row contains a character that is invalid for " .. state.kind .. " maps"
+    end
+  end
+  if text ~= "" and state.width ~= 0 and #text ~= state.width then
+    return false, "row width changed inside map block"
+  end
+  return true
+end
+
+local function transferRow(state, text)
+  if not destinationReady() then
+    return false, "map destination disappeared"
+  end
+  if state.rows + 1 &gt; MAX_ROWS then
+    return false, "row count exceeds safety limit"
+  end
+  if state.bytes + #text + 1 &gt; MAX_BYTES then
+    return false, "map byte count exceeds safety limit"
+  end
+
+  local valid, validationError = validRow(state, text)
+  if not valid then return false, validationError end
+  if not scheduleTimeout(state) then
+    return false, "could not refresh inactivity timer"
+  end
+
+  local transferred, transferError = xpcall(function()
+    if text == "" then
+      map.minimap:echo(string.rep(" ", state.padding) .. "\n")
+    else
+      selectCurrentLine()
+      copy()
+      if state.padding &gt; 0 then
+        map.minimap:echo(string.rep(" ", state.padding))
+      end
+      local appended = appendBuffer("map.minimap")
+      if appended == false then error("appendBuffer returned false") end
+    end
+  end, debug.traceback)
+  if not transferred then return false, transferError end
+
+  local deleted, deleteError = pcall(deleteLine)
+  if not deleted then return false, deleteError end
+  state.rows = state.rows + 1
+  state.bytes = state.bytes + #text + 1
+  state.width = math.max(state.width, #text)
+  return true
+end
+
+local function finishCapture(state)
+  local columns = math.max(1, state.width + state.padding)
+  local rows = math.max(1, state.rows)
+  local fitted, fitError = pcall(state.config.fit, columns, rows)
+  if not fitted then
+    logError("could not fit completed map: " .. tostring(fitError))
+  end
+  logDebug("capture completed", {
+    kind = state.kind,
+    rows = state.rows,
+    width = state.width,
+    padding = state.padding,
+  })
+  Capture.reset("map completed")
+end
+
+function Capture.processLine(text)
+  if type(text) ~= "string" then
+    if Capture.state then Capture.reset("missing incoming line") end
+    return "ignored"
+  end
+
+  for kind, config in pairs(MAP_KINDS) do
+    if text == config.opening then
+      return beginCapture(kind) and "started" or "ignored"
+    end
+  end
+
+  local state = Capture.state
+  if not state then return "ignored" end
+
+  if text == state.config.closing then
+    local deleted, deleteError = pcall(deleteLine)
+    if not deleted then
+      Capture.reset("could not consume closing marker")
+      logError("could not consume closing marker: " .. tostring(deleteError))
+      return "aborted"
+    end
+    finishCapture(state)
+    return "finished"
+  end
+
+  for _, config in pairs(MAP_KINDS) do
+    if text == config.closing then
+      Capture.reset("mismatched closing marker")
+      return "aborted"
+    end
+  end
+
+  local transferred, transferError = transferRow(state, text)
+  if not transferred then
+    Capture.reset(transferError)
+    logError(transferError .. "; leaving current line visible")
+    return "aborted"
+  end
+  return "row"
+end
+
+-- Installing or recompiling this script must retire state and temporary
+-- triggers retained from an earlier package version.
+Capture.reset("parser loaded")</script>
+							<eventHandlerList />
+						</Script>

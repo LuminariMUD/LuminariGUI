@@ -2,7 +2,8 @@
 
 Date: 2026-09-07
 
-Status: Investigation and reproduction complete; implementation pending.
+Status: Implemented and verified on `fix/output-spacing-ascii-map`; this is not
+a release approval.
 
 GUI baseline: `ab33a52`, package `2.0.4.045`.
 
@@ -20,8 +21,49 @@ sent the complete map, including `    [.]-[|]-[.]` on its first row. Replaying
 that captured output through the unchanged production triggers in native
 Mudlet 4.22.0 reproduced the reported leak and missing row.
 
-This document is the requested fix plan. No GUI source, generated XML,
-package version, or server source was changed during this investigation.
+The implementation below now replaces both faulty trigger paths. The initial
+investigation itself was read-only; subsequent progress entries distinguish
+the source, generated package, tests, and documentation changed for the fix.
+
+## Implementation progress
+
+- 2026-09-07: Scope review retained the boundary parser, recovery guard,
+  lifecycle cleanup, measured sizing, regression coverage, and native-client
+  checks because each protects a reproduced defect or an explicit failure
+  case. The implementation uses the existing permanent trigger tree as the
+  single line dispatcher and a focused GUI parser script; a second event or
+  handler abstraction was removed from the design as unnecessary.
+- 2026-09-07: Removed the unconditional blank-line gag and both dynamic map
+  triggers. Added one permanent logical-line dispatcher plus the focused
+  `GUI.AsciiMapCapture` boundary parser. It validates room/wilderness rows,
+  preserves ANSI formatting and exact whitespace, measures completed maps,
+  uses 64-row/256-column/131072-byte guards, and owns a five-second inactivity
+  timer. Failed transfers and malformed blocks reset before leaving the current
+  line readable.
+- 2026-09-07: Connected capture reset to GUI refresh, reconnect, profile reset,
+  package reload, cleanup, and uninstall paths, including retirement of a
+  legacy `map.maplineTrig`. The resource audit now reports 36 owned anonymous
+  handlers, 22 owned timer creation sites, two package-XML handlers, and zero
+  unowned handlers or timers.
+- 2026-09-07: Added and registered eight production-source regression groups.
+  They cover normal spacing, the exact `145202` fixture with formatting, room
+  heights 3/9/11/13/25, true blank rows, a 21-row wilderness map, multiple and
+  nested blocks, mismatches/timeouts/safety limits, destination failures, next-
+  map recovery, and lifecycle cleanup. Existing lifecycle coverage now resets
+  an active capture and owned timeout during cleanup/uninstall.
+- 2026-09-07: Production-trigger native replays pass on official Mudlet 4.21.0
+  and 4.22.0 builds and on a version-recorded 5.0.1 comparison. A complete
+  generated 2.0.4.046 profile also passed over Mudlet 4.22.0's actual Telnet
+  path against the local server: both compact settings captured all nine
+  `145202` rows with no map leakage, while compact-off preserved the additional
+  server blank line. The character was independently verified back in room
+  `1204` with GUI off, compact off, automap on, brief off, and fully logged out.
+- 2026-09-07: Final gates passed: build validation, generated-output parity,
+  all nine suites supported by the installed tools, standalone package
+  validation, handler/timer ownership analysis, and whitespace/error checking.
+  `luacheck` was not installed, so the documented `--skip-optional` path ran all
+  available suites with `lua` and `luac`; the optional quality suite remains a
+  hosted-CI check.
 
 ## Evidence and reproduction
 
@@ -47,8 +89,11 @@ package version, or server source was changed during this investigation.
   lines in an initial trial; those results were excluded.
 - Read main-console and miniconsole buffers with `getLines()` and recorded
   every map-row callback. A complete block and a replay split at each newline
-  produced the same first-row failure. Arbitrary TCP fragmentation and a
-  full-package live-Mudlet session remain implementation acceptance tests.
+  produced the same first-row failure. A full-package live-Mudlet session was
+  subsequently completed, and the native line-split replay and live Telnet
+  result agreed. Deliberate transport fragment boundaries were not observable;
+  the package parser receives Mudlet's completed logical lines and no longer
+  owns byte-stream assembly.
 - A comparison run reported Mudlet 5.0.1 and captured all nine rows. The
   disposable runtime's automatic updater had changed the executable between
   runs. Its result was kept separately; automatic downloads were then
@@ -59,9 +104,10 @@ package version, or server source was changed during this investigation.
   those settings and completed character and account logout. Authentication
   data is excluded from this document and the replay fixtures.
 
-The user's installed Mudlet version has not yet been established. The
-version-specific reproduction above should be compared with that version
-when implementing the fix. The supplied server checkout was at `2fa02cca6`;
+The user's installed Mudlet version was not available to the automated test.
+The supported 4.21/4.22 builds and a newer 5.0.1 comparison now agree, because
+the implementation no longer creates a timing-sensitive trigger mid-stream.
+The supplied server checkout was at `2fa02cca6`;
 the running listener used a binary under its `bin/releases/` directory, so
 checkout identity alone is not proof of the running binary's source revision.
 The live output independently confirms the relevant map framing and spacing.
