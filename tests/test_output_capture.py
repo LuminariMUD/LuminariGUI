@@ -7,7 +7,6 @@ import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -50,7 +49,7 @@ class OutputCaptureTester:
 
     @staticmethod
     def _mocks():
-        return r'''
+        return r"""
 destination = {}
 destinationStyles = {}
 main = {}
@@ -192,7 +191,7 @@ function repeatedRow(width, symbol)
   assert(#symbol == 1)
   return symbol .. string.rep(" ", width - 1)
 end
-'''
+"""
 
     def _run_lua(self, body):
         source = self._mocks() + "\n" + self.capture_source + "\n" + body
@@ -217,11 +216,15 @@ end
             if node.findtext("name") == "GUI"
         )
         triggers = gui.findall("./Trigger")
-        capture = [node for node in triggers if node.findtext("name") == "Capture ASCII Maps"]
+        capture = [
+            node for node in triggers if node.findtext("name") == "Capture ASCII Maps"
+        ]
         if len(capture) != 1:
             raise AssertionError("exactly one permanent ASCII map trigger is required")
         if capture[0].findtext("regexCodeList/string") != "^.*$":
-            raise AssertionError("ASCII map trigger does not dispatch every logical line")
+            raise AssertionError(
+                "ASCII map trigger does not dispatch every logical line"
+            )
         if capture[0].get("isTempTrigger") != "no":
             raise AssertionError("ASCII map dispatcher unexpectedly became temporary")
 
@@ -237,10 +240,12 @@ end
         )
         returned = [value for value in forbidden if value in source]
         if returned:
-            raise AssertionError("obsolete output triggers returned: " + ", ".join(returned))
+            raise AssertionError(
+                "obsolete output triggers returned: " + ", ".join(returned)
+            )
 
         self._run_lua(
-            r'''
+            r"""
 assert(map.maplineTrig == nil, "legacy line trigger ID survived parser load")
 assert(activeTriggers[77] == nil, "legacy line trigger survived parser load")
 assert(feedLine("ordinary output") == "ignored")
@@ -248,12 +253,12 @@ assert(feedLine("") == "ignored")
 assert(feedLine("   indented   words   ") == "ignored")
 assert(#deletedLines == 0, "ordinary output was deleted")
 assert(#main == 3 and main[2].text == "" and main[3].text == "   indented   words   ")
-'''
+"""
         )
 
     def _test_exact_room_fixture_and_formatting(self):
         self._run_lua(
-            r'''
+            r"""
 local rows = {
   "    [.]-[|]-[.]    ",
   "         |         ",
@@ -288,12 +293,12 @@ assert(#fitCalls == 1 and fitCalls[1].kind == "room")
 assert(fitCalls[1].columns == 20 and fitCalls[1].rows == 9)
 assert(GUI.AsciiMapCapture.state == nil)
 assert(timers["asciiMapCapture.inactivity"] == nil)
-'''
+"""
         )
 
     def _test_supported_heights_and_blank_rows(self):
         self._run_lua(
-            r'''
+            r"""
 for _, height in ipairs({3, 9, 11, 13, 25}) do
   local width = (height * 2) + 1
   assert(feedLine("<ROOM_MAP>") == "started")
@@ -317,12 +322,12 @@ assert(feedLine("</ROOM_MAP>") == "finished")
 assert(#destination == 3)
 assert(destination[1] == " " and destination[2] == " .      " and destination[3] == " ")
 assert(fitCalls[#fitCalls].rows == 3 and fitCalls[#fitCalls].columns == 8)
-'''
+"""
         )
 
     def _test_wilderness_and_multiple_blocks(self):
         self._run_lua(
-            r'''
+            r"""
 assert(feedLine("<ROOM_MAP>") == "started")
 assert(feedLine(repeatedRow(19, ".")) == "row")
 assert(feedLine("<WILDERNESS_MAP>") == "started", "new opener did not replace capture")
@@ -337,12 +342,12 @@ assert(clearCount == 2, "each opening marker must clear exactly once")
 assert(#fitCalls == 1 and fitCalls[1].kind == "wilderness")
 assert(fitCalls[1].columns == 23 and fitCalls[1].rows == 21)
 assert(#main == 0, "successful maps leaked into main output")
-'''
+"""
         )
 
     def _test_invalid_and_mismatched_recovery(self):
         self._run_lua(
-            r'''
+            r"""
 assert(feedLine("<ROOM_MAP>") == "started")
 assert(feedLine(repeatedRow(19, ".")) == "row")
 assert(feedLine("This is ordinary prose.") == "aborted")
@@ -367,12 +372,12 @@ fireTimer("asciiMapCapture.inactivity")
 assert(GUI.AsciiMapCapture.state == nil)
 assert(feedLine("after timeout") == "ignored")
 assert(main[#main].text == "after timeout")
-'''
+"""
         )
 
     def _test_destination_failures_preserve_current_line(self):
         self._run_lua(
-            r'''
+            r"""
 map.minimap = nil
 assert(feedLine("<ROOM_MAP>") == "ignored")
 assert(main[#main].text == "<ROOM_MAP>", "missing destination consumed opener")
@@ -390,12 +395,12 @@ failAppend = false
 failClear = true
 assert(feedLine("<ROOM_MAP>") == "ignored")
 assert(main[#main].text == "<ROOM_MAP>", "clear failure consumed opener")
-'''
+"""
         )
 
     def _test_safety_limit_and_next_map_recovery(self):
         self._run_lua(
-            r'''
+            r"""
 local row = repeatedRow(19, ".")
 assert(feedLine("<ROOM_MAP>") == "started")
 for _ = 1, 64 do assert(feedLine(row) == "row") end
@@ -408,7 +413,7 @@ assert(feedLine("<ROOM_MAP>") == "started")
 assert(feedLine(row) == "row")
 assert(feedLine("</ROOM_MAP>") == "finished")
 assert(#destination == 1 and destination[1] == " " .. row)
-'''
+"""
         )
 
     def _test_lifecycle_reset_hooks(self):
@@ -438,7 +443,7 @@ assert(#destination == 1 and destination[1] == " " .. row)
                 raise AssertionError(f"{boundary} does not reset active map capture")
 
         self._run_lua(
-            r'''
+            r"""
 assert(feedLine("<ROOM_MAP>") == "started")
 assert(feedLine(repeatedRow(19, ".")) == "row")
 assert(GUI.AsciiMapCapture.reset("test lifecycle boundary") == true)
@@ -446,7 +451,7 @@ assert(GUI.AsciiMapCapture.state == nil)
 assert(timers["asciiMapCapture.inactivity"] == nil)
 assert(feedLine("ordinary after lifecycle reset") == "ignored")
 assert(main[#main].text == "ordinary after lifecycle reset")
-'''
+"""
         )
 
     def run_tests(self):
@@ -457,13 +462,34 @@ assert(main[#main].text == "ordinary after lifecycle reset")
             return False
 
         tests = [
-            ("permanent_trigger_and_spacing", self._test_permanent_trigger_and_spacing_contract),
-            ("exact_room_fixture_and_formatting", self._test_exact_room_fixture_and_formatting),
-            ("supported_heights_and_blank_rows", self._test_supported_heights_and_blank_rows),
-            ("wilderness_and_multiple_blocks", self._test_wilderness_and_multiple_blocks),
-            ("invalid_and_mismatched_recovery", self._test_invalid_and_mismatched_recovery),
-            ("destination_failure_recovery", self._test_destination_failures_preserve_current_line),
-            ("safety_limit_and_next_map", self._test_safety_limit_and_next_map_recovery),
+            (
+                "permanent_trigger_and_spacing",
+                self._test_permanent_trigger_and_spacing_contract,
+            ),
+            (
+                "exact_room_fixture_and_formatting",
+                self._test_exact_room_fixture_and_formatting,
+            ),
+            (
+                "supported_heights_and_blank_rows",
+                self._test_supported_heights_and_blank_rows,
+            ),
+            (
+                "wilderness_and_multiple_blocks",
+                self._test_wilderness_and_multiple_blocks,
+            ),
+            (
+                "invalid_and_mismatched_recovery",
+                self._test_invalid_and_mismatched_recovery,
+            ),
+            (
+                "destination_failure_recovery",
+                self._test_destination_failures_preserve_current_line,
+            ),
+            (
+                "safety_limit_and_next_map",
+                self._test_safety_limit_and_next_map_recovery,
+            ),
             ("lifecycle_reset_hooks", self._test_lifecycle_reset_hooks),
         ]
         for name, test in tests:
