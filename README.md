@@ -4,6 +4,17 @@
 
 LuminariGUI is a comprehensive graphical user interface package for [LuminariMUD](http://luminarimud.com/), built for the [Mudlet](https://www.mudlet.org/) client. It provides real-time data integration, advanced mapping, and a customizable chat interface to enhance the gameplay experience.
 
+## LuminariMUD Eco-System
+
+What we call the "Lumiverse":
+
+- [LuminariMUD game server](https://github.com/LuminariMUD/Luminari-Source)
+- [Sage GraphRAG lore and world building](https://github.com/LuminariMUD/sage)
+- [Luminari web client](https://github.com/LuminariMUD/luminariweb)
+- [InterMUD-3 client](https://github.com/LuminariMUD/Intermud3)
+- [Discord bridge](https://github.com/LuminariMUD/discord-mud-chat)
+- [Wilderness editor](https://github.com/LuminariMUD/wildeditor)
+
 ## Features
 
 *   **Real-time Status Monitoring**: Instant updates on health, movement, mana, and other vital statistics via MSDP (MUD Server Data Protocol).
