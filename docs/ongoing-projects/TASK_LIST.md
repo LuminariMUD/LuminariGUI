@@ -162,6 +162,13 @@ in this folder.
 
 ## Feature backlog
 
+- [ ] Restore normal output spacing and capture complete ASCII maps using
+  [the investigation and fix plan](OUTPUT_SPACING_AND_ASCII_MAP_PLAN.md).
+  - Investigated 2026-09-07: the global blank-line gag overrides compact mode;
+    native Mudlet 4.22.0 replay of local room `145202` captures 8 of 9 map
+    rows, with the first row leaking into the main console. Fixed capture
+    lengths also truncate taller maps. Implementation and regression coverage
+    remain pending.
 - [x] Expand sound support beyond chat notifications using a small native subsystem
   - Completed 2026-08-05: `GUI.Sound` centralizes tagged Mudlet media playback,
     safe profile/package file resolution, persistence, master/per-channel
