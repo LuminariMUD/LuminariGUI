@@ -84,8 +84,10 @@ existing versioned filename, then duplicate it in the same remote directory
 as `LuminariGUI.mpackage`. Verify both remote files match the release package
 before reporting completion; do not print or commit `.env` values.
 
-The public download redirects to Cloudflare Pages, which serves a separate
-copy. Update both download directories in the sibling `lum-sites` repository
-and deploy its website using `docs/publish-deploy.md`. Verify the public
-versioned and `LuminariGUI.mpackage` URLs match the release SHA-256 after
+Public downloads use a separate Cloudflare Pages deployment. Local `.env`
+contains its credentials, project/branch, website Git URL, build/download
+paths, and public URL; `.env.example` documents the steps. Clone the website
+into a temporary directory if needed, update both download copies, build,
+commit/push, and deploy the complete site. Never deploy only the packages.
+Verify both files at `RELEASE_PUBLIC_BASE_URL` match the release SHA-256 after
 redirects; SSH file checks alone do not verify public downloads.
