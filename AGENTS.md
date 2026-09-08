@@ -83,3 +83,9 @@ For every new release, use `.env` variables `UPLOAD_SSH_COMMAND` and
 existing versioned filename, then duplicate it in the same remote directory
 as `LuminariGUI.mpackage`. Verify both remote files match the release package
 before reporting completion; do not print or commit `.env` values.
+
+The public download redirects to Cloudflare Pages, which serves a separate
+copy. Update both download directories in the sibling `lum-sites` repository
+and deploy its website using `docs/publish-deploy.md`. Verify the public
+versioned and `LuminariGUI.mpackage` URLs match the release SHA-256 after
+redirects; SSH file checks alone do not verify public downloads.
